@@ -1,0 +1,3 @@
+set -eu
+dburl=$(sudo docker inspect gsa-tv-control-plane --format '{{range .Config.Env}}{{println .}}{{end}}' | awk -F= '$1=="DATABASE_URL"{sub(/^DATABASE_URL=/,"");print;exit}')
+sudo docker run --pull=never --rm --network host postgres:15-alpine psql "$dburl" -X -qAt -v ON_ERROR_STOP=1 -c "SELECT j.id,j.state,j.progress,j.finished_at,p.state,p.metadata->>'fact_check_status',length(j.output->>'text') FROM public.gsa_tv_ai_jobs j JOIN public.gsa_tv_ai_projects p ON p.id=j.project_id WHERE j.id='80943e33-c98a-44f7-ac09-4d3c26ab1db3'; SELECT metadata->>'fact_check_report' FROM public.gsa_tv_ai_projects WHERE id='67e6b0d1-c7dd-4fd4-8076-66e464fa42c8';"

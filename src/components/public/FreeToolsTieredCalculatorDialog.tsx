@@ -354,6 +354,18 @@ export function FreeToolsTieredCalculatorDialog({
     setUnlockOpen(true);
   };
 
+  const onProPdfDownloaded = async () => {
+    if (!tool) return;
+    try {
+      await freeToolsProAccess.consumeSession(tool);
+    } catch {
+      // ignore
+    }
+    await refreshStatus(tool);
+    setMode('free');
+    setNotice('O uso único do voucher foi concluído após a geração do PDF. A calculadora retornou ao modo Free.');
+  };
+
   const price = status?.product
     ? new Intl.NumberFormat('pt-BR', {
         style: 'currency',
@@ -384,87 +396,90 @@ export function FreeToolsTieredCalculatorDialog({
         zIndexClassName="z-[130]"
       >
         <div className="flex max-h-[calc(100dvh-.75rem)] min-h-0 flex-col sm:max-h-[calc(100dvh-2.5rem)]">
-          <div className="flex min-h-9 items-center bg-[#111e2a] px-4 py-2 text-white sm:px-6">
-            <strong className="text-[10px] font-black tracking-[.18em] text-[#d8bd73]">GSA HUB</strong>
-            <span className="mx-3 h-3 w-px bg-white/20" />
-            <span className="text-[9px] font-bold uppercase tracking-[.14em] text-white/50">Centro de ferramentas públicas</span>
+          <div className="flex min-h-7 items-center bg-[#111e2a] px-3 py-1.5 text-white sm:min-h-9 sm:px-6 sm:py-2">
+            <strong className="text-[9px] font-black tracking-[.18em] text-[#d8bd73] sm:text-[10px]">GSA HUB</strong>
+            <span className="mx-2.5 h-2.5 w-px bg-white/20 sm:mx-3 sm:h-3" />
+            <span className="text-[8px] font-bold uppercase tracking-[.14em] text-white/50 sm:text-[9px]">Centro de ferramentas públicas</span>
           </div>
 
-          <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-[#d6cec2] bg-[#faf7f0]/97 px-4 py-4 backdrop-blur sm:px-6 sm:py-5">
-            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#172433] text-[#d8bd73] sm:h-12 sm:w-12">
-                <Icon className="h-5 w-5" />
+          <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-[#d6cec2] bg-[#faf7f0]/97 px-3.5 py-2.5 backdrop-blur sm:px-6 sm:py-4">
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-4">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#172433] text-[#d8bd73] shadow-xs sm:h-12 sm:w-12">
+                <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
               </span>
-              <h2 className="min-w-0 text-xl font-black leading-tight tracking-[-.025em] text-[#111820] sm:text-2xl">{presentation?.title}</h2>
+              <h2 className="min-w-0 text-base font-black leading-tight tracking-[-.025em] text-[#111820] sm:text-2xl">{presentation?.title}</h2>
             </div>
             <button
               type="button"
               onClick={onClose}
               aria-label="Fechar calculadora"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#d1c9bd] bg-white text-[#5c6670] transition hover:border-[#9d7c34] hover:text-[#111820]"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#d1c9bd] bg-white text-[#5c6670] transition hover:border-[#9d7c34] hover:text-[#111820] sm:h-11 sm:w-11"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </header>
 
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <section className="border-b border-[#ddd6cb] bg-[#eee8dd] px-4 py-3 sm:px-6 sm:py-4">
-              <div className="mx-auto grid max-w-xl grid-cols-2 overflow-hidden rounded-xl border border-[#cec5b8] bg-white p-1">
+            <section className="border-b border-[#ddd6cb] bg-[#eee8dd] px-3 py-2 sm:px-6 sm:py-3.5">
+              <div className="mx-auto grid max-w-xl grid-cols-2 overflow-hidden rounded-xl border border-[#cec5b8] bg-white p-1 shadow-2xs">
                 <button
                   type="button"
                   onClick={() => setMode('free')}
-                  className={`min-h-12 rounded-lg px-4 text-sm font-black transition ${mode === 'free' ? 'bg-[#172433] text-white shadow-sm' : 'text-[#59646d] hover:bg-[#f5f2ec]'}`}
+                  className={`min-h-10 rounded-lg px-3 text-xs font-black transition sm:min-h-12 sm:px-4 sm:text-sm ${mode === 'free' ? 'bg-[#172433] text-white shadow-sm' : 'text-[#59646d] hover:bg-[#f5f2ec]'}`}
                 >
-                  <span className="inline-flex items-center gap-2"><Calculator className="h-4 w-4" />Free</span>
-                  <small className={`mt-0.5 block text-[9px] font-bold ${mode === 'free' ? 'text-white/50' : 'text-[#8b9297]'}`}>Cálculo simples</small>
+                  <span className="inline-flex items-center gap-1.5 sm:gap-2"><Calculator className="h-3.5 w-3.5 sm:h-4 sm:w-4" />Free</span>
+                  <small className={`block text-[8px] font-bold sm:text-[9px] ${mode === 'free' ? 'text-white/50' : 'text-[#8b9297]'}`}>Cálculo simples</small>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => void selectPro()}
-                  className={`min-h-12 rounded-lg px-4 text-sm font-black transition ${mode === 'pro' ? 'bg-[#91722f] text-white shadow-sm' : 'text-[#59646d] hover:bg-[#f5f2ec]'}`}
+                  className={`min-h-10 rounded-lg px-3 text-xs font-black transition sm:min-h-12 sm:px-4 sm:text-sm ${mode === 'pro' ? 'bg-[#91722f] text-white shadow-sm' : 'text-[#59646d] hover:bg-[#f5f2ec]'}`}
                 >
-                  <span className="inline-flex items-center gap-2"><Crown className="h-4 w-4 text-[#f5eaaf]" />Pro</span>
-                  <small className={`mt-0.5 block text-[9px] font-bold ${mode === 'pro' ? 'text-white/80' : 'text-[#8b9297]'}`}>
+                  <span className="inline-flex items-center gap-1.5 sm:gap-2"><Crown className="h-3.5 w-3.5 text-[#f5eaaf] sm:h-4 sm:w-4" />Pro</span>
+                  <small className={`block text-[8px] font-bold sm:text-[9px] ${mode === 'pro' ? 'text-white/80' : 'text-[#8b9297]'}`}>
                     {proSubtitle}
                   </small>
                 </button>
               </div>
 
               {notice && (
-                <div className="mx-auto mt-3 max-w-xl rounded-lg border border-[#d2c4a3] bg-[#faf3df] px-4 py-3 text-xs font-bold text-[#685326]">{notice}</div>
+                <div className="mx-auto mt-2.5 max-w-xl rounded-lg border border-[#d2c4a3] bg-[#faf3df] px-3.5 py-2 text-xs font-bold text-[#685326] sm:px-4 sm:py-3">{notice}</div>
               )}
             </section>
 
             <main className="p-3 sm:p-6">
               {tool && (mode === 'free'
                 ? <FreeToolsSimpleCalculator tool={tool} />
-                : <FreeToolsAdvancedCalculator tool={tool} status={status} onUnlockRequired={openUnlockOptions} />)}
+                : <FreeToolsAdvancedCalculator tool={tool} status={status} onUnlockRequired={openUnlockOptions} onPdfGenerated={onProPdfDownloaded} />)}
             </main>
-          </div>
 
-          <footer className="flex flex-col gap-3 border-t border-[#d7d0c5] bg-[#faf7f0] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <div className="max-w-2xl">
-              <p className="text-[11px] font-bold text-[#4f5961]">Resultado informativo e educativo.</p>
-              <p className="mt-.5 text-[10px] leading-4 text-[#7a8288]">Não comprova direitos nem substitui documentos, cálculo oficial ou orientação profissional.</p>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <button
-                type="button"
-                onClick={onServices}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[#b89a58] bg-[#f5ecd5] px-4 text-sm font-black text-[#654f20]"
-              >
-                Conhecer atendimento GSA <ArrowRight className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#172433] px-5 text-sm font-black text-white"
-              >
-                Fechar ferramenta
-              </button>
-            </div>
-          </footer>
+            {/* Rodapé dentro do container de rolagem para não obstruir telas mobile */}
+            <footer className="border-t border-[#d7d0c5] bg-[#faf7f0] px-4 py-4 sm:px-6 sm:py-5">
+              <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="max-w-2xl">
+                  <p className="text-[11px] font-bold text-[#4f5961]">Resultado informativo e educativo.</p>
+                  <p className="mt-0.5 text-[10px] leading-4 text-[#7a8288]">Não comprova direitos nem substitui documentos, cálculo oficial ou orientação profissional.</p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <button
+                    type="button"
+                    onClick={onServices}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#b89a58] bg-[#f5ecd5] px-4 text-xs font-black uppercase tracking-wider text-[#654f20] shadow-2xs transition hover:bg-[#ede1c5]"
+                  >
+                    Conhecer atendimento GSA <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#172433] px-5 text-xs font-black uppercase tracking-wider text-white shadow-2xs transition hover:bg-[#253648]"
+                  >
+                    Fechar ferramenta
+                  </button>
+                </div>
+              </div>
+            </footer>
+          </div>
         </div>
       </AccessibleDialog>
 

@@ -1,0 +1,4095 @@
+{
+  "totalPolicies": 378,
+  "roleBreakdown": {
+    "anon": 9,
+    "authenticated": 42,
+    "service_role": 14,
+    "public": 332,
+    "other": 0
+  },
+  "cmdBreakdown": {
+    "ALL": 90,
+    "SELECT": 188,
+    "INSERT": 47,
+    "UPDATE": 27,
+    "DELETE": 26
+  },
+  "tablePolicyMap": {
+    "system_settings": [
+      {
+        "name": "system_settings_public_read",
+        "table": "system_settings",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "key NOT IN ('admin_access_code', 'master_api_key', 'smtp_password')",
+        "check": "",
+        "file": "20260714053200_protect_system_settings_secrets.sql"
+      },
+      {
+        "name": "system_settings_admin_secret_read",
+        "table": "system_settings",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_is_admin()",
+        "check": "",
+        "file": "20260714053200_protect_system_settings_secrets.sql"
+      },
+      {
+        "name": "Public and Auth Read Access system_settings",
+        "table": "system_settings",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260723120000_system_db_alignment.sql"
+      },
+      {
+        "name": "system_settings_public_read",
+        "table": "system_settings",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "key = ANY (ARRAY[\n      'afiliado_bonus_boas_vindas_ativo','afiliado_bonus_boas_vindas_valor',\n      'afiliado_pontos_ativo','afiliado_pontos_minimo_resgate','afiliado_pontos_resgate_taxa',\n      'afiliado_saque_minimo','bonus_cadastro_tipo','bonus_cadastro_valor','bonus_indicador',\n      'codigo_cadastro_padrao_ativo','credito_saque_taxa_tipo','credito_saque_taxa_valor',\n      'desconto_indicado_porcentagem','indicado_desconto_porcentagem','indicado_recompensa_tipo',\n      'indicado_valor_pontos','indicador_limite_carteira','indicador_recompensa_tipo',\n      'indicador_valor_pontos','loja_credito_juros_avista','loja_credito_juros_parcelado',\n      'loja_taxa_entrega_padrao','modal_indicacao_acao_botao','modal_indicacao_ativo',\n      'modal_indicacao_descricao','modal_indicacao_modulo_destino','modal_indicacao_tamanho',\n      'modal_indicacao_texto_botao','modal_indicacao_titulo','modal_indicacao_url_botao',\n      'modulo_area_vip_ativo','modulo_area_vip_oculto','template_mensagem_indicacao',\n      'valor_minimo_saque','whatsapp_float_ativo','whatsapp_float_mensagem',\n      'whatsapp_float_posicao','whatsapp_float_tamanho','whatsapp_float_telefone',\n      'whatsapp_float_tooltip','loja_pix_desconto_ativo','loja_pix_desconto_porcentagem',\n      'loja_pix_desconto_tipo_aplicacao','loja_pix_desconto_categorias',\n      'loja_pix_desconto_produtos','loja_pix_desconto_permitir_pontos',\n      'loja_pix_desconto_permitir_saldo_carteira'\n    ]::text[])",
+        "check": "",
+        "file": "20260830190000_admin_full_audit_security_remediation.sql"
+      }
+    ],
+    "client_levels": [
+      {
+        "name": "Public Read client_levels",
+        "table": "client_levels",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260723120000_system_db_alignment.sql"
+      }
+    ],
+    "clientes": [
+      {
+        "name": "service_role_all_clientes",
+        "table": "clientes",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260828230000_security_lockdown_rls_and_rpc_permissions.sql"
+      },
+      {
+        "name": "gsa_client_own_profile_read",
+        "table": "clientes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente' AND id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      }
+    ],
+    "level_history": [
+      {
+        "name": "gsa_client_own_level_history_hardened",
+        "table": "level_history",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "produtos": [
+      {
+        "name": "marketplace_products_read",
+        "table": "produtos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260829211500_marketplace_security_refund_checkout_hardening.sql"
+      }
+    ],
+    "vouchers": [
+      {
+        "name": "gsa_client_own_vouchers_read",
+        "table": "vouchers",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260910233000_client_panel_rls_hardening.sql"
+      }
+    ],
+    "cliente_promocoes": [
+      {
+        "name": "gsa_client_own_promocoes_hardened",
+        "table": "cliente_promocoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "cliente_premios": [
+      {
+        "name": "gsa_client_own_premios_read",
+        "table": "cliente_premios",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260910233000_client_panel_rls_hardening.sql"
+      },
+      {
+        "name": "gsa_management_cliente_premios",
+        "table": "cliente_premios",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+        "check": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+        "file": "20260910233000_client_panel_rls_hardening.sql"
+      }
+    ],
+    "orcamentos": [
+      {
+        "name": "marketplace_orders_read",
+        "table": "orcamentos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260829211500_marketplace_security_refund_checkout_hardening.sql"
+      },
+      {
+        "name": "gsa_client_own_orcamentos_hardened",
+        "table": "orcamentos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      },
+      {
+        "name": "gsa_client_own_orcamentos_hardened",
+        "table": "orcamentos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260910233000_client_panel_rls_hardening.sql"
+      }
+    ],
+    "ordens_servico": [
+      {
+        "name": "ordens_servico_public_read",
+        "table": "ordens_servico",
+        "command": "SELECT",
+        "roles": "anon, authenticated",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260829233000_harden_service_billing_end_to_end.sql"
+      },
+      {
+        "name": "gsa_client_own_ordens_servico_hardened",
+        "table": "ordens_servico",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "os_notas": [
+      {
+        "name": "gsa_client_own_os_notas",
+        "table": "os_notas",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente'\n    AND EXISTS (\n      SELECT 1 FROM public.ordens_servico os\n      WHERE os.id = os_id\n        AND os.cliente_id = public.gsa_jwt_actor_id()\n    )",
+        "check": "",
+        "file": "20260910233000_client_panel_rls_hardening.sql"
+      }
+    ],
+    "ordens_compra": [
+      {
+        "name": "marketplace_purchase_orders_read",
+        "table": "ordens_compra",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260829211500_marketplace_security_refund_checkout_hardening.sql"
+      },
+      {
+        "name": "gsa_client_own_ordens_compra_hardened",
+        "table": "ordens_compra",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      },
+      {
+        "name": "gsa_client_own_ordens_compra_hardened",
+        "table": "ordens_compra",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260910233000_client_panel_rls_hardening.sql"
+      }
+    ],
+    "ordens_assinatura": [
+      {
+        "name": "gsa_client_own_ordens_assinatura_hardened",
+        "table": "ordens_assinatura",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "faturas": [
+      {
+        "name": "service_role_all_faturas",
+        "table": "faturas",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260828230000_security_lockdown_rls_and_rpc_permissions.sql"
+      },
+      {
+        "name": "faturas_public_read",
+        "table": "faturas",
+        "command": "SELECT",
+        "roles": "anon,authenticated",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260829233000_harden_service_billing_end_to_end.sql"
+      },
+      {
+        "name": "gsa_client_own_invoices_read",
+        "table": "faturas",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente' AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      }
+    ],
+    "pagamentos": [
+      {
+        "name": "service_role_all_pagamentos",
+        "table": "pagamentos",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260828230000_security_lockdown_rls_and_rpc_permissions.sql"
+      },
+      {
+        "name": "gsa_client_own_pagamentos_hardened",
+        "table": "pagamentos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND EXISTS (SELECT 1 FROM public.faturas f WHERE f.id=fatura_id AND f.cliente_id=public.gsa_jwt_actor_id())",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "carteira_lancamentos": [
+      {
+        "name": "service_role_all_carteira_lancamentos",
+        "table": "carteira_lancamentos",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260828230000_security_lockdown_rls_and_rpc_permissions.sql"
+      },
+      {
+        "name": "gsa_client_own_wallet_read",
+        "table": "carteira_lancamentos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente' AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      }
+    ],
+    "extrato_financeiro": [
+      {
+        "name": "service_role_all_extrato_financeiro",
+        "table": "extrato_financeiro",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260828230000_security_lockdown_rls_and_rpc_permissions.sql"
+      },
+      {
+        "name": "gsa_client_own_extrato_hardened",
+        "table": "extrato_financeiro",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "saques": [
+      {
+        "name": "saques_select_public_temp",
+        "table": "saques",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260714020000_secure_admin_withdrawal_transfer_rpcs.sql"
+      },
+      {
+        "name": "gsa_client_own_withdrawals_read",
+        "table": "saques",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente' AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      }
+    ],
+    "transferencias": [
+      {
+        "name": "transferencias_select_public_temp",
+        "table": "transferencias",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260714020000_secure_admin_withdrawal_transfer_rpcs.sql"
+      },
+      {
+        "name": "gsa_client_own_transfers_read",
+        "table": "transferencias",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente'\n  AND public.gsa_jwt_actor_id() IN (cliente_origem_id, cliente_destino_id)",
+        "check": "",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      }
+    ],
+    "pontos_movimentacoes": [
+      {
+        "name": "gsa_client_own_points_read",
+        "table": "pontos_movimentacoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente' AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      }
+    ],
+    "points_transactions": [
+      {
+        "name": "gsa_client_own_points_transactions_hardened",
+        "table": "points_transactions",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "colaboradores": [
+      {
+        "name": "collaborator_self_or_access_read",
+        "table": "colaboradores",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": true,
+        "using": "public.gsa_current_actor_type() <> 'colaborador' OR id = public.gsa_current_actor_id() OR public.gsa_collaborator_has_module('acessos')",
+        "check": "",
+        "file": "20260720213000_secure_collaborator_panel.sql"
+      },
+      {
+        "name": "collaborator_access_insert",
+        "table": "colaboradores",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": true,
+        "using": "",
+        "check": "public.gsa_current_actor_type() <> 'colaborador' OR public.gsa_collaborator_has_module('acessos')",
+        "file": "20260720213000_secure_collaborator_panel.sql"
+      },
+      {
+        "name": "collaborator_access_update",
+        "table": "colaboradores",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": true,
+        "using": "public.gsa_current_actor_type() <> 'colaborador' OR public.gsa_collaborator_has_module('acessos')",
+        "check": "public.gsa_current_actor_type() <> 'colaborador' OR public.gsa_collaborator_has_module('acessos')",
+        "file": "20260720213000_secure_collaborator_panel.sql"
+      },
+      {
+        "name": "collaborator_access_delete",
+        "table": "colaboradores",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": true,
+        "using": "public.gsa_current_actor_type() <> 'colaborador' OR public.gsa_collaborator_has_module('acessos')",
+        "check": "",
+        "file": "20260720213000_secure_collaborator_panel.sql"
+      },
+      {
+        "name": "service_role_all_colaboradores",
+        "table": "colaboradores",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260828230000_security_lockdown_rls_and_rpc_permissions.sql"
+      }
+    ],
+    "colaborador_modulos": [
+      {
+        "name": "collaborator_modules_read",
+        "table": "colaborador_modulos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": true,
+        "using": "public.gsa_current_actor_type() <> 'colaborador' OR colaborador_id = public.gsa_current_actor_id() OR public.gsa_collaborator_has_module('acessos')",
+        "check": "",
+        "file": "20260720213000_secure_collaborator_panel.sql"
+      },
+      {
+        "name": "collaborator_modules_insert",
+        "table": "colaborador_modulos",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": true,
+        "using": "",
+        "check": "public.gsa_current_actor_type() <> 'colaborador' OR public.gsa_collaborator_has_module('acessos')",
+        "file": "20260720213000_secure_collaborator_panel.sql"
+      },
+      {
+        "name": "collaborator_modules_update",
+        "table": "colaborador_modulos",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": true,
+        "using": "public.gsa_current_actor_type() <> 'colaborador' OR public.gsa_collaborator_has_module('acessos')",
+        "check": "public.gsa_current_actor_type() <> 'colaborador' OR public.gsa_collaborator_has_module('acessos')",
+        "file": "20260720213000_secure_collaborator_panel.sql"
+      },
+      {
+        "name": "collaborator_modules_delete",
+        "table": "colaborador_modulos",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": true,
+        "using": "public.gsa_current_actor_type() <> 'colaborador' OR public.gsa_collaborator_has_module('acessos')",
+        "check": "",
+        "file": "20260720213000_secure_collaborator_panel.sql"
+      },
+      {
+        "name": "service_role_all_colaborador_modulos",
+        "table": "colaborador_modulos",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260828230000_security_lockdown_rls_and_rpc_permissions.sql"
+      }
+    ],
+    "prestadores": [
+      {
+        "name": "Acesso total prestadores",
+        "table": "prestadores",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260317000002_create_prestadores_schema.sql"
+      },
+      {
+        "name": "gsa_collaborator_module_prestadores",
+        "table": "prestadores",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": true,
+        "using": "public.gsa_admin_restrict_collaborator_to_module('prestadores')",
+        "check": "public.gsa_admin_restrict_collaborator_to_module('prestadores')",
+        "file": "20260721130000_harden_collaborator_authorization.sql"
+      },
+      {
+        "name": "gsa_provider_own_provider_hardened",
+        "table": "prestadores",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='prestador' AND id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "prestador_demandas": [
+      {
+        "name": "Acesso total prestador_demandas",
+        "table": "prestador_demandas",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260317000002_create_prestadores_schema.sql"
+      },
+      {
+        "name": "collaborator_assigned_demands_only",
+        "table": "prestador_demandas",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": true,
+        "using": "public.gsa_current_actor_type() <> 'colaborador'\r\n  OR public.gsa_collaborator_has_module('operacoes')\r\n  OR (public.gsa_collaborator_has_module('demandas') AND colaborador_id = public.gsa_current_actor_id())",
+        "check": "public.gsa_current_actor_type() <> 'colaborador'\r\n  OR public.gsa_collaborator_has_module('operacoes')\r\n  OR (public.gsa_collaborator_has_module('demandas') AND colaborador_id = public.gsa_current_actor_id())",
+        "file": "20260720213000_secure_collaborator_panel.sql"
+      },
+      {
+        "name": "gsa_collaborator_module_prestador_demandas",
+        "table": "prestador_demandas",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": true,
+        "using": "public.gsa_current_actor_type() <> 'colaborador'\r\n        OR public.gsa_admin_has_module('operacoes')\r\n        OR (\r\n          public.gsa_admin_has_module('demandas')\r\n          AND colaborador_id = public.gsa_current_actor_id()\r\n        )",
+        "check": "public.gsa_current_actor_type() <> 'colaborador'\r\n        OR public.gsa_admin_has_module('operacoes')\r\n        OR (\r\n          public.gsa_admin_has_module('demandas')\r\n          AND colaborador_id = public.gsa_current_actor_id()\r\n        )",
+        "file": "20260721130000_harden_collaborator_authorization.sql"
+      },
+      {
+        "name": "gsa_provider_own_demandas_hardened",
+        "table": "prestador_demandas",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='prestador' AND prestador_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "prestador_faturas": [
+      {
+        "name": "Acesso total prestador_faturas",
+        "table": "prestador_faturas",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260317000002_create_prestadores_schema.sql"
+      }
+    ],
+    "prestador_saques": [
+      {
+        "name": "Acesso total prestador_saques",
+        "table": "prestador_saques",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260318000000_update_prestador_demandas.sql"
+      }
+    ],
+    "prestador_transacoes": [
+      {
+        "name": "Acesso total prestador_transacoes",
+        "table": "prestador_transacoes",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260318000000_update_prestador_demandas.sql"
+      }
+    ],
+    "prestador_agendamentos": [
+      {
+        "name": "Acesso total aos agendamentos",
+        "table": "prestador_agendamentos",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260318000006_create_agendamentos.sql"
+      },
+      {
+        "name": "gsa_provider_own_agendamentos_hardened",
+        "table": "prestador_agendamentos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='prestador' AND prestador_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "prestador_documentos": [
+      {
+        "name": "Acesso total prestador_documentos",
+        "table": "prestador_documentos",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260317000002_create_prestadores_schema.sql"
+      },
+      {
+        "name": "gsa_collaborator_module_prestador_documentos",
+        "table": "prestador_documentos",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": true,
+        "using": "public.gsa_admin_restrict_collaborator_to_module('prestadores')",
+        "check": "public.gsa_admin_restrict_collaborator_to_module('prestadores')",
+        "file": "20260721130000_harden_collaborator_authorization.sql"
+      }
+    ],
+    "prestador_historico": [
+      {
+        "name": "Acesso total prestador_historico",
+        "table": "prestador_historico",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260317000002_create_prestadores_schema.sql"
+      },
+      {
+        "name": "gsa_provider_own_history_hardened",
+        "table": "prestador_historico",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='prestador' AND prestador_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "prestador_suporte_demandas": [
+      {
+        "name": "Acesso total prestador_suporte_demandas",
+        "table": "prestador_suporte_demandas",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260318000000_update_prestador_demandas.sql"
+      },
+      {
+        "name": "gsa_provider_own_support_hardened",
+        "table": "prestador_suporte_demandas",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='prestador' AND prestador_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      },
+      {
+        "name": "gsa_collaborator_module_prestador_suporte_demandas",
+        "table": "prestador_suporte_demandas",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": true,
+        "using": "public.gsa_admin_restrict_collaborator_to_module('atendimento')",
+        "check": "public.gsa_admin_restrict_collaborator_to_module('atendimento')",
+        "file": "20260830051000_close_admin_residual_public_mutations.sql"
+      }
+    ],
+    "tickets": [
+      {
+        "name": "gsa_client_own_tickets_read",
+        "table": "tickets",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente' AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      },
+      {
+        "name": "gsa_provider_own_tickets_read",
+        "table": "tickets",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'prestador' AND prestador_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      }
+    ],
+    "ticket_mensagens": [
+      {
+        "name": "gsa_ticket_messages_owner_hardened",
+        "table": "ticket_mensagens",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "EXISTS (SELECT 1 FROM public.tickets t WHERE t.id=ticket_id AND (\n  (public.gsa_jwt_actor_type()='cliente' AND t.cliente_id=public.gsa_jwt_actor_id()) OR\n  (public.gsa_jwt_actor_type()='prestador' AND t.prestador_id=public.gsa_jwt_actor_id())))",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "notificacoes": [
+      {
+        "name": "collaborator_notification_visibility",
+        "table": "notificacoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": true,
+        "using": "public.gsa_current_actor_type() <> 'colaborador'\r\n  OR destinatario_tipo = 'broadcast_todos'\r\n  OR (destinatario_tipo = 'colaborador' AND colaborador_id = public.gsa_current_actor_id())",
+        "check": "",
+        "file": "20260720213000_secure_collaborator_panel.sql"
+      },
+      {
+        "name": "Allow read notificacoes",
+        "table": "notificacoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260723120000_system_db_alignment.sql"
+      },
+      {
+        "name": "Allow insert notificacoes",
+        "table": "notificacoes",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "true",
+        "file": "20260723120000_system_db_alignment.sql"
+      },
+      {
+        "name": "Allow update notificacoes",
+        "table": "notificacoes",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260723120000_system_db_alignment.sql"
+      },
+      {
+        "name": "gsa_client_own_notifications_read",
+        "table": "notificacoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente'\n  AND (\n    cliente_id = public.gsa_jwt_actor_id()\n    OR destinatario_tipo IN ('broadcast_clientes', 'broadcast_todos')\n  )",
+        "check": "",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      },
+      {
+        "name": "gsa_provider_own_notifications_read",
+        "table": "notificacoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'prestador'\n  AND (\n    prestador_id = public.gsa_jwt_actor_id()\n    OR destinatario_tipo IN ('broadcast_prestadores', 'broadcast_todos')\n  )",
+        "check": "",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      }
+    ],
+    "indicacoes": [
+      {
+        "name": "gsa_client_own_indicacoes_hardened",
+        "table": "indicacoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND indicador_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "promocoes_quantidade": [
+      {
+        "name": "Public Full Access",
+        "table": "promocoes_quantidade",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "master_supabase_schema.sql"
+      }
+    ],
+    "promocoes_quantidade_uso": [
+      {
+        "name": "Public Full Access",
+        "table": "promocoes_quantidade_uso",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "master_supabase_schema.sql"
+      },
+      {
+        "name": "gsa_client_own_promo_usage_hardened",
+        "table": "promocoes_quantidade_uso",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "public": [
+      {
+        "name": "Public Full Access",
+        "table": "public",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true)', r.tablename",
+        "file": "master_supabase_schema.sql"
+      },
+      {
+        "name": "gsa_ads_admin_access",
+        "table": "public",
+        "command": "ALL",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "public.gsa_admin_has_module(''anuncios'')",
+        "check": "public.gsa_admin_has_module(''anuncios''))', v_table",
+        "file": "20260721210100_create_advertising_foundation.sql"
+      },
+      {
+        "name": "gsa_ads_admin_access",
+        "table": "public",
+        "command": "ALL",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "public.gsa_admin_has_module(''anuncios'')",
+        "check": "public.gsa_admin_has_module(''anuncios''))', v_table",
+        "file": "20260721223100_complete_advertising_platform.sql"
+      },
+      {
+        "name": "Allow All Access",
+        "table": "public",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260723130000_add_missing_fk_indexes.sql"
+      },
+      {
+        "name": "gsa_management_hardened",
+        "table": "public",
+        "command": "ALL",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() IN (''admin'',''colaborador'')",
+        "check": "public.gsa_jwt_actor_type() IN (''admin'',''colaborador''))', r.t",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      },
+      {
+        "name": "gsa_provider_own_hardened",
+        "table": "public",
+        "command": "SELECT",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()=''prestador'' AND prestador_id=public.gsa_jwt_actor_id())',t",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      },
+      {
+        "name": "gsa_public_read_hardened",
+        "table": "public",
+        "command": "SELECT",
+        "roles": "anon,authenticated",
+        "restrictive": false,
+        "using": "true)',t",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      },
+      {
+        "name": "gsa_management_hardened",
+        "table": "public",
+        "command": "ALL",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() IN (''admin'',''colaborador'')",
+        "check": "public.gsa_jwt_actor_type() IN (''admin'',''colaborador''))',t",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      },
+      {
+        "name": "gsa_collaborator_fail_closed_hardened",
+        "table": "public",
+        "command": "ALL",
+        "roles": "authenticated",
+        "restrictive": true,
+        "using": "public.gsa_admin_restrict_collaborator_to_module(public.gsa_admin_table_module(%L))",
+        "check": "public.gsa_admin_restrict_collaborator_to_module(public.gsa_admin_table_module(%L)))',t,t,t",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      },
+      {
+        "name": "gsa_management_hardened",
+        "table": "public",
+        "command": "ALL",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() IN (''admin'',''colaborador'')",
+        "check": "public.gsa_jwt_actor_type() IN (''admin'',''colaborador''))',t",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      },
+      {
+        "name": "gsa_public_read_hardened",
+        "table": "public",
+        "command": "SELECT",
+        "roles": "anon,authenticated",
+        "restrictive": false,
+        "using": "true)',t",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      },
+      {
+        "name": "gsa_management_hardened",
+        "table": "public",
+        "command": "ALL",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() IN (''admin'',''colaborador'')",
+        "check": "public.gsa_jwt_actor_type() IN (''admin'',''colaborador''))',t",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      },
+      {
+        "name": "gsa_service_role_internal_only",
+        "table": "public",
+        "command": "ALL",
+        "roles": "service_role",
+        "restrictive": true,
+        "using": "true",
+        "check": "true)', t",
+        "file": "20260830190000_admin_full_audit_security_remediation.sql"
+      },
+      {
+        "name": "gsa_management_hardened",
+        "table": "public",
+        "command": "ALL",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() IN (''admin'',''colaborador'')",
+        "check": "public.gsa_jwt_actor_type() IN (''admin'',''colaborador''))',\n      v_table",
+        "file": "20260830235500_system_end_to_end_security_remediation.sql"
+      }
+    ],
+    "suporte_mensagens": [
+      {
+        "name": "Acesso total suporte_mensagens",
+        "table": "suporte_mensagens",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260318000001_support_and_adjustments.sql"
+      },
+      {
+        "name": "gsa_support_message_participant_read",
+        "table": "suporte_mensagens",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "(\n      public.gsa_jwt_actor_type() IN ('admin', 'colaborador')\n      AND public.gsa_admin_has_module('atendimento')\n    )\n    OR (\n      public.gsa_jwt_actor_type() = 'prestador'\n      AND EXISTS (\n        SELECT 1\n          FROM public.prestador_suporte_demandas d\n         WHERE d.id = suporte_id\n           AND d.prestador_id = public.gsa_jwt_actor_id()\n      )\n    )",
+        "check": "",
+        "file": "20260830051000_close_admin_residual_public_mutations.sql"
+      },
+      {
+        "name": "gsa_support_message_participant_insert",
+        "table": "suporte_mensagens",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "length(trim(mensagem)) BETWEEN 1 AND 5000\n    AND (\n      (\n        public.gsa_jwt_actor_type() IN ('admin', 'colaborador')\n        AND public.gsa_admin_has_module('atendimento')\n        AND autor_tipo = 'admin'\n        AND autor_id = public.gsa_jwt_actor_id()::text\n      )\n      OR (\n        public.gsa_jwt_actor_type() = 'prestador'\n        AND autor_tipo = 'prestador'\n        AND autor_id = public.gsa_jwt_actor_id()::text\n        AND EXISTS (\n          SELECT 1\n            FROM public.prestador_suporte_demandas d\n           WHERE d.id = suporte_id\n             AND d.prestador_id = public.gsa_jwt_actor_id()\n             AND coalesce(d.status, 'aberto') <> 'fechado'\n        )\n      )\n    )",
+        "file": "20260830051000_close_admin_residual_public_mutations.sql"
+      }
+    ],
+    "blog_posts": [
+      {
+        "name": "blog_posts_public_read",
+        "table": "blog_posts",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260826220000_production_remediation_consolidated.sql"
+      },
+      {
+        "name": "blog_posts_admin_write",
+        "table": "blog_posts",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260826220000_production_remediation_consolidated.sql"
+      }
+    ],
+    "emprestimos": [
+      {
+        "name": "gsa_client_own_loans_read",
+        "table": "emprestimos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente' AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      }
+    ],
+    "prestador_demandas_historico": [
+      {
+        "name": "Permitir leitura para usuários autenticados",
+        "table": "prestador_demandas_historico",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260506000000_fix_demand_history_rls.sql"
+      },
+      {
+        "name": "Permitir inserção para usuários autenticados",
+        "table": "prestador_demandas_historico",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "true",
+        "file": "20260506000000_fix_demand_history_rls.sql"
+      },
+      {
+        "name": "gsa_collaborator_demand_history_scope",
+        "table": "prestador_demandas_historico",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": true,
+        "using": "public.gsa_current_actor_type() <> 'colaborador'\r\n        OR public.gsa_collaborator_can_access_demand(demanda_id)",
+        "check": "public.gsa_current_actor_type() <> 'colaborador'\r\n        OR public.gsa_collaborator_can_access_demand(demanda_id)",
+        "file": "20260721130000_harden_collaborator_authorization.sql"
+      },
+      {
+        "name": "gsa_provider_own_demand_history_hardened",
+        "table": "prestador_demandas_historico",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='prestador' AND EXISTS (\n  SELECT 1 FROM public.prestador_demandas d WHERE d.id=demanda_id AND d.prestador_id=public.gsa_jwt_actor_id())",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "loja_solicitacoes": [
+      {
+        "name": "Acesso total loja_solicitacoes",
+        "table": "loja_solicitacoes",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260518000000_add_imagens_anexo_to_loja_solicitacoes.sql"
+      },
+      {
+        "name": "gsa_client_own_loja_solicitacoes_hardened",
+        "table": "loja_solicitacoes",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "loja_carrinhos": [
+      {
+        "name": "gsa_client_own_cart",
+        "table": "loja_carrinhos",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "file": "20260910233000_client_panel_rls_hardening.sql"
+      },
+      {
+        "name": "gsa_management_cart",
+        "table": "loja_carrinhos",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+        "check": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+        "file": "20260910233000_client_panel_rls_hardening.sql"
+      }
+    ],
+    "emprestimo_parcelas": [
+      {
+        "name": "gsa_client_own_emprestimo_parcelas_hardened",
+        "table": "emprestimo_parcelas",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "os_suporte_mensagens": [
+      {
+        "name": "Enable insert for authenticated users only",
+        "table": "os_suporte_mensagens",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "auth.role() = 'authenticated'",
+        "file": "20260602000000_create_os_suporte_mensagens.sql"
+      },
+      {
+        "name": "Enable select for authenticated users only",
+        "table": "os_suporte_mensagens",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "auth.role() = 'authenticated'",
+        "check": "",
+        "file": "20260602000000_create_os_suporte_mensagens.sql"
+      },
+      {
+        "name": "Enable update for authenticated users only",
+        "table": "os_suporte_mensagens",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "auth.role() = 'authenticated'",
+        "check": "",
+        "file": "20260602000000_create_os_suporte_mensagens.sql"
+      },
+      {
+        "name": "gsa_client_own_os_suporte_mensagens",
+        "table": "os_suporte_mensagens",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente'\n    AND EXISTS (\n      SELECT 1 FROM public.ordens_servico os\n      WHERE os.id = os_id\n        AND os.cliente_id = public.gsa_jwt_actor_id()\n    )",
+        "check": "",
+        "file": "20260910233000_client_panel_rls_hardening.sql"
+      }
+    ],
+    "promocoes_quantidade_ativadas": [
+      {
+        "name": "gsa_client_own_qty_promo_activations",
+        "table": "promocoes_quantidade_ativadas",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260910233000_client_panel_rls_hardening.sql"
+      },
+      {
+        "name": "gsa_management_qty_promo_activations",
+        "table": "promocoes_quantidade_ativadas",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+        "check": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+        "file": "20260910233000_client_panel_rls_hardening.sql"
+      }
+    ],
+    "loja_reembolsos": [
+      {
+        "name": "gsa_client_own_refunds_hardened",
+        "table": "loja_reembolsos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "orcamento_timeline": [
+      {
+        "name": "orcamento_timeline_select_authenticated",
+        "table": "orcamento_timeline",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260711080000_create_orcamento_timeline_compat.sql"
+      },
+      {
+        "name": "orcamento_timeline_insert_authenticated",
+        "table": "orcamento_timeline",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "true",
+        "file": "20260711080000_create_orcamento_timeline_compat.sql"
+      },
+      {
+        "name": "orcamento_timeline_select_public",
+        "table": "orcamento_timeline",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260711081000_fix_orcamento_timeline_rls.sql"
+      },
+      {
+        "name": "orcamento_timeline_insert_public",
+        "table": "orcamento_timeline",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "true",
+        "file": "20260711081000_fix_orcamento_timeline_rls.sql"
+      },
+      {
+        "name": "orcamento_timeline_update_public",
+        "table": "orcamento_timeline",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260711081000_fix_orcamento_timeline_rls.sql"
+      },
+      {
+        "name": "gsa_client_own_orcamento_timeline_hardened",
+        "table": "orcamento_timeline",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "sistema_logs": [
+      {
+        "name": "sistema_logs_select_public_temp",
+        "table": "sistema_logs",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260714014000_reduce_public_session_log_writes.sql"
+      },
+      {
+        "name": "sistema_logs_insert_public_temp",
+        "table": "sistema_logs",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "true",
+        "file": "20260714014000_reduce_public_session_log_writes.sql"
+      }
+    ],
+    "loja_pedido_itens": [
+      {
+        "name": "loja_pedido_itens_cliente_select",
+        "table": "loja_pedido_itens",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\n    AND public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260714056000_atomic_session_store_checkout.sql"
+      },
+      {
+        "name": "loja_pedido_itens_staff_select",
+        "table": "loja_pedido_itens",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_is_admin()",
+        "check": "",
+        "file": "20260714056000_atomic_session_store_checkout.sql"
+      }
+    ],
+    "gsa_voucher_resgates": [
+      {
+        "name": "gsa_client_own_voucher_redemptions_hardened",
+        "table": "gsa_voucher_resgates",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "produto_desconto_cota_movimentos": [
+      {
+        "name": "Movimentos somente admin/service",
+        "table": "produto_desconto_cota_movimentos",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "false",
+        "check": "false",
+        "file": "20260716184000_product_discount_quantity_limit.sql"
+      }
+    ],
+    "classificados_configuracoes": [
+      {
+        "name": "Public read classificados config",
+        "table": "classificados_configuracoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260717200000_hub_classificados_schema.sql"
+      }
+    ],
+    "classificados_comissoes_config": [
+      {
+        "name": "Public read classificados comissoes config",
+        "table": "classificados_comissoes_config",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260717200000_hub_classificados_schema.sql"
+      },
+      {
+        "name": "classificados_comissoes_config_leitura_autenticada",
+        "table": "classificados_comissoes_config",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "ativo = true",
+        "check": "",
+        "file": "20260721203000_classifieds_commission_config.sql"
+      }
+    ],
+    "classificados_anuncios": [
+      {
+        "name": "Public read active ads",
+        "table": "classificados_anuncios",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "status IN ('publicado', 'reservado', 'vendido')",
+        "check": "",
+        "file": "20260717200000_hub_classificados_schema.sql"
+      },
+      {
+        "name": "Seller read own ads",
+        "table": "classificados_anuncios",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "cliente_id = auth.uid()",
+        "check": "",
+        "file": "20260717200000_hub_classificados_schema.sql"
+      },
+      {
+        "name": "classificados_anuncios_publicados_select",
+        "table": "classificados_anuncios",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "status IN ('publicado','reservado','vendido') OR cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260721223000_classifieds_complete_operational_schema.sql"
+      }
+    ],
+    "classificados_anuncio_midias": [
+      {
+        "name": "Public read ad media",
+        "table": "classificados_anuncio_midias",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260717200000_hub_classificados_schema.sql"
+      }
+    ],
+    "classificados_propostas": [
+      {
+        "name": "Participants read own proposals",
+        "table": "classificados_propostas",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "comprador_id = auth.uid() OR vendedor_id = auth.uid()",
+        "check": "",
+        "file": "20260717200000_hub_classificados_schema.sql"
+      },
+      {
+        "name": "classificados_propostas_participantes_select",
+        "table": "classificados_propostas",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid() AND public.gsa_jwt_actor_id() IN (comprador_id, vendedor_id)",
+        "check": "",
+        "file": "20260721223000_classifieds_complete_operational_schema.sql"
+      }
+    ],
+    "classificados_transacoes": [
+      {
+        "name": "Participants read own transactions",
+        "table": "classificados_transacoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "comprador_id = auth.uid() OR vendedor_id = auth.uid()",
+        "check": "",
+        "file": "20260717200000_hub_classificados_schema.sql"
+      },
+      {
+        "name": "classificados_transacoes_participantes_select",
+        "table": "classificados_transacoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid() AND public.gsa_jwt_actor_id() IN (comprador_id, vendedor_id)",
+        "check": "",
+        "file": "20260721223000_classifieds_complete_operational_schema.sql"
+      }
+    ],
+    "classificados_comprovantes": [
+      {
+        "name": "Participants read own receipts",
+        "table": "classificados_comprovantes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "transacao_id IN (\n        SELECT id FROM public.classificados_transacoes WHERE comprador_id = auth.uid() OR vendedor_id = auth.uid()\n    )",
+        "check": "",
+        "file": "20260717200000_hub_classificados_schema.sql"
+      }
+    ],
+    "classificados_mensagens": [
+      {
+        "name": "Users read chat messages",
+        "table": "classificados_mensagens",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "remetente_id = auth.uid() OR (destinatario_id = auth.uid() AND status = 'approved')",
+        "check": "",
+        "file": "20260717200000_hub_classificados_schema.sql"
+      },
+      {
+        "name": "classificados_mensagens_participantes_select",
+        "table": "classificados_mensagens",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid() AND EXISTS (\r\n  SELECT 1 FROM public.classificados_propostas p\r\n  WHERE p.id = proposta_id AND public.gsa_jwt_actor_id() IN (p.comprador_id, p.vendedor_id)\r\n)",
+        "check": "",
+        "file": "20260721223000_classifieds_complete_operational_schema.sql"
+      }
+    ],
+    "classificados_comissoes": [
+      {
+        "name": "Seller read own commissions",
+        "table": "classificados_comissoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "vendedor_id = auth.uid()",
+        "check": "",
+        "file": "20260717200000_hub_classificados_schema.sql"
+      },
+      {
+        "name": "classificados_comissoes_vendedor_select",
+        "table": "classificados_comissoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid() AND vendedor_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260721223000_classifieds_complete_operational_schema.sql"
+      }
+    ],
+    "viagens_configuracoes": [
+      {
+        "name": "Leitura pública configuracoes",
+        "table": "viagens_configuracoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Leitura pública configuracoes",
+        "table": "viagens_configuracoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      }
+    ],
+    "viagens_pacotes": [
+      {
+        "name": "Leitura pacotes publicados",
+        "table": "viagens_pacotes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "status IN ('publicado', 'disponibilidade_sob_consulta', 'esgotado')",
+        "check": "",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Leitura pacotes publicados",
+        "table": "viagens_pacotes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "status IN ('publicado', 'disponibilidade_sob_consulta', 'esgotado')",
+        "check": "",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      }
+    ],
+    "viagens_pacote_imagens": [
+      {
+        "name": "Leitura imagens pacotes",
+        "table": "viagens_pacote_imagens",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Leitura imagens pacotes",
+        "table": "viagens_pacote_imagens",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      }
+    ],
+    "viagens_orcamentos": [
+      {
+        "name": "Cliente ve seus orcamentos",
+        "table": "viagens_orcamentos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id)",
+        "check": "",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente insere orcamentos",
+        "table": "viagens_orcamentos",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id) OR cliente_id IS NULL",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente ve seus orcamentos",
+        "table": "viagens_orcamentos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      },
+      {
+        "name": "Cliente ou visitante insere orcamentos",
+        "table": "viagens_orcamentos",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "(\r\n      cliente_id IS NULL\r\n      AND NULLIF(trim(nome), '') IS NOT NULL\r\n      AND NULLIF(trim(email), '') IS NOT NULL\r\n      AND NULLIF(trim(telefone), '') IS NOT NULL\r\n    )\r\n    OR (\r\n      public.gsa_jwt_session_is_valid()\r\n      AND public.gsa_jwt_actor_type() = 'cliente'\r\n      AND cliente_id = public.gsa_jwt_actor_id()\r\n    )",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      },
+      {
+        "name": "Cliente ou visitante insere orcamentos",
+        "table": "viagens_orcamentos",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "(\r\n      cliente_id IS NULL\r\n      AND NULLIF(trim(nome), '') IS NOT NULL\r\n      AND NULLIF(trim(email), '') IS NOT NULL\r\n      AND NULLIF(trim(telefone), '') IS NOT NULL\r\n    )\r\n    OR (\r\n      public.gsa_jwt_session_is_valid()\r\n      AND public.gsa_jwt_actor_type() = 'cliente'\r\n      AND cliente_id = public.gsa_jwt_actor_id()\r\n    )",
+        "file": "20260720123000_gsa_viagens_storage_and_quotes.sql"
+      },
+      {
+        "name": "Visitante insere orcamentos",
+        "table": "viagens_orcamentos",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "cliente_id IS NULL\r\n    AND NULLIF(trim(nome), '') IS NOT NULL\r\n    AND NULLIF(trim(email), '') IS NOT NULL\r\n    AND NULLIF(trim(telefone), '') IS NOT NULL",
+        "file": "20260720140000_gsa_viagens_hardening.sql"
+      },
+      {
+        "name": "Cliente insere seus orcamentos",
+        "table": "viagens_orcamentos",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "file": "20260720140000_gsa_viagens_hardening.sql"
+      }
+    ],
+    "viagens_solicitacoes_reserva": [
+      {
+        "name": "Cliente ve suas reservas",
+        "table": "viagens_solicitacoes_reserva",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id)",
+        "check": "",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente insere reservas",
+        "table": "viagens_solicitacoes_reserva",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id)",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente atualiza reservas",
+        "table": "viagens_solicitacoes_reserva",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id)",
+        "check": "",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente ve suas reservas",
+        "table": "viagens_solicitacoes_reserva",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      },
+      {
+        "name": "Cliente insere reservas",
+        "table": "viagens_solicitacoes_reserva",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      },
+      {
+        "name": "Cliente atualiza reservas",
+        "table": "viagens_solicitacoes_reserva",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      }
+    ],
+    "viagens_propostas": [
+      {
+        "name": "Cliente ve suas propostas",
+        "table": "viagens_propostas",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id)",
+        "check": "",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente atualiza suas propostas (aceite)",
+        "table": "viagens_propostas",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id)",
+        "check": "",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente ve suas propostas",
+        "table": "viagens_propostas",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      },
+      {
+        "name": "gsa_client_own_travel_proposals_hardened",
+        "table": "viagens_propostas",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "viagens_passageiros": [
+      {
+        "name": "Cliente ve seus passageiros",
+        "table": "viagens_passageiros",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id)",
+        "check": "",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente insere passageiros",
+        "table": "viagens_passageiros",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id)",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente atualiza passageiros",
+        "table": "viagens_passageiros",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id)",
+        "check": "",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente deleta passageiros",
+        "table": "viagens_passageiros",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id)",
+        "check": "",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente ve seus passageiros",
+        "table": "viagens_passageiros",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      },
+      {
+        "name": "Cliente insere passageiros",
+        "table": "viagens_passageiros",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_propostas proposta\r\n      WHERE proposta.id = proposta_id\r\n        AND proposta.cliente_id = public.gsa_jwt_actor_id()\r\n    )",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      },
+      {
+        "name": "Cliente atualiza passageiros",
+        "table": "viagens_passageiros",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      },
+      {
+        "name": "Cliente deleta passageiros",
+        "table": "viagens_passageiros",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      },
+      {
+        "name": "Cliente insere passageiros",
+        "table": "viagens_passageiros",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_propostas proposta\r\n      JOIN public.viagens_transacoes transacao\r\n        ON transacao.proposta_id = proposta.id\r\n      WHERE proposta.id = proposta_id\r\n        AND proposta.cliente_id = public.gsa_jwt_actor_id()\r\n        AND transacao.cliente_id = public.gsa_jwt_actor_id()\r\n        AND transacao.status = 'pendente'\r\n    )",
+        "file": "20260720140000_gsa_viagens_hardening.sql"
+      },
+      {
+        "name": "Cliente atualiza passageiros",
+        "table": "viagens_passageiros",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_transacoes transacao\r\n      WHERE transacao.proposta_id = proposta_id\r\n        AND transacao.cliente_id = public.gsa_jwt_actor_id()\r\n        AND transacao.status = 'pendente'\r\n    )",
+        "check": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_transacoes transacao\r\n      WHERE transacao.proposta_id = proposta_id\r\n        AND transacao.cliente_id = public.gsa_jwt_actor_id()\r\n        AND transacao.status = 'pendente'\r\n    )",
+        "file": "20260720140000_gsa_viagens_hardening.sql"
+      },
+      {
+        "name": "Cliente deleta passageiros",
+        "table": "viagens_passageiros",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_transacoes transacao\r\n      WHERE transacao.proposta_id = proposta_id\r\n        AND transacao.cliente_id = public.gsa_jwt_actor_id()\r\n        AND transacao.status = 'pendente'\r\n    )",
+        "check": "",
+        "file": "20260720140000_gsa_viagens_hardening.sql"
+      },
+      {
+        "name": "Cliente atualiza passageiros",
+        "table": "viagens_passageiros",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\n    AND public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()\n    AND EXISTS (\n      SELECT 1 FROM public.viagens_transacoes transacao\n      WHERE transacao.proposta_id = viagens_passageiros.proposta_id\n        AND transacao.cliente_id = public.gsa_jwt_actor_id()\n        AND transacao.status = 'pendente'\n    )",
+        "check": "public.gsa_jwt_session_is_valid()\n    AND public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()\n    AND EXISTS (\n      SELECT 1 FROM public.viagens_transacoes transacao\n      WHERE transacao.proposta_id = viagens_passageiros.proposta_id\n        AND transacao.cliente_id = public.gsa_jwt_actor_id()\n        AND transacao.status = 'pendente'\n    )",
+        "file": "20260830190000_admin_full_audit_security_remediation.sql"
+      },
+      {
+        "name": "Cliente deleta passageiros",
+        "table": "viagens_passageiros",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\n    AND public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()\n    AND EXISTS (\n      SELECT 1 FROM public.viagens_transacoes transacao\n      WHERE transacao.proposta_id = viagens_passageiros.proposta_id\n        AND transacao.cliente_id = public.gsa_jwt_actor_id()\n        AND transacao.status = 'pendente'\n    )",
+        "check": "",
+        "file": "20260830190000_admin_full_audit_security_remediation.sql"
+      }
+    ],
+    "viagens_passageiro_documentos": [
+      {
+        "name": "Cliente ve documentos seus passageiros",
+        "table": "viagens_passageiro_documentos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "passageiro_id IN (SELECT id FROM public.viagens_passageiros WHERE auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id))",
+        "check": "",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente insere documentos passageiros",
+        "table": "viagens_passageiro_documentos",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "passageiro_id IN (SELECT id FROM public.viagens_passageiros WHERE auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id))",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente deleta documentos passageiros",
+        "table": "viagens_passageiro_documentos",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "passageiro_id IN (SELECT id FROM public.viagens_passageiros WHERE auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id))",
+        "check": "",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente ve documentos seus passageiros",
+        "table": "viagens_passageiro_documentos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_passageiros passageiro\r\n      WHERE passageiro.id = passageiro_id\r\n        AND passageiro.cliente_id = public.gsa_jwt_actor_id()\r\n    )",
+        "check": "",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      },
+      {
+        "name": "Cliente insere documentos passageiros",
+        "table": "viagens_passageiro_documentos",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_passageiros passageiro\r\n      WHERE passageiro.id = passageiro_id\r\n        AND passageiro.cliente_id = public.gsa_jwt_actor_id()\r\n    )",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      },
+      {
+        "name": "Cliente deleta documentos passageiros",
+        "table": "viagens_passageiro_documentos",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_passageiros passageiro\r\n      WHERE passageiro.id = passageiro_id\r\n        AND passageiro.cliente_id = public.gsa_jwt_actor_id()\r\n    )",
+        "check": "",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      },
+      {
+        "name": "Cliente insere documentos passageiros",
+        "table": "viagens_passageiro_documentos",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_passageiros passageiro\r\n      JOIN public.viagens_transacoes transacao\r\n        ON transacao.proposta_id = passageiro.proposta_id\r\n      WHERE passageiro.id = passageiro_id\r\n        AND passageiro.cliente_id = public.gsa_jwt_actor_id()\r\n        AND transacao.cliente_id = public.gsa_jwt_actor_id()\r\n        AND transacao.status IN (\r\n          'pendente',\r\n          'pagamento_confirmado',\r\n          'compra_fornecedor_pendente',\r\n          'compra_fornecedor_em_andamento',\r\n          'pacote_adquirido',\r\n          'emissao_em_andamento'\r\n        )\r\n    )",
+        "file": "20260720140000_gsa_viagens_hardening.sql"
+      },
+      {
+        "name": "Cliente deleta documentos passageiros",
+        "table": "viagens_passageiro_documentos",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_passageiros passageiro\r\n      JOIN public.viagens_transacoes transacao\r\n        ON transacao.proposta_id = passageiro.proposta_id\r\n      WHERE passageiro.id = passageiro_id\r\n        AND passageiro.cliente_id = public.gsa_jwt_actor_id()\r\n        AND transacao.cliente_id = public.gsa_jwt_actor_id()\r\n        AND transacao.status IN (\r\n          'pendente',\r\n          'pagamento_confirmado',\r\n          'compra_fornecedor_pendente',\r\n          'compra_fornecedor_em_andamento',\r\n          'pacote_adquirido',\r\n          'emissao_em_andamento'\r\n        )\r\n    )",
+        "check": "",
+        "file": "20260720140000_gsa_viagens_hardening.sql"
+      }
+    ],
+    "viagens_transacoes": [
+      {
+        "name": "Cliente ve suas transacoes",
+        "table": "viagens_transacoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id)",
+        "check": "",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente ve suas transacoes",
+        "table": "viagens_transacoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      }
+    ],
+    "viagens_vouchers": [
+      {
+        "name": "Cliente ve seus vouchers",
+        "table": "viagens_vouchers",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "transacao_id IN (SELECT id FROM public.viagens_transacoes WHERE auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id))",
+        "check": "",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente ve seus vouchers",
+        "table": "viagens_vouchers",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_transacoes transacao\r\n      WHERE transacao.id = transacao_id\r\n        AND transacao.cliente_id = public.gsa_jwt_actor_id()\r\n    )",
+        "check": "",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      }
+    ],
+    "viagens_cancelamentos": [
+      {
+        "name": "Cliente ve seus cancelamentos",
+        "table": "viagens_cancelamentos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id)",
+        "check": "",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente solicita cancelamento",
+        "table": "viagens_cancelamentos",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "auth.uid() IN (SELECT user_id FROM public.clientes WHERE id = cliente_id)",
+        "file": "20260717220000_gsa_viagens_schema.sql"
+      },
+      {
+        "name": "Cliente ve seus cancelamentos",
+        "table": "viagens_cancelamentos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260720110000_gsa_viagens_custom_session_security.sql"
+      }
+    ],
+    "storage": [
+      {
+        "name": "gsa_saude_documentos_cliente_upload",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id='gsa-saude-documentos' AND (storage.foldername(name))[1]=coalesce(auth.jwt()->'app_metadata'->>'gsa_actor_id','')",
+        "file": "20260718120000_gsa_saude_complete.sql"
+      },
+      {
+        "name": "gsa_saude_documentos_cliente_read",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id='gsa-saude-documentos' AND ((storage.foldername(name))[1]=coalesce(auth.jwt()->'app_metadata'->>'gsa_actor_id','') OR coalesce(auth.jwt()->'app_metadata'->>'gsa_actor_type','') IN ('admin','colaborador'))",
+        "check": "",
+        "file": "20260718120000_gsa_saude_complete.sql"
+      },
+      {
+        "name": "gsa_saude_documentos_admin_manage",
+        "table": "storage",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id='gsa-saude-documentos' AND coalesce(auth.jwt()->'app_metadata'->>'gsa_actor_type','') IN ('admin','colaborador')",
+        "check": "bucket_id='gsa-saude-documentos' AND coalesce(auth.jwt()->'app_metadata'->>'gsa_actor_type','') IN ('admin','colaborador')",
+        "file": "20260718120000_gsa_saude_complete.sql"
+      },
+      {
+        "name": "gsa_seguros_documentos_cliente_upload",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id='gsa-seguros-documentos' AND (storage.foldername(name))[1]=coalesce(auth.jwt()->'app_metadata'->>'gsa_actor_id','')",
+        "file": "20260718121000_gsa_seguros_complete.sql"
+      },
+      {
+        "name": "gsa_seguros_documentos_cliente_read",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id='gsa-seguros-documentos' AND ((storage.foldername(name))[1]=coalesce(auth.jwt()->'app_metadata'->>'gsa_actor_id','') OR coalesce(auth.jwt()->'app_metadata'->>'gsa_actor_type','') IN ('admin','colaborador'))",
+        "check": "",
+        "file": "20260718121000_gsa_seguros_complete.sql"
+      },
+      {
+        "name": "gsa_seguros_documentos_admin_manage",
+        "table": "storage",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id='gsa-seguros-documentos' AND coalesce(auth.jwt()->'app_metadata'->>'gsa_actor_type','') IN ('admin','colaborador')",
+        "check": "bucket_id='gsa-seguros-documentos' AND coalesce(auth.jwt()->'app_metadata'->>'gsa_actor_type','') IN ('admin','colaborador')",
+        "file": "20260718121000_gsa_seguros_complete.sql"
+      },
+      {
+        "name": "Cliente envia documentos de viagem",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id = 'viagens-documentos'\r\n    AND public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND public.gsa_jwt_actor_id()::text = split_part(name, '/', 1)\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_passageiros passageiro\r\n      WHERE passageiro.id::text = split_part(name, '/', 2)\r\n        AND passageiro.cliente_id = public.gsa_jwt_actor_id()\r\n    )",
+        "file": "20260720123000_gsa_viagens_storage_and_quotes.sql"
+      },
+      {
+        "name": "Cliente le documentos de viagem",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'viagens-documentos'\r\n    AND public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND public.gsa_jwt_actor_id()::text = split_part(name, '/', 1)\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_passageiros passageiro\r\n      WHERE passageiro.id::text = split_part(name, '/', 2)\r\n        AND passageiro.cliente_id = public.gsa_jwt_actor_id()\r\n    )",
+        "check": "",
+        "file": "20260720123000_gsa_viagens_storage_and_quotes.sql"
+      },
+      {
+        "name": "Cliente remove documentos de viagem",
+        "table": "storage",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'viagens-documentos'\r\n    AND public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND public.gsa_jwt_actor_id()::text = split_part(name, '/', 1)\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_passageiros passageiro\r\n      WHERE passageiro.id::text = split_part(name, '/', 2)\r\n        AND passageiro.cliente_id = public.gsa_jwt_actor_id()\r\n    )",
+        "check": "",
+        "file": "20260720123000_gsa_viagens_storage_and_quotes.sql"
+      },
+      {
+        "name": "Cliente baixa vouchers de viagem",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'viagens-vouchers'\r\n    AND public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND public.gsa_jwt_actor_id()::text = split_part(name, '/', 1)\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_transacoes transacao\r\n      WHERE transacao.id::text = split_part(name, '/', 2)\r\n        AND transacao.cliente_id = public.gsa_jwt_actor_id()\r\n    )",
+        "check": "",
+        "file": "20260720123000_gsa_viagens_storage_and_quotes.sql"
+      },
+      {
+        "name": "Operacao GSA gerencia arquivos de viagem",
+        "table": "storage",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id IN ('viagens-documentos', 'viagens-vouchers')\r\n    AND public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+        "check": "bucket_id IN ('viagens-documentos', 'viagens-vouchers')\r\n    AND public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+        "file": "20260720123000_gsa_viagens_storage_and_quotes.sql"
+      },
+      {
+        "name": "Cliente envia documentos de viagem",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id = 'viagens-documentos'\r\n    AND public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND public.gsa_jwt_actor_id()::TEXT = split_part(name, '/', 1)\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_passageiros passageiro\r\n      JOIN public.viagens_transacoes transacao\r\n        ON transacao.proposta_id = passageiro.proposta_id\r\n      WHERE passageiro.id::TEXT = split_part(name, '/', 2)\r\n        AND passageiro.cliente_id = public.gsa_jwt_actor_id()\r\n        AND transacao.cliente_id = public.gsa_jwt_actor_id()\r\n        AND transacao.status IN (\r\n          'pendente',\r\n          'pagamento_confirmado',\r\n          'compra_fornecedor_pendente',\r\n          'compra_fornecedor_em_andamento',\r\n          'pacote_adquirido',\r\n          'emissao_em_andamento'\r\n        )\r\n    )",
+        "file": "20260720140000_gsa_viagens_hardening.sql"
+      },
+      {
+        "name": "Cliente remove documentos de viagem",
+        "table": "storage",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'viagens-documentos'\r\n    AND public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND public.gsa_jwt_actor_id()::TEXT = split_part(name, '/', 1)\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_passageiros passageiro\r\n      JOIN public.viagens_transacoes transacao\r\n        ON transacao.proposta_id = passageiro.proposta_id\r\n      WHERE passageiro.id::TEXT = split_part(name, '/', 2)\r\n        AND passageiro.cliente_id = public.gsa_jwt_actor_id()\r\n        AND transacao.cliente_id = public.gsa_jwt_actor_id()\r\n        AND transacao.status IN (\r\n          'pendente',\r\n          'pagamento_confirmado',\r\n          'compra_fornecedor_pendente',\r\n          'compra_fornecedor_em_andamento',\r\n          'pacote_adquirido',\r\n          'emissao_em_andamento'\r\n        )\r\n    )",
+        "check": "",
+        "file": "20260720140000_gsa_viagens_hardening.sql"
+      },
+      {
+        "name": "gsa_private_documents_admin_manage",
+        "table": "storage",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'gsa-private-documents'\r\n  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') IN ('admin', 'colaborador')",
+        "check": "bucket_id = 'gsa-private-documents'\r\n  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') IN ('admin', 'colaborador')",
+        "file": "20260720200000_private_service_support_documents.sql"
+      },
+      {
+        "name": "gsa_private_documents_client_insert",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id = 'gsa-private-documents'\r\n  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') = 'cliente'\r\n  AND (storage.foldername(name))[1] = 'clientes'\r\n  AND (storage.foldername(name))[2] = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')\r\n  AND (storage.foldername(name))[4] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'\r\n  AND (\r\n    (\r\n      (storage.foldername(name))[3] = 'ordens-servico'\r\n      AND EXISTS (\r\n        SELECT 1\r\n        FROM public.ordens_servico os\r\n        WHERE os.id = ((storage.foldername(name))[4])::uuid\r\n          AND os.cliente_id::text = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')\r\n      )\r\n    )\r\n    OR\r\n    (\r\n      (storage.foldername(name))[3] = 'tickets'\r\n      AND EXISTS (\r\n        SELECT 1\r\n        FROM public.tickets t\r\n        WHERE t.id = ((storage.foldername(name))[4])::uuid\r\n          AND t.cliente_id::text = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')\r\n      )\r\n    )\r\n  )",
+        "file": "20260720200000_private_service_support_documents.sql"
+      },
+      {
+        "name": "gsa_private_documents_client_select",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'gsa-private-documents'\r\n  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') = 'cliente'\r\n  AND (storage.foldername(name))[1] = 'clientes'\r\n  AND (storage.foldername(name))[2] = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')\r\n  AND (storage.foldername(name))[4] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'\r\n  AND (\r\n    (\r\n      (storage.foldername(name))[3] = 'ordens-servico'\r\n      AND EXISTS (\r\n        SELECT 1\r\n        FROM public.ordens_servico os\r\n        WHERE os.id = ((storage.foldername(name))[4])::uuid\r\n          AND os.cliente_id::text = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')\r\n      )\r\n    )\r\n    OR\r\n    (\r\n      (storage.foldername(name))[3] = 'tickets'\r\n      AND EXISTS (\r\n        SELECT 1\r\n        FROM public.tickets t\r\n        WHERE t.id = ((storage.foldername(name))[4])::uuid\r\n          AND t.cliente_id::text = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')\r\n      )\r\n    )\r\n  )",
+        "check": "",
+        "file": "20260720200000_private_service_support_documents.sql"
+      },
+      {
+        "name": "gsa_private_documents_client_delete",
+        "table": "storage",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'gsa-private-documents'\r\n  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') = 'cliente'\r\n  AND (storage.foldername(name))[1] = 'clientes'\r\n  AND (storage.foldername(name))[2] = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')\r\n  AND (storage.foldername(name))[3] IN ('ordens-servico', 'tickets')",
+        "check": "",
+        "file": "20260720200000_private_service_support_documents.sql"
+      },
+      {
+        "name": "gsa_private_documents_provider_insert",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id = 'gsa-private-documents'\r\n  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') = 'prestador'\r\n  AND (storage.foldername(name))[1] = 'prestadores'\r\n  AND (storage.foldername(name))[2] = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')\r\n  AND (storage.foldername(name))[3] = 'tickets'\r\n  AND (storage.foldername(name))[4] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'\r\n  AND EXISTS (\r\n    SELECT 1\r\n    FROM public.tickets t\r\n    WHERE t.id = ((storage.foldername(name))[4])::uuid\r\n      AND t.prestador_id::text = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')\r\n  )",
+        "file": "20260720200000_private_service_support_documents.sql"
+      },
+      {
+        "name": "gsa_private_documents_provider_select",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'gsa-private-documents'\r\n  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') = 'prestador'\r\n  AND (storage.foldername(name))[1] = 'prestadores'\r\n  AND (storage.foldername(name))[2] = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')\r\n  AND (storage.foldername(name))[3] = 'tickets'\r\n  AND (storage.foldername(name))[4] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'\r\n  AND EXISTS (\r\n    SELECT 1\r\n    FROM public.tickets t\r\n    WHERE t.id = ((storage.foldername(name))[4])::uuid\r\n      AND t.prestador_id::text = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')\r\n  )",
+        "check": "",
+        "file": "20260720200000_private_service_support_documents.sql"
+      },
+      {
+        "name": "gsa_private_documents_provider_delete",
+        "table": "storage",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'gsa-private-documents'\r\n  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') = 'prestador'\r\n  AND (storage.foldername(name))[1] = 'prestadores'\r\n  AND (storage.foldername(name))[2] = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')\r\n  AND (storage.foldername(name))[3] = 'tickets'",
+        "check": "",
+        "file": "20260720200000_private_service_support_documents.sql"
+      },
+      {
+        "name": "gsa_private_documents_provider_assigned_os_select",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'gsa-private-documents'\r\n  AND coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_type', '') = 'prestador'\r\n  AND (storage.foldername(name))[1] = 'clientes'\r\n  AND (storage.foldername(name))[3] = 'ordens-servico'\r\n  AND (storage.foldername(name))[4] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'\r\n  AND EXISTS (\r\n    SELECT 1\r\n    FROM public.prestador_demandas pd\r\n    WHERE pd.os_id = ((storage.foldername(name))[4])::uuid\r\n      AND pd.prestador_id::text = coalesce(auth.jwt() -> 'app_metadata' ->> 'gsa_actor_id', '')\r\n  )",
+        "check": "",
+        "file": "20260720200000_private_service_support_documents.sql"
+      },
+      {
+        "name": "GSA acessa documentos privados do cliente",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'documentos_cliente'\r\n  AND public.gsa_jwt_session_is_valid()\r\n  AND (\r\n    public.gsa_jwt_actor_type() IN ('admin', 'colaborador')\r\n    OR (\r\n      public.gsa_jwt_actor_type() IN ('cliente', 'prestador')\r\n      AND string_to_array(name, '/') @> ARRAY[public.gsa_jwt_actor_id()::TEXT]\r\n    )\r\n  )",
+        "check": "",
+        "file": "20260720203000_private_client_documents_storage.sql"
+      },
+      {
+        "name": "GSA envia documentos privados do cliente",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id = 'documentos_cliente'\r\n  AND public.gsa_jwt_session_is_valid()\r\n  AND (\r\n    public.gsa_jwt_actor_type() IN ('admin', 'colaborador')\r\n    OR (\r\n      public.gsa_jwt_actor_type() IN ('cliente', 'prestador')\r\n      AND string_to_array(name, '/') @> ARRAY[public.gsa_jwt_actor_id()::TEXT]\r\n    )\r\n  )",
+        "file": "20260720203000_private_client_documents_storage.sql"
+      },
+      {
+        "name": "GSA atualiza documentos privados do cliente",
+        "table": "storage",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'documentos_cliente'\r\n  AND public.gsa_jwt_session_is_valid()\r\n  AND (\r\n    public.gsa_jwt_actor_type() IN ('admin', 'colaborador')\r\n    OR (\r\n      public.gsa_jwt_actor_type() IN ('cliente', 'prestador')\r\n      AND string_to_array(name, '/') @> ARRAY[public.gsa_jwt_actor_id()::TEXT]\r\n    )\r\n  )",
+        "check": "bucket_id = 'documentos_cliente'\r\n  AND public.gsa_jwt_session_is_valid()\r\n  AND (\r\n    public.gsa_jwt_actor_type() IN ('admin', 'colaborador')\r\n    OR (\r\n      public.gsa_jwt_actor_type() IN ('cliente', 'prestador')\r\n      AND string_to_array(name, '/') @> ARRAY[public.gsa_jwt_actor_id()::TEXT]\r\n    )\r\n  )",
+        "file": "20260720203000_private_client_documents_storage.sql"
+      },
+      {
+        "name": "GSA exclui documentos privados do cliente",
+        "table": "storage",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'documentos_cliente'\r\n  AND public.gsa_jwt_session_is_valid()\r\n  AND (\r\n    public.gsa_jwt_actor_type() IN ('admin', 'colaborador')\r\n    OR (\r\n      public.gsa_jwt_actor_type() IN ('cliente', 'prestador')\r\n      AND string_to_array(name, '/') @> ARRAY[public.gsa_jwt_actor_id()::TEXT]\r\n    )\r\n  )",
+        "check": "",
+        "file": "20260720203000_private_client_documents_storage.sql"
+      },
+      {
+        "name": "provider_private_files_select",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id IN ('documentos_prestador', 'entregas_demandas')\r\n  AND (\r\n    public.gsa_current_actor_type() IN ('admin', 'colaborador')\r\n    OR (\r\n      public.gsa_current_actor_type() = 'prestador'\r\n      AND (storage.foldername(name))[1] = public.gsa_current_actor_id()::text\r\n    )\r\n  )",
+        "check": "",
+        "file": "20260720210000_harden_provider_portal.sql"
+      },
+      {
+        "name": "provider_private_files_insert",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id IN ('documentos_prestador', 'entregas_demandas')\r\n  AND public.gsa_current_actor_type() = 'prestador'\r\n  AND (storage.foldername(name))[1] = public.gsa_current_actor_id()::text",
+        "file": "20260720210000_harden_provider_portal.sql"
+      },
+      {
+        "name": "provider_private_files_update",
+        "table": "storage",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id IN ('documentos_prestador', 'entregas_demandas')\r\n  AND public.gsa_current_actor_type() = 'prestador'\r\n  AND (storage.foldername(name))[1] = public.gsa_current_actor_id()::text",
+        "check": "bucket_id IN ('documentos_prestador', 'entregas_demandas')\r\n  AND public.gsa_current_actor_type() = 'prestador'\r\n  AND (storage.foldername(name))[1] = public.gsa_current_actor_id()::text",
+        "file": "20260720210000_harden_provider_portal.sql"
+      },
+      {
+        "name": "provider_private_files_delete",
+        "table": "storage",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id IN ('documentos_prestador', 'entregas_demandas')\r\n  AND public.gsa_current_actor_type() = 'prestador'\r\n  AND (storage.foldername(name))[1] = public.gsa_current_actor_id()::text",
+        "check": "",
+        "file": "20260720210000_harden_provider_portal.sql"
+      },
+      {
+        "name": "provider_private_files_insert",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id IN ('documentos_prestador', 'entregas_demandas')\r\n  AND (\r\n    public.gsa_current_actor_type() IN ('admin', 'colaborador')\r\n    OR (\r\n      public.gsa_current_actor_type() = 'prestador'\r\n      AND (storage.foldername(name))[1] = public.gsa_current_actor_id()::text\r\n    )\r\n  )",
+        "file": "20260720211000_provider_storage_admin_access.sql"
+      },
+      {
+        "name": "provider_private_files_update",
+        "table": "storage",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id IN ('documentos_prestador', 'entregas_demandas')\r\n  AND (\r\n    public.gsa_current_actor_type() IN ('admin', 'colaborador')\r\n    OR (\r\n      public.gsa_current_actor_type() = 'prestador'\r\n      AND (storage.foldername(name))[1] = public.gsa_current_actor_id()::text\r\n    )\r\n  )",
+        "check": "bucket_id IN ('documentos_prestador', 'entregas_demandas')\r\n  AND (\r\n    public.gsa_current_actor_type() IN ('admin', 'colaborador')\r\n    OR (\r\n      public.gsa_current_actor_type() = 'prestador'\r\n      AND (storage.foldername(name))[1] = public.gsa_current_actor_id()::text\r\n    )\r\n  )",
+        "file": "20260720211000_provider_storage_admin_access.sql"
+      },
+      {
+        "name": "provider_private_files_delete",
+        "table": "storage",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id IN ('documentos_prestador', 'entregas_demandas')\r\n  AND (\r\n    public.gsa_current_actor_type() IN ('admin', 'colaborador')\r\n    OR (\r\n      public.gsa_current_actor_type() = 'prestador'\r\n      AND (storage.foldername(name))[1] = public.gsa_current_actor_id()::text\r\n    )\r\n  )",
+        "check": "",
+        "file": "20260720211000_provider_storage_admin_access.sql"
+      },
+      {
+        "name": "GSA acessa documentos privados do cliente",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "bucket_id = 'documentos_cliente' AND public.gsa_jwt_session_is_valid() AND (\r\n    public.gsa_jwt_actor_type() IN ('admin', 'colaborador') OR (\r\n      public.gsa_jwt_actor_type() IN ('cliente', 'prestador') AND (\r\n        split_part(name, '/', 1) = public.gsa_jwt_actor_id()::TEXT OR (\r\n          split_part(name, '/', 1) IN ('credito_documentos', 'credito_contratos', 'cliente_documentos', 'documentos', 'perfil', 'suporte', 'tickets')\r\n          AND split_part(name, '/', 2) = public.gsa_jwt_actor_id()::TEXT\r\n        )\r\n      )\r\n    )\r\n  )",
+        "check": "",
+        "file": "20260720232000_harden_client_portal_audit_findings.sql"
+      },
+      {
+        "name": "GSA envia documentos privados do cliente",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id = 'documentos_cliente' AND public.gsa_jwt_session_is_valid() AND (\r\n    public.gsa_jwt_actor_type() IN ('admin', 'colaborador') OR (\r\n      public.gsa_jwt_actor_type() IN ('cliente', 'prestador') AND (\r\n        split_part(name, '/', 1) = public.gsa_jwt_actor_id()::TEXT OR (\r\n          split_part(name, '/', 1) IN ('credito_documentos', 'credito_contratos', 'cliente_documentos', 'documentos', 'perfil', 'suporte', 'tickets')\r\n          AND split_part(name, '/', 2) = public.gsa_jwt_actor_id()::TEXT\r\n        )\r\n      )\r\n    )\r\n  )",
+        "file": "20260720232000_harden_client_portal_audit_findings.sql"
+      },
+      {
+        "name": "GSA atualiza documentos privados do cliente",
+        "table": "storage",
+        "command": "UPDATE",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "bucket_id = 'documentos_cliente' AND public.gsa_jwt_session_is_valid() AND (\r\n    public.gsa_jwt_actor_type() IN ('admin', 'colaborador') OR split_part(name, '/', 1) = public.gsa_jwt_actor_id()::TEXT OR (\r\n      split_part(name, '/', 1) IN ('credito_documentos', 'credito_contratos', 'cliente_documentos', 'documentos', 'perfil', 'suporte', 'tickets')\r\n      AND split_part(name, '/', 2) = public.gsa_jwt_actor_id()::TEXT\r\n    )\r\n  )",
+        "check": "bucket_id = 'documentos_cliente' AND public.gsa_jwt_session_is_valid() AND (\r\n    public.gsa_jwt_actor_type() IN ('admin', 'colaborador') OR split_part(name, '/', 1) = public.gsa_jwt_actor_id()::TEXT OR (\r\n      split_part(name, '/', 1) IN ('credito_documentos', 'credito_contratos', 'cliente_documentos', 'documentos', 'perfil', 'suporte', 'tickets')\r\n      AND split_part(name, '/', 2) = public.gsa_jwt_actor_id()::TEXT\r\n    )\r\n  )",
+        "file": "20260720232000_harden_client_portal_audit_findings.sql"
+      },
+      {
+        "name": "GSA exclui documentos privados do cliente",
+        "table": "storage",
+        "command": "DELETE",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "bucket_id = 'documentos_cliente' AND public.gsa_jwt_session_is_valid() AND (\r\n    public.gsa_jwt_actor_type() IN ('admin', 'colaborador') OR split_part(name, '/', 1) = public.gsa_jwt_actor_id()::TEXT OR (\r\n      split_part(name, '/', 1) IN ('credito_documentos', 'credito_contratos', 'cliente_documentos', 'documentos', 'perfil', 'suporte', 'tickets')\r\n      AND split_part(name, '/', 2) = public.gsa_jwt_actor_id()::TEXT\r\n    )\r\n  )",
+        "check": "",
+        "file": "20260720232000_harden_client_portal_audit_findings.sql"
+      },
+      {
+        "name": "provider_private_files_select",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id IN ('documentos_prestador', 'entregas_demandas')\r\n  AND (\r\n    public.gsa_current_actor_type() = 'admin'\r\n    OR (\r\n      public.gsa_current_actor_type() = 'colaborador'\r\n      AND (\r\n        (bucket_id = 'entregas_demandas' AND public.gsa_admin_has_module('operacoes'))\r\n        OR (\r\n          bucket_id = 'documentos_prestador'\r\n          AND (\r\n            ((storage.foldername(name))[2] = 'chat' AND public.gsa_admin_has_module('atendimento'))\r\n            OR ((storage.foldername(name))[2] <> 'chat' AND public.gsa_admin_has_module('cadastro'))\r\n          )\r\n        )\r\n      )\r\n    )\r\n    OR (\r\n      public.gsa_current_actor_type() = 'prestador'\r\n      AND (storage.foldername(name))[1] = public.gsa_current_actor_id()::text\r\n    )\r\n  )",
+        "check": "",
+        "file": "20260720233000_provider_portal_audit_hardening.sql"
+      },
+      {
+        "name": "provider_private_files_insert",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id IN ('documentos_prestador', 'entregas_demandas')\r\n  AND (\r\n    public.gsa_current_actor_type() = 'admin'\r\n    OR (\r\n      public.gsa_current_actor_type() = 'colaborador'\r\n      AND (\r\n        (bucket_id = 'entregas_demandas' AND public.gsa_admin_has_module('operacoes'))\r\n        OR (\r\n          bucket_id = 'documentos_prestador'\r\n          AND (\r\n            ((storage.foldername(name))[2] = 'chat' AND public.gsa_admin_has_module('atendimento'))\r\n            OR ((storage.foldername(name))[2] <> 'chat' AND public.gsa_admin_has_module('cadastro'))\r\n          )\r\n        )\r\n      )\r\n    )\r\n    OR (\r\n      public.gsa_current_actor_type() = 'prestador'\r\n      AND (storage.foldername(name))[1] = public.gsa_current_actor_id()::text\r\n    )\r\n  )",
+        "file": "20260720233000_provider_portal_audit_hardening.sql"
+      },
+      {
+        "name": "provider_private_files_update",
+        "table": "storage",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id IN ('documentos_prestador', 'entregas_demandas')\r\n  AND (\r\n    public.gsa_current_actor_type() = 'admin'\r\n    OR (\r\n      public.gsa_current_actor_type() = 'colaborador'\r\n      AND (\r\n        (bucket_id = 'entregas_demandas' AND public.gsa_admin_has_module('operacoes'))\r\n        OR (bucket_id = 'documentos_prestador' AND public.gsa_admin_has_module('cadastro'))\r\n      )\r\n    )\r\n    OR (\r\n      public.gsa_current_actor_type() = 'prestador'\r\n      AND (storage.foldername(name))[1] = public.gsa_current_actor_id()::text\r\n    )\r\n  )",
+        "check": "bucket_id IN ('documentos_prestador', 'entregas_demandas')\r\n  AND (\r\n    public.gsa_current_actor_type() = 'admin'\r\n    OR (\r\n      public.gsa_current_actor_type() = 'colaborador'\r\n      AND (\r\n        (bucket_id = 'entregas_demandas' AND public.gsa_admin_has_module('operacoes'))\r\n        OR (bucket_id = 'documentos_prestador' AND public.gsa_admin_has_module('cadastro'))\r\n      )\r\n    )\r\n    OR (\r\n      public.gsa_current_actor_type() = 'prestador'\r\n      AND (storage.foldername(name))[1] = public.gsa_current_actor_id()::text\r\n    )\r\n  )",
+        "file": "20260720233000_provider_portal_audit_hardening.sql"
+      },
+      {
+        "name": "provider_private_files_delete",
+        "table": "storage",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id IN ('documentos_prestador', 'entregas_demandas')\r\n  AND (\r\n    public.gsa_current_actor_type() = 'admin'\r\n    OR (\r\n      public.gsa_current_actor_type() = 'colaborador'\r\n      AND (\r\n        (bucket_id = 'entregas_demandas' AND public.gsa_admin_has_module('operacoes'))\r\n        OR (bucket_id = 'documentos_prestador' AND public.gsa_admin_has_module('cadastro'))\r\n      )\r\n    )\r\n    OR (\r\n      public.gsa_current_actor_type() = 'prestador'\r\n      AND (storage.foldername(name))[1] = public.gsa_current_actor_id()::text\r\n    )\r\n  )",
+        "check": "",
+        "file": "20260720233000_provider_portal_audit_hardening.sql"
+      },
+      {
+        "name": "gsa_admin_private_documents_select",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'gsa-private-documents'\r\n  AND public.gsa_private_document_read_allowed(name)",
+        "check": "",
+        "file": "20260721001500_private_admin_documents.sql"
+      },
+      {
+        "name": "gsa_admin_private_documents_insert",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id = 'gsa-private-documents'\r\n  AND public.gsa_admin_private_document_allowed(name)",
+        "file": "20260721001500_private_admin_documents.sql"
+      },
+      {
+        "name": "gsa_admin_private_documents_update",
+        "table": "storage",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'gsa-private-documents'\r\n  AND public.gsa_admin_private_document_allowed(name)",
+        "check": "bucket_id = 'gsa-private-documents'\r\n  AND public.gsa_admin_private_document_allowed(name)",
+        "file": "20260721001500_private_admin_documents.sql"
+      },
+      {
+        "name": "gsa_admin_private_documents_delete",
+        "table": "storage",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'gsa-private-documents'\r\n  AND public.gsa_admin_private_document_allowed(name)",
+        "check": "",
+        "file": "20260721001500_private_admin_documents.sql"
+      },
+      {
+        "name": "gsa_advertiser_creative_objects",
+        "table": "storage",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'gsa-ad-creatives'\r\n        AND (\r\n          split_part(name, '/', 1) = public.gsa_current_advertiser_id()::text\r\n          OR public.gsa_admin_has_module('anuncios')\r\n        )",
+        "check": "bucket_id = 'gsa-ad-creatives'\r\n        AND (\r\n          split_part(name, '/', 1) = public.gsa_current_advertiser_id()::text\r\n          OR public.gsa_admin_has_module('anuncios')\r\n        )",
+        "file": "20260721223100_complete_advertising_platform.sql"
+      },
+      {
+        "name": "supplier_documents_select",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'documentos_fornecedor' AND public.gsa_supplier_document_allowed(name, false)",
+        "check": "",
+        "file": "20260722021000_supplier_auth_and_onboarding.sql"
+      },
+      {
+        "name": "supplier_documents_insert",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id = 'documentos_fornecedor' AND public.gsa_supplier_document_allowed(name, true)",
+        "file": "20260722021000_supplier_auth_and_onboarding.sql"
+      },
+      {
+        "name": "supplier_documents_update",
+        "table": "storage",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'documentos_fornecedor' AND public.gsa_supplier_document_allowed(name, true)",
+        "check": "bucket_id = 'documentos_fornecedor' AND public.gsa_supplier_document_allowed(name, true)",
+        "file": "20260722021000_supplier_auth_and_onboarding.sql"
+      },
+      {
+        "name": "supplier_documents_delete",
+        "table": "storage",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'documentos_fornecedor' AND public.gsa_supplier_document_allowed(name, true)",
+        "check": "",
+        "file": "20260722021000_supplier_auth_and_onboarding.sql"
+      },
+      {
+        "name": "gsa_careers_resume_public_insert",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id = 'gsa-careers-resumes'\r\n  AND public.gsa_careers_resume_path_is_expected(name)",
+        "file": "20260722235959_harden_gsa_careers_flow.sql"
+      },
+      {
+        "name": "gsa_careers_resume_admin_select",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'gsa-careers-resumes'\r\n  AND public.gsa_careers_is_admin_actor()",
+        "check": "",
+        "file": "20260722235959_harden_gsa_careers_flow.sql"
+      },
+      {
+        "name": "gsa_site_campaign_assets_public_read",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'gsa-site-campaigns'",
+        "check": "",
+        "file": "20260724223300_site_campaigns_security.sql"
+      },
+      {
+        "name": "gsa_site_campaign_assets_admin_insert",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id = 'gsa-site-campaigns'\r\n  AND public.gsa_admin_has_module('avisos-campanhas')\r\n  AND name LIKE 'campaigns/%'",
+        "file": "20260724223300_site_campaigns_security.sql"
+      },
+      {
+        "name": "gsa_site_campaign_assets_admin_update",
+        "table": "storage",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'gsa-site-campaigns'\r\n  AND public.gsa_admin_has_module('avisos-campanhas')",
+        "check": "bucket_id = 'gsa-site-campaigns'\r\n  AND public.gsa_admin_has_module('avisos-campanhas')\r\n  AND name LIKE 'campaigns/%'",
+        "file": "20260724223300_site_campaigns_security.sql"
+      },
+      {
+        "name": "gsa_site_campaign_assets_admin_delete",
+        "table": "storage",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'gsa-site-campaigns'\r\n  AND public.gsa_admin_has_module('avisos-campanhas')",
+        "check": "",
+        "file": "20260724223300_site_campaigns_security.sql"
+      },
+      {
+        "name": "gsa_site_campaign_assets_admin_insert",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id = 'gsa-site-campaigns'\r\n  AND name LIKE 'campaigns/%'\r\n  AND (\r\n    public.gsa_site_campaign_has_action('create')\r\n    OR public.gsa_site_campaign_has_action('edit')\r\n  )",
+        "file": "20260724223700_site_campaigns_permission_hardening.sql"
+      },
+      {
+        "name": "gsa_site_campaign_assets_admin_update",
+        "table": "storage",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'gsa-site-campaigns'\r\n  AND (\r\n    public.gsa_site_campaign_has_action('create')\r\n    OR public.gsa_site_campaign_has_action('edit')\r\n  )",
+        "check": "bucket_id = 'gsa-site-campaigns'\r\n  AND name LIKE 'campaigns/%'\r\n  AND (\r\n    public.gsa_site_campaign_has_action('create')\r\n    OR public.gsa_site_campaign_has_action('edit')\r\n  )",
+        "file": "20260724223700_site_campaigns_permission_hardening.sql"
+      },
+      {
+        "name": "gsa_site_campaign_assets_admin_delete",
+        "table": "storage",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'gsa-site-campaigns'\r\n  AND public.gsa_site_campaign_has_action('delete')",
+        "check": "",
+        "file": "20260724223700_site_campaigns_permission_hardening.sql"
+      },
+      {
+        "name": "supplier_documents_select",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'documentos_fornecedor'\n  AND public.gsa_supplier_document_allowed(name, false)",
+        "check": "",
+        "file": "20260829232500_supplier_security_financial_hardening.sql"
+      },
+      {
+        "name": "supplier_documents_insert",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id = 'documentos_fornecedor'\n  AND public.gsa_supplier_document_allowed(name, true)",
+        "file": "20260829232500_supplier_security_financial_hardening.sql"
+      },
+      {
+        "name": "supplier_documents_update",
+        "table": "storage",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'documentos_fornecedor'\n  AND public.gsa_supplier_document_allowed(name, true)",
+        "check": "bucket_id = 'documentos_fornecedor'\n  AND public.gsa_supplier_document_allowed(name, true)",
+        "file": "20260829232500_supplier_security_financial_hardening.sql"
+      },
+      {
+        "name": "supplier_documents_delete",
+        "table": "storage",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'documentos_fornecedor'\n  AND public.gsa_supplier_document_allowed(name, true)",
+        "check": "",
+        "file": "20260829232500_supplier_security_financial_hardening.sql"
+      },
+      {
+        "name": "gsa_ad_creative_select",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id='gsa-ad-creatives' AND (\n    split_part(name,'/',1)=public.gsa_current_advertiser_id()::text\n    OR public.gsa_admin_has_module('anuncios')\n  )",
+        "check": "",
+        "file": "20260830003000_harden_advertising_end_to_end.sql"
+      },
+      {
+        "name": "gsa_ad_creative_insert",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id='gsa-ad-creatives'\n  AND name ~ '^[0-9a-f-]{36}/[0-9a-f-]{36}/[A-Za-z0-9][A-Za-z0-9._-]{0,180}$'\n  AND split_part(name,'/',1)=public.gsa_current_advertiser_id()::text\n  AND EXISTS (\n    SELECT 1 FROM public.gsa_ad_campaigns c\n    WHERE c.id::text=split_part(name,'/',2)\n      AND c.advertiser_id=public.gsa_current_advertiser_id()\n      AND c.status NOT IN ('completed','cancelled')\n  )",
+        "file": "20260830003000_harden_advertising_end_to_end.sql"
+      },
+      {
+        "name": "gsa_ad_creative_delete",
+        "table": "storage",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id='gsa-ad-creatives' AND (\n    public.gsa_admin_has_module('anuncios') OR (\n      split_part(name,'/',1)=public.gsa_current_advertiser_id()::text\n      AND NOT EXISTS (\n        SELECT 1 FROM public.gsa_ad_creatives cr\n        WHERE cr.storage_path=name AND cr.status IN ('pending_review','approved')\n      )\n    )\n  )",
+        "check": "",
+        "file": "20260830003000_harden_advertising_end_to_end.sql"
+      },
+      {
+        "name": "GSA acessa documentos privados do cliente",
+        "table": "storage",
+        "command": "SELECT",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "bucket_id = 'documentos_cliente'\n  AND public.gsa_jwt_session_is_valid()\n  AND (\n    public.gsa_jwt_actor_type() IN ('admin', 'colaborador')\n    OR split_part(name, '/', 1) = public.gsa_jwt_actor_id()::text\n    OR split_part(name, '/', 2) = public.gsa_jwt_actor_id()::text\n  )",
+        "check": "",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      },
+      {
+        "name": "GSA envia documentos privados do cliente",
+        "table": "storage",
+        "command": "INSERT",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "",
+        "check": "bucket_id = 'documentos_cliente'\n  AND public.gsa_jwt_session_is_valid()\n  AND (\n    public.gsa_jwt_actor_type() IN ('admin', 'colaborador')\n    OR split_part(name, '/', 1) = public.gsa_jwt_actor_id()::text\n    OR split_part(name, '/', 2) = public.gsa_jwt_actor_id()::text\n  )",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      },
+      {
+        "name": "GSA atualiza documentos privados do cliente",
+        "table": "storage",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "bucket_id = 'documentos_cliente'\n  AND public.gsa_jwt_session_is_valid()\n  AND (\n    public.gsa_jwt_actor_type() IN ('admin', 'colaborador')\n    OR split_part(name, '/', 1) = public.gsa_jwt_actor_id()::text\n    OR split_part(name, '/', 2) = public.gsa_jwt_actor_id()::text\n  )",
+        "check": "bucket_id = 'documentos_cliente'\n  AND public.gsa_jwt_session_is_valid()\n  AND (\n    public.gsa_jwt_actor_type() IN ('admin', 'colaborador')\n    OR split_part(name, '/', 1) = public.gsa_jwt_actor_id()::text\n    OR split_part(name, '/', 2) = public.gsa_jwt_actor_id()::text\n  )",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      },
+      {
+        "name": "GSA exclui documentos privados do cliente",
+        "table": "storage",
+        "command": "DELETE",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "bucket_id = 'documentos_cliente'\n  AND public.gsa_jwt_session_is_valid()\n  AND (\n    public.gsa_jwt_actor_type() IN ('admin', 'colaborador')\n    OR split_part(name, '/', 1) = public.gsa_jwt_actor_id()::text\n    OR split_part(name, '/', 2) = public.gsa_jwt_actor_id()::text\n  )",
+        "check": "",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      }
+    ],
+    "notificacao_leituras": [
+      {
+        "name": "notificacao_leituras_select_own",
+        "table": "notificacao_leituras",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "ator_tipo = public.gsa_current_actor_type()\r\n  AND ator_id = public.gsa_current_actor_id()",
+        "check": "",
+        "file": "20260720210000_harden_provider_portal.sql"
+      },
+      {
+        "name": "notificacao_leituras_insert_own",
+        "table": "notificacao_leituras",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "ator_tipo = public.gsa_current_actor_type()\r\n  AND ator_id = public.gsa_current_actor_id()",
+        "file": "20260720210000_harden_provider_portal.sql"
+      }
+    ],
+    "admin_notificacoes": [
+      {
+        "name": "collaborator_cannot_access_admin_notifications",
+        "table": "admin_notificacoes",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": true,
+        "using": "public.gsa_current_actor_type() <> 'colaborador'",
+        "check": "public.gsa_current_actor_type() <> 'colaborador'",
+        "file": "20260720213000_secure_collaborator_panel.sql"
+      },
+      {
+        "name": "gsa_admin_notifications_select_hardened",
+        "table": "admin_notificacoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_admin_notification_has_access(tipo,link)",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      },
+      {
+        "name": "gsa_admin_notifications_update_hardened",
+        "table": "admin_notificacoes",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_admin_notification_has_access(tipo,link)",
+        "check": "public.gsa_admin_notification_has_access(tipo,link)",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      },
+      {
+        "name": "gsa_admin_notifications_insert_hardened",
+        "table": "admin_notificacoes",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "(public.gsa_admin_context()->>'actor_type')='admin'",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      },
+      {
+        "name": "gsa_admin_notifications_delete_hardened",
+        "table": "admin_notificacoes",
+        "command": "DELETE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "(public.gsa_admin_context()->>'actor_type')='admin'",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "parceiros": [
+      {
+        "name": "parceiros_public_read_active",
+        "table": "parceiros",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "status = 'ativo'",
+        "check": "",
+        "file": "20260721110000_create_public_partners.sql"
+      },
+      {
+        "name": "gsa_management_partners",
+        "table": "parceiros",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+        "check": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+        "file": "20260830190000_admin_full_audit_security_remediation.sql"
+      },
+      {
+        "name": "gsa_collaborator_module_parceiros",
+        "table": "parceiros",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": true,
+        "using": "public.gsa_admin_restrict_collaborator_to_module('parceiros')",
+        "check": "public.gsa_admin_restrict_collaborator_to_module('parceiros')",
+        "file": "20260830190000_admin_full_audit_security_remediation.sql"
+      },
+      {
+        "name": "parceiros_service_role_read_active",
+        "table": "parceiros",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "status = 'ativo'",
+        "check": "",
+        "file": "20260831140000_fix_partner_bot_service_role_read.sql"
+      }
+    ],
+    "parceiros_resgates": [
+      {
+        "name": "parceiros_resgates_admin_all",
+        "table": "parceiros_resgates",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260721120000_partner_benefit_redemption.sql"
+      }
+    ],
+    "viagens_transacao_parcelas": [
+      {
+        "name": "Cliente ve parcelas de suas viagens",
+        "table": "viagens_transacao_parcelas",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_session_is_valid()\r\n    AND public.gsa_jwt_actor_type() = 'cliente'\r\n    AND EXISTS (\r\n      SELECT 1\r\n      FROM public.viagens_transacoes transacao\r\n      WHERE transacao.id = transacao_id\r\n        AND transacao.cliente_id = public.gsa_jwt_actor_id()\r\n    )",
+        "check": "",
+        "file": "20260721150000_gsa_viagens_financial_integrity.sql"
+      }
+    ],
+    "gsa_advertisers": [
+      {
+        "name": "gsa_ads_read_advertisers",
+        "table": "gsa_advertisers",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "auth_user_id = auth.uid() OR public.gsa_admin_has_module('anuncios')",
+        "check": "",
+        "file": "20260830003000_harden_advertising_end_to_end.sql"
+      }
+    ],
+    "gsa_ad_placements": [
+      {
+        "name": "gsa_ads_read_placements",
+        "table": "gsa_ad_placements",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_admin_has_module('anuncios')",
+        "check": "",
+        "file": "20260830003000_harden_advertising_end_to_end.sql"
+      }
+    ],
+    "gsa_ad_requests": [
+      {
+        "name": "gsa_ads_read_requests",
+        "table": "gsa_ad_requests",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "advertiser_id = public.gsa_current_advertiser_id() OR public.gsa_admin_has_module('anuncios')",
+        "check": "",
+        "file": "20260830003000_harden_advertising_end_to_end.sql"
+      }
+    ],
+    "gsa_ad_proposals": [
+      {
+        "name": "gsa_ads_read_proposals",
+        "table": "gsa_ad_proposals",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_admin_has_module('anuncios') OR EXISTS (\n  SELECT 1 FROM public.gsa_ad_requests r\n  WHERE r.id = gsa_ad_proposals.request_id AND r.advertiser_id = public.gsa_current_advertiser_id()\n)",
+        "check": "",
+        "file": "20260830003000_harden_advertising_end_to_end.sql"
+      }
+    ],
+    "gsa_ad_negotiations": [
+      {
+        "name": "gsa_ads_read_negotiations",
+        "table": "gsa_ad_negotiations",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_admin_has_module('anuncios') OR EXISTS (\n  SELECT 1 FROM public.gsa_ad_proposals p\n  JOIN public.gsa_ad_requests r ON r.id = p.request_id\n  WHERE p.id = gsa_ad_negotiations.proposal_id AND r.advertiser_id = public.gsa_current_advertiser_id()\n)",
+        "check": "",
+        "file": "20260830003000_harden_advertising_end_to_end.sql"
+      }
+    ],
+    "gsa_ad_campaigns": [
+      {
+        "name": "gsa_ads_read_campaigns",
+        "table": "gsa_ad_campaigns",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "advertiser_id = public.gsa_current_advertiser_id() OR public.gsa_admin_has_module('anuncios')",
+        "check": "",
+        "file": "20260830003000_harden_advertising_end_to_end.sql"
+      }
+    ],
+    "gsa_ad_creatives": [
+      {
+        "name": "gsa_ads_read_creatives",
+        "table": "gsa_ad_creatives",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_admin_has_module('anuncios') OR EXISTS (\n  SELECT 1 FROM public.gsa_ad_campaigns c\n  WHERE c.id = gsa_ad_creatives.campaign_id AND c.advertiser_id = public.gsa_current_advertiser_id()\n)",
+        "check": "",
+        "file": "20260830003000_harden_advertising_end_to_end.sql"
+      }
+    ],
+    "classificados_midias": [
+      {
+        "name": "classificados_midias_visiveis_select",
+        "table": "classificados_midias",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "EXISTS (\r\n  SELECT 1 FROM public.classificados_anuncios a\r\n  WHERE a.id = anuncio_id\r\n    AND (a.status IN ('publicado','reservado','vendido') OR a.cliente_id = public.gsa_jwt_actor_id())\r\n)",
+        "check": "",
+        "file": "20260721223000_classifieds_complete_operational_schema.sql"
+      }
+    ],
+    "gsa_ad_payments": [
+      {
+        "name": "gsa_ads_read_payments",
+        "table": "gsa_ad_payments",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_admin_has_module('anuncios') OR EXISTS (\n  SELECT 1 FROM public.gsa_ad_campaigns c\n  WHERE c.id = gsa_ad_payments.campaign_id AND c.advertiser_id = public.gsa_current_advertiser_id()\n)",
+        "check": "",
+        "file": "20260830003000_harden_advertising_end_to_end.sql"
+      }
+    ],
+    "classificados_ajustes": [
+      {
+        "name": "classificados_ajustes_cliente_select",
+        "table": "classificados_ajustes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "EXISTS (\r\n    SELECT 1 FROM public.classificados_anuncios a\r\n    WHERE a.id = anuncio_id AND a.cliente_id = public.gsa_jwt_actor_id()\r\n  )",
+        "check": "",
+        "file": "20260721233000_classifieds_review_adjustment_flow.sql"
+      }
+    ],
+    "gsa_afiliado_programas": [
+      {
+        "name": "gsa_affiliate_programs_public_read",
+        "table": "gsa_afiliado_programas",
+        "command": "SELECT",
+        "roles": "anon, authenticated",
+        "restrictive": false,
+        "using": "ativo",
+        "check": "",
+        "file": "20260830010000_harden_affiliate_program_end_to_end.sql"
+      }
+    ],
+    "gsa_afiliados": [
+      {
+        "name": "gsa_affiliates_own_read",
+        "table": "gsa_afiliados",
+        "command": "SELECT",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830010000_harden_affiliate_program_end_to_end.sql"
+      }
+    ],
+    "gsa_afiliado_links": [
+      {
+        "name": "gsa_affiliate_links_own_read",
+        "table": "gsa_afiliado_links",
+        "command": "SELECT",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "EXISTS (\n  SELECT 1 FROM public.gsa_afiliados a\n  WHERE a.id = afiliado_id AND a.cliente_id = public.gsa_jwt_actor_id()\n)",
+        "check": "",
+        "file": "20260830010000_harden_affiliate_program_end_to_end.sql"
+      }
+    ],
+    "gsa_afiliado_cliques": [
+      {
+        "name": "gsa_affiliate_clicks_own_read",
+        "table": "gsa_afiliado_cliques",
+        "command": "SELECT",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "EXISTS (\n  SELECT 1 FROM public.gsa_afiliado_links l\n  JOIN public.gsa_afiliados a ON a.id = l.afiliado_id\n  WHERE l.id = link_id AND a.cliente_id = public.gsa_jwt_actor_id()\n)",
+        "check": "",
+        "file": "20260830010000_harden_affiliate_program_end_to_end.sql"
+      }
+    ],
+    "gsa_afiliado_atribuicoes": [
+      {
+        "name": "gsa_affiliate_attributions_own_read",
+        "table": "gsa_afiliado_atribuicoes",
+        "command": "SELECT",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "EXISTS (\n  SELECT 1 FROM public.gsa_afiliados a\n  WHERE a.id = afiliado_id AND a.cliente_id = public.gsa_jwt_actor_id()\n)",
+        "check": "",
+        "file": "20260830010000_harden_affiliate_program_end_to_end.sql"
+      }
+    ],
+    "gsa_afiliado_conversoes": [
+      {
+        "name": "gsa_affiliate_conversions_own_read",
+        "table": "gsa_afiliado_conversoes",
+        "command": "SELECT",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "EXISTS (\n  SELECT 1 FROM public.gsa_afiliados a\n  WHERE a.id = afiliado_id AND a.cliente_id = public.gsa_jwt_actor_id()\n)",
+        "check": "",
+        "file": "20260830010000_harden_affiliate_program_end_to_end.sql"
+      }
+    ],
+    "gsa_afiliado_comissoes": [
+      {
+        "name": "gsa_affiliate_commissions_own_read",
+        "table": "gsa_afiliado_comissoes",
+        "command": "SELECT",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "EXISTS (\n  SELECT 1 FROM public.gsa_afiliados a\n  WHERE a.id = afiliado_id AND a.cliente_id = public.gsa_jwt_actor_id()\n)",
+        "check": "",
+        "file": "20260830010000_harden_affiliate_program_end_to_end.sql"
+      }
+    ],
+    "gsa_afiliado_saques": [
+      {
+        "name": "gsa_affiliate_payouts_own_read",
+        "table": "gsa_afiliado_saques",
+        "command": "SELECT",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "EXISTS (\n  SELECT 1 FROM public.gsa_afiliados a\n  WHERE a.id = afiliado_id AND a.cliente_id = public.gsa_jwt_actor_id()\n)",
+        "check": "",
+        "file": "20260830010000_harden_affiliate_program_end_to_end.sql"
+      }
+    ],
+    "gsa_afiliado_comissao_eventos": [
+      {
+        "name": "gsa_affiliate_events_own_read",
+        "table": "gsa_afiliado_comissao_eventos",
+        "command": "SELECT",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "EXISTS (\n  SELECT 1 FROM public.gsa_afiliados a\n  WHERE a.id = afiliado_id AND a.cliente_id = public.gsa_jwt_actor_id()\n)",
+        "check": "",
+        "file": "20260830010000_harden_affiliate_program_end_to_end.sql"
+      }
+    ],
+    "gsa_careers_applications": [
+      {
+        "name": "gsa_careers_admin_all",
+        "table": "gsa_careers_applications",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260722180000_create_gsa_careers_foundation.sql"
+      },
+      {
+        "name": "gsa_careers_public_select",
+        "table": "gsa_careers_applications",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260722195000_gsa_careers_public_read_rpc.sql"
+      }
+    ],
+    "gsa_afiliado_pontos_eventos": [
+      {
+        "name": "gsa_affiliate_points_own_read",
+        "table": "gsa_afiliado_pontos_eventos",
+        "command": "SELECT",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "cliente_id = public.gsa_jwt_actor_id()\n  OR EXISTS (\n    SELECT 1 FROM public.gsa_afiliados a\n    WHERE a.id = afiliado_id AND a.cliente_id = public.gsa_jwt_actor_id()\n  )",
+        "check": "",
+        "file": "20260830010000_harden_affiliate_program_end_to_end.sql"
+      }
+    ],
+    "cliente_notas_admin": [
+      {
+        "name": "Allow all cliente_notas_admin",
+        "table": "cliente_notas_admin",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260723120000_system_db_alignment.sql"
+      }
+    ],
+    "loja_categorias": [
+      {
+        "name": "Public Read loja_categorias",
+        "table": "loja_categorias",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260723120000_system_db_alignment.sql"
+      }
+    ],
+    "whatsapp_pendencias_ativas": [
+      {
+        "name": "Admins read all whatsapp_pendencias_ativas",
+        "table": "whatsapp_pendencias_ativas",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "EXISTS (SELECT 1 FROM admins WHERE id = auth.uid()) OR\r\n    EXISTS (SELECT 1 FROM colaboradores WHERE id = auth.uid())",
+        "check": "",
+        "file": "20260803172000_whatsapp_bidirectional_pendencies.sql"
+      },
+      {
+        "name": "whatsapp_pendencias_auth_read",
+        "table": "whatsapp_pendencias_ativas",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260826220000_production_remediation_consolidated.sql"
+      },
+      {
+        "name": "whatsapp_pendencias_all_access",
+        "table": "whatsapp_pendencias_ativas",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260826220000_production_remediation_consolidated.sql"
+      }
+    ],
+    "gsa_whatsapp_ramais": [
+      {
+        "name": "Permitir leitura publica de ramais ativos",
+        "table": "gsa_whatsapp_ramais",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260807123000_create_whatsapp_ramais_table.sql"
+      },
+      {
+        "name": "Permitir gestao total por usuarios autenticados",
+        "table": "gsa_whatsapp_ramais",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "auth.role() IN ('authenticated', 'service_role')",
+        "check": "",
+        "file": "20260807123000_create_whatsapp_ramais_table.sql"
+      }
+    ],
+    "gsa_hero_banners": [
+      {
+        "name": "Public can view active hero banners",
+        "table": "gsa_hero_banners",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "is_active = true\r\n    AND (starts_at IS NULL OR starts_at <= now())\r\n    AND (ends_at IS NULL OR ends_at >= now())",
+        "check": "",
+        "file": "20260812090000_create_gsa_hero_banners.sql"
+      },
+      {
+        "name": "Admins and Service Role full access hero banners",
+        "table": "gsa_hero_banners",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260812090000_create_gsa_hero_banners.sql"
+      },
+      {
+        "name": "Public can view active hero banners",
+        "table": "gsa_hero_banners",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "is_active = true\n    AND (starts_at IS NULL OR starts_at <= now())\n    AND (ends_at IS NULL OR ends_at >= now())",
+        "check": "",
+        "file": "20260826220000_production_remediation_consolidated.sql"
+      },
+      {
+        "name": "Admins and Service Role full access hero banners",
+        "table": "gsa_hero_banners",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260826220000_production_remediation_consolidated.sql"
+      }
+    ],
+    "loja_avaliacoes": [
+      {
+        "name": "Permitir leitura pública de avaliações aprovadas",
+        "table": "loja_avaliacoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "status = 'aprovado' OR auth.role() = 'service_role'",
+        "check": "",
+        "file": "20260812140000_product_reviews_and_ratings_system.sql"
+      },
+      {
+        "name": "Permitir inserção de avaliações",
+        "table": "loja_avaliacoes",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "true",
+        "file": "20260812140000_product_reviews_and_ratings_system.sql"
+      },
+      {
+        "name": "Permitir atualização de curtidas úteis",
+        "table": "loja_avaliacoes",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260812140000_product_reviews_and_ratings_system.sql"
+      }
+    ],
+    "loja_vaquinhas": [
+      {
+        "name": "Public can view vaquinhas",
+        "table": "loja_vaquinhas",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260814103000_setup_group_gift_vaquinhas.sql"
+      },
+      {
+        "name": "Public can insert vaquinhas",
+        "table": "loja_vaquinhas",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "true",
+        "file": "20260814103000_setup_group_gift_vaquinhas.sql"
+      },
+      {
+        "name": "Public can update vaquinhas",
+        "table": "loja_vaquinhas",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260814103000_setup_group_gift_vaquinhas.sql"
+      },
+      {
+        "name": "loja_vaquinhas_public_access",
+        "table": "loja_vaquinhas",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260826220000_production_remediation_consolidated.sql"
+      }
+    ],
+    "loja_vaquinha_contribuicoes": [
+      {
+        "name": "Public can view contribuicoes",
+        "table": "loja_vaquinha_contribuicoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260814103000_setup_group_gift_vaquinhas.sql"
+      },
+      {
+        "name": "Public can insert contribuicoes",
+        "table": "loja_vaquinha_contribuicoes",
+        "command": "INSERT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "",
+        "check": "true",
+        "file": "20260814103000_setup_group_gift_vaquinhas.sql"
+      },
+      {
+        "name": "Public can update contribuicoes",
+        "table": "loja_vaquinha_contribuicoes",
+        "command": "UPDATE",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260814103000_setup_group_gift_vaquinhas.sql"
+      },
+      {
+        "name": "loja_vaquinha_contribuicoes_public_access",
+        "table": "loja_vaquinha_contribuicoes",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260826220000_production_remediation_consolidated.sql"
+      }
+    ],
+    "loja_favoritos": [
+      {
+        "name": "cliente_select_loja_favoritos",
+        "table": "loja_favoritos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260814120000_loja_favoritos_persistence.sql"
+      },
+      {
+        "name": "admin_all_loja_favoritos",
+        "table": "loja_favoritos",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260814120000_loja_favoritos_persistence.sql"
+      },
+      {
+        "name": "gsa_client_own_favoritos",
+        "table": "loja_favoritos",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "file": "20260910233000_client_panel_rls_hardening.sql"
+      },
+      {
+        "name": "gsa_management_favoritos",
+        "table": "loja_favoritos",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+        "check": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+        "file": "20260910233000_client_panel_rls_hardening.sql"
+      }
+    ],
+    "produto_variacao_grupos": [
+      {
+        "name": "produto_variacao_grupos_catalogo_select",
+        "table": "produto_variacao_grupos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "EXISTS (\n    SELECT 1 FROM public.produtos p\n    WHERE p.id = produto_variacao_grupos.produto_id\n      AND p.status = 'ativo' AND p.visivel_na_loja = true\n  )",
+        "check": "",
+        "file": "20260817120000_product_variations_marketplace.sql"
+      }
+    ],
+    "produto_variacao_opcoes": [
+      {
+        "name": "produto_variacao_opcoes_catalogo_select",
+        "table": "produto_variacao_opcoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "EXISTS (\n    SELECT 1\n    FROM public.produto_variacao_grupos g\n    JOIN public.produtos p ON p.id = g.produto_id\n    WHERE g.id = produto_variacao_opcoes.grupo_id\n      AND p.status = 'ativo' AND p.visivel_na_loja = true\n  )",
+        "check": "",
+        "file": "20260817120000_product_variations_marketplace.sql"
+      }
+    ],
+    "produto_variantes": [
+      {
+        "name": "produto_variantes_catalogo_select",
+        "table": "produto_variantes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "ativo AND EXISTS (\n    SELECT 1 FROM public.produtos p\n    WHERE p.id = produto_variantes.produto_id\n      AND p.status = 'ativo' AND p.visivel_na_loja = true\n  )",
+        "check": "",
+        "file": "20260817120000_product_variations_marketplace.sql"
+      }
+    ],
+    "produto_variante_opcoes": [
+      {
+        "name": "produto_variante_opcoes_catalogo_select",
+        "table": "produto_variante_opcoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "EXISTS (\n    SELECT 1\n    FROM public.produto_variantes v\n    JOIN public.produtos p ON p.id = v.produto_id\n    WHERE v.id = produto_variante_opcoes.variante_id\n      AND v.ativo AND p.status = 'ativo' AND p.visivel_na_loja = true\n  )",
+        "check": "",
+        "file": "20260817120000_product_variations_marketplace.sql"
+      }
+    ],
+    "contratos": [
+      {
+        "name": "contratos_admin_access",
+        "table": "contratos",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260826220000_production_remediation_consolidated.sql"
+      },
+      {
+        "name": "contratos_anon_select",
+        "table": "contratos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260826220000_production_remediation_consolidated.sql"
+      },
+      {
+        "name": "gsa_client_own_contracts_hardened",
+        "table": "contratos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "prestador_promocoes": [
+      {
+        "name": "gsa_provider_promotions_read_hardened",
+        "table": "prestador_promocoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='prestador'",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "gsa_tv_channels": [
+      {
+        "name": "gsa_tv_channels_public_read",
+        "table": "gsa_tv_channels",
+        "command": "SELECT",
+        "roles": "anon, authenticated, service_role",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260826233000_db_rpc_integrity_remediation.sql"
+      },
+      {
+        "name": "gsa_tv_channels_admin_write",
+        "table": "gsa_tv_channels",
+        "command": "ALL",
+        "roles": "authenticated, service_role",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260826233000_db_rpc_integrity_remediation.sql"
+      }
+    ],
+    "gsa_tv_media_items": [
+      {
+        "name": "gsa_tv_media_public_read",
+        "table": "gsa_tv_media_items",
+        "command": "SELECT",
+        "roles": "anon, authenticated, service_role",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260826233000_db_rpc_integrity_remediation.sql"
+      },
+      {
+        "name": "gsa_tv_media_admin_write",
+        "table": "gsa_tv_media_items",
+        "command": "ALL",
+        "roles": "authenticated, service_role",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260826233000_db_rpc_integrity_remediation.sql"
+      }
+    ],
+    "gsa_tv_schedule_slots": [
+      {
+        "name": "gsa_tv_schedule_public_read",
+        "table": "gsa_tv_schedule_slots",
+        "command": "SELECT",
+        "roles": "anon, authenticated, service_role",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260826233000_db_rpc_integrity_remediation.sql"
+      },
+      {
+        "name": "gsa_tv_schedule_admin_write",
+        "table": "gsa_tv_schedule_slots",
+        "command": "ALL",
+        "roles": "authenticated, service_role",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260826233000_db_rpc_integrity_remediation.sql"
+      }
+    ],
+    "gsa_tv_playlists": [
+      {
+        "name": "gsa_tv_playlists_admin_access",
+        "table": "gsa_tv_playlists",
+        "command": "ALL",
+        "roles": "authenticated, service_role",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260826233000_db_rpc_integrity_remediation.sql"
+      }
+    ],
+    "gsa_tv_incidents": [
+      {
+        "name": "gsa_tv_incidents_admin_access",
+        "table": "gsa_tv_incidents",
+        "command": "ALL",
+        "roles": "authenticated, service_role",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260826233000_db_rpc_integrity_remediation.sql"
+      }
+    ],
+    "gsa_tv_audit_log": [
+      {
+        "name": "gsa_tv_audit_log_admin_access",
+        "table": "gsa_tv_audit_log",
+        "command": "ALL",
+        "roles": "authenticated, service_role",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260826233000_db_rpc_integrity_remediation.sql"
+      }
+    ],
+    "gsa_tv_jobs": [
+      {
+        "name": "gsa_tv_jobs_admin_access",
+        "table": "gsa_tv_jobs",
+        "command": "ALL",
+        "roles": "authenticated, service_role",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260826233000_db_rpc_integrity_remediation.sql"
+      }
+    ],
+    "parceiros_resgates_public_status": [
+      {
+        "name": "parceiros_resgates_public_status_read",
+        "table": "parceiros_resgates_public_status",
+        "command": "SELECT",
+        "roles": "anon, authenticated",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260828170000_partner_redemption_appeals.sql"
+      }
+    ],
+    "gsa_afiliado_transferencias": [
+      {
+        "name": "gsa_afiliado_transferencias_no_direct_access",
+        "table": "gsa_afiliado_transferencias",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "false",
+        "check": "false",
+        "file": "20260828214500_affiliate_balance_transfers.sql"
+      },
+      {
+        "name": "gsa_affiliate_transfers_own_read",
+        "table": "gsa_afiliado_transferencias",
+        "command": "SELECT",
+        "roles": "authenticated",
+        "restrictive": false,
+        "using": "EXISTS (\n    SELECT 1 FROM public.gsa_afiliados a\n    WHERE a.cliente_id = public.gsa_jwt_actor_id()\n      AND a.id IN (remetente_afiliado_id, destinatario_afiliado_id)\n  )",
+        "check": "",
+        "file": "20260830010000_harden_affiliate_program_end_to_end.sql"
+      }
+    ],
+    "cobrancas": [
+      {
+        "name": "service_role_all_cobrancas",
+        "table": "cobrancas",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260828230000_security_lockdown_rls_and_rpc_permissions.sql"
+      },
+      {
+        "name": "gsa_client_own_cobrancas_hardened",
+        "table": "cobrancas",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "cobranca_historico": [
+      {
+        "name": "service_role_all_cobranca_historico",
+        "table": "cobranca_historico",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260828230000_security_lockdown_rls_and_rpc_permissions.sql"
+      },
+      {
+        "name": "gsa_client_own_cobranca_historico_hardened",
+        "table": "cobranca_historico",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND EXISTS (SELECT 1 FROM public.cobrancas c WHERE c.id=cobranca_id AND c.cliente_id=public.gsa_jwt_actor_id())",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "loja_credito_solicitacoes": [
+      {
+        "name": "service_role_all_loja_credito_solicitacoes",
+        "table": "loja_credito_solicitacoes",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260828230000_security_lockdown_rls_and_rpc_permissions.sql"
+      },
+      {
+        "name": "gsa_client_own_credit_requests_read",
+        "table": "loja_credito_solicitacoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente' AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      }
+    ],
+    "loja_credito_movimentacoes": [
+      {
+        "name": "service_role_all_loja_credito_movimentacoes",
+        "table": "loja_credito_movimentacoes",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260828230000_security_lockdown_rls_and_rpc_permissions.sql"
+      },
+      {
+        "name": "gsa_client_own_credit_moves_hardened",
+        "table": "loja_credito_movimentacoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "loja_credito_documentos": [
+      {
+        "name": "service_role_all_loja_credito_documentos",
+        "table": "loja_credito_documentos",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260828230000_security_lockdown_rls_and_rpc_permissions.sql"
+      },
+      {
+        "name": "gsa_client_own_credit_docs_hardened",
+        "table": "loja_credito_documentos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND EXISTS (\n  SELECT 1 FROM public.loja_credito_solicitacoes s WHERE s.id=solicitacao_id AND s.cliente_id=public.gsa_jwt_actor_id())",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "loja_credito_contestacoes": [
+      {
+        "name": "loja_credito_contestacoes_no_direct_access",
+        "table": "loja_credito_contestacoes",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "false",
+        "check": "false",
+        "file": "20260829024500_credit_purchase_disputes.sql"
+      }
+    ],
+    "loja_credito_contestacao_eventos": [
+      {
+        "name": "loja_credito_contestacao_eventos_no_direct_access",
+        "table": "loja_credito_contestacao_eventos",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "false",
+        "check": "false",
+        "file": "20260829024500_credit_purchase_disputes.sql"
+      }
+    ],
+    "loja_credito_cancelamentos_limite": [
+      {
+        "name": "loja_credito_cancelamentos_limite_no_direct_access",
+        "table": "loja_credito_cancelamentos_limite",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "false",
+        "check": "false",
+        "file": "20260829031500_credit_limit_cancellation_requests.sql"
+      }
+    ],
+    "loja_credito_saques": [
+      {
+        "name": "loja_credito_saques_no_direct_access",
+        "table": "loja_credito_saques",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "false",
+        "check": "false",
+        "file": "20260829133000_credit_available_withdrawals.sql"
+      }
+    ],
+    "loja_credito_saque_eventos": [
+      {
+        "name": "loja_credito_saque_eventos_no_direct_access",
+        "table": "loja_credito_saque_eventos",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "false",
+        "check": "false",
+        "file": "20260829133000_credit_available_withdrawals.sql"
+      }
+    ],
+    "cupons_loja": [
+      {
+        "name": "marketplace_coupons_read",
+        "table": "cupons_loja",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260829211500_marketplace_security_refund_checkout_hardening.sql"
+      }
+    ],
+    "cupons_ativados": [
+      {
+        "name": "marketplace_coupon_activations_read",
+        "table": "cupons_ativados",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "",
+        "file": "20260829211500_marketplace_security_refund_checkout_hardening.sql"
+      },
+      {
+        "name": "gsa_client_own_coupon_activations_read",
+        "table": "cupons_ativados",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830051000_close_admin_residual_public_mutations.sql"
+      }
+    ],
+    "cliente_documentos": [
+      {
+        "name": "gsa_client_own_documents_read",
+        "table": "cliente_documentos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() = 'cliente' AND cliente_id = public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830023000_harden_client_portal_end_to_end.sql"
+      }
+    ],
+    "emprestimo_documentos": [
+      {
+        "name": "gsa_client_own_emprestimo_documentos_hardened",
+        "table": "emprestimo_documentos",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "prestador_premios": [
+      {
+        "name": "gsa_provider_own_premios_hardened",
+        "table": "prestador_premios",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='prestador' AND prestador_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "prestador_promocoes_ativacoes": [
+      {
+        "name": "gsa_provider_own_promo_activation_hardened",
+        "table": "prestador_promocoes_ativacoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='prestador' AND prestador_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "emprestimo_comentarios": [
+      {
+        "name": "gsa_client_own_loan_comments_hardened",
+        "table": "emprestimo_comentarios",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND EXISTS (\n  SELECT 1 FROM public.emprestimos e WHERE e.id=emprestimo_id AND e.cliente_id=public.gsa_jwt_actor_id())",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "emprestimo_historico": [
+      {
+        "name": "gsa_client_own_loan_history_hardened",
+        "table": "emprestimo_historico",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND EXISTS (\n  SELECT 1 FROM public.emprestimos e WHERE e.id=emprestimo_id AND e.cliente_id=public.gsa_jwt_actor_id())",
+        "check": "",
+        "file": "20260830030000_admin_panel_security_end_to_end.sql"
+      }
+    ],
+    "fatura_contestacoes": [
+      {
+        "name": "gsa_management_hardened",
+        "table": "fatura_contestacoes",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type() IN ('admin','colaborador')",
+        "check": "public.gsa_jwt_actor_type() IN ('admin','colaborador')",
+        "file": "20260830043000_admin_security_residual_end_to_end.sql"
+      },
+      {
+        "name": "gsa_collaborator_module_fatura_contestacoes",
+        "table": "fatura_contestacoes",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": true,
+        "using": "public.gsa_admin_restrict_collaborator_to_module('financeiro')",
+        "check": "public.gsa_admin_restrict_collaborator_to_module('financeiro')",
+        "file": "20260830043000_admin_security_residual_end_to_end.sql"
+      },
+      {
+        "name": "gsa_client_own_fatura_contestacoes",
+        "table": "fatura_contestacoes",
+        "command": "SELECT",
+        "roles": "public",
+        "restrictive": false,
+        "using": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+        "check": "",
+        "file": "20260830043000_admin_security_residual_end_to_end.sql"
+      }
+    ],
+    "gsa_provider_registration_challenges": [
+      {
+        "name": "gsa_provider_registration_challenges_service_only",
+        "table": "gsa_provider_registration_challenges",
+        "command": "ALL",
+        "roles": "service_role",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260830123000_provider_registration_otp_and_authorization_hardening.sql"
+      }
+    ],
+    "gsa_calculator_pro_whatsapp_requests": [
+      {
+        "name": "gsa_service_role_calculator_requests",
+        "table": "gsa_calculator_pro_whatsapp_requests",
+        "command": "ALL",
+        "roles": "service_role",
+        "restrictive": true,
+        "using": "true",
+        "check": "true",
+        "file": "20260830190000_admin_full_audit_security_remediation.sql"
+      }
+    ],
+    "gsa_tv_channel_secrets": [
+      {
+        "name": "gsa_tv_channel_secrets_service_role_access",
+        "table": "gsa_tv_channel_secrets",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260831155000_gsa_tv_channel_secrets.sql"
+      },
+      {
+        "name": "gsa_tv_channel_secrets_service_role_access",
+        "table": "gsa_tv_channel_secrets",
+        "command": "ALL",
+        "roles": "public",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260831160000_fix_gsa_tv_secret_service_access.sql"
+      }
+    ],
+    "gsa_tv_ai_provider_secrets": [
+      {
+        "name": "gsa_tv_ai_provider_secrets_service_only",
+        "table": "gsa_tv_ai_provider_secrets",
+        "command": "ALL",
+        "roles": "service_role",
+        "restrictive": false,
+        "using": "true",
+        "check": "true",
+        "file": "20260831220500_gsa_tv_ai_provider_security.sql"
+      }
+    ]
+  }
+}

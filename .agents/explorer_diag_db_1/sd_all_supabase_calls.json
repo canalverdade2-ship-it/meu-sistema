@@ -1,0 +1,446 @@
+[
+  {
+    "file": "src/components/admin/super-domains/contratos/AreaVipView.tsx",
+    "line": 159,
+    "table": "clientes",
+    "callSnippet": "supabase .from('clientes') .select('id, nome, email, telefone, nivel_id, pontos_totais, created_at') .order('pontos_totais', { ascending: false }) .limit(50);"
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/AreaVipView.tsx",
+    "line": 231,
+    "table": "clientes",
+    "callSnippet": "supabase.from('clientes').update({ nivel_id: tier }).eq('id', selectedMember.cliente_id);"
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+    "line": 183,
+    "table": "tickets",
+    "callSnippet": "supabase .from('tickets') .select('*, clientes(id, nome, email, telefone), prestadores(id, nome_razao, email, telefone), ticket_mensagens(*)') .order('created_at', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+    "line": 316,
+    "table": "ticket_mensagens",
+    "callSnippet": "supabase.from('ticket_mensagens').insert([{ ticket_id: selectedTicket.id, autor_tipo: 'atendente', autor_nome: 'Atendente GSA', mensagem: replyMessage.trim() }]);"
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+    "line": 322,
+    "table": "tickets",
+    "callSnippet": "supabase.from('tickets').update({ status: 'em_andamento', updated_at: new Date().toISOString() }).eq('id', selectedTicket.id);"
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+    "line": 350,
+    "table": "tickets",
+    "callSnippet": "supabase.from('tickets').update({ status: 'resolvido', fechado_em: new Date().toISOString() }).eq('id', selectedTicket.id);"
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+    "line": 200,
+    "table": "contratos",
+    "callSnippet": "supabase .from('contratos') .select('*') .order('created_at', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+    "line": 304,
+    "table": "contratos",
+    "callSnippet": "supabase.from('contratos').update({ status: 'ativo' }).eq('id', selectedContrato.id);"
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+    "line": 374,
+    "table": "contratos",
+    "callSnippet": "supabase.from('contratos').insert([{ id: newCtr.id, codigo_contrato: newCtr.codigo_contrato, titulo: newCtr.titulo, tipo: newCtr.tipo, cliente_id: newCtr.cliente_id, cliente_nome: newCtr.cliente_nome, cliente_documento: newCtr.cliente_documento, status: newCtr.status, valor_mensal: newCtr.valor_mens"
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+    "line": 81,
+    "table": "clientes",
+    "callSnippet": "supabase .from('clientes') .select(` id, codigo_cliente, nome, tipo_pessoa, cpf, cnpj, email, telefone, status, data_cadastro, cep, endereco, numero, bairro, cidade, estado, observacoes, saldo_carteira, saldo_pontos, nivel_id, carteira_bloqueada, pontos_bloqueados, bloqueado, nivel_manual_id `) .ord"
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+    "line": 222,
+    "table": "clientes",
+    "callSnippet": "supabase .from('clientes') .update({ status: isBloqueado ? 'inativo' : novoStatus, bloqueado: isBloqueado, carteira_bloqueada: isBloqueado }) .eq('id', selectedCliente.id);"
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+    "line": 264,
+    "table": "clientes",
+    "callSnippet": "supabase .from('clientes') .update({ saldo_carteira: novoSaldo }) .eq('id', selectedCliente.id);"
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+    "line": 386,
+    "table": "clientes",
+    "callSnippet": "supabase.from('clientes').insert([payload]).select().single();"
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/GsaSaudeView.tsx",
+    "line": 144,
+    "table": "saude_contratos",
+    "callSnippet": "supabase .from('saude_contratos') .select('*') .order('created_at', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/GsaSegurosView.tsx",
+    "line": 104,
+    "table": "seguros_apolices",
+    "callSnippet": "supabase .from('seguros_apolices') .select('*') .order('created_at', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/HubEmpresasView.tsx",
+    "line": 125,
+    "table": "empresa",
+    "callSnippet": "supabase .from('empresa') .select('*') .order('created_at', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/HubEmpresasView.tsx",
+    "line": 231,
+    "table": "empresa",
+    "callSnippet": "supabase.from('empresa').insert([{ razao_social: nova.razao_social, nome_fantasia: nova.nome_fantasia, cnpj: nova.cnpj, inscricao_estadual: nova.inscricao_estadual, email: nova.email_corporativo, telefone: nova.telefone_corporativo, cidade: nova.cidade, estado: nova.estado, endereco: nova.endereco_c"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/CobrancaView.tsx",
+    "line": 91,
+    "table": "system_settings",
+    "callSnippet": "supabase.from('system_settings').select('*');"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/CobrancaView.tsx",
+    "line": 104,
+    "table": "system_settings",
+    "callSnippet": "supabase.from('system_settings').select('key, value');"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/CobrancaView.tsx",
+    "line": 110,
+    "table": "cobrancas",
+    "callSnippet": "supabase .from('cobrancas') .select(` *, faturas(id, codigo_fatura, data_vencimento, valor_total), clientes(id, nome, cpf, cnpj, telefone, email, codigo_cliente), cobranca_historico(*), cobranca_acordo_parcelas(*) `) .order('score_risco', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+    "line": 71,
+    "table": "emprestimos",
+    "callSnippet": "supabase .from('emprestimos') .select(` *, clientes(id, nome, cpf, cnpj, email, telefone, saldo_carteira, codigo_cliente), emprestimo_parcelas(id, numero_parcela, valor, data_vencimento, status), emprestimo_documentos(id, tipo, arquivo_url, status) `) .order('created_at', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+    "line": 102,
+    "table": "loja_credito_solicitacoes",
+    "callSnippet": "supabase .from('loja_credito_solicitacoes') .select(` *, clientes(id, nome, cpf, cnpj, email, telefone, codigo_cliente) `) .order('created_at', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+    "line": 96,
+    "table": "faturas",
+    "callSnippet": "supabase .from('faturas') .select(` *, cobrancas(id, status), clientes(id, nome, cpf, cnpj, email, telefone, codigo_cliente), ordens_servico(id, codigo_os, orcamentos(codigo_orcamento, total, valor_servico, valor_adicional, descricao_adicional, acrescimo, desconto, servicos(nome))), ordens_compra(id"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+    "line": 261,
+    "table": "faturas",
+    "callSnippet": "supabase .from('faturas') .select('*, clientes(nome, telefone)') .eq('id', faturaToSettle.id) .single();"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+    "line": 330,
+    "table": "ordens_fiscais",
+    "callSnippet": "supabase.from('ordens_fiscais').insert([{ codigo_fiscal: codigo, fatura_id: fatura.id, cliente_id: fatura.cliente_id || null, cliente_nome: fatura.clientes?.nome || null, cliente_documento: fatura.clientes?.cnpj || fatura.clientes?.cpf || null, cliente_telefone: fatura.clientes?.telefone || null, ti"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+    "line": 417,
+    "table": "clientes",
+    "callSnippet": "supabase .from('clientes') .select('id, nome, cpf, cnpj, email, telefone') .eq('status', 'ativo') .order('nome');"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+    "line": 435,
+    "table": "ordens_servico",
+    "callSnippet": "supabase.from('ordens_servico').select('id, codigo_os, orcamentos(total)').eq('cliente_id', clienteId).eq('status', 'andamento'), supabase.from('ordens_compra').select('id, codigo_ordem, orcamentos(total)').eq('cliente_id', clienteId).eq('status', 'em_analise'), supabase.from('ordens_assinatura').se"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+    "line": 436,
+    "table": "ordens_compra",
+    "callSnippet": "supabase.from('ordens_compra').select('id, codigo_ordem, orcamentos(total)').eq('cliente_id', clienteId).eq('status', 'em_analise'), supabase.from('ordens_assinatura').select('id, codigo_ordem, orcamentos(total)').eq('cliente_id', clienteId).eq('status', 'em_analise') ]);"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+    "line": 437,
+    "table": "ordens_assinatura",
+    "callSnippet": "supabase.from('ordens_assinatura').select('id, codigo_ordem, orcamentos(total)').eq('cliente_id', clienteId).eq('status', 'em_analise') ]);"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+    "line": 89,
+    "table": "faturas",
+    "callSnippet": "supabase.from('faturas').select('valor_total').in('status', ['pendente', 'vencida', 'pendente_pagamento', 'revisada']), supabase.from('saques').select('id', { count: 'exact', head: true }).eq('status', 'pendente'), supabase.from('cobrancas').select('id', { count: 'exact', head: true }).neq('status',"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+    "line": 90,
+    "table": "saques",
+    "callSnippet": "supabase.from('saques').select('id', { count: 'exact', head: true }).eq('status', 'pendente'), supabase.from('cobrancas').select('id', { count: 'exact', head: true }).neq('status', 'quitado'), supabase.from('ordens_fiscais').select('id', { count: 'exact', head: true }).eq('status_emissao', 'pendente"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+    "line": 91,
+    "table": "cobrancas",
+    "callSnippet": "supabase.from('cobrancas').select('id', { count: 'exact', head: true }).neq('status', 'quitado'), supabase.from('ordens_fiscais').select('id', { count: 'exact', head: true }).eq('status_emissao', 'pendente_emissao') ]);"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+    "line": 92,
+    "table": "ordens_fiscais",
+    "callSnippet": "supabase.from('ordens_fiscais').select('id', { count: 'exact', head: true }).eq('status_emissao', 'pendente_emissao') ]);"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FluxoCaixaView.tsx",
+    "line": 76,
+    "table": "saques",
+    "callSnippet": "supabase .from('saques') .select('*, clientes(id, nome, codigo_cliente, cpf, saldo_carteira, telefone, email)') .order('data_solicitacao', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FluxoCaixaView.tsx",
+    "line": 90,
+    "table": "transferencias",
+    "callSnippet": "supabase .from('transferencias') .select(` *, cliente_origem:clientes!cliente_origem_id(id, nome, cpf, data_cadastro, saldo_carteira, saldo_pontos, telefone), cliente_destino:clientes!cliente_destino_id(id, nome, cpf, data_cadastro, saldo_carteira, saldo_pontos, telefone) `) .order('data_solicitacao"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+    "line": 50,
+    "table": "loja_reembolsos",
+    "callSnippet": "supabase .from('loja_reembolsos') .select('*, clientes(id, nome, cpf, email, telefone)') .order('created_at', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+    "line": 72,
+    "table": "loja_reembolsos",
+    "callSnippet": "supabase .from('loja_reembolsos') .update({ status: 'aprovado', data_pagamento: new Date().toISOString(), observacoes_pagamento: paymentNotes, metodo_reembolso: paymentMethod }) .eq('id', selectedRefund.id);"
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+    "line": 86,
+    "table": "carteira_movimentacoes",
+    "callSnippet": "supabase.from('carteira_movimentacoes').insert([{ cliente_id: selectedRefund.cliente_id, tipo: 'credito', valor: selectedRefund.valor, descricao: `Reembolso referente ao pedido #${selectedRefund.ordem_compra_id?.slice(0, 8) || selectedRefund.id.slice(0, 8)}`, origem: 'reembolso' }]);"
+  },
+  {
+    "file": "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+    "line": 37,
+    "table": "admin_sessoes",
+    "callSnippet": "supabase.from('admin_sessoes').select('*').order('criado_em', { ascending: false }).limit(200)).catch(() => ({ data: [] as any[], error: null })), Promise.resolve(supabase.from('sistema_configuracoes').select('*').limit(50)).catch(() => ({ data: [] as any[], error: null })), ]);"
+  },
+  {
+    "file": "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+    "line": 38,
+    "table": "sistema_configuracoes",
+    "callSnippet": "supabase.from('sistema_configuracoes').select('*').limit(50)).catch(() => ({ data: [] as any[], error: null })), ]);"
+  },
+  {
+    "file": "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+    "line": 65,
+    "table": "colaboradores",
+    "callSnippet": "supabase.from('colaboradores').select('id, nome, email, created_at, status');"
+  },
+  {
+    "file": "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+    "line": 86,
+    "table": "clientes",
+    "callSnippet": "supabase.from('clientes').select('id, nome, email, data_cadastro, status').limit(100);"
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+    "line": 90,
+    "table": "orcamentos",
+    "callSnippet": "supabase.from('orcamentos').select('id, status', { count: 'exact', head: false }), supabase.from('ordens_servico').select('id', { count: 'exact', head: true }).eq('status', 'andamento'), supabase.from('prestador_demandas').select('id', { count: 'exact', head: true }).in('status', ['aberta', 'em_anda"
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+    "line": 91,
+    "table": "ordens_servico",
+    "callSnippet": "supabase.from('ordens_servico').select('id', { count: 'exact', head: true }).eq('status', 'andamento'), supabase.from('prestador_demandas').select('id', { count: 'exact', head: true }).in('status', ['aberta', 'em_andamento']), supabase.from('ordens_compra').select('id', { count: 'exact', head: true "
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+    "line": 92,
+    "table": "prestador_demandas",
+    "callSnippet": "supabase.from('prestador_demandas').select('id', { count: 'exact', head: true }).in('status', ['aberta', 'em_andamento']), supabase.from('ordens_compra').select('id', { count: 'exact', head: true }).eq('status', 'processamento') ]);"
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+    "line": 93,
+    "table": "ordens_compra",
+    "callSnippet": "supabase.from('ordens_compra').select('id', { count: 'exact', head: true }).eq('status', 'processamento') ]);"
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+    "line": 71,
+    "table": "orcamentos",
+    "callSnippet": "supabase .from('orcamentos') .select(` *, clientes ( id, nome, cpf, cnpj, email, telefone, codigo_cliente, indicacao_origem_id ), servicos ( nome, descricao, valor ), produtos ( nome, descricao, valor ), assinaturas ( nome, descricao, valor ) `);"
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+    "line": 217,
+    "table": "orcamentos",
+    "callSnippet": "supabase .from('orcamentos') .select('status') .eq('id', orc.id) .single();"
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+    "line": 281,
+    "table": "orcamentos",
+    "callSnippet": "supabase .from('orcamentos') .update({ fase_negociacao: 'cliente', proposta_admin_porcentagem: renegotiateValue }) .eq('id', selectedOrcamento.id);"
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+    "line": 828,
+    "table": "orcamentos",
+    "callSnippet": "supabase .from('orcamentos') .update({ documentos_solicitados: filtered, status: 'pendência documentos' }) .eq('id', selectedOrcamento.id);"
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+    "line": 61,
+    "table": "ordens_servico",
+    "callSnippet": "supabase .from('ordens_servico') .select(` *, clientes ( id, nome, cpf, cnpj, telefone, email, codigo_cliente ), orcamentos:orcamento_id ( id, servico_id, produto_id, assinatura_id, codigo_orcamento, total, valor_servico, valor_adicional, descricao_adicional, acrescimo, desconto, servicos ( nome, de"
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+    "line": 169,
+    "table": "ordens_servico",
+    "callSnippet": "supabase .from('ordens_servico') .update({ status: 'concluido', data_fim: new Date().toISOString() }) .eq('id', os.id);"
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+    "line": 210,
+    "table": "ordens_servico",
+    "callSnippet": "supabase .from('ordens_servico') .update({ status: 'cancelado', motivo_cancelamento: cancelReason, data_fim: new Date().toISOString() }) .eq('id', selectedOS.id);"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+    "line": 76,
+    "table": "premios_resgates",
+    "callSnippet": "supabase .from('premios_resgates') .select(` *, cliente:clientes(nome, email, cpf, cnpj) `) .order('created_at', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+    "line": 96,
+    "table": "vouchers",
+    "callSnippet": "supabase .from('vouchers') .select(` *, cliente:clientes(nome, email, cpf) `) .order('created_at', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+    "line": 116,
+    "table": "cupons_loja",
+    "callSnippet": "supabase .from('cupons_loja') .select('*') .order('created_at', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+    "line": 133,
+    "table": "loja_solicitacoes",
+    "callSnippet": "supabase .from('loja_solicitacoes') .select(` *, cliente:clientes(nome, email) `) .order('created_at', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+    "line": 153,
+    "table": "indicacoes",
+    "callSnippet": "supabase .from('indicacoes') .select('*') .order('created_at', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+    "line": 189,
+    "table": "clientes",
+    "callSnippet": "supabase .from('clientes') .select('id, nome') .eq('cpf', cleanDoc) .maybeSingle();"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/NovoPrestadorDrawer.tsx",
+    "line": 73,
+    "table": "prestadores",
+    "callSnippet": "supabase.from('prestadores').insert([{ tipo_cadastro: formData.tipo_cadastro, nome_razao: formData.nome_razao.trim(), nome_responsavel: formData.tipo_cadastro === 'cnpj' ? formData.nome_responsavel.trim() : null, documento: cleanDoc, email: formData.email.trim(), telefone: cleanPhone, cep: cleanCep,"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/NovoPrestadorDrawer.tsx",
+    "line": 95,
+    "table": "prestador_historico",
+    "callSnippet": "supabase.from('prestador_historico').insert([{ prestador_id: data.id, acao: 'Cadastro realizado via painel Enterprise', descricao: 'Prestador credenciado com status ATIVO.' }]).throwOnError();"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+    "line": 76,
+    "table": "prestadores",
+    "callSnippet": "supabase .from('prestadores') .select('id', { count: 'exact', head: true }) .eq('status', 'ativo');"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+    "line": 82,
+    "table": "prestador_saques",
+    "callSnippet": "supabase .from('prestador_saques') .select('id', { count: 'exact', head: true }) .in('status', ['pendente', 'aguardando', 'em_analise']);"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+    "line": 87,
+    "table": "saques",
+    "callSnippet": "supabase .from('saques') .select('id', { count: 'exact', head: true }) .in('status', ['pendente', 'aguardando', 'em_analise']);"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+    "line": 93,
+    "table": "fornecedores",
+    "callSnippet": "supabase .from('fornecedores') .select('id', { count: 'exact', head: true }) .eq('status', 'ativo');"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+    "line": 99,
+    "table": "afiliados",
+    "callSnippet": "supabase .from('afiliados') .select('id', { count: 'exact', head: true }) .eq('status', 'ativo');"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+    "line": 96,
+    "table": "prestador_demandas",
+    "callSnippet": "supabase .from('prestador_demandas') .select('*') .eq('prestador_id', prestadorId) .order('created_at', { ascending: false }) .limit(20);"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+    "line": 116,
+    "table": "prestadores",
+    "callSnippet": "supabase .from('prestadores') .update(editForm) .eq('id', prestador.id);"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+    "line": 151,
+    "table": "prestadores",
+    "callSnippet": "supabase .from('prestadores') .update(updatePayload) .eq('id', prestador.id);"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+    "line": 158,
+    "table": "prestador_historico",
+    "callSnippet": "supabase.from('prestador_historico').insert([{ prestador_id: prestador.id, acao: `Status alterado para ${newStatus}`, descricao: `Status atualizado no painel de controle pelo administrador.` }]).throwOnError();"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+    "line": 246,
+    "table": "prestadores",
+    "callSnippet": "supabase .from('prestadores') .delete() .eq('id', prestador.id);"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/PrestadoresSection.tsx",
+    "line": 35,
+    "table": "prestadores",
+    "callSnippet": "supabase .from('prestadores') .select('*') .order('created_at', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx",
+    "line": 40,
+    "table": "prestador_saques",
+    "callSnippet": "supabase .from('prestador_saques') .select(` *, prestador:prestadores(nome_razao, documento, email, telefone, saldo_carteira) `) .order('created_at', { ascending: false });"
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx",
+    "line": 51,
+    "table": "saques",
+    "callSnippet": "supabase .from('saques') .select(` *, cliente:clientes(nome, email, telefone, cpf, cnpj, tipo_pessoa) `) .order('created_at', { ascending: false });"
+  }
+]

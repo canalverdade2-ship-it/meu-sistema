@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Loader2 } from 'lucide-react';
+import { maskPhone } from '../../../../lib/utils';
 
 interface UrlImportSourceProps {
   onAnalyze: (url: string, supplierName: string, phone: string, obs: string) => Promise<void>;
@@ -58,8 +59,10 @@ export function UrlImportSource({ onAnalyze, loading }: UrlImportSourceProps) {
             </label>
             <input
               type="text"
+              inputMode="tel"
+              maxLength={15}
               value={phone}
-              onChange={e => setPhone(e.target.value)}
+              onChange={e => setPhone(maskPhone(e.target.value))}
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
               placeholder="(00) 00000-0000"
               disabled={loading}

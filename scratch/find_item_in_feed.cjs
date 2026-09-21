@@ -1,7 +1,8 @@
 const { Readable } = require('stream');
 const readline = require('readline');
 
-const FEED_OFICIAL_URL = 'https://affiliate.shopee.com.br/api/v1/datafeed/download?id=YWJjZGVmZ2hpamtsbW5vcPNcbnfdFhhQkoz1FtnUm6DtED25ejObtofpYLqHBC0h';
+const FEED_OFICIAL_URL = process.argv[3] || 'https://affiliate.shopee.com.br/api/v1/datafeed/download?id=YWJjZGVmZ2hpamtsbW5vcPNcbnfdFhhQkoz1FtnUm6DtED25ejObtofpYLqHBC0h';
+const TARGET_ITEM = process.argv[2] || '9998055754';
 
 function parseCSVLine(line) {
   const result = [];
@@ -24,7 +25,7 @@ function parseCSVLine(line) {
 }
 
 async function findShopeeItem() {
-  console.log('Downloading and streaming CSV feed to locate item 9998055754...');
+  console.log(`Downloading and streaming CSV feed to locate item ${TARGET_ITEM}...`);
   const res = await fetch(FEED_OFICIAL_URL, { headers: { 'User-Agent': 'Mozilla/5.0' } });
   
   // Create stream parser
@@ -37,15 +38,21 @@ async function findShopeeItem() {
   let headers = null;
   let lines = 0;
   let found = false;
+  let pending = '';
 
-  for await (const line of rl) {
+  for await (const physicalLine of rl) {
+    pending = pending ? `${pending}\n${physicalLine}` : physicalLine;
+    const quoteCount = (pending.match(/"/g) || []).length;
+    if (quoteCount % 2 !== 0) continue;
+    const line = pending;
+    pending = '';
     if (!line.trim()) continue;
     if (!headers) {
       headers = parseCSVLine(line).map(h => h.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_'));
       continue;
     }
     lines++;
-    if (line.includes('9998055754') || line.includes('Porta Coque de Ballet')) {
+    if (line.includes(TARGET_ITEM)) {
       const row = parseCSVLine(line);
       const obj = {};
       headers.forEach((h, i) => { obj[h] = row[i]; });

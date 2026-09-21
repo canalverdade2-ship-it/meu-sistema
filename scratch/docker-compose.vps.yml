@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: gsa-redis
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: gsa-postgres
+    restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_DB: gsahub
+      POSTGRES_USER: gsaadmin
+      POSTGRES_PASSWORD: Gsa@2026Secure!
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: gsa-n8n
+    restart: always
+    ports:
+      - '5678:5678'
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - TZ=America/Sao_Paulo
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=gsahub
+      - DB_POSTGRESDB_USER=gsaadmin
+      - DB_POSTGRESDB_PASSWORD=Gsa@2026Secure!
+      - N8N_ENCRYPTION_KEY=gsa_n8n_key_2026_secure
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - postgres
+      - redis
+
+  evolution-api:
+    image: evoapicloud/evolution-api:latest
+    container_name: gsa-evolution-api
+    restart: always
+    ports:
+      - '8080:8080'
+    environment:
+      - SERVER_URL=http://localhost:8080
+      - AUTH_TYPE=apikey
+      - AUTH_API_KEY=gsa_evolution_key_2026_secure
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://gsaadmin:Gsa@2026Secure!@postgres:5432/evolution?schema=public
+      - REDIS_URI=redis://redis:6379/1
+    depends_on:
+      - postgres
+      - redis
+
+volumes:
+  redis_data:
+  postgres_data:
+  n8n_data:

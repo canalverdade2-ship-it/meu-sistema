@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Store, Globe, Package } from 'lucide-react';
 import { ImportSupplierConfig, SupplierMode } from '../../../../types/productImport';
+import { maskPhone } from '../../../../lib/utils';
 
 interface ImportSupplierModeProps {
   onConfirm: (config: ImportSupplierConfig) => void;
@@ -114,8 +115,11 @@ export function ImportSupplierMode({ onConfirm, onBack }: ImportSupplierModeProp
               <label className="block text-sm font-medium text-gray-700 mb-1">Telefone *</label>
               <input 
                 type="text" 
+                inputMode="tel"
+                maxLength={15}
+                placeholder="(00) 00000-0000"
                 value={telefone} 
-                onChange={e => setTelefone(e.target.value)}
+                onChange={e => setTelefone(maskPhone(e.target.value))}
                 className="w-full px-4 py-2 border rounded-lg" 
               />
             </div>

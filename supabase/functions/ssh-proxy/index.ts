@@ -31,7 +31,9 @@ async function handleRequest(request: Request) {
 
   // Autenticação WebSocket geralmente passa token via querystring ou protocolos sec
   const url = new URL(request.url);
-  const token = url.searchParams.get('token');
+  const authHeader = request.headers.get('authorization') || '';
+  const tokenFromHeader = authHeader.replace(/^bearer\s+/i, '').trim();
+  const token = url.searchParams.get('token') || tokenFromHeader || request.headers.get('apikey');
   
   if (!token) {
     return json(401, { error: 'Missing token' }, origin);
@@ -39,17 +41,28 @@ async function handleRequest(request: Request) {
   
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   
   if (!supabaseUrl || !supabaseAnonKey) {
     return json(500, { error: 'Supabase URL or Anon Key not configured' }, origin);
   }
 
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: { headers: { Authorization: `Bearer ${token}` } }
-  });
+  const isServiceRole = Boolean(serviceRoleKey && token === serviceRoleKey);
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) return json(401, { error: 'Unauthorized user' }, origin);
+  if (!isServiceRole) {
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } }
+    });
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) return json(401, { error: 'Unauthorized user' }, origin);
+
+    const actorType = user.app_metadata?.gsa_actor_type || user.app_metadata?.role || user.user_metadata?.role || user.role;
+    const isPrivileged = actorType === 'admin' || actorType === 'colaborador' || user.role === 'service_role';
+    if (!isPrivileged) {
+      return json(403, { error: 'Forbidden: requires admin or colaborador role' }, origin);
+    }
+  }
 
   if (request.headers.get("upgrade") !== "websocket") {
     return json(400, { error: 'Requires WebSocket connection' }, origin);

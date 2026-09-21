@@ -3057,10 +3057,11 @@ export function FaturaDetails({
                   </label>
                   <div className="relative">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-neutral-400">R$</span>
-                    <input
+                    <input 
                       type="text"
                       value={ajusteDesconto ? maskCurrency(ajusteDesconto) : ''}
-                      onChange={e => {
+                      inputMode="decimal"
+onChange={e => {
                         const val = e.target.value.replace(/\D/g, "");
                         setAjusteDesconto((Number(val) / 100).toString());
                       }}
@@ -3075,10 +3076,11 @@ export function FaturaDetails({
                   </label>
                   <div className="relative">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-neutral-400">R$</span>
-                    <input
+                    <input 
                       type="text"
                       value={ajusteAcrescimo ? maskCurrency(ajusteAcrescimo) : ''}
-                      onChange={e => {
+                      inputMode="decimal"
+onChange={e => {
                         const val = e.target.value.replace(/\D/g, "");
                         setAjusteAcrescimo((Number(val) / 100).toString());
                       }}

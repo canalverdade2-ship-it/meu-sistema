@@ -334,6 +334,10 @@ export function OrdensServicoModule({ activeSubTab, initialItemId, colaboradorNo
               os={selectedOS} 
               onCancel={() => handleCancelClick(selectedOS.id)}
               colaboradorNome={colaboradorNome}
+              onFinalized={() => {
+                setIsDetailOpen(false);
+                fetchOrdens();
+              }}
             />
           )}
         </div>
@@ -368,7 +372,7 @@ export function OrdensServicoModule({ activeSubTab, initialItemId, colaboradorNo
   );
 }
 
-export function OSDetails({ os, onCancel, colaboradorNome }: { os: OS, onCancel: () => void, colaboradorNome?: string }) {
+export function OSDetails({ os, onCancel, colaboradorNome, onFinalized }: { os: OS, onCancel: () => void, colaboradorNome?: string, onFinalized?: () => void }) {
   const { openFile } = useFileViewer();
   const [notas, setNotas] = useState<any[]>([]);
   const [novaNota, setNovaNota] = useState('');
@@ -535,7 +539,9 @@ export function OSDetails({ os, onCancel, colaboradorNome }: { os: OS, onCancel:
 
       toast.success('Ordem de Serviço finalizada com sucesso!');
       setIsFinalizeModalOpen(false);
-      window.location.reload(); // Recarregar para atualizar a lista
+      if (onFinalized) {
+        onFinalized();
+      }
     } catch (err: any) {
       toast.error('Erro ao finalizar OS: ' + err.message);
     } finally {

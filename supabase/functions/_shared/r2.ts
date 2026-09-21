@@ -22,14 +22,21 @@ function getEndpoint() {
 }
 
 // ─── AWS Signature V4 ─────────────────────────────────────────────────────────
+function asArrayBuffer(value: ArrayBuffer | Uint8Array): ArrayBuffer {
+  if (value instanceof ArrayBuffer) return value;
+  const copy = new Uint8Array(value.byteLength);
+  copy.set(value);
+  return copy.buffer;
+}
+
 async function hmac(key: ArrayBuffer | Uint8Array, data: string): Promise<ArrayBuffer> {
-  const k = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const k = await crypto.subtle.importKey('raw', asArrayBuffer(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   return crypto.subtle.sign('HMAC', k, new TextEncoder().encode(data));
 }
 
 async function sha256hex(data: string | Uint8Array): Promise<string> {
   const buf = typeof data === 'string' ? new TextEncoder().encode(data) : data;
-  const hash = await crypto.subtle.digest('SHA-256', buf);
+  const hash = await crypto.subtle.digest('SHA-256', asArrayBuffer(buf));
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
@@ -92,7 +99,7 @@ export async function r2Upload(
   const resp = await fetch(`${getEndpoint()}/${R2_BUCKET}/${normalizedKey}`, {
     method: 'PUT',
     headers,
-    body,
+    body: asArrayBuffer(body),
   });
 
   if (!resp.ok) {

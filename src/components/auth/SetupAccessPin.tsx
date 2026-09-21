@@ -4,9 +4,10 @@ import { Lock, CheckCircle, ArrowRight, RefreshCw, KeyRound } from 'lucide-react
 interface SetupAccessPinProps {
   onComplete: (accessPin: string) => Promise<void> | void;
   loading?: boolean;
+  onSuccess?: () => void;
 }
 
-export function SetupAccessPin({ onComplete, loading = false }: SetupAccessPinProps) {
+export function SetupAccessPin({ onComplete, loading = false, onSuccess }: SetupAccessPinProps) {
   const [step, setStep] = useState<'create' | 'confirm' | 'success'>('create');
   
   const [pin, setPin] = useState(['', '', '', '']);
@@ -93,7 +94,13 @@ export function SetupAccessPin({ onComplete, loading = false }: SetupAccessPinPr
         </p>
         <button
           type="button"
-          onClick={() => window.location.reload()} // No futuro, isso pode ser integrado com context de Auth para login automático
+          onClick={() => {
+            if (onSuccess) {
+              onSuccess();
+            } else {
+              window.dispatchEvent(new CustomEvent('gsa-auth-success'));
+            }
+          }}
           className="flex w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-green-600 py-4 font-bold text-white shadow-lg shadow-green-600/20 transition-all hover:-translate-y-0.5 hover:bg-green-500"
         >
           <KeyRound className="h-5 w-5" />

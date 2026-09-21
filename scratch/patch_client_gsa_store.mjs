@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+const p='src/components/client/ClientGSAStore.tsx';
+let s=fs.readFileSync(p,'utf8').replace(/\r\n/g,'\n');
+s=s.replace("import { clientOperationalWrite } from '../../lib/clientOperationalWrite';", "import { clientOperationalWrite } from '../../lib/clientOperationalWrite';\nimport { callClientRpc } from '../../lib/clientRpc';");
+s=s.replace("const CheckoutModal = React.lazy(() => import('./store/CheckoutModal'));\n",'');
+const old=`        const { error } = await supabase\n          .from('cupons_ativados')\n          .insert({ cliente_id: clientId, cupom_id: cupomId });\n        if (error && error.code !== '23505') throw error;`;
+const neu=`        await callClientRpc('gsa_client_activate_store_coupon', { p_cupom_id: cupomId });`;
+if(!s.includes(old)) throw new Error('coupon activation block missing');
+s=s.replace(old,neu);
+const modal=/\n\s*\{\/\* Checkout Modal \*\/\}\n\s*<CheckoutModal[\s\S]*?\n\s*\/>\n/;
+if(!modal.test(s)) throw new Error('legacy checkout JSX missing');
+s=s.replace(modal,'\n');
+fs.writeFileSync(p,s,'utf8');
+console.log('CLIENT_GSA_STORE_PATCHED');

@@ -1,0 +1,3267 @@
+[
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/App.tsx",
+    "line": 76,
+    "table": "loja_carrinhos",
+    "column": "item_id",
+    "detail": "Column 'item_id' does not exist in table 'loja_carrinhos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/App.tsx",
+    "line": 76,
+    "table": "loja_carrinhos",
+    "column": "tipo",
+    "detail": "Column 'tipo' does not exist in table 'loja_carrinhos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/App.tsx",
+    "line": 76,
+    "table": "loja_carrinhos",
+    "column": "quantidade",
+    "detail": "Column 'quantidade' does not exist in table 'loja_carrinhos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 346,
+    "table": "faturas",
+    "column": "valor",
+    "detail": "Column 'valor' does not exist in table 'faturas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 370,
+    "table": "orcamentos",
+    "column": "valor_total",
+    "detail": "Column 'valor_total' does not exist in table 'orcamentos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 418,
+    "table": "emprestimos",
+    "column": "codigo_contrato",
+    "detail": "Column 'codigo_contrato' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 418,
+    "table": "emprestimos",
+    "column": "valor_solicitado",
+    "detail": "Column 'valor_solicitado' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 418,
+    "table": "emprestimos",
+    "column": "status",
+    "detail": "Column 'status' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 591,
+    "table": "emprestimos",
+    "column": "contrato_url",
+    "detail": "Column 'contrato_url' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_servico",
+    "column": "total",
+    "detail": "Column 'total' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_servico",
+    "column": "valor_servico",
+    "detail": "Column 'valor_servico' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_servico",
+    "column": "valor_adicional",
+    "detail": "Column 'valor_adicional' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_servico",
+    "column": "descricao_adicional",
+    "detail": "Column 'descricao_adicional' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_servico",
+    "column": "acrescimo",
+    "detail": "Column 'acrescimo' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_servico",
+    "column": "desconto",
+    "detail": "Column 'desconto' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "valor)",
+    "detail": "Column 'valor)' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "total",
+    "detail": "Column 'total' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "valor_servico",
+    "detail": "Column 'valor_servico' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "valor_adicional",
+    "detail": "Column 'valor_adicional' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "descricao_adicional",
+    "detail": "Column 'descricao_adicional' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "acrescimo",
+    "detail": "Column 'acrescimo' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "desconto)",
+    "detail": "Column 'desconto)' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "valor)",
+    "detail": "Column 'valor)' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "total",
+    "detail": "Column 'total' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "valor_servico",
+    "detail": "Column 'valor_servico' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "valor_adicional",
+    "detail": "Column 'valor_adicional' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "descricao_adicional",
+    "detail": "Column 'descricao_adicional' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "acrescimo",
+    "detail": "Column 'acrescimo' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "desconto",
+    "detail": "Column 'desconto' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "quantidade_meses",
+    "detail": "Column 'quantidade_meses' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/ClientesModule.tsx",
+    "line": 1312,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "prazo_indeterminado)",
+    "detail": "Column 'prazo_indeterminado)' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/CreditoModule.tsx",
+    "line": 263,
+    "table": "clientes",
+    "column": "limite_credito_total",
+    "detail": "Column 'limite_credito_total' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/CreditoModule.tsx",
+    "line": 263,
+    "table": "clientes",
+    "column": "limite_credito_disponivel",
+    "detail": "Column 'limite_credito_disponivel' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/CreditoModule.tsx",
+    "line": 263,
+    "table": "clientes",
+    "column": "opcao_pagamento_parcelado",
+    "detail": "Column 'opcao_pagamento_parcelado' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/CreditoModule.tsx",
+    "line": 263,
+    "table": "clientes",
+    "column": "max_parcelas",
+    "detail": "Column 'max_parcelas' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/demandas/DemandasComentarios.tsx",
+    "line": 98,
+    "table": "prestador_demandas",
+    "column": "colaborador_id",
+    "detail": "Column 'colaborador_id' does not exist in table 'prestador_demandas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/demandas/DemandasDashboard.tsx",
+    "line": 32,
+    "table": "prestador_demandas",
+    "column": "colaborador_id",
+    "detail": "Column 'colaborador_id' does not exist in table 'prestador_demandas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/demandas/DemandasDashboard.tsx",
+    "line": 32,
+    "table": "prestador_demandas",
+    "column": "prioridade",
+    "detail": "Column 'prioridade' does not exist in table 'prestador_demandas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/demandas/DemandasDashboard.tsx",
+    "line": 32,
+    "table": "prestador_demandas",
+    "column": "prazo_limite",
+    "detail": "Column 'prazo_limite' does not exist in table 'prestador_demandas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_JOIN_TABLE",
+    "file": "src/components/admin/demandas/NovaDemandaModal.tsx",
+    "line": 52,
+    "table": "ordens_servico",
+    "joined": "orcamento_id",
+    "token": "orcamentos:orcamento_id(anexos)",
+    "detail": "Joined relation 'orcamento_id' in table 'ordens_servico' does not exist in schema."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/DemandasColaboradorModule.tsx",
+    "line": 51,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "cliente",
+    "detail": "Column 'cliente' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/DemandasColaboradorModule.tsx",
+    "line": 51,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "nome)",
+    "detail": "Column 'nome)' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/ecommerce/PricingPanel.tsx",
+    "line": 36,
+    "table": "pricing_configs",
+    "detail": "Table 'pricing_configs' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/ecommerce/PricingPanel.tsx",
+    "line": 63,
+    "table": "pricing_configs",
+    "detail": "Table 'pricing_configs' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/EmprestimosModule.tsx",
+    "line": 103,
+    "table": "emprestimo_parcelas",
+    "column": "valor",
+    "detail": "Column 'valor' does not exist in table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/EmprestimosModule.tsx",
+    "line": 103,
+    "table": "emprestimo_parcelas",
+    "column": "status",
+    "detail": "Column 'status' does not exist in table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/EmprestimosModule.tsx",
+    "line": 103,
+    "table": "emprestimo_parcelas",
+    "column": "data_vencimento",
+    "detail": "Column 'data_vencimento' does not exist in table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/EmprestimosModule.tsx",
+    "line": 103,
+    "table": "emprestimo_parcelas",
+    "column": "numero_parcela",
+    "detail": "Column 'numero_parcela' does not exist in table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/EmprestimosModule.tsx",
+    "line": 103,
+    "table": "emprestimo_parcelas",
+    "column": "data_pagamento",
+    "detail": "Column 'data_pagamento' does not exist in table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/EmprestimosModule.tsx",
+    "line": 139,
+    "table": "emprestimos",
+    "column": "valor_aprovado",
+    "detail": "Column 'valor_aprovado' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/EmprestimosModule.tsx",
+    "line": 139,
+    "table": "emprestimos",
+    "column": "status",
+    "detail": "Column 'status' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/EmprestimosModule.tsx",
+    "line": 140,
+    "table": "emprestimo_parcelas",
+    "column": "status",
+    "detail": "Column 'status' does not exist in table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/EmprestimosModule.tsx",
+    "line": 141,
+    "table": "emprestimos",
+    "column": "taxa_servico",
+    "detail": "Column 'taxa_servico' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/EmprestimosModule.tsx",
+    "line": 178,
+    "table": "emprestimo_parcelas",
+    "column": "valor",
+    "detail": "Column 'valor' does not exist in table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/EmprestimosModule.tsx",
+    "line": 178,
+    "table": "emprestimo_parcelas",
+    "column": "status",
+    "detail": "Column 'status' does not exist in table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/EmprestimosModule.tsx",
+    "line": 178,
+    "table": "emprestimo_parcelas",
+    "column": "data_vencimento",
+    "detail": "Column 'data_vencimento' does not exist in table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/EmprestimosModule.tsx",
+    "line": 178,
+    "table": "emprestimo_parcelas",
+    "column": "numero_parcela",
+    "detail": "Column 'numero_parcela' does not exist in table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/EmprestimosModule.tsx",
+    "line": 178,
+    "table": "emprestimo_parcelas",
+    "column": "data_pagamento",
+    "detail": "Column 'data_pagamento' does not exist in table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_servico",
+    "column": "total",
+    "detail": "Column 'total' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_servico",
+    "column": "valor_servico",
+    "detail": "Column 'valor_servico' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_servico",
+    "column": "valor_adicional",
+    "detail": "Column 'valor_adicional' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_servico",
+    "column": "descricao_adicional",
+    "detail": "Column 'descricao_adicional' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_servico",
+    "column": "acrescimo",
+    "detail": "Column 'acrescimo' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_servico",
+    "column": "desconto",
+    "detail": "Column 'desconto' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "valor)",
+    "detail": "Column 'valor)' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "total",
+    "detail": "Column 'total' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "valor_servico",
+    "detail": "Column 'valor_servico' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "valor_adicional",
+    "detail": "Column 'valor_adicional' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "descricao_adicional",
+    "detail": "Column 'descricao_adicional' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "acrescimo",
+    "detail": "Column 'acrescimo' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "desconto)",
+    "detail": "Column 'desconto)' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "valor)",
+    "detail": "Column 'valor)' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "total",
+    "detail": "Column 'total' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "valor_servico",
+    "detail": "Column 'valor_servico' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "valor_adicional",
+    "detail": "Column 'valor_adicional' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "descricao_adicional",
+    "detail": "Column 'descricao_adicional' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "acrescimo",
+    "detail": "Column 'acrescimo' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "desconto",
+    "detail": "Column 'desconto' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "quantidade_meses",
+    "detail": "Column 'quantidade_meses' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "line": 257,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "prazo_indeterminado)",
+    "detail": "Column 'prazo_indeterminado)' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/GsaTvModule.tsx",
+    "line": 240,
+    "table": "gsa_tv_channels",
+    "detail": "Table 'gsa_tv_channels' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/GsaTvModule.tsx",
+    "line": 258,
+    "table": "gsa_tv_media_items",
+    "detail": "Table 'gsa_tv_media_items' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/GsaTvModule.tsx",
+    "line": 280,
+    "table": "gsa_tv_schedule_slots",
+    "detail": "Table 'gsa_tv_schedule_slots' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/GsaTvModule.tsx",
+    "line": 299,
+    "table": "gsa_tv_playlists",
+    "detail": "Table 'gsa_tv_playlists' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/GsaTvModule.tsx",
+    "line": 309,
+    "table": "gsa_tv_incidents",
+    "detail": "Table 'gsa_tv_incidents' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/GsaTvModule.tsx",
+    "line": 319,
+    "table": "gsa_tv_audit_log",
+    "detail": "Table 'gsa_tv_audit_log' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/GsaTvModule.tsx",
+    "line": 336,
+    "table": "gsa_tv_jobs",
+    "detail": "Table 'gsa_tv_jobs' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/GsaTvModule.tsx",
+    "line": 439,
+    "table": "gsa_tv_audit_log",
+    "detail": "Table 'gsa_tv_audit_log' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/GsaTvModule.tsx",
+    "line": 493,
+    "table": "gsa_tv_media_items",
+    "detail": "Table 'gsa_tv_media_items' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/GsaTvModule.tsx",
+    "line": 538,
+    "table": "gsa_tv_schedule_slots",
+    "detail": "Table 'gsa_tv_schedule_slots' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/GsaTvModule.tsx",
+    "line": 556,
+    "table": "gsa_tv_schedule_slots",
+    "detail": "Table 'gsa_tv_schedule_slots' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/GsaTvModule.tsx",
+    "line": 570,
+    "table": "gsa_tv_channels",
+    "detail": "Table 'gsa_tv_channels' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "line": 54,
+    "table": "loja_solicitacoes",
+    "column": "cliente_id",
+    "detail": "Column 'cliente_id' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "line": 54,
+    "table": "loja_solicitacoes",
+    "column": "tipo",
+    "detail": "Column 'tipo' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "line": 54,
+    "table": "loja_solicitacoes",
+    "column": "status",
+    "detail": "Column 'status' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "line": 54,
+    "table": "loja_solicitacoes",
+    "column": "motivo",
+    "detail": "Column 'motivo' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "line": 54,
+    "table": "loja_solicitacoes",
+    "column": "metodo_entrega",
+    "detail": "Column 'metodo_entrega' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "line": 54,
+    "table": "loja_solicitacoes",
+    "column": "endereco_devolucao",
+    "detail": "Column 'endereco_devolucao' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "line": 54,
+    "table": "loja_solicitacoes",
+    "column": "data_agendamento",
+    "detail": "Column 'data_agendamento' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "line": 54,
+    "table": "loja_solicitacoes",
+    "column": "rastreio_cliente",
+    "detail": "Column 'rastreio_cliente' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "line": 54,
+    "table": "loja_solicitacoes",
+    "column": "rastreio_admin",
+    "detail": "Column 'rastreio_admin' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "line": 54,
+    "table": "loja_solicitacoes",
+    "column": "valor_diferenca",
+    "detail": "Column 'valor_diferenca' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "line": 54,
+    "table": "loja_solicitacoes",
+    "column": "resposta_admin",
+    "detail": "Column 'resposta_admin' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "line": 54,
+    "table": "loja_solicitacoes",
+    "column": "historico_status",
+    "detail": "Column 'historico_status' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "line": 54,
+    "table": "loja_solicitacoes",
+    "column": "created_at",
+    "detail": "Column 'created_at' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "line": 54,
+    "table": "loja_solicitacoes",
+    "column": "updated_at",
+    "detail": "Column 'updated_at' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "line": 54,
+    "table": "loja_solicitacoes",
+    "joined": "orcamentos",
+    "column": "protocolo",
+    "detail": "Column 'protocolo' does not exist in joined table 'orcamentos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_JOIN_TABLE",
+    "file": "src/components/admin/OrdensCompraModule.tsx",
+    "line": 486,
+    "table": "produtos",
+    "joined": "categorias",
+    "token": "categorias(nome)",
+    "detail": "Joined relation 'categorias' in table 'produtos' does not exist in schema."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/OrdensCompraModule.tsx",
+    "line": 548,
+    "table": "ordens_compra",
+    "joined": "produtos",
+    "column": "identificador_preferencial",
+    "detail": "Column 'identificador_preferencial' does not exist in joined table 'produtos'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/OrdensCompraModule.tsx",
+    "line": 548,
+    "table": "ordens_compra",
+    "joined": "produtos",
+    "column": "tipo_codigo_barras",
+    "detail": "Column 'tipo_codigo_barras' does not exist in joined table 'produtos'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/OrdensCompraModule.tsx",
+    "line": 548,
+    "table": "ordens_compra",
+    "joined": "produtos",
+    "column": "imagem_url",
+    "detail": "Column 'imagem_url' does not exist in joined table 'produtos'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/OrdensCompraModule.tsx",
+    "line": 552,
+    "table": "ordens_assinatura",
+    "joined": "assinaturas",
+    "column": "imagem_url",
+    "detail": "Column 'imagem_url' does not exist in joined table 'assinaturas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_JOIN_TABLE",
+    "file": "src/components/admin/OrdensServicoModule.tsx",
+    "line": 115,
+    "table": "ordens_servico",
+    "joined": "orcamento_id",
+    "token": "orcamentos:orcamento_id(id, servico_id, produto_id, assinatura_id, codigo_orcamento, total, valor_servico, valor_adicional, descricao_adicional, acrescimo, desconto, servicos(nome, descricao))",
+    "detail": "Joined relation 'orcamento_id' in table 'ordens_servico' does not exist in schema."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/OrdensServicoModule.tsx",
+    "line": 115,
+    "table": "ordens_servico",
+    "joined": "prestador_demandas",
+    "column": "link_resultado",
+    "detail": "Column 'link_resultado' does not exist in joined table 'prestador_demandas'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/OrdensServicoModule.tsx",
+    "line": 115,
+    "table": "ordens_servico",
+    "joined": "prestador_demandas",
+    "column": "arquivos_resultado",
+    "detail": "Column 'arquivos_resultado' does not exist in joined table 'prestador_demandas'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/OrdensServicoModule.tsx",
+    "line": 115,
+    "table": "ordens_servico",
+    "joined": "prestador_demandas",
+    "column": "arquivos_briefing",
+    "detail": "Column 'arquivos_briefing' does not exist in joined table 'prestador_demandas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/OrdensServicoModule.tsx",
+    "line": 171,
+    "table": "prestador_demandas",
+    "column": "codigo_demanda",
+    "detail": "Column 'codigo_demanda' does not exist in table 'prestador_demandas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/prestadores/AdminPrestadorDocumentos.tsx",
+    "line": 224,
+    "table": "documentos_prestador",
+    "detail": "Table 'documentos_prestador' does not exist in schema."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "line": 211,
+    "table": "prestador_suporte_demandas",
+    "joined": "prestador_demandas",
+    "column": "ordem_servico",
+    "detail": "Column 'ordem_servico' does not exist in joined table 'prestador_demandas'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "line": 239,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "cliente",
+    "detail": "Column 'cliente' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "line": 239,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "orcamento",
+    "detail": "Column 'orcamento' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "line": 239,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "codigo_orcamento",
+    "detail": "Column 'codigo_orcamento' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "line": 239,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "total",
+    "detail": "Column 'total' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "line": 239,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "observacoes_servico",
+    "detail": "Column 'observacoes_servico' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "line": 239,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "descricao_adicional",
+    "detail": "Column 'descricao_adicional' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "line": 239,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "servico",
+    "detail": "Column 'servico' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "line": 266,
+    "table": "prestador_demandas",
+    "column": "link_resultado",
+    "detail": "Column 'link_resultado' does not exist in table 'prestador_demandas'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "line": 266,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "cliente",
+    "detail": "Column 'cliente' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "line": 266,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "orcamento",
+    "detail": "Column 'orcamento' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "line": 266,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "codigo_orcamento",
+    "detail": "Column 'codigo_orcamento' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "line": 266,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "total",
+    "detail": "Column 'total' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "line": 266,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "observacoes_servico",
+    "detail": "Column 'observacoes_servico' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "line": 266,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "descricao_adicional",
+    "detail": "Column 'descricao_adicional' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "line": 266,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "servico",
+    "detail": "Column 'servico' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/PromocaoQuantidadeForm.tsx",
+    "line": 56,
+    "table": "produtos",
+    "column": "identificador_preferencial",
+    "detail": "Column 'identificador_preferencial' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/ReembolsosModule.tsx",
+    "line": 72,
+    "table": "faturas",
+    "column": "desconto_voucher_aplicado",
+    "detail": "Column 'desconto_voucher_aplicado' does not exist in table 'faturas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/ReembolsosModule.tsx",
+    "line": 72,
+    "table": "faturas",
+    "column": "abatimento_carteira_aplicado",
+    "detail": "Column 'abatimento_carteira_aplicado' does not exist in table 'faturas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/ReembolsosModule.tsx",
+    "line": 72,
+    "table": "faturas",
+    "column": "desconto_pontos_aplicado",
+    "detail": "Column 'desconto_pontos_aplicado' does not exist in table 'faturas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioCredito.tsx",
+    "line": 20,
+    "table": "clientes",
+    "column": "limite_credito_total",
+    "detail": "Column 'limite_credito_total' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioCredito.tsx",
+    "line": 20,
+    "table": "clientes",
+    "column": "limite_credito_disponivel",
+    "detail": "Column 'limite_credito_disponivel' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+    "line": 20,
+    "table": "emprestimos",
+    "column": "status",
+    "detail": "Column 'status' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+    "line": 20,
+    "table": "emprestimos",
+    "column": "valor_aprovado",
+    "detail": "Column 'valor_aprovado' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+    "line": 20,
+    "table": "emprestimos",
+    "column": "valor_total_financiado",
+    "detail": "Column 'valor_total_financiado' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+    "line": 20,
+    "table": "emprestimos",
+    "column": "taxa_servico",
+    "detail": "Column 'taxa_servico' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+    "line": 20,
+    "table": "emprestimos",
+    "column": "created_at",
+    "detail": "Column 'created_at' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+    "line": 20,
+    "table": "emprestimos",
+    "column": "juros_total_percentual",
+    "detail": "Column 'juros_total_percentual' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+    "line": 24,
+    "table": "emprestimo_parcelas",
+    "column": "valor",
+    "detail": "Column 'valor' does not exist in table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+    "line": 24,
+    "table": "emprestimo_parcelas",
+    "column": "status",
+    "detail": "Column 'status' does not exist in table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+    "line": 24,
+    "table": "emprestimo_parcelas",
+    "column": "data_vencimento",
+    "detail": "Column 'data_vencimento' does not exist in table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioLoja.tsx",
+    "line": 21,
+    "table": "produtos",
+    "column": "estoque_disponivel",
+    "detail": "Column 'estoque_disponivel' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioLoja.tsx",
+    "line": 21,
+    "table": "produtos",
+    "column": "controle_estoque",
+    "detail": "Column 'controle_estoque' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioLoja.tsx",
+    "line": 22,
+    "table": "loja_solicitacoes",
+    "column": "tipo",
+    "detail": "Column 'tipo' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioLoja.tsx",
+    "line": 22,
+    "table": "loja_solicitacoes",
+    "column": "status",
+    "detail": "Column 'status' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioLoja.tsx",
+    "line": 22,
+    "table": "loja_solicitacoes",
+    "column": "created_at",
+    "detail": "Column 'created_at' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioMarketing.tsx",
+    "line": 21,
+    "table": "indicacoes",
+    "column": "data_criacao",
+    "detail": "Column 'data_criacao' does not exist in table 'indicacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "line": 22,
+    "table": "emprestimos",
+    "column": "codigo_emprestimo",
+    "detail": "Column 'codigo_emprestimo' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "line": 22,
+    "table": "emprestimos",
+    "column": "valor_solicitado",
+    "detail": "Column 'valor_solicitado' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "line": 22,
+    "table": "emprestimos",
+    "column": "valor_total_financiado",
+    "detail": "Column 'valor_total_financiado' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "line": 22,
+    "table": "emprestimos",
+    "column": "created_at",
+    "detail": "Column 'created_at' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "line": 22,
+    "table": "emprestimos",
+    "column": "status",
+    "detail": "Column 'status' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "line": 22,
+    "table": "emprestimos",
+    "column": "data_ativacao",
+    "detail": "Column 'data_ativacao' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "line": 22,
+    "table": "emprestimos",
+    "joined": "emprestimo_parcelas",
+    "column": "valor",
+    "detail": "Column 'valor' does not exist in joined table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "line": 22,
+    "table": "emprestimos",
+    "joined": "emprestimo_parcelas",
+    "column": "status",
+    "detail": "Column 'status' does not exist in joined table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "line": 22,
+    "table": "emprestimos",
+    "joined": "emprestimo_parcelas",
+    "column": "data_pagamento",
+    "detail": "Column 'data_pagamento' does not exist in joined table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "line": 32,
+    "table": "faturas",
+    "column": "valor_base_original",
+    "detail": "Column 'valor_base_original' does not exist in table 'faturas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "line": 32,
+    "table": "faturas",
+    "column": "is_amortizacao_credito",
+    "detail": "Column 'is_amortizacao_credito' does not exist in table 'faturas'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "line": 32,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "codigo_orcamento",
+    "detail": "Column 'codigo_orcamento' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "line": 32,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "total",
+    "detail": "Column 'total' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "line": 32,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "acrescimo",
+    "detail": "Column 'acrescimo' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "line": 32,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "desconto",
+    "detail": "Column 'desconto' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "line": 32,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "status )",
+    "detail": "Column 'status )' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/ScrapingAdminModule.tsx",
+    "line": 125,
+    "table": "automacao_scraping_configs",
+    "detail": "Table 'automacao_scraping_configs' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/ScrapingAdminModule.tsx",
+    "line": 131,
+    "table": "automacao_scraping_configs",
+    "detail": "Table 'automacao_scraping_configs' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/ScrapingAdminModule.tsx",
+    "line": 149,
+    "table": "automacao_scraping_configs",
+    "detail": "Table 'automacao_scraping_configs' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/ScrapingAdminModule.tsx",
+    "line": 166,
+    "table": "viagens_categorias",
+    "detail": "Table 'viagens_categorias' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/ScrapingAdminModule.tsx",
+    "line": 262,
+    "table": "automacao_scraping_configs",
+    "detail": "Table 'automacao_scraping_configs' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/ScrapingExecutionMonitorModal.tsx",
+    "line": 107,
+    "table": "automacao_scraping_logs",
+    "detail": "Table 'automacao_scraping_logs' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/super-domains/contratos/AreaVipView.tsx",
+    "line": 160,
+    "table": "clientes",
+    "column": "created_at",
+    "detail": "Column 'created_at' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+    "line": 201,
+    "table": "contratos",
+    "detail": "Table 'contratos' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+    "line": 304,
+    "table": "contratos",
+    "detail": "Table 'contratos' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+    "line": 374,
+    "table": "contratos",
+    "detail": "Table 'contratos' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+    "line": 82,
+    "table": "clientes",
+    "column": "bloqueado",
+    "detail": "Column 'bloqueado' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+    "line": 72,
+    "table": "emprestimos",
+    "joined": "emprestimo_parcelas",
+    "column": "id",
+    "detail": "Column 'id' does not exist in joined table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+    "line": 72,
+    "table": "emprestimos",
+    "joined": "emprestimo_parcelas",
+    "column": "numero_parcela",
+    "detail": "Column 'numero_parcela' does not exist in joined table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+    "line": 72,
+    "table": "emprestimos",
+    "joined": "emprestimo_parcelas",
+    "column": "valor",
+    "detail": "Column 'valor' does not exist in joined table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+    "line": 72,
+    "table": "emprestimos",
+    "joined": "emprestimo_parcelas",
+    "column": "data_vencimento",
+    "detail": "Column 'data_vencimento' does not exist in joined table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+    "line": 72,
+    "table": "emprestimos",
+    "joined": "emprestimo_parcelas",
+    "column": "status",
+    "detail": "Column 'status' does not exist in joined table 'emprestimo_parcelas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+    "line": 86,
+    "table": "carteira_movimentacoes",
+    "detail": "Table 'carteira_movimentacoes' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+    "line": 37,
+    "table": "admin_sessoes",
+    "detail": "Table 'admin_sessoes' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+    "line": 38,
+    "table": "sistema_configuracoes",
+    "detail": "Table 'sistema_configuracoes' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+    "line": 77,
+    "table": "premios_resgates",
+    "detail": "Table 'premios_resgates' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+    "line": 100,
+    "table": "afiliados",
+    "detail": "Table 'afiliados' does not exist in schema."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx",
+    "line": 41,
+    "table": "prestador_saques",
+    "joined": "prestadores",
+    "column": "saldo_carteira",
+    "detail": "Column 'saldo_carteira' does not exist in joined table 'prestadores'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/ViagensCategoriasModule.tsx",
+    "line": 48,
+    "table": "viagens_categorias",
+    "detail": "Table 'viagens_categorias' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/admin/ViagensCategoriasModule.tsx",
+    "line": 134,
+    "table": "viagens_categorias",
+    "detail": "Table 'viagens_categorias' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/ClientGSAStore.tsx",
+    "line": 484,
+    "table": "loja_carrinhos",
+    "column": "item_id",
+    "detail": "Column 'item_id' does not exist in table 'loja_carrinhos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/ClientGSAStore.tsx",
+    "line": 484,
+    "table": "loja_carrinhos",
+    "column": "tipo",
+    "detail": "Column 'tipo' does not exist in table 'loja_carrinhos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/ClientGSAStore.tsx",
+    "line": 484,
+    "table": "loja_carrinhos",
+    "column": "quantidade",
+    "detail": "Column 'quantidade' does not exist in table 'loja_carrinhos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/ClientGSAStore.tsx",
+    "line": 929,
+    "table": "produtos",
+    "column": "controle_estoque",
+    "detail": "Column 'controle_estoque' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/ClientGSAStore.tsx",
+    "line": 929,
+    "table": "produtos",
+    "column": "estoque_disponivel",
+    "detail": "Column 'estoque_disponivel' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/client/ClientOrcamentos.tsx",
+    "line": 298,
+    "table": "documentos_cliente",
+    "detail": "Table 'documentos_cliente' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/client/ClientOrcamentos.tsx",
+    "line": 304,
+    "table": "documentos_cliente",
+    "detail": "Table 'documentos_cliente' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/client/ClientOrcamentos.tsx",
+    "line": 1707,
+    "table": "documentos_cliente",
+    "detail": "Table 'documentos_cliente' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/client/ClientOrcamentos.tsx",
+    "line": 1713,
+    "table": "documentos_cliente",
+    "detail": "Table 'documentos_cliente' does not exist in schema."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/client/ClientProdutos.tsx",
+    "line": 105,
+    "table": "ordens_compra",
+    "joined": "produtos",
+    "column": "imagem_url",
+    "detail": "Column 'imagem_url' does not exist in joined table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/ClientProdutos.tsx",
+    "line": 119,
+    "table": "produtos",
+    "column": "visivel_na_loja",
+    "detail": "Column 'visivel_na_loja' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/ClientProdutos.tsx",
+    "line": 119,
+    "table": "produtos",
+    "column": "controle_estoque",
+    "detail": "Column 'controle_estoque' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/ClientProdutos.tsx",
+    "line": 119,
+    "table": "produtos",
+    "column": "estoque_disponivel",
+    "detail": "Column 'estoque_disponivel' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/ClientProdutos.tsx",
+    "line": 119,
+    "table": "produtos",
+    "column": "tipo_cliente",
+    "detail": "Column 'tipo_cliente' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/ClientProdutos.tsx",
+    "line": 131,
+    "table": "loja_carrinhos",
+    "column": "quantidade",
+    "detail": "Column 'quantidade' does not exist in table 'loja_carrinhos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/client/ClientProfile.tsx",
+    "line": 378,
+    "table": "documentos_cliente",
+    "detail": "Table 'documentos_cliente' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/client/ClientProfile.tsx",
+    "line": 384,
+    "table": "documentos_cliente",
+    "detail": "Table 'documentos_cliente' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/client/ClientProfile.tsx",
+    "line": 433,
+    "table": "documentos_cliente",
+    "detail": "Table 'documentos_cliente' does not exist in schema."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/client/ClientPromocoes.tsx",
+    "line": 124,
+    "table": "cliente_promocoes",
+    "joined": "orcamentos",
+    "column": "titulo_solicitacao",
+    "detail": "Column 'titulo_solicitacao' does not exist in joined table 'orcamentos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/ClientVouchers.tsx",
+    "line": 89,
+    "table": "extrato_financeiro",
+    "column": "referencia_id",
+    "detail": "Column 'referencia_id' does not exist in table 'extrato_financeiro'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/client/marketplace/classifieds/MyClassifiedCommissionsPage.tsx",
+    "line": 44,
+    "table": "classificados_comissoes",
+    "joined": "classificados_transacoes",
+    "column": "categoria)",
+    "detail": "Column 'categoria)' does not exist in joined table 'classificados_transacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/marketplace/travel/MyTripsPage.tsx",
+    "line": 43,
+    "table": "viagens_transacoes",
+    "column": "valor_faturado",
+    "detail": "Column 'valor_faturado' does not exist in table 'viagens_transacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/marketplace/travel/MyTripsPage.tsx",
+    "line": 43,
+    "table": "viagens_transacoes",
+    "column": "valor_efetivamente_pago",
+    "detail": "Column 'valor_efetivamente_pago' does not exist in table 'viagens_transacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/marketplace/travel/MyTripsPage.tsx",
+    "line": 43,
+    "table": "viagens_transacoes",
+    "column": "valor_em_aberto",
+    "detail": "Column 'valor_em_aberto' does not exist in table 'viagens_transacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/marketplace/travel/MyTripsPage.tsx",
+    "line": 43,
+    "table": "viagens_transacoes",
+    "column": "pagamento_status",
+    "detail": "Column 'pagamento_status' does not exist in table 'viagens_transacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/marketplace/travel/TravelCancellationsPage.tsx",
+    "line": 58,
+    "table": "viagens_transacoes",
+    "column": "valor_faturado",
+    "detail": "Column 'valor_faturado' does not exist in table 'viagens_transacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/marketplace/travel/TravelCancellationsPage.tsx",
+    "line": 58,
+    "table": "viagens_transacoes",
+    "column": "valor_efetivamente_pago",
+    "detail": "Column 'valor_efetivamente_pago' does not exist in table 'viagens_transacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/marketplace/travel/TravelCancellationsPage.tsx",
+    "line": 58,
+    "table": "viagens_transacoes",
+    "column": "valor_em_aberto",
+    "detail": "Column 'valor_em_aberto' does not exist in table 'viagens_transacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/marketplace/travel/TravelCancellationsPage.tsx",
+    "line": 58,
+    "table": "viagens_transacoes",
+    "column": "valor_elegivel_reembolso",
+    "detail": "Column 'valor_elegivel_reembolso' does not exist in table 'viagens_transacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/marketplace/travel/TravelCancellationsPage.tsx",
+    "line": 58,
+    "table": "viagens_transacoes",
+    "column": "pagamento_status",
+    "detail": "Column 'pagamento_status' does not exist in table 'viagens_transacoes'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/client/marketplace/travel/TravelCancellationsPage.tsx",
+    "line": 58,
+    "table": "viagens_transacoes",
+    "joined": "viagens_cancelamentos",
+    "column": "valor_pago_no_pedido",
+    "detail": "Column 'valor_pago_no_pedido' does not exist in joined table 'viagens_cancelamentos'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/client/marketplace/travel/TravelCancellationsPage.tsx",
+    "line": 58,
+    "table": "viagens_transacoes",
+    "joined": "viagens_cancelamentos",
+    "column": "faturas_suspensas",
+    "detail": "Column 'faturas_suspensas' does not exist in joined table 'viagens_cancelamentos'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/client/marketplace/travel/TravelCancellationsPage.tsx",
+    "line": 58,
+    "table": "viagens_transacoes",
+    "joined": "viagens_cancelamentos",
+    "column": "decidido_em",
+    "detail": "Column 'decidido_em' does not exist in joined table 'viagens_cancelamentos'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/client/marketplace/travel/TravelCancellationsPage.tsx",
+    "line": 58,
+    "table": "viagens_transacoes",
+    "joined": "viagens_cancelamentos",
+    "column": "concluido_em",
+    "detail": "Column 'concluido_em' does not exist in joined table 'viagens_cancelamentos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/client/store/BlogHome.tsx",
+    "line": 26,
+    "table": "blog_posts",
+    "detail": "Table 'blog_posts' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/client/store/BlogPostPage.tsx",
+    "line": 21,
+    "table": "blog_posts",
+    "detail": "Table 'blog_posts' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutModal.tsx",
+    "line": 96,
+    "table": "clientes",
+    "column": "limite_credito_total",
+    "detail": "Column 'limite_credito_total' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutModal.tsx",
+    "line": 96,
+    "table": "clientes",
+    "column": "limite_credito_disponivel",
+    "detail": "Column 'limite_credito_disponivel' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutModal.tsx",
+    "line": 96,
+    "table": "clientes",
+    "column": "opcao_pagamento_parcelado",
+    "detail": "Column 'opcao_pagamento_parcelado' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutModal.tsx",
+    "line": 96,
+    "table": "clientes",
+    "column": "max_parcelas",
+    "detail": "Column 'max_parcelas' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutModal.tsx",
+    "line": 260,
+    "table": "orcamentos",
+    "column": "cupom_desconto_id",
+    "detail": "Column 'cupom_desconto_id' does not exist in table 'orcamentos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutModal.tsx",
+    "line": 260,
+    "table": "orcamentos",
+    "column": "cupom_entrega_id",
+    "detail": "Column 'cupom_entrega_id' does not exist in table 'orcamentos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutModal.tsx",
+    "line": 695,
+    "table": "produtos",
+    "column": "identificador_preferencial",
+    "detail": "Column 'identificador_preferencial' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutModal.tsx",
+    "line": 743,
+    "table": "produtos",
+    "column": "valor_promocional",
+    "detail": "Column 'valor_promocional' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutModal.tsx",
+    "line": 743,
+    "table": "produtos",
+    "column": "desconto_fim_em",
+    "detail": "Column 'desconto_fim_em' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutModal.tsx",
+    "line": 743,
+    "table": "produtos",
+    "column": "desconto_quantidade_limite",
+    "detail": "Column 'desconto_quantidade_limite' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutModal.tsx",
+    "line": 743,
+    "table": "produtos",
+    "column": "desconto_quantidade_utilizada",
+    "detail": "Column 'desconto_quantidade_utilizada' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutModal.tsx",
+    "line": 743,
+    "table": "produtos",
+    "column": "visivel_na_loja",
+    "detail": "Column 'visivel_na_loja' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutModal.tsx",
+    "line": 743,
+    "table": "produtos",
+    "column": "estoque_disponivel",
+    "detail": "Column 'estoque_disponivel' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutModal.tsx",
+    "line": 822,
+    "table": "clientes",
+    "column": "limite_credito_disponivel",
+    "detail": "Column 'limite_credito_disponivel' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 370,
+    "table": "clientes",
+    "column": "limite_credito_total",
+    "detail": "Column 'limite_credito_total' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 370,
+    "table": "clientes",
+    "column": "limite_credito_disponivel",
+    "detail": "Column 'limite_credito_disponivel' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 370,
+    "table": "clientes",
+    "column": "opcao_pagamento_parcelado",
+    "detail": "Column 'opcao_pagamento_parcelado' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 370,
+    "table": "clientes",
+    "column": "max_parcelas",
+    "detail": "Column 'max_parcelas' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 554,
+    "table": "orcamentos",
+    "column": "cupom_desconto_id",
+    "detail": "Column 'cupom_desconto_id' does not exist in table 'orcamentos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 554,
+    "table": "orcamentos",
+    "column": "cupom_entrega_id",
+    "detail": "Column 'cupom_entrega_id' does not exist in table 'orcamentos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 692,
+    "table": "produtos",
+    "column": "identificador_preferencial",
+    "detail": "Column 'identificador_preferencial' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 993,
+    "table": "produtos",
+    "column": "valor_custo",
+    "detail": "Column 'valor_custo' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 993,
+    "table": "produtos",
+    "column": "valor_promocional",
+    "detail": "Column 'valor_promocional' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 993,
+    "table": "produtos",
+    "column": "desconto_tipo",
+    "detail": "Column 'desconto_tipo' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 993,
+    "table": "produtos",
+    "column": "desconto_valor",
+    "detail": "Column 'desconto_valor' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 993,
+    "table": "produtos",
+    "column": "desconto_percentual",
+    "detail": "Column 'desconto_percentual' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 993,
+    "table": "produtos",
+    "column": "desconto_fim_em",
+    "detail": "Column 'desconto_fim_em' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 993,
+    "table": "produtos",
+    "column": "desconto_quantidade_limite",
+    "detail": "Column 'desconto_quantidade_limite' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 993,
+    "table": "produtos",
+    "column": "desconto_quantidade_utilizada",
+    "detail": "Column 'desconto_quantidade_utilizada' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 993,
+    "table": "produtos",
+    "column": "visivel_na_loja",
+    "detail": "Column 'visivel_na_loja' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 993,
+    "table": "produtos",
+    "column": "estoque_disponivel",
+    "detail": "Column 'estoque_disponivel' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 993,
+    "table": "produtos",
+    "column": "controle_estoque",
+    "detail": "Column 'controle_estoque' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CheckoutPage.tsx",
+    "line": 1061,
+    "table": "clientes",
+    "column": "limite_credito_disponivel",
+    "detail": "Column 'limite_credito_disponivel' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CouponsPage.tsx",
+    "line": 103,
+    "table": "orcamentos",
+    "column": "cupom_desconto_id",
+    "detail": "Column 'cupom_desconto_id' does not exist in table 'orcamentos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/CouponsPage.tsx",
+    "line": 103,
+    "table": "orcamentos",
+    "column": "cupom_entrega_id",
+    "detail": "Column 'cupom_entrega_id' does not exist in table 'orcamentos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/EcommerceHeader.tsx",
+    "line": 298,
+    "table": "loja_carrinhos",
+    "column": "quantidade",
+    "detail": "Column 'quantidade' does not exist in table 'loja_carrinhos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/EcommerceHeader.tsx",
+    "line": 402,
+    "table": "produtos",
+    "column": "valor_promocional",
+    "detail": "Column 'valor_promocional' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/EcommerceHeader.tsx",
+    "line": 402,
+    "table": "produtos",
+    "column": "imagem_url",
+    "detail": "Column 'imagem_url' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/EcommerceHeader.tsx",
+    "line": 402,
+    "table": "produtos",
+    "column": "categoria_id",
+    "detail": "Column 'categoria_id' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/EcommerceHome.tsx",
+    "line": 296,
+    "table": "loja_carrinhos",
+    "column": "quantidade",
+    "detail": "Column 'quantidade' does not exist in table 'loja_carrinhos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/ProductPage.tsx",
+    "line": 168,
+    "table": "produtos",
+    "column": "valor_promocional",
+    "detail": "Column 'valor_promocional' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/ProductPage.tsx",
+    "line": 168,
+    "table": "produtos",
+    "column": "desconto_percentual",
+    "detail": "Column 'desconto_percentual' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/ProductPage.tsx",
+    "line": 168,
+    "table": "produtos",
+    "column": "imagem_url",
+    "detail": "Column 'imagem_url' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/ProductPage.tsx",
+    "line": 183,
+    "table": "produtos",
+    "column": "valor_promocional",
+    "detail": "Column 'valor_promocional' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/ProductPage.tsx",
+    "line": 183,
+    "table": "produtos",
+    "column": "desconto_percentual",
+    "detail": "Column 'desconto_percentual' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/ProductPage.tsx",
+    "line": 183,
+    "table": "produtos",
+    "column": "imagem_url",
+    "detail": "Column 'imagem_url' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/ProductPage.tsx",
+    "line": 246,
+    "table": "loja_carrinhos",
+    "column": "quantidade",
+    "detail": "Column 'quantidade' does not exist in table 'loja_carrinhos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/ProductPage.tsx",
+    "line": 488,
+    "table": "loja_carrinhos",
+    "column": "quantidade",
+    "detail": "Column 'quantidade' does not exist in table 'loja_carrinhos'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/client/store/PurchasesPage.tsx",
+    "line": 239,
+    "table": "ordens_compra",
+    "joined": "produtos",
+    "column": "imagem_url",
+    "detail": "Column 'imagem_url' does not exist in joined table 'produtos'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/client/store/PurchasesPage.tsx",
+    "line": 239,
+    "table": "ordens_compra",
+    "joined": "produtos",
+    "column": "identificador_preferencial",
+    "detail": "Column 'identificador_preferencial' does not exist in joined table 'produtos'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/client/store/PurchasesPage.tsx",
+    "line": 242,
+    "table": "ordens_assinatura",
+    "joined": "assinaturas",
+    "column": "imagem_url",
+    "detail": "Column 'imagem_url' does not exist in joined table 'assinaturas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/PurchasesPage.tsx",
+    "line": 540,
+    "table": "loja_carrinhos",
+    "column": "quantidade",
+    "detail": "Column 'quantidade' does not exist in table 'loja_carrinhos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/StoreHubCoupons.tsx",
+    "line": 63,
+    "table": "orcamentos",
+    "column": "cupom_desconto_id",
+    "detail": "Column 'cupom_desconto_id' does not exist in table 'orcamentos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/store/StoreHubCoupons.tsx",
+    "line": 63,
+    "table": "orcamentos",
+    "column": "cupom_entrega_id",
+    "detail": "Column 'cupom_entrega_id' does not exist in table 'orcamentos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/StoreHub.tsx",
+    "line": 237,
+    "table": "clientes",
+    "column": "limite_credito_disponivel",
+    "detail": "Column 'limite_credito_disponivel' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/StoreHub.tsx",
+    "line": 237,
+    "table": "clientes",
+    "column": "limite_credito_total",
+    "detail": "Column 'limite_credito_total' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/StoreHub.tsx",
+    "line": 237,
+    "table": "clientes",
+    "column": "nivel_fidelidade",
+    "detail": "Column 'nivel_fidelidade' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/client/StoreHub.tsx",
+    "line": 248,
+    "table": "loja_pedidos",
+    "detail": "Table 'loja_pedidos' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/components/client/StoreHub.tsx",
+    "line": 269,
+    "table": "cliente_cupons",
+    "detail": "Table 'cliente_cupons' does not exist in schema."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/client/StoreHub.tsx",
+    "line": 462,
+    "table": "loja_reembolsos",
+    "joined": "ordens_compra",
+    "column": "orcamento_id",
+    "detail": "Column 'orcamento_id' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/client/StoreHub.tsx",
+    "line": 462,
+    "table": "loja_reembolsos",
+    "joined": "ordens_assinatura",
+    "column": "orcamento_id",
+    "detail": "Column 'orcamento_id' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_JOIN_TABLE",
+    "file": "src/components/client/StoreHub.tsx",
+    "line": 638,
+    "table": "loja_solicitacoes",
+    "joined": "orcamento_origem_id",
+    "token": "orcamento_origem:orcamento_origem_id(\r\n            codigo_orcamento,\r\n            total,\r\n            origem_gsa_store\r\n          )",
+    "detail": "Joined relation 'orcamento_origem_id' in table 'loja_solicitacoes' does not exist in schema."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/client/StoreHub.tsx",
+    "line": 1071,
+    "table": "ordens_compra",
+    "joined": "produtos",
+    "column": "imagem_url",
+    "detail": "Column 'imagem_url' does not exist in joined table 'produtos'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/client/StoreHub.tsx",
+    "line": 1071,
+    "table": "ordens_compra",
+    "joined": "produtos",
+    "column": "identificador_preferencial",
+    "detail": "Column 'identificador_preferencial' does not exist in joined table 'produtos'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/client/StoreHub.tsx",
+    "line": 1074,
+    "table": "ordens_assinatura",
+    "joined": "assinaturas",
+    "column": "imagem_url",
+    "detail": "Column 'imagem_url' does not exist in joined table 'assinaturas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/StoreHub.tsx",
+    "line": 1255,
+    "table": "loja_solicitacoes",
+    "column": "orcamento_origem_id",
+    "detail": "Column 'orcamento_origem_id' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/client/StoreHub.tsx",
+    "line": 1255,
+    "table": "loja_solicitacoes",
+    "column": "status",
+    "detail": "Column 'status' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorDemandas.tsx",
+    "line": 112,
+    "table": "prestador_demandas",
+    "column": "link_resultado",
+    "detail": "Column 'link_resultado' does not exist in table 'prestador_demandas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorDemandas.tsx",
+    "line": 112,
+    "table": "prestador_demandas",
+    "column": "arquivos_resultado",
+    "detail": "Column 'arquivos_resultado' does not exist in table 'prestador_demandas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorDemandas.tsx",
+    "line": 112,
+    "table": "prestador_demandas",
+    "column": "arquivos_briefing",
+    "detail": "Column 'arquivos_briefing' does not exist in table 'prestador_demandas'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/components/prestador/PrestadorDemandas.tsx",
+    "line": 112,
+    "table": "prestador_demandas",
+    "joined": "ordens_servico",
+    "column": "orcamento",
+    "detail": "Column 'orcamento' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorDocumentos.tsx",
+    "line": 40,
+    "table": "prestador_documentos",
+    "column": "urls",
+    "detail": "Column 'urls' does not exist in table 'prestador_documentos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorDocumentos.tsx",
+    "line": 40,
+    "table": "prestador_documentos",
+    "column": "updated_at",
+    "detail": "Column 'updated_at' does not exist in table 'prestador_documentos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorDocumentos.tsx",
+    "line": 40,
+    "table": "prestador_documentos",
+    "column": "motivo_rejeicao",
+    "detail": "Column 'motivo_rejeicao' does not exist in table 'prestador_documentos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorDocumentos.tsx",
+    "line": 40,
+    "table": "prestador_documentos",
+    "column": "enviado_por_admin",
+    "detail": "Column 'enviado_por_admin' does not exist in table 'prestador_documentos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorFinanceiro.tsx",
+    "line": 68,
+    "table": "prestador_saques",
+    "column": "valor_liquido",
+    "detail": "Column 'valor_liquido' does not exist in table 'prestador_saques'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorFinanceiro.tsx",
+    "line": 68,
+    "table": "prestador_saques",
+    "column": "taxa_aplicada",
+    "detail": "Column 'taxa_aplicada' does not exist in table 'prestador_saques'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorFinanceiro.tsx",
+    "line": 68,
+    "table": "prestador_saques",
+    "column": "tipo_chave_pix",
+    "detail": "Column 'tipo_chave_pix' does not exist in table 'prestador_saques'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorFinanceiro.tsx",
+    "line": 68,
+    "table": "prestador_saques",
+    "column": "chave_pix",
+    "detail": "Column 'chave_pix' does not exist in table 'prestador_saques'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorFinanceiro.tsx",
+    "line": 68,
+    "table": "prestador_saques",
+    "column": "data_vencimento",
+    "detail": "Column 'data_vencimento' does not exist in table 'prestador_saques'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorFinanceiro.tsx",
+    "line": 68,
+    "table": "prestador_saques",
+    "column": "motivo_cancelamento",
+    "detail": "Column 'motivo_cancelamento' does not exist in table 'prestador_saques'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorFinanceiro.tsx",
+    "line": 68,
+    "table": "prestador_saques",
+    "column": "observacao",
+    "detail": "Column 'observacao' does not exist in table 'prestador_saques'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorFinanceiro.tsx",
+    "line": 198,
+    "table": "prestadores",
+    "column": "nome_completo",
+    "detail": "Column 'nome_completo' does not exist in table 'prestadores'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorSuporte.tsx",
+    "line": 53,
+    "table": "tickets",
+    "column": "updated_at",
+    "detail": "Column 'updated_at' does not exist in table 'tickets'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorSuporte.tsx",
+    "line": 80,
+    "table": "ticket_mensagens",
+    "column": "anexo_url",
+    "detail": "Column 'anexo_url' does not exist in table 'ticket_mensagens'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/prestador/PrestadorSuporte.tsx",
+    "line": 80,
+    "table": "ticket_mensagens",
+    "column": "anexo_tipo",
+    "detail": "Column 'anexo_tipo' does not exist in table 'ticket_mensagens'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/public/PublicVIPPresentationPage.tsx",
+    "line": 257,
+    "table": "produtos",
+    "column": "imagem_url",
+    "detail": "Column 'imagem_url' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/components/public/PublicVIPPresentationPage.tsx",
+    "line": 257,
+    "table": "produtos",
+    "column": "categoria",
+    "detail": "Column 'categoria' does not exist in table 'produtos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/hooks/useProviderNotifications.tsx",
+    "line": 158,
+    "table": "notificacoes",
+    "column": "prioridade",
+    "detail": "Column 'prioridade' does not exist in table 'notificacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/hooks/useProviderNotifications.tsx",
+    "line": 158,
+    "table": "notificacoes",
+    "column": "destinatario_tipo",
+    "detail": "Column 'destinatario_tipo' does not exist in table 'notificacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/lib/pdfSharingService.ts",
+    "line": 18,
+    "table": "documentos_prestador",
+    "detail": "Table 'documentos_prestador' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/lib/pdfSharingService.ts",
+    "line": 24,
+    "table": "documentos_prestador",
+    "detail": "Table 'documentos_prestador' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/lib/pdfSharingService.ts",
+    "line": 42,
+    "table": "documentos_prestador",
+    "detail": "Table 'documentos_prestador' does not exist in schema."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/lib/pixService.ts",
+    "line": 212,
+    "table": "orcamentos",
+    "joined": "loja_pedido_itens",
+    "column": "imagem_url",
+    "detail": "Column 'imagem_url' does not exist in joined table 'loja_pedido_itens'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/lib/pixService.ts",
+    "line": 212,
+    "table": "orcamentos",
+    "joined": "loja_pedido_itens",
+    "column": "codigo_produto",
+    "detail": "Column 'codigo_produto' does not exist in joined table 'loja_pedido_itens'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/lib/pixService.ts",
+    "line": 212,
+    "table": "orcamentos",
+    "joined": "loja_pedido_itens",
+    "column": "codigo_barras",
+    "detail": "Column 'codigo_barras' does not exist in joined table 'loja_pedido_itens'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/lib/pixService.ts",
+    "line": 212,
+    "table": "orcamentos",
+    "joined": "loja_pedido_itens",
+    "column": "valor)",
+    "detail": "Column 'valor)' does not exist in joined table 'loja_pedido_itens'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/lib/pixService.ts",
+    "line": 212,
+    "table": "orcamentos",
+    "joined": "ordens_compra",
+    "column": "nome",
+    "detail": "Column 'nome' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/lib/pixService.ts",
+    "line": 212,
+    "table": "orcamentos",
+    "joined": "ordens_compra",
+    "column": "imagem_url",
+    "detail": "Column 'imagem_url' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/lib/pixService.ts",
+    "line": 212,
+    "table": "orcamentos",
+    "joined": "ordens_compra",
+    "column": "codigo_produto",
+    "detail": "Column 'codigo_produto' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/lib/pixService.ts",
+    "line": 212,
+    "table": "orcamentos",
+    "joined": "ordens_compra",
+    "column": "codigo_barras",
+    "detail": "Column 'codigo_barras' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/lib/pixService.ts",
+    "line": 212,
+    "table": "orcamentos",
+    "joined": "ordens_compra",
+    "column": "valor)",
+    "detail": "Column 'valor)' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/lib/privateStorage.ts",
+    "line": 153,
+    "table": "emprestimos",
+    "column": "cliente_id",
+    "detail": "Column 'cliente_id' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/lib/supabase.ts",
+    "line": 155,
+    "table": "emprestimos",
+    "column": "cliente_id",
+    "detail": "Column 'cliente_id' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/lib/supabaseWrapper.ts",
+    "line": 5,
+    "table": "...",
+    "detail": "Table '...' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/pages/AdvertiserPortal.tsx",
+    "line": 796,
+    "table": "gsa-ad-creatives",
+    "detail": "Table 'gsa-ad-creatives' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_TABLE",
+    "file": "src/pages/AdvertiserPortal.tsx",
+    "line": 831,
+    "table": "gsa-ad-creatives",
+    "detail": "Table 'gsa-ad-creatives' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/utils/paymentPropagation.ts",
+    "line": 48,
+    "table": "faturas",
+    "column": "is_amortizacao_credito",
+    "detail": "Column 'is_amortizacao_credito' does not exist in table 'faturas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/utils/paymentPropagation.ts",
+    "line": 48,
+    "table": "faturas",
+    "column": "valor_base_original",
+    "detail": "Column 'valor_base_original' does not exist in table 'faturas'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/utils/paymentPropagation.ts",
+    "line": 64,
+    "table": "loja_solicitacoes",
+    "column": "tipo",
+    "detail": "Column 'tipo' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/utils/paymentPropagation.ts",
+    "line": 64,
+    "table": "loja_solicitacoes",
+    "column": "cliente_id",
+    "detail": "Column 'cliente_id' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/utils/paymentPropagation.ts",
+    "line": 64,
+    "table": "loja_solicitacoes",
+    "column": "historico_status",
+    "detail": "Column 'historico_status' does not exist in table 'loja_solicitacoes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/utils/paymentPropagation.ts",
+    "line": 105,
+    "table": "clientes",
+    "column": "limite_credito_disponivel",
+    "detail": "Column 'limite_credito_disponivel' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/utils/paymentPropagation.ts",
+    "line": 105,
+    "table": "clientes",
+    "column": "limite_credito_total",
+    "detail": "Column 'limite_credito_total' does not exist in table 'clientes'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/utils/paymentPropagation.ts",
+    "line": 158,
+    "table": "ordens_compra",
+    "column": "orcamento_id",
+    "detail": "Column 'orcamento_id' does not exist in table 'ordens_compra'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/utils/paymentPropagation.ts",
+    "line": 198,
+    "table": "ordens_assinatura",
+    "column": "orcamento_id",
+    "detail": "Column 'orcamento_id' does not exist in table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/utils/promotions.ts",
+    "line": 14,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "orcamento_id",
+    "detail": "Column 'orcamento_id' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/utils/promotions.ts",
+    "line": 14,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "orcamento_id",
+    "detail": "Column 'orcamento_id' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/utils/referral.ts",
+    "line": 29,
+    "table": "faturas",
+    "joined": "ordens_servico",
+    "column": "desconto)",
+    "detail": "Column 'desconto)' does not exist in joined table 'ordens_servico'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/utils/referral.ts",
+    "line": 29,
+    "table": "faturas",
+    "joined": "ordens_compra",
+    "column": "desconto)",
+    "detail": "Column 'desconto)' does not exist in joined table 'ordens_compra'."
+  },
+  {
+    "severity": "MEDIUM",
+    "category": "INVALID_JOIN_COLUMN",
+    "file": "src/utils/referral.ts",
+    "line": 29,
+    "table": "faturas",
+    "joined": "ordens_assinatura",
+    "column": "desconto)",
+    "detail": "Column 'desconto)' does not exist in joined table 'ordens_assinatura'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_JOIN_TABLE",
+    "file": "src/utils/referral.ts",
+    "line": 50,
+    "table": "indicacoes",
+    "joined": "indicador_id",
+    "token": "indicador:indicador_id(id, nome, saldo_carteira)",
+    "detail": "Joined relation 'indicador_id' in table 'indicacoes' does not exist in schema."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/utils/riskProfile.ts",
+    "line": 36,
+    "table": "emprestimos",
+    "column": "status",
+    "detail": "Column 'status' does not exist in table 'emprestimos'."
+  },
+  {
+    "severity": "HIGH",
+    "category": "INVALID_COLUMN",
+    "file": "src/utils/riskProfile.ts",
+    "line": 40,
+    "table": "emprestimo_parcelas",
+    "column": "status",
+    "detail": "Column 'status' does not exist in table 'emprestimo_parcelas'."
+  }
+]

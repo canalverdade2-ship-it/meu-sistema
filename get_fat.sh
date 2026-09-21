@@ -1,0 +1,1 @@
+﻿PGPASSWORD=GSA_SENHA_FORTE_2026 psql -h 127.0.0.1 -p 5433 -U supabase_admin -d gsahub -c "SELECT f.id, f.status, f.valor_total, f.data_vencimento FROM orcamentos o JOIN faturas f ON f.orcamento_id = o.id WHERE o.codigo_orcamento LIKE '%F9EBC9EE43%';"

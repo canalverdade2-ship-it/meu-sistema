@@ -1,0 +1,8 @@
+import { runSshScript } from './ssh2-run.mjs';
+
+const cmd = `
+sudo journalctl -u gsa-tv-backup.service --since '2026-09-06' --no-pager
+`;
+
+const res = await runSshScript(cmd, 30000);
+console.log(res.stdout);

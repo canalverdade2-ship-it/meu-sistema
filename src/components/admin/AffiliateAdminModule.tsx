@@ -27,6 +27,7 @@ import { copyToClipboard, formatCurrency, formatDateTime, formatShortId } from '
 import { useConfirm } from '../../hooks/useConfirm';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { Modal } from '../ui/Modal';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 type AffiliateAdminTab = 'programas' | 'afiliados' | 'saques' | 'regras_pontos';
 
 type AffiliateProgram = {
@@ -227,9 +228,16 @@ export function AffiliateAdminModule() {
 
   useEffect(() => {
     void load();
-    const interval = window.setInterval(() => void load(true), 30000);
-    return () => window.clearInterval(interval);
   }, [load]);
+
+  useRealtimeSubscription([
+    { table: 'gsa_afiliados', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'gsa_afiliado_programas', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'gsa_afiliado_comissoes', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'gsa_afiliado_saques', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'gsa_afiliado_links', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'indicacoes', onChange: () => void load(true), debounceMs: 500 },
+  ]);
 
   const filteredAffiliates = useMemo(() => {
     const query = search.trim().toLocaleLowerCase('pt-BR');
@@ -269,6 +277,11 @@ export function AffiliateAdminModule() {
   const decidePayout = async (payout: AffiliatePayout, action: 'approve' | 'reject' | 'mark_paid', customNotes?: string, paidAtDate?: string) => {
     const notes = customNotes || null;
 
+    if (action === 'mark_paid' && (!notes || notes.trim().length < 4)) {
+      toast.error('Informe a referência ou o comprovante do pagamento PIX.');
+      return false;
+    }
+
     setWorkingId(payout.id);
     try {
       await callAdminRpc('gsa_admin_decide_affiliate_payout', {
@@ -279,8 +292,10 @@ export function AffiliateAdminModule() {
       });
       toast.success('Solicitação de saque atualizada.');
       await load(true);
+      return true;
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível processar o saque.');
+      return false;
     } finally {
       setWorkingId(null);
     }
@@ -1032,13 +1047,14 @@ export function AffiliateAdminModule() {
 
                   <div>
                     <label className="block text-xs font-bold text-neutral-700 mb-1">
-                      Notas / Comprovante PIX (opcional)
+                      {approvalAction === 'mark_paid' ? 'Referência / Comprovante PIX' : 'Notas da aprovação (opcional)'}
+                      {approvalAction === 'mark_paid' && <span className="text-emerald-700"> *</span>}
                     </label>
                     <input
                       type="text"
                       value={approvalNotes}
                       onChange={(e) => setApprovalNotes(e.target.value)}
-                      placeholder="Ex: Ref PIX 98765432..."
+                      placeholder={approvalAction === 'mark_paid' ? 'Obrigatório: ID E2E, referência ou comprovante' : 'Observação administrativa'}
                       className="w-full rounded-xl border border-emerald-200 bg-white p-2.5 text-xs text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
                     />
                   </div>
@@ -1059,10 +1075,12 @@ export function AffiliateAdminModule() {
                     type="button"
                     disabled={workingId === selectedPayout.id}
                     onClick={async () => {
-                      await decidePayout(selectedPayout, approvalAction, approvalNotes.trim() || undefined, approvalDateTime);
-                      setSelectedPayout(null);
-                      setIsApprovingPayout(false);
-                      setApprovalNotes('');
+                      const success = await decidePayout(selectedPayout, approvalAction, approvalNotes.trim() || undefined, approvalDateTime);
+                      if (success) {
+                        setSelectedPayout(null);
+                        setIsApprovingPayout(false);
+                        setApprovalNotes('');
+                      }
                     }}
                     className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-black text-white hover:bg-emerald-700 disabled:opacity-50"
                   >
@@ -1246,13 +1264,14 @@ function MinimumPayoutRuleEditor({ summaryMinimum, onSaved }: { summaryMinimum: 
         <div className="flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2 text-xs font-bold text-neutral-700">
             Mínimo (R$)
-            <input
+            <input 
               type="number"
               min={1}
               max={100000}
               step={1}
               value={minValor}
-              onChange={(e) => setMinValor(number(e.target.value))}
+              inputMode="numeric"
+onChange={(e) => setMinValor(number(e.target.value))}
               className="w-28 rounded-xl border border-neutral-300 px-3 py-2.5 text-sm font-black text-neutral-900 focus:border-indigo-600 focus:outline-none"
             />
           </label>
@@ -1306,7 +1325,7 @@ function ProgramEditor({ program, onSaved }: { key?: string; program: AffiliateP
 }
 
 function NumberField({ label, value, onChange, min, max, step = 1 }: { label: string; value: number; onChange: (value: number) => void; min: number; max: number; step?: number }) {
-  return <label className="text-xs font-bold text-neutral-600">{label}<input type="number" value={value} min={min} max={max} step={step} onChange={(event) => onChange(number(event.target.value))} className="mt-1.5 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm font-bold" /></label>;
+  return <label className="text-xs font-bold text-neutral-600">{label}<input  type="number" value={value} min={min} max={max} step={step} inputMode="numeric" onChange={(event) => onChange(number(event.target.value))} className="mt-1.5 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm font-bold" /></label>;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -1416,12 +1435,13 @@ function AffiliatePointsSettingsEditor({ summary, onSaved }: { summary: Affiliat
 
           <label className="block text-xs font-bold text-neutral-700">
             Quantidade de Pontos de Boas-Vindas
-            <input
+            <input 
               type="number"
               min={0}
               max={100000}
               value={welcomeValor}
-              onChange={(e) => setWelcomeValor(number(e.target.value))}
+              inputMode="numeric"
+onChange={(e) => setWelcomeValor(number(e.target.value))}
               className="mt-1.5 w-full rounded-xl border border-neutral-200 p-3 text-sm font-bold text-indigo-700"
             />
           </label>
@@ -1465,25 +1485,27 @@ function AffiliatePointsSettingsEditor({ summary, onSaved }: { summary: Affiliat
 
           <label className="block text-xs font-bold text-neutral-700">
             Pontos Mínimos para Resgate
-            <input
+            <input 
               type="number"
               min={1}
               max={1000000}
               value={pontosMinimo}
-              onChange={(e) => setPontosMinimo(number(e.target.value))}
+              inputMode="numeric"
+onChange={(e) => setPontosMinimo(number(e.target.value))}
               className="mt-1.5 w-full rounded-xl border border-neutral-200 p-3 text-sm font-bold text-neutral-800"
             />
           </label>
 
           <label className="block text-xs font-bold text-neutral-700">
             Taxa de Conversão (R$ / Ponto)
-            <input
+            <input 
               type="number"
               step={0.001}
               min={0.001}
               max={100}
               value={pontosTaxa}
-              onChange={(e) => setPontosTaxa(number(e.target.value))}
+              inputMode="numeric"
+onChange={(e) => setPontosTaxa(number(e.target.value))}
               className="mt-1.5 w-full rounded-xl border border-neutral-200 p-3 text-sm font-bold text-emerald-700"
             />
             <span className="mt-1.5 block text-[11px] font-bold text-neutral-400">
@@ -1591,20 +1613,21 @@ function AffiliateManualAdjustmentForm({ affiliate, onSaved }: { affiliate: Affi
                 onChange={(e) => setOperacao(e.target.value as 'credito' | 'debito')}
                 className="mt-1 w-full rounded-xl border border-neutral-300 p-2.5 text-xs font-bold focus:border-indigo-600 focus:outline-none"
               >
-                <option value="credito">➕ Crédito (+ Adicionar ao saldo)</option>
-                <option value="debito">➖ Débito (- Subtrair do saldo)</option>
+                <option value="credito">âž• Crédito (+ Adicionar ao saldo)</option>
+                <option value="debito">âž– Débito (- Subtrair do saldo)</option>
               </select>
             </label>
 
             <label className="block text-xs font-bold text-neutral-700">
               {tipo === 'pontos' ? 'Quantidade (pts)' : 'Valor (R$)'}
-              <input
+              <input 
                 type="number"
                 step="any"
                 min="0"
                 placeholder={tipo === 'pontos' ? '100' : '50.00'}
                 value={value}
-                onChange={(e) => setValue(e.target.value)}
+                inputMode="numeric"
+onChange={(e) => setValue(e.target.value)}
                 className="mt-1 w-full rounded-xl border border-neutral-300 p-2.5 font-mono text-xs font-bold focus:border-indigo-600 focus:outline-none"
                 required
               />

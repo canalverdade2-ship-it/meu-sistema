@@ -1,0 +1,148 @@
+# GSA TV — Regras de alerta do Prometheus
+# Alertas críticos são enviados ao n8n via webhook (configurado na Fase 9)
+
+groups:
+  - name: gsa-tv-services
+    interval: 30s
+    rules:
+
+      # Processo parado: qualquer serviço da GSA TV
+      - alert: GsaTvServiceDown
+        expr: up{job=~"ffplayout|media-worker|cache-manager|playout-api|playlist-compiler"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: gsa-tv
+        annotations:
+          summary: "Serviço GSA TV parado: {{ $labels.job }}"
+          description: "O serviço {{ $labels.job }} está inacessível há mais de 1 minuto."
+
+      # Heartbeat ausente (simples — qualquer instância do gsa-tv-net)
+      - alert: GsaTvHeartbeatMissing
+        expr: absent(up{job="ffplayout"})
+        for: 2m
+        labels:
+          severity: critical
+          team: gsa-tv
+        annotations:
+          summary: "Heartbeat da GSA TV ausente"
+          description: "O ffplayout não está reportando métricas há mais de 2 minutos."
+
+  - name: gsa-tv-cache
+    interval: 60s
+    rules:
+
+      # Cache com menos de 6 horas de cobertura
+      - alert: GsaTvCacheLow
+        expr: gsa_tv_cache_files < 1
+        for: 5m
+        labels:
+          severity: warning
+          team: gsa-tv
+        annotations:
+          summary: "Cache da GSA TV vazio ou incompleto"
+          description: "O cache local não possui arquivos suficientes para as próximas horas."
+
+      # Downloads pendentes por mais de 30 minutos
+      - alert: GsaTvPendingDownloads
+        expr: gsa_tv_pending_downloads > 0
+        for: 30m
+        labels:
+          severity: warning
+          team: gsa-tv
+        annotations:
+          summary: "Downloads pendentes há mais de 30 min"
+          description: "Há {{ $value }} downloads pendentes sem progressão."
+
+  - name: gsa-tv-resources
+    interval: 30s
+    rules:
+
+      # Disco > 70%
+      - alert: GsaTvDiskAlert70
+        expr: |
+          (node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_free_bytes{mountpoint="/"})
+          / node_filesystem_size_bytes{mountpoint="/"} * 100 > 70
+        for: 5m
+        labels:
+          severity: warning
+          team: gsa-tv
+        annotations:
+          summary: "Disco acima de 70%: {{ $value | printf \"%.1f\" }}%"
+          description: "O disco raiz da VPS atingiu {{ $value | printf \"%.1f\" }}% de utilização."
+
+      # Disco > 80%
+      - alert: GsaTvDiskAlert80
+        expr: |
+          (node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_free_bytes{mountpoint="/"})
+          / node_filesystem_size_bytes{mountpoint="/"} * 100 > 80
+        for: 2m
+        labels:
+          severity: error
+          team: gsa-tv
+        annotations:
+          summary: "Disco acima de 80% — atenção imediata: {{ $value | printf \"%.1f\" }}%"
+          description: "O disco raiz da VPS atingiu {{ $value | printf \"%.1f\" }}% de utilização."
+
+      # Disco > 90%
+      - alert: GsaTvDiskAlert90
+        expr: |
+          (node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_free_bytes{mountpoint="/"})
+          / node_filesystem_size_bytes{mountpoint="/"} * 100 > 90
+        for: 1m
+        labels:
+          severity: critical
+          team: gsa-tv
+        annotations:
+          summary: "DISCO CRITICO acima de 90%: {{ $value | printf \"%.1f\" }}%"
+          description: "Limpar cache ou expandir disco imediatamente."
+
+      # CPU média > 80% por 5 minutos
+      - alert: GsaTvHighCPU
+        expr: |
+          100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: gsa-tv
+        annotations:
+          summary: "CPU acima de 80% por 5 min: {{ $value | printf \"%.1f\" }}%"
+          description: "Verificar se há encode extra ou processo rogue na VPS."
+
+      # Memória > 85%
+      - alert: GsaTvHighMemory
+        expr: |
+          (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          team: gsa-tv
+        annotations:
+          summary: "Memória acima de 85%: {{ $value | printf \"%.1f\" }}%"
+          description: "Verificar memória dos containers GSA TV."
+
+  - name: gsa-tv-playout
+    interval: 30s
+    rules:
+
+      # Dropped frames (se a métrica existir)
+      - alert: GsaTvDroppedFrames
+        expr: increase(gsa_tv_media_worker_errors_total[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+          team: gsa-tv
+        annotations:
+          summary: "Erros no Media Worker: {{ $value }} em 5 min"
+          description: "Possivel problema de processamento de mídia."
+
+      # Playlist compiler falhou
+      - alert: GsaTvPlaylistCompilerFailed
+        expr: gsa_tv_playlist_compiler_last_ok == 0
+        for: 10m
+        labels:
+          severity: error
+          team: gsa-tv
+        annotations:
+          summary: "Playlist Compiler não compilou com sucesso há 10 min"
+          description: "Verificar logs do gsa-tv-playlist-compiler."

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { toast } from 'react-hot-toast';
-import { formatCurrency, formatDate, formatDateTime } from '../../../lib/utils';
+import { formatCurrency, formatDate, formatDateTime, formatLancamentoDescricao } from '../../../lib/utils';
 import { Modal } from '../../ui/Modal';
 import { callClientRpc } from '../../../lib/clientRpc';
 import { useWhatsAppDocument } from '../../../hooks/useWhatsAppDocument';
@@ -29,10 +29,7 @@ interface ExtratoListProps {
 export function ExtratoList({ clientId, initialItemId, clienteNome, clienteTelefone }: ExtratoListProps & { clienteNome?: string, clienteTelefone?: string }) {
   const [extrato, setExtrato] = useState<any[]>([]);
   const { isSendingWhatsApp, sendToWhatsApp } = useWhatsAppDocument();
-  const [monthFilter, setMonthFilter] = useState<string>(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  });
+  const [monthFilter, setMonthFilter] = useState<string>('');
   const [selectedTransferencia, setSelectedTransferencia] = useState<any>(null);
   const [isTransferenciaModalOpen, setIsTransferenciaModalOpen] = useState(false);
   const [isEstornando, setIsEstornando] = useState(false);
@@ -116,14 +113,23 @@ export function ExtratoList({ clientId, initialItemId, clienteNome, clienteTelef
       </div>
 
       <div className="rounded-2xl bg-white p-6 shadow-md ring-1 ring-neutral-300">
-        {extrato.map(item => (
+        {extrato.map(item => {
+          const info = formatLancamentoDescricao(item.descricao);
+          return (
           <div key={item.id} className="flex items-center justify-between border-b border-neutral-100 py-4 last:border-0">
             <div className="flex items-center gap-4">
               <div className={`h-10 w-10 flex items-center justify-center rounded-full ${item.tipo === 'entrada' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
                 {item.tipo === 'entrada' ? <ArrowDownCircle className="h-5 w-5" /> : <ArrowUpRight className="h-5 w-5" />}
               </div>
               <div>
-                <p className="font-medium text-neutral-900">{item.descricao}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-medium text-neutral-900">{info.titulo}</p>
+                  {info.autor && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-neutral-100 text-neutral-600">
+                      {info.autor}
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-neutral-500">{formatDateTime(item.data)}</p>
               </div>
             </div>
@@ -134,7 +140,8 @@ export function ExtratoList({ clientId, initialItemId, clienteNome, clienteTelef
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <Modal 
@@ -175,7 +182,7 @@ export function ExtratoList({ clientId, initialItemId, clienteNome, clienteTelef
                    selectedTransferencia.status === 'estornado' ? 'Transferência Estornada' :
                    selectedTransferencia.status === 'recusado' ? 'Transferência Recusada' :
                    selectedTransferencia.status === 'cancelado' ? 'Transferência Cancelada' :
-                   'Aguardando Aprovação Administrativa'}
+                   'Aguardando Aprovação do Sistema'}
                 </p>
               </div>
             </div>

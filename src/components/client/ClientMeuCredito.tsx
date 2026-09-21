@@ -5,6 +5,7 @@ import { Modal } from '../ui/Modal';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { useWhatsAppDocument } from '../../hooks/useWhatsAppDocument';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import { generateExtratoPDF } from '../../lib/pdf';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
 import { uploadToR2 } from '../../lib/r2Storage';
@@ -32,16 +33,27 @@ import {
   BadgeAlert,
   Loader2,
   X,
+  XCircle,
   ClipboardList,
   CreditCard,
   Send,
   Package
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatCurrency, formatDate, formatDateTime } from '../../lib/utils';
+import { formatCurrency, formatDate, formatDateTime, maskCPF, maskCNPJ, maskPhone } from '../../lib/utils';
 import { toast } from 'react-hot-toast';
 import { validarCPF, validarCNPJ, validarEmail } from '../../utils/cpfValidator';
 import { getProductDisplayCode } from '../../lib/productIdentification';
+import { useConfirm } from '../../hooks/useConfirm';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { CreditDisputeModal } from './CreditDisputeModal';
+import { listClientCreditDisputes } from '../../features/creditDisputes/service';
+import type { CreditDispute } from '../../features/creditDisputes/types';
+import { listClientCreditLimitCancellations, requestClientCreditLimitCancellation } from '../../features/creditLimitCancellation/service';
+import type { CreditLimitCancellation } from '../../features/creditLimitCancellation/types';
+import { CreditWithdrawalModal } from './CreditWithdrawalModal';
+import { listClientCreditWithdrawals } from '../../features/creditWithdrawal/service';
+import type { CreditWithdrawal } from '../../features/creditWithdrawal/types';
 
 interface ClientMeuCreditoProps {
   clientId: string;
@@ -68,6 +80,8 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
   const [submitting, setSubmitting] = useState(false);
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
   const [uploadingContrato, setUploadingContrato] = useState(false);
+  const [cancellingIncrease, setCancellingIncrease] = useState(false);
+  const confirmHook = useConfirm();
   const [showSign, setShowSign] = useState(false);
   const signCanvasRef = useRef<HTMLCanvasElement>(null);
   const signPadRef = useRef<SignaturePad|null>(null);
@@ -109,6 +123,11 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
   const [isAllAmortizacoesOpen, setIsAllAmortizacoesOpen] = useState(false);
   const [isAllExtratoOpen, setIsAllExtratoOpen] = useState(false);
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
+  const [creditDisputes, setCreditDisputes] = useState<CreditDispute[]>([]);
+  const [selectedDisputeMovement, setSelectedDisputeMovement] = useState<LojaCreditoMovimentacao | null>(null);
+  const [creditLimitCancellations, setCreditLimitCancellations] = useState<CreditLimitCancellation[]>([]);
+  const [creditWithdrawals, setCreditWithdrawals] = useState<CreditWithdrawal[]>([]);
+  const [isCreditWithdrawalModalOpen, setIsCreditWithdrawalModalOpen] = useState(false);
 
   // Extrai o código do orçamento de uma fatura de amortização de crédito
   const getFaturaCodigoOrcamento = (fat: any): string => {
@@ -342,6 +361,12 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
         
       if (movErr) throw movErr;
       setMovimentacoes(movData || []);
+      try { setCreditDisputes(await listClientCreditDisputes()); }
+      catch (disputeError) { console.warn('Não foi possível carregar as contestações de crédito:', disputeError); setCreditDisputes([]); }
+      try { setCreditLimitCancellations(await listClientCreditLimitCancellations()); }
+      catch (cancelError) { console.warn('Não foi possível carregar os cancelamentos de limite:', cancelError); setCreditLimitCancellations([]); }
+      try { setCreditWithdrawals(await listClientCreditWithdrawals()); }
+      catch (withdrawalError) { console.warn('Não foi possível carregar os saques de crédito:', withdrawalError); setCreditWithdrawals([]); }
 
       // 4. Carrega faturas amortizáveis
       const { data: fatData, error: fatErr } = await supabase
@@ -364,55 +389,126 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
 
   useEffect(() => {
     loadData();
-
-    // Configura canal de realtime para atualização instantânea
-    const channel = supabase
-      .channel(`client-meu-credito-${clientId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'loja_credito_solicitacoes', filter: `cliente_id=eq.${clientId}` },
-        () => {
-          loadData();
-          onRefreshCliente();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'loja_credito_movimentacoes', filter: `cliente_id=eq.${clientId}` },
-        () => {
-          loadData();
-          onRefreshCliente();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'faturas', filter: `cliente_id=eq.${clientId}` },
-        () => {
-          loadData();
-          onRefreshCliente();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'clientes', filter: `id=eq.${clientId}` },
-        () => {
-          onRefreshCliente();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'loja_credito_documentos' },
-        () => {
-          loadData();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [clientId]);
 
+  useRealtimeSubscription(
+    [
+      {
+        table: 'loja_credito_solicitacoes',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: () => {
+          loadData();
+          onRefreshCliente();
+        },
+      },
+      {
+        table: 'loja_credito_movimentacoes',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: () => {
+          loadData();
+          onRefreshCliente();
+        },
+      },
+      {
+        table: 'faturas',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: () => {
+          loadData();
+          onRefreshCliente();
+        },
+      },
+      {
+        table: 'clientes',
+        filter: clientId ? `id=eq.${clientId}` : undefined,
+        onChange: onRefreshCliente,
+      },
+      {
+        table: 'loja_credito_documentos',
+        onChange: loadData,
+      },
+      {
+        table: 'notificacoes',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: loadData,
+      },
+    ],
+    [clientId]
+  );
+
+
+  const activeCreditWithdrawal = creditWithdrawals.find((item) => ['aguardando_documentos', 'em_analise', 'analise_reforcada', 'aprovado'].includes(item.status)) || null;
+  const notifiedCreditWithdrawal = initialItemId ? creditWithdrawals.find((item) => item.id === initialItemId) || null : null;
+  const creditWithdrawalForModal = notifiedCreditWithdrawal || activeCreditWithdrawal;
+
+  useEffect(() => {
+    if (initialItemId && creditWithdrawals.some((item) => item.id === initialItemId)) setIsCreditWithdrawalModalOpen(true);
+  }, [initialItemId, creditWithdrawals]);
+
+  const getCreditDisputeForMovement = (movementId: string) =>
+    creditDisputes.find((item) => item.movimentacao_id === movementId) || null;
+
+  const isWithinDisputeWindow = (mov: LojaCreditoMovimentacao) => {
+    if (mov.tipo !== 'compra' || !mov.created_at) return false;
+    return Date.now() <= new Date(mov.created_at).getTime() + 90 * 24 * 60 * 60 * 1000;
+  };
+
+  const disputeStatusLabel = (status: string) => ({
+    aberta: 'Contestação registrada', em_analise: 'Contestação em análise',
+    aguardando_documentos: 'Aguardando documentos', deferida: 'Contestação aprovada',
+    parcialmente_deferida: 'Parcialmente aprovada', indeferida: 'Contestação não aprovada',
+    cancelada_cliente: 'Contestação cancelada', resolvida_por_estorno: 'Resolvida por estorno',
+  } as Record<string, string>)[status] || 'Ver contestação';
+
+  const renderCreditDisputeAction = (mov: LojaCreditoMovimentacao) => {
+    if (mov.tipo !== 'compra') return null;
+    const dispute = getCreditDisputeForMovement(mov.id);
+    if (dispute) return <button type="button" onClick={() => setSelectedDisputeMovement(mov)} className="mt-1.5 rounded-lg bg-indigo-50 px-2.5 py-1 text-[9.5px] font-black text-indigo-700 ring-1 ring-indigo-100 hover:bg-indigo-100">{disputeStatusLabel(dispute.status)}</button>;
+    if (!isWithinDisputeWindow(mov)) return <span className="mt-1.5 block text-[9px] font-semibold text-neutral-400">Prazo de contestação encerrado</span>;
+    return <button type="button" onClick={() => setSelectedDisputeMovement(mov)} className="mt-1.5 rounded-lg bg-amber-50 px-2.5 py-1 text-[9.5px] font-black text-amber-700 ring-1 ring-amber-100 hover:bg-amber-100">Contestar compra</button>;
+  };
+
+  const blockedCredit = Math.max(Number(cliente.limite_credito_bloqueado || 0), 0);
+  const currentCreditUsed = Math.max(Number(cliente.limite_credito_total || 0) - Number(cliente.limite_credito_disponivel || 0), 0);
+  const hasPendingCreditInvoice = faturas.some((fat) => fat.status !== 'cancelado' && Number(fat.valor_final_pendente || 0) > 0.01);
+  const activeCreditLimitCancellation = creditLimitCancellations.find((item) => ['solicitado', 'em_analise'].includes(item.status)) || null;
+  const isPreApprovedRequest = Boolean((solicitacao as any)?.origem_pre_aprovado);
+  const preApprovedAlreadyReleased = Boolean((cliente as any).credito_pre_aprovado_liberado_em);
+
+  const handleRequestPreApprovedCredit = async () => {
+    const confirmed = await confirmHook.confirm({
+      title: 'Solicitar liberação dos R$ 100,00?',
+      message: 'O crédito continuará indisponível durante a análise. O sistema terá até 72 horas para aprovar ou recusar a liberação.',
+      confirmLabel: 'Solicitar liberação', cancelLabel: 'Agora não', variant: 'info',
+    });
+    if (!confirmed) return;
+    setSubmitting(true);
+    try {
+      const result = await callClientRpc<any>('gsa_client_request_preapproved_credit_100');
+      toast.success(result?.already_pending ? 'A solicitação já está em análise.' : 'Solicitação enviada. Prazo de análise: até 72 horas.');
+      await loadData();
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível solicitar a liberação.');
+    } finally { setSubmitting(false); }
+  };
+
+  const handleRequestCreditLimitCancellation = async () => {
+    if (blockedCredit > 0.01) { toast.error('Existe limite bloqueado por uma análise financeira em andamento.'); return; }
+    if (currentCreditUsed > 0.01) { toast.error('O limite só pode ser cancelado quando não houver nenhum valor utilizado.'); return; }
+    if (hasPendingCreditInvoice) { toast.error('Quite ou regularize as faturas de crédito pendentes antes de solicitar o cancelamento.'); return; }
+    const confirmed = await confirmHook.confirm({
+      title: 'Solicitar cancelamento do limite?',
+      message: 'Seu limite será enviado para análise de cancelamento. Até a decisão, não utilize o crédito. A aprovação só poderá ocorrer se o Limite Usado continuar em R$ 0,00.',
+      confirmLabel: 'Solicitar cancelamento', cancelLabel: 'Manter meu limite', variant: 'danger',
+    });
+    if (!confirmed) return;
+    setSubmitting(true);
+    try {
+      const result = await requestClientCreditLimitCancellation();
+      toast.success(`Solicitação ${result.protocolo} registrada.`);
+      await loadData(); onRefreshCliente();
+    } catch (error: any) { toast.error(error?.message || 'Não foi possível solicitar o cancelamento do limite.'); }
+    finally { setSubmitting(false); }
+  };
 
   // Função para salvar cadastro pendente e criar a solicitação
   const handleCreateSolicitacao = async (e: React.FormEvent, tipo: 'adesao' | 'alteracao' = 'adesao') => {
@@ -715,6 +811,7 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
       case 'contrato_assinado': return 'Contrato Assinado (Em Ativação)';
       case 'liberado': return 'Crédito Liberado';
       case 'negado': return 'Solicitação Recusada';
+      case 'cancelado': return 'Solicitação Cancelada';
       default: return status;
     }
   };
@@ -723,6 +820,7 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
     switch (status) {
       case 'liberado': return 'text-emerald-600 bg-emerald-50 border-emerald-100';
       case 'negado': return 'text-rose-600 bg-rose-50 border-rose-100';
+      case 'cancelado': return 'text-neutral-600 bg-neutral-50 border-neutral-200';
       case 'analise': return 'text-amber-600 bg-amber-50 border-amber-100';
       case 'documentos_pendentes': return 'text-purple-600 bg-purple-50 border-purple-100';
       case 'pre_aprovado': return 'text-indigo-600 bg-indigo-50 border-indigo-100';
@@ -744,7 +842,7 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
   }
 
   // 1. Landing Page: Solicitação Inicial
-  if (!solicitacao || (solicitacao.status === 'negado' && !isLockoutActive)) {
+  if ((!solicitacao || (solicitacao.status === 'negado' && !isLockoutActive)) && Number(cliente.limite_credito_total || 0) <= 0) {
     return (
       <div className="p-4 md:p-8 max-w-5xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-16">
@@ -760,31 +858,23 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
         <div className="bg-gradient-to-br from-indigo-900 via-indigo-950 to-neutral-950 text-white rounded-[3rem] p-8 md:p-14 text-center relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full filter blur-3xl -mr-16 -mt-16"></div>
           <div className="relative z-10 max-w-xl mx-auto">
-            <h3 className="text-2xl md:text-4xl font-black mb-4">Solicite seu Limite Inicial</h3>
+            <h3 className="text-2xl md:text-4xl font-black mb-4">R$ 100,00 pré-aprovados para você</h3>
             <p className="text-indigo-200/80 font-medium text-xs md:text-sm leading-relaxed mb-8">
-              A resposta inicial ocorre em até 5 dias úteis. Certifique-se de que os seus dados cadastrais estão atualizados para a análise de crédito.
+              Solicite a liberação. O valor entrará em análise por até 72 horas e somente ficará disponível depois da aprovação do sistema.
             </p>
-            <button
-              onClick={() => setIsRequestModalOpen(true)}
-              className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-white text-indigo-900 text-xs md:text-sm font-black uppercase tracking-wider transition-all hover:scale-105 hover:bg-neutral-50 shadow-xl"
-            >
-              Fazer Solicitação de Crédito
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            <div className="flex flex-col justify-center gap-3 sm:flex-row">
+              <button onClick={() => void handleRequestPreApprovedCredit()} disabled={submitting} className="inline-flex items-center justify-center gap-3 rounded-2xl bg-white px-8 py-4 text-xs font-black uppercase tracking-wider text-indigo-900 shadow-xl transition-all hover:scale-105 hover:bg-neutral-50 disabled:opacity-50 md:text-sm">
+                {submitting ? 'Enviando...' : 'Liberar os R$ 100'} <ArrowRight className="w-4 h-4" />
+              </button>
+              <button onClick={() => setIsRequestModalOpen(true)} disabled={submitting} className="inline-flex items-center justify-center gap-3 rounded-2xl border border-white/30 bg-white/10 px-8 py-4 text-xs font-black uppercase tracking-wider text-white transition-all hover:bg-white/20 md:text-sm">
+                Solicitar outro valor
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Modal Solicitação de Adesão */}
-        <ModalSolicitacao 
-          isOpen={isRequestModalOpen}
-          onClose={() => setIsRequestModalOpen(false)}
-          profileData={profileData}
-          setProfileData={setProfileData}
-          limiteDesejado={limiteDesejado}
-          setLimiteDesejado={setLimiteDesejado}
-          onSubmit={(e) => handleCreateSolicitacao(e, 'adesao')}
-          submitting={submitting}
-        />
+        <ConfirmDialog {...confirmHook} />
+        <ModalSolicitacao isOpen={isRequestModalOpen} onClose={() => setIsRequestModalOpen(false)} profileData={profileData} setProfileData={setProfileData} limiteDesejado={limiteDesejado} setLimiteDesejado={setLimiteDesejado} onSubmit={(e) => handleCreateSolicitacao(e, 'adesao')} submitting={submitting} />
       </div>
     );
   }
@@ -822,10 +912,38 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
   }
 
   // 3. Status da Solicitação em Andamento (Timeline / Documentos / Contratos)
-  const isEmAndamento = solicitacao && solicitacao.status !== 'liberado' && solicitacao.status !== 'negado';
+  const isEmAndamento = solicitacao && !['liberado', 'negado', 'cancelado'].includes(solicitacao.status);
+
+  const handleCancelCreditIncrease = async () => {
+    if (!solicitacao || solicitacao.tipo_solicitacao !== 'alteracao' || solicitacao.status !== 'analise') return;
+    const confirmed = await confirmHook.confirm({
+      title: 'Cancelar aumento de crédito?',
+      message: 'A solicitação deixará imediatamente a fila de análise. Esta ação não pode ser desfeita.',
+      confirmLabel: 'Sim, cancelar solicitação',
+      cancelLabel: 'Manter em análise',
+      variant: 'danger',
+    });
+    if (!confirmed) return;
+
+    try {
+      setCancellingIncrease(true);
+      await callClientRpc('gsa_client_cancel_credit_increase_request', {
+        p_solicitacao_id: solicitacao.id,
+      });
+      toast.success('Solicitação de aumento de crédito cancelada.');
+      setIsTrackingModalOpen(false);
+      await loadData();
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível cancelar a solicitação.');
+      await loadData();
+    } finally {
+      setCancellingIncrease(false);
+    }
+  };
 
   const renderAcompanhamento = (isModal: boolean = false) => (
     <div className={isModal ? "p-2" : "p-4 md:p-8 max-w-4xl mx-auto"}>
+        <ConfirmDialog {...confirmHook} />
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div>
             <h2 className="text-3xl font-black text-neutral-900 tracking-tight mt-1">Acompanhamento de Crédito</h2>
@@ -834,6 +952,17 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
             {getStatusText(solicitacao.status)}
           </div>
         </div>
+
+        {solicitacao.tipo_solicitacao === 'alteracao' && solicitacao.status === 'analise' && (
+          <button
+            type="button"
+            onClick={() => void handleCancelCreditIncrease()}
+            disabled={cancellingIncrease}
+            className="mb-8 w-full rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-bold text-rose-700 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {cancellingIncrease ? 'Cancelando solicitação...' : 'Cancelar solicitação de aumento'}
+          </button>
+        )}
 
         {/* SLA Information Box */}
         <div className="bg-indigo-50/60 border border-indigo-100 rounded-3xl p-6 mb-8 flex items-start gap-4">
@@ -1024,7 +1153,7 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
                     </div>
                   ) : (
                     <p className="text-xs text-neutral-400 italic mt-2">
-                      Aguarde enquanto o administrador carrega o contrato de crédito para sua assinatura.
+                      Aguarde enquanto o sistema prepara o contrato de crédito para sua assinatura.
                     </p>
                   )}
                 </div>
@@ -1043,12 +1172,13 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
   // 4. Painel de Crédito Ativo (Status Liberado)
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8">
-      {isEmAndamento && (solicitacao as any)?.tipo !== 'adesao' && (
+      <ConfirmDialog {...confirmHook} />
+      {isEmAndamento && (
         <div className="bg-indigo-50 border border-indigo-200 rounded-[2rem] p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h4 className="text-sm font-black text-indigo-900 uppercase tracking-wider flex items-center gap-2">
               <Clock className="w-5 h-5 text-indigo-600" />
-              Solicitação de Aumento de Limite em Andamento
+              {isPreApprovedRequest ? 'Liberação do Crédito Pré-Aprovado em Análise' : 'Solicitação de Aumento de Limite em Andamento'}
             </h4>
             <p className="text-xs text-indigo-700/80 font-semibold mt-1">
               Status atual: {getStatusText(solicitacao.status)}
@@ -1087,6 +1217,18 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
 
       {creditoTab === 'limite' && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          {Number(cliente.limite_credito_total || 0) < 100 && !preApprovedAlreadyReleased && !isPreApprovedRequest && (
+            <div className="rounded-[2rem] border border-emerald-200 bg-emerald-50 p-6 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-6">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Oferta pré-aprovada</p>
+                <h3 className="mt-1 text-2xl font-black text-emerald-950">R$ 100,00 em crédito</h3>
+                <p className="mt-2 text-xs font-medium leading-relaxed text-emerald-800">A liberação depende de aprovação do sistema, com prazo de análise de até 72 horas.</p>
+              </div>
+              <button type="button" onClick={() => void handleRequestPreApprovedCredit()} disabled={submitting} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-6 py-3 text-xs font-black uppercase tracking-wider text-white hover:bg-emerald-800 disabled:opacity-50 sm:mt-0 sm:w-auto">
+                {submitting ? 'Enviando...' : 'Solicitar liberação'} <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
           {/* Header Cards (Disponível vs Total) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
@@ -1105,6 +1247,11 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
           <div className="z-10 mt-8">
             <span className="text-[10px] text-indigo-300 font-bold uppercase tracking-wider block">Crédito Disponível</span>
             <span className="text-3xl md:text-4xl font-black tracking-tight">{formatCurrency(cliente.limite_credito_disponivel || 0)}</span>
+            {blockedCredit > 0.01 && (
+              <span className="mt-2 block text-[10px] font-black uppercase tracking-wider text-amber-300">
+                {formatCurrency(blockedCredit)} bloqueado durante análise
+              </span>
+            )}
           </div>
 
           <div className="flex justify-between items-center z-10 border-t border-white/10 pt-4 mt-4">
@@ -1146,6 +1293,7 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
                       <span>Disponível: {formatCurrency(disponivel)}</span>
                       <span>{pctDisponivel.toFixed(0)}%</span>
                     </div>
+                    {blockedCredit > 0.01 && <p className="text-[11px] font-bold text-amber-600">Bloqueado: {formatCurrency(blockedCredit)} · Utilizável: {formatCurrency(Math.max(disponivel - blockedCredit, 0))}</p>}
                   </div>
                   <div className="w-full bg-neutral-100 h-3 rounded-full overflow-hidden">
                     <div 
@@ -1176,6 +1324,7 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
             <div>
               <h4 className="text-sm font-black uppercase tracking-wide text-neutral-400">Ações Rápidas</h4>
               <p className="text-xs text-neutral-500 font-medium mt-1">Gerencie seu crédito</p>
+              {activeCreditLimitCancellation ? <p className="mt-2 text-[10px] font-bold text-amber-300">Cancelamento em análise • {activeCreditLimitCancellation.protocolo}</p> : blockedCredit > 0.01 ? <p className="mt-2 text-[10px] font-semibold text-amber-300">Há limite bloqueado por análise financeira.</p> : currentCreditUsed > 0.01 ? <p className="mt-2 text-[10px] font-semibold text-neutral-400">Cancelamento disponível somente com Limite Usado em R$ 0,00.</p> : hasPendingCreditInvoice ? <p className="mt-2 text-[10px] font-semibold text-neutral-400">Regularize as faturas de crédito pendentes antes de cancelar o limite.</p> : Number(cliente.limite_credito_total || 0) > 0 ? <p className="mt-2 text-[10px] font-semibold text-emerald-300">Seu limite está elegível para solicitação de cancelamento.</p> : null}
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <button
@@ -1185,6 +1334,18 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
                 Solicitar Aumento
                 <ChevronRight className="w-4 h-4" />
               </button>
+              {(Boolean(activeCreditWithdrawal) || Math.max(Number(cliente.limite_credito_disponivel || 0) - blockedCredit, 0) > 0) && (
+                <button type="button" onClick={() => setIsCreditWithdrawalModalOpen(true)} className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl border border-emerald-400/40 bg-emerald-500/10 text-emerald-200 text-xs font-black uppercase tracking-wider transition-all hover:bg-emerald-500/20 whitespace-nowrap">
+                  {activeCreditWithdrawal ? 'Acompanhar Saque' : 'Solicitar Saque'}
+                  <DollarSign className="w-4 h-4" />
+                </button>
+              )}
+              {Number(cliente.limite_credito_total || 0) > 0 && (
+                <button type="button" onClick={() => void handleRequestCreditLimitCancellation()} disabled={submitting || blockedCredit > 0.01 || currentCreditUsed > 0.01 || hasPendingCreditInvoice || Boolean(activeCreditLimitCancellation)} className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl border border-rose-400/40 bg-rose-500/10 text-rose-200 text-xs font-black uppercase tracking-wider transition-all hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-40 whitespace-nowrap">
+                  Cancelar Limite
+                  <XCircle className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1360,7 +1521,7 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
                             const formattedMovimentacoes = movimentacoesFiltradas.map((mov: any) => ({
                               data: mov.created_at,
                               descricao: mov.historico || mov.descricao,
-                              tipo: mov.tipo === 'entrada' || mov.valor > 0 ? 'entrada' : 'saida', // Adapting to generic extrato structure
+                              tipo: ['concessao_inicial', 'amortizacao', 'ajuste_adm_aumento', 'solicitacao_aumento_aprovada', 'estorno_compra'].includes(mov.tipo) ? 'entrada' : 'saida',
                               valor: Math.abs(mov.valor || 0)
                             }));
                             
@@ -1416,6 +1577,8 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
                                     <div>
                                       <p className="text-xs font-bold text-neutral-800 leading-tight">{mov.descricao || getMovimentacaoTitle(mov.tipo)}</p>
                                       <p className="text-[9px] text-neutral-400 mt-0.5">{formatDateTime(mov.created_at)}</p>
+
+                                      {renderCreditDisputeAction(mov)}
                                     </div>
                                     <div className="text-right shrink-0">
                                       <span className={`text-xs font-black ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
@@ -1592,6 +1755,8 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
                           <div>
                             <p className="text-xs font-bold text-neutral-800 leading-tight">{mov.descricao || getMovimentacaoTitle(mov.tipo)}</p>
                             <p className="text-[9px] text-neutral-400 mt-0.5">{formatDateTime(mov.created_at)}</p>
+
+                            {renderCreditDisputeAction(mov)}
                           </div>
                           <div className="text-right shrink-0">
                             <span className={`text-xs font-black ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
@@ -1608,6 +1773,23 @@ export function ClientMeuCredito({ clientId, cliente, onRefreshCliente, onNaviga
           </ul>
         </div>
       </Modal>
+
+      <CreditWithdrawalModal
+        isOpen={isCreditWithdrawalModalOpen}
+        clientId={clientId}
+        withdrawal={creditWithdrawalForModal}
+        onClose={() => setIsCreditWithdrawalModalOpen(false)}
+        onChanged={async () => { await loadData(); onRefreshCliente(); }}
+      />
+
+      <CreditDisputeModal
+        isOpen={Boolean(selectedDisputeMovement)}
+        movement={selectedDisputeMovement}
+        dispute={selectedDisputeMovement ? getCreditDisputeForMovement(selectedDisputeMovement.id) : null}
+        clientId={clientId}
+        onClose={() => setSelectedDisputeMovement(null)}
+        onChanged={loadData}
+      />
 
       {/* Modal de Detalhes da Amortização */}
       <Modal isOpen={isDetailOpen} onClose={() => setIsDetailOpen(false)} title="Detalhes da Compra / Amortização" size="full">
@@ -1949,6 +2131,8 @@ function getMovimentacaoTitle(tipo: string): string {
     case 'ajuste_adm_reducao': return 'Redução de Limite (Sistema)';
     case 'solicitacao_aumento_aprovada': return 'Aumento de Limite Aprovado';
     case 'estorno_compra': return 'Estorno de Compra';
+    case 'cancelamento_limite': return 'Cancelamento do Limite de Crédito';
+    case 'saque_credito': return 'Saque de Crédito GSA';
     default: return tipo;
   }
 }
@@ -2083,10 +2267,12 @@ function ModalSolicitacao({
                 <label className="block text-[11px] font-bold text-neutral-700 mb-1">Telefone Celular *</label>
                 <input 
                   type="text"
-                  inputMode="numeric"
+                  inputMode="tel"
                   required
+                  placeholder="(00) 00000-0000"
+                  maxLength={15}
                   value={profileData.telefone}
-                  onChange={e => setProfileData({ ...profileData, telefone: e.target.value })}
+                  onChange={e => setProfileData({ ...profileData, telefone: maskPhone(e.target.value) })}
                   className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-500"
                 />
               </div>
@@ -2110,8 +2296,10 @@ function ModalSolicitacao({
                     type="text"
                     inputMode="numeric"
                     required
+                    placeholder="000.000.000-00"
+                    maxLength={14}
                     value={profileData.cpf}
-                    onChange={e => setProfileData({ ...profileData, cpf: e.target.value })}
+                    onChange={e => setProfileData({ ...profileData, cpf: maskCPF(e.target.value) })}
                     onBlur={(e) => {
                       const val = e.target.value.replace(/\D/g, '');
                       if (val && !validarCPF(val)) { toast.error('CPF inválido'); setProfileData({ ...profileData, cpf: '' }); }
@@ -2126,8 +2314,10 @@ function ModalSolicitacao({
                     type="text"
                     inputMode="numeric"
                     required
+                    placeholder="00.000.000/0000-00"
+                    maxLength={18}
                     value={profileData.cnpj}
-                    onChange={e => setProfileData({ ...profileData, cnpj: e.target.value })}
+                    onChange={e => setProfileData({ ...profileData, cnpj: maskCNPJ(e.target.value) })}
                     onBlur={(e) => {
                       const val = e.target.value.replace(/\D/g, '');
                       if (val && !validarCNPJ(val)) { toast.error('CNPJ inválido'); setProfileData({ ...profileData, cnpj: '' }); }
@@ -2283,13 +2473,14 @@ function ModalSolicitacao({
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <span className="text-neutral-500 font-bold">R$</span>
                   </div>
-                  <input
+                  <input 
                     type="number"
                     min={0}
                     step="0.01"
                     required
                     value={limiteDesejado}
-                    onChange={e => setLimiteDesejado(e.target.value)}
+                    inputMode="numeric"
+onChange={(e) => setLimiteDesejado(e.target.value)}
                     className="w-full pl-11 pr-4 py-3 rounded-xl border border-neutral-200 bg-white text-base font-bold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-500"
                     placeholder="Digite o novo valor desejado"
                   />

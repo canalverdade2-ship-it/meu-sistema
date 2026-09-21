@@ -4,12 +4,12 @@ const { resolve } = require('node:path');
 const { Client } = require('pg');
 
 const database = 'gsa_collaborator_boundaries_test';
-const connection = {
-  host: process.env.PGHOST || '127.0.0.1',
-  port: Number(process.env.PGPORT || 5432),
-  user: process.env.PGUSER || 'postgres',
-  password: process.env.PGPASSWORD || 'postgres',
-};
+const runtimeDatabaseUrl = process.env.ADMIN_RUNTIME_DB_URL || process.env.DATABASE_URL;
+if (!runtimeDatabaseUrl) {
+  console.log('[runtime-db] SKIP: defina ADMIN_RUNTIME_DB_URL para executar este teste no PostgreSQL da VPS/túnel (porta 5433).');
+  process.exit(0);
+}
+const connection = { connectionString: runtimeDatabaseUrl };
 
 const IDS = {
   admin: '10000000-0000-4000-8000-000000000001',

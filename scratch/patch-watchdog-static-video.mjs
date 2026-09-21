@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+const p='infrastructure/gsa-tv/services/watchdog/src/app.js';
+let s=fs.readFileSync(p,'utf8');
+const a=`    await syncExecution(current);\n    const expected =`;
+const b=`    await syncExecution(current);\n    let allowStaticVideo = false;\n    const currentSource = String(current?.media?.source || '');\n    if (currentSource.startsWith('/media/')) {\n      const mediaPolicy = await pool.query(\"select coalesce((metadata->>'allow_static_video')::boolean,false) as allow_static from public.gsa_tv_media_items where drive_path=$1 limit 1\", [currentSource]);\n      allowStaticVideo = Boolean(mediaPolicy.rows[0]?.allow_static);\n    }\n    const expected =`;
+if(!s.includes(a)) throw new Error('cycle marker missing');s=s.replace(a,b);
+s=s.replace('    const signalAge = ch.last_signal_at', '    const freezeBad = Boolean(contentExpected && !allowStaticVideo && lastQuality.freeze);\n    const signalAge = ch.last_signal_at');
+s=s.replaceAll('Boolean(contentExpected && lastQuality.freeze)', 'freezeBad');
+s=s.replace('      signal_age_s: signalAge,', '      signal_age_s: signalAge,\n      freeze_exempt: allowStaticVideo,');
+fs.writeFileSync(p,s);console.log('watchdog static-video policy patched');

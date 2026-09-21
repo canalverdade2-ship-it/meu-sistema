@@ -5,7 +5,7 @@ import { Plus, Search, Filter, MoreHorizontal, User as UserIcon, Wallet, FileTex
 import { supabase } from '../../lib/supabase';
 import { safeSupabaseQuery } from '../../lib/supabaseWrapper';
 import { canDeleteRecord } from '../../lib/deleteRequest';
-import { formatCurrency, formatDate, maskCPF, maskCNPJ, maskPhone, generateCode, formatDateTime, handleError, isLocalDevHost } from '../../lib/utils';
+import { formatCurrency, formatDate, maskCPF, maskCNPJ, maskPhone, generateCode, formatDateTime, formatLancamentoDescricao, handleError, isLocalDevHost } from '../../lib/utils';
 import { validarCPF, validarCNPJ, validarEmail } from '../../utils/cpfValidator';
 import { toast } from 'react-hot-toast';
 import { Modal } from '../ui/Modal';
@@ -31,6 +31,7 @@ import { sessionService } from '../../lib/sessionService';
 import { callAdminRpc } from '../../lib/adminRpc';
 import { removePrivateDocument } from '../../lib/privateStorage';
 import { adminModulePath } from '../../routing/adminAccess';
+import { navigate } from '../../routing/navigationService';
 
 export interface ClientPendency {
   id: string;
@@ -565,7 +566,7 @@ export function ClientesModule({ activeSubTab = 'ativos', initialItemId, colabor
     setIsPendenciesModalOpen(false);
     setIsDeleteConfirmOpen(false);
     const targetUrl = adminModulePath(pItem.module, pItem.tab, pItem.itemId);
-    window.location.href = targetUrl;
+    navigate(targetUrl);
   };
 
   const handleDelete = async () => {
@@ -1163,7 +1164,7 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
   const [isAddingBalance, setIsAddingBalance] = useState(false);
   const [balanceType, setBalanceType] = useState<'entrada' | 'saida'>('entrada');
   const [balanceAmount, setBalanceAmount] = useState('');
-  const [balanceDescription, setBalanceDescription] = useState('Ajuste manual de saldo (Admin)');
+  const [balanceDescription, setBalanceDescription] = useState('Ajuste de Saldo');
   const [osList, setOsList] = useState<any[]>([]);
   const [comprasList, setComprasList] = useState<any[]>([]);
   const [assinaturasList, setAssinaturasList] = useState<any[]>([]);
@@ -1174,7 +1175,7 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
   const [isAddingPoints, setIsAddingPoints] = useState(false);
   const [pointsType, setPointsType] = useState<'adicao' | 'remocao'>('adicao');
   const [pointsAmount, setPointsAmount] = useState('');
-  const [pointsDescription, setPointsDescription] = useState('Ajuste manual de pontos (Admin)');
+  const [pointsDescription, setPointsDescription] = useState('Ajuste de Pontos');
   const [paidInvoicesCount, setPaidInvoicesCount] = useState<number | null>(null);
   const [isProcessingBalance, setIsProcessingBalance] = useState(false);
   const [isProcessingPoints, setIsProcessingPoints] = useState(false);
@@ -1610,7 +1611,7 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
 
       setIsAddingBalance(false);
       setBalanceAmount('');
-      setBalanceDescription('Ajuste manual de saldo (Admin)');
+      setBalanceDescription('Ajuste de Saldo');
       setBalanceType('entrada');
       onRefresh();
     } catch (error: any) {
@@ -1800,7 +1801,7 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
 
       setIsAddingPoints(false);
       setPointsAmount('');
-      setPointsDescription('Ajuste manual de pontos (Admin)');
+      setPointsDescription('Ajuste de Pontos');
       setPointsType('adicao');
       onRefresh();
     } catch (error: any) {
@@ -2150,8 +2151,11 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
                       <label className="text-[9px] sm:text-[10px] font-black text-neutral-400 uppercase tracking-widest ml-1">Telefone</label>
                       <input 
                         type="text" 
+                        inputMode="tel"
+                        maxLength={15}
+                        placeholder="(00) 00000-0000"
                         value={editData.telefone || ''} 
-                        onChange={e => setEditData({...editData, telefone: e.target.value})}
+                        onChange={e => setEditData({...editData, telefone: maskPhone(e.target.value)})}
                         className="w-full rounded-xl bg-neutral-50 border-transparent px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-bold focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none ring-1 ring-neutral-200"
                       />
                     </div>
@@ -2162,6 +2166,7 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
                       <label className="text-[9px] sm:text-[10px] font-black text-neutral-400 uppercase tracking-widest ml-1">CEP</label>
                       <input 
                         type="text" 
+                        inputMode="numeric"
                         value={editData.cep || ''} 
                         onChange={async e => {
                           let v = e.target.value.replace(/\D/g, '');
@@ -2204,6 +2209,7 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
                       <label className="text-[9px] sm:text-[10px] font-black text-neutral-400 uppercase tracking-widest ml-1">Número</label>
                       <input 
                         type="text" 
+                        inputMode="numeric"
                         value={editData.numero || ''} 
                         onChange={e => setEditData({...editData, numero: e.target.value})}
                         className="w-full rounded-xl bg-neutral-50 border-transparent px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-bold focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none ring-1 ring-neutral-200"
@@ -2785,7 +2791,7 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
               <Modal
                 isOpen={isAddingBalance}
                 onClose={() => setIsAddingBalance(false)}
-                title={`NOVO LANÇAMENTO - ${cliente.nome_razao}`}
+                title={`NOVO LANÇAMENTO - ${cliente.nome || (cliente as any).nome_razao || 'Cliente'}`}
                 size="wide"
               >
                 <div className="bg-[#1a1a1a] px-4 sm:px-5 py-4 sm:py-6 -mx-4 -mt-4 mb-4 border-b border-white/5 relative overflow-hidden rounded-t-xl sm:rounded-t-2xl">
@@ -2799,7 +2805,7 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
                                 NOVO LANÇAMENTO
                             </h2>
                             <p className="text-[8px] sm:text-[9px] font-black text-indigo-400 uppercase tracking-widest mt-0.5">
-                                {cliente.nome_razao}
+                                {cliente.nome || (cliente as any).nome_razao || 'Cliente'}
                             </p>
                         </div>
                     </div>
@@ -2875,22 +2881,32 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
                   <div className="p-10 flex justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div></div>
                 ) : extratoList.length > 0 ? (
                   <div className="space-y-2">
-                    {extratoList.map(item => (
-                      <div key={item.id} className="flex items-center justify-between p-4 rounded-xl bg-white ring-1 ring-neutral-200 hover:shadow-sm transition-all group">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${item.tipo === 'entrada' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                            {item.tipo === 'entrada' ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 opacity-50" />}
+                    {extratoList.map(item => {
+                      const info = formatLancamentoDescricao(item.descricao);
+                      return (
+                        <div key={item.id} className="flex items-center justify-between p-4 rounded-xl bg-white ring-1 ring-neutral-200 hover:shadow-sm transition-all group">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${item.tipo === 'entrada' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                              {item.tipo === 'entrada' ? <Plus className="h-4 w-4" /> : <Trash2 className="h-4 w-4 opacity-50" />}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-xs font-black text-neutral-900 uppercase tracking-tight">{info.titulo}</p>
+                                {info.autor && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-neutral-100 text-neutral-600">
+                                    {info.autor}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{formatDateTime(item.data)}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-xs font-black text-neutral-900 uppercase tracking-tight">{item.descricao}</p>
-                            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{formatDateTime(item.data)}</p>
-                          </div>
+                          <p className={`font-black text-sm tracking-tight ${item.tipo === 'entrada' ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {item.tipo === 'entrada' ? '+' : '-'} {formatCurrency(item.valor)}
+                          </p>
                         </div>
-                        <p className={`font-black text-sm tracking-tight ${item.tipo === 'entrada' ? 'text-emerald-600' : 'text-red-600'}`}>
-                          {item.tipo === 'entrada' ? '+' : '-'} {formatCurrency(item.valor)}
-                        </p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-10 bg-white rounded-3xl border border-dashed border-neutral-200 italic text-neutral-300 font-bold uppercase text-xs">Sem transações registradas</div>
@@ -2943,7 +2959,7 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
               <Modal
                 isOpen={isAddingPoints}
                 onClose={() => setIsAddingPoints(false)}
-                title={`AJUSTE DE PONTOS - ${cliente.nome_razao}`}
+                title={`AJUSTE DE PONTOS - ${cliente.nome || (cliente as any).nome_razao || 'Cliente'}`}
                 size="wide"
               >
                 <div className="bg-[#1a1a1a] px-4 sm:px-5 py-4 sm:py-6 -mx-4 -mt-4 mb-4 border-b border-white/5 relative overflow-hidden rounded-t-xl sm:rounded-t-2xl">
@@ -2957,7 +2973,7 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
                                 AJUSTE DE PONTOS
                             </h2>
                             <p className="text-[8px] sm:text-[9px] font-black text-indigo-400 uppercase tracking-widest mt-0.5">
-                                {cliente.nome_razao}
+                                {cliente.nome || (cliente as any).nome_razao || 'Cliente'}
                             </p>
                         </div>
                     </div>
@@ -2983,12 +2999,13 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
 
                   <div className="text-left">
                     <label className="mb-1.5 sm:mb-2 block text-[9px] sm:text-[10px] font-black text-neutral-400 uppercase tracking-widest ml-1">Quantidade de Pontos *</label>
-                    <input
+                    <input 
                       type="number"
                       required
                       placeholder="0"
                       value={pointsAmount}
-                      onChange={e => setPointsAmount(e.target.value)}
+                      inputMode="numeric"
+onChange={(e) => setPointsAmount(e.target.value)}
                       className="w-full rounded-xl sm:rounded-2xl bg-neutral-50 border-transparent px-4 sm:px-5 py-3.5 sm:py-4 text-xl sm:text-2xl font-black text-neutral-900 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none ring-1 ring-neutral-200"
                     />
                   </div>
@@ -2998,7 +3015,7 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
                     <textarea
                       required
                       rows={2}
-                      placeholder="Ex: Fidelidade ou Correção"
+                      placeholder="Ex: Bonificação de Fidelidade, Campanha Promocional..."
                       value={pointsDescription}
                       onChange={e => setPointsDescription(e.target.value)}
                       className="w-full rounded-xl sm:rounded-2xl bg-neutral-50 border-transparent px-4 sm:px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-bold text-neutral-900 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-neutral-300 transition-all outline-none ring-1 ring-neutral-200 resize-none"
@@ -3033,22 +3050,32 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
                   <div className="p-10 flex justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div></div>
                 ) : extratoPontosList.length > 0 ? (
                   <div className="space-y-2">
-                    {extratoPontosList.map(item => (
-                      <div key={item.id} className="flex items-center justify-between p-4 rounded-xl bg-white ring-1 ring-neutral-200 hover:shadow-sm transition-all group">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${item.pontos > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                            <Gift className="h-4 w-4 opacity-70" />
+                    {extratoPontosList.map(item => {
+                      const info = formatLancamentoDescricao(item.descricao);
+                      return (
+                        <div key={item.id} className="flex items-center justify-between p-4 rounded-xl bg-white ring-1 ring-neutral-200 hover:shadow-sm transition-all group">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${item.pontos > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                              <Gift className="h-4 w-4 opacity-70" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-xs font-black text-neutral-900 uppercase tracking-tight">{info.titulo}</p>
+                                {info.autor && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-neutral-100 text-neutral-600">
+                                    {info.autor}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{formatDateTime(item.data)}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-xs font-black text-neutral-900 uppercase tracking-tight">{item.descricao}</p>
-                            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{formatDateTime(item.data)}</p>
-                          </div>
+                          <p className={`font-black text-sm tracking-tight ${item.pontos > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {item.pontos > 0 ? '+' : ''}{item.pontos.toLocaleString('pt-BR')} <span className="text-[10px]">pts</span>
+                          </p>
                         </div>
-                        <p className={`font-black text-sm tracking-tight ${item.pontos > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                          {item.pontos > 0 ? '+' : ''}{item.pontos} <span className="text-[10px]">pts</span>
-                        </p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-10 bg-white rounded-3xl border border-dashed border-neutral-200 italic text-neutral-300 font-bold uppercase text-xs">Sem movimentações de pontos</div>
@@ -3118,6 +3145,9 @@ function ClienteDetails({ cliente: initialCliente, colaboradorId, colaboradorNom
               os={selectedOS} 
               onCancel={() => {
                  toast.error("Para cancelar, utilize o módulo 'Ordens de Serviço'.");
+              }}
+              onFinalized={() => {
+                setIsOSModalOpen(false);
               }}
             />
           )}

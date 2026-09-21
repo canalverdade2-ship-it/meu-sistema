@@ -1,0 +1,16 @@
+{
+  "name": "gsa-tv-media-worker",
+  "version": "1.0.0",
+  "description": "GSA TV Media Worker — validação e normalização de mídia",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js"
+  },
+  "dependencies": {
+    "express": "4.19.2",
+    "pino": "9.3.2",
+    "pino-http": "10.2.0"
+  },
+  "engines": { "node": ">=20" }
+}

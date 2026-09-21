@@ -66,13 +66,13 @@ function Field({ label, value, onChange, prefix, suffix, help, min = 0, max = 10
       <span className="text-xs font-black text-[#26313a] sm:text-sm">{label}</span>
       <span className="relative mt-1.5 block">
         {prefix && <span className="absolute inset-y-0 left-4 flex items-center text-xs font-bold text-[#727c84]">{prefix}</span>}
-        <input
+        <input 
           type="number"
           min={min}
           max={max}
           step={step}
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          inputMode="numeric" onChange={(event) => onChange(event.target.value)}
           className={`min-h-12 w-full rounded-lg border border-[#d5cfc5] bg-white py-3 text-sm font-bold text-[#111820] outline-none transition hover:border-[#bbb1a1] focus:border-[#91722f] focus:ring-4 focus:ring-[#91722f]/10 ${prefix ? 'pl-12' : 'pl-4'} ${suffix ? 'pr-16' : 'pr-4'}`}
         />
         {suffix && <span className="absolute inset-y-0 right-4 flex items-center text-xs font-bold text-[#727c84]">{suffix}</span>}

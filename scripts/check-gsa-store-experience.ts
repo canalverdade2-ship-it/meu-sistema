@@ -94,10 +94,10 @@ assertContains('src/components/client/store/CartDrawer.tsx', [
   'aria-labelledby="gsa-cart-title"',
 ]);
 
-assertContains('src/components/client/store/CheckoutModal.tsx', [
+assertContains('src/components/client/store/CheckoutPage.tsx', [
   'gsa_client_checkout_store',
   'request_id: checkoutRequestId.current',
-  'Não foi possível validar preços e estoque',
+  'Remova os produtos excluídos ou esgotados do carrinho antes de finalizar.',
   'visivel_na_loja',
   'estoque_disponivel',
 ]);

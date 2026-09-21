@@ -1,0 +1,440 @@
+[
+  {
+    "updatedAt": "2026-08-07T14:01:53.637Z",
+    "createdAt": "2026-08-01T11:23:28.822Z",
+    "id": "gsaDisparadorEvo01",
+    "name": "GSA System - Disparador WhatsApp (Evolution API)",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "send-whatsapp",
+          "options": {}
+        },
+        "name": "Webhook GSA System",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          250,
+          300
+        ],
+        "webhookId": "gsa-whatsapp-webhook",
+        "id": "3e47f72d-39e5-427c-9f00-d032594c1ad6"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "2e680a6b-c376-47b1-9bb4-b77e20b33633",
+                "leftValue": "={{ $json.body.mediaBase64 || $json.body.pdfUrl || $json.body.media }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "5f13ab69-9f4a-4d79-9e8c-52bb6c8a77a9",
+        "name": "Possui Anexo PDF?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          480,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendMedia/GSA_WhatsApp",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "gsa_hub_evolution_token_2026"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"number\": \"{{ $json.body.phone }}\",\n  \"mediatype\": \"document\",\n  \"mimetype\": \"application/pdf\",\n  \"media\": \"{{ $json.body.mediaBase64 || $json.body.media || $json.body.pdfUrl }}\",\n  \"fileName\": \"{{ $json.body.fileName || 'fatura.pdf' }}\",\n  \"caption\": \"{{ $json.body.message }}\"\n}",
+          "options": {}
+        },
+        "name": "Enviar Documento PDF",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          720,
+          200
+        ],
+        "id": "d8e792ac-7411-4f46-81aa-a829a9971bc1"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/GSA_WhatsApp",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "gsa_hub_evolution_token_2026"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $json.body.phone }}"
+              },
+              {
+                "name": "text",
+                "value": "={{ $json.body.message }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "name": "Enviar Somente Texto",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          720,
+          400
+        ],
+        "id": "2d62bfaf-39f9-40af-93c1-5825fbe3f3df"
+      }
+    ],
+    "connections": {
+      "Webhook GSA System": {
+        "main": [
+          [
+            {
+              "node": "Possui Anexo PDF?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Possui Anexo PDF?": {
+        "main": [
+          [
+            {
+              "node": "Enviar Documento PDF",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Enviar Somente Texto",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "meta": null,
+    "nodeGroups": [],
+    "pinData": null,
+    "versionId": "7d211890-8006-4fa1-8aa9-8e28a5fb2a62",
+    "activeVersionId": "7d211890-8006-4fa1-8aa9-8e28a5fb2a62",
+    "versionCounter": 3,
+    "triggerCount": 1,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-08-01T11:23:28.822Z",
+        "createdAt": "2026-08-01T11:23:28.822Z",
+        "role": "workflow:owner",
+        "workflowId": "gsaDisparadorEvo01",
+        "projectId": "ua2AKZri5BfBFtHx",
+        "project": {
+          "updatedAt": "2026-08-01T05:20:42.629Z",
+          "createdAt": "2026-08-01T03:07:30.347Z",
+          "id": "ua2AKZri5BfBFtHx",
+          "name": "Adriano Farias <gsa.doc.adm@gmail.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "customTelemetryTags": [],
+          "creatorId": "8ba64243-0dd3-4c9b-9c40-e3dfdaea6499"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  },
+  {
+    "updatedAt": "2026-08-07T18:39:43.056Z",
+    "createdAt": "2026-08-01T06:10:17.348Z",
+    "id": "axrrRfvSTGkcFvXo",
+    "name": "Bot GSA - Evolution API",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "evolution-api",
+          "options": {}
+        },
+        "id": "d711eccb-e54e-4cce-ab66-8299285346fd",
+        "name": "Receber Mensagem (Webhook)",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "evolution-api"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://evolution-api:8080/message/sendText/GSA_WhatsApp",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "gsa_hub_evolution_token_2026"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "number",
+                "value": "={{ $json.body.data.key.remoteJid }}"
+              },
+              {
+                "name": "text",
+                "value": "=\"?? Ol?! Eu sou o assistente virtual da GSA.\\n\\nRecebi sua mensagem: *\" + ($json.body.data.message?.conversation || $json.body.data.message?.extendedTextMessage?.text || \"mensagem\") + \"*\\n\\nSeu atendimento j? foi registrado no nosso sistema!\""
+              },
+              {
+                "name": "delay",
+                "value": "4000"
+              },
+              {
+                "name": "presence",
+                "value": "composing"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "0e210060-d34c-4c65-90c2-b1c494175819",
+        "name": "Responder Cliente",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          304,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Receber Mensagem (Webhook)": {
+        "main": [
+          [
+            {
+              "node": "Responder Cliente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "binaryMode": "separate",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": null,
+    "nodeGroups": [],
+    "pinData": {},
+    "versionId": "035d85dc-a666-4849-a6e6-b1712f05c163",
+    "activeVersionId": "035d85dc-a666-4849-a6e6-b1712f05c163",
+    "versionCounter": 6,
+    "triggerCount": 1,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-08-01T06:10:17.348Z",
+        "createdAt": "2026-08-01T06:10:17.348Z",
+        "role": "workflow:owner",
+        "workflowId": "axrrRfvSTGkcFvXo",
+        "projectId": "ua2AKZri5BfBFtHx",
+        "project": {
+          "updatedAt": "2026-08-01T05:20:42.629Z",
+          "createdAt": "2026-08-01T03:07:30.347Z",
+          "id": "ua2AKZri5BfBFtHx",
+          "name": "Adriano Farias <gsa.doc.adm@gmail.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "customTelemetryTags": [],
+          "creatorId": "8ba64243-0dd3-4c9b-9c40-e3dfdaea6499"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": "Version 328e2eba",
+      "description": ""
+    }
+  },
+  {
+    "updatedAt": "2026-08-12T12:19:48.623Z",
+    "createdAt": "2026-08-12T12:19:48.623Z",
+    "id": "VgluPHP5sK3Kvegz",
+    "name": "GSA HUB - Automa├º├úo Banners Carrossel Home",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "atualizar-banner-carrossel",
+          "options": {}
+        },
+        "id": "webhook-trigger-banner",
+        "name": "Webhook - Novo Banner",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          250,
+          300
+        ],
+        "webhookId": "atualizar-banner-carrossel"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.147-15-43-141.nip.io/rest/v1/gsa_hero_banners",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzczOTU2NDA5LCJleHAiOjIwODk1MzI0MDl9.05kQchOXKH2S062F8SJsb-bmnh3pni-RJE1P0jo0Igs"
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzczOTU2NDA5LCJleHAiOjIwODk1MzI0MDl9.05kQchOXKH2S062F8SJsb-bmnh3pni-RJE1P0jo0Igs"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=representation"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"title\": \"{{ $json.body.title || $json.title }}\",\n  \"subtitle\": \"{{ $json.body.subtitle || $json.subtitle }}\",\n  \"image_url\": \"{{ $json.body.image_url || $json.image_url }}\",\n  \"link_url\": \"{{ $json.body.link_url || $json.link_url || '/marketplace/produtos-assinaturas' }}\",\n  \"button_text\": \"{{ $json.body.button_text || $json.button_text || 'Confira agora' }}\",\n  \"display_order\": {{ $json.body.display_order || $json.display_order || 1 }},\n  \"is_active\": true\n}"
+        },
+        "id": "http-supabase-banner",
+        "name": "Publicar no Supabase VPS",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          500,
+          300
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook - Novo Banner": {
+        "main": [
+          [
+            {
+              "node": "Publicar no Supabase VPS",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "meta": null,
+    "nodeGroups": [],
+    "pinData": null,
+    "versionId": "8a6a26e1-560a-41ad-a21d-2cb24dd08006",
+    "activeVersionId": "8a6a26e1-560a-41ad-a21d-2cb24dd08006",
+    "versionCounter": 1,
+    "triggerCount": 1,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-08-12T12:19:48.623Z",
+        "createdAt": "2026-08-12T12:19:48.623Z",
+        "role": "workflow:owner",
+        "workflowId": "VgluPHP5sK3Kvegz",
+        "projectId": "ua2AKZri5BfBFtHx",
+        "project": {
+          "updatedAt": "2026-08-01T05:20:42.629Z",
+          "createdAt": "2026-08-01T03:07:30.347Z",
+          "id": "ua2AKZri5BfBFtHx",
+          "name": "Adriano Farias <gsa.doc.adm@gmail.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "customTelemetryTags": [],
+          "creatorId": "8ba64243-0dd3-4c9b-9c40-e3dfdaea6499"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]

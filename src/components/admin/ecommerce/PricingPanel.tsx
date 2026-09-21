@@ -171,10 +171,11 @@ export function PricingPanel({ colaboradorId, colaboradorNome }: PricingPanelPro
                   <td className="px-5 py-4 font-medium text-neutral-900">{config.category}</td>
                   <td className="px-5 py-4">
                     <div className="relative w-24">
-                      <input
+                      <input 
                         type="number"
                         value={config.base_markup}
-                        onChange={(e) => handleConfigChange(config.id, 'base_markup', Number(e.target.value))}
+                        inputMode="numeric"
+onChange={(e) => handleConfigChange(config.id, 'base_markup', Number(e.target.value))}
                         className="w-full rounded-lg border-neutral-200 pr-6 py-1.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 text-xs">%</span>
@@ -182,10 +183,11 @@ export function PricingPanel({ colaboradorId, colaboradorNome }: PricingPanelPro
                   </td>
                   <td className="px-5 py-4">
                     <div className="relative w-24">
-                      <input
+                      <input 
                         type="number"
                         value={config.min_margin}
-                        onChange={(e) => handleConfigChange(config.id, 'min_margin', Number(e.target.value))}
+                        inputMode="numeric"
+onChange={(e) => handleConfigChange(config.id, 'min_margin', Number(e.target.value))}
                         className="w-full rounded-lg border-neutral-200 pr-6 py-1.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 text-xs">%</span>
@@ -193,10 +195,11 @@ export function PricingPanel({ colaboradorId, colaboradorNome }: PricingPanelPro
                   </td>
                   <td className="px-5 py-4">
                     <div className="relative w-24">
-                      <input
+                      <input 
                         type="number"
                         value={config.max_margin}
-                        onChange={(e) => handleConfigChange(config.id, 'max_margin', Number(e.target.value))}
+                        inputMode="numeric"
+onChange={(e) => handleConfigChange(config.id, 'max_margin', Number(e.target.value))}
                         className="w-full rounded-lg border-neutral-200 pr-6 py-1.5 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 text-xs">%</span>

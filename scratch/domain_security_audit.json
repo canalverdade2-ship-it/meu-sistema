@@ -1,0 +1,1418 @@
+{
+  "prestador": [
+    {
+      "table": "prestadores",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "gsa_collaborator_module_prestadores",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_admin_restrict_collaborator_to_module('prestadores')",
+          "withCheck": "public.gsa_admin_restrict_collaborator_to_module('prestadores')"
+        },
+        {
+          "name": "gsa_provider_own_provider_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type()='prestador' AND id=public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "prestador_demandas",
+      "policyCount": 3,
+      "policies": [
+        {
+          "name": "collaborator_assigned_demands_only",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_current_actor_type() <> 'colaborador'\r\n  OR public.gsa_collaborator_has_module('operacoes",
+          "withCheck": "public.gsa_current_actor_type() <> 'colaborador'\r\n  OR public.gsa_collaborator_has_module('operacoes"
+        },
+        {
+          "name": "gsa_collaborator_module_prestador_demandas",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_current_actor_type() <> 'colaborador'\r\n        OR public.gsa_admin_has_module('operacoes'",
+          "withCheck": "public.gsa_current_actor_type() <> 'colaborador'\r\n        OR public.gsa_admin_has_module('operacoes'"
+        },
+        {
+          "name": "gsa_provider_own_demandas_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type()='prestador' AND prestador_id=public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "prestador_demandas_historico",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "gsa_collaborator_demand_history_scope",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_current_actor_type() <> 'colaborador'\r\n        OR public.gsa_collaborator_can_access_dema",
+          "withCheck": "public.gsa_current_actor_type() <> 'colaborador'\r\n        OR public.gsa_collaborator_can_access_dema"
+        },
+        {
+          "name": "gsa_provider_own_demand_history_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type()='prestador' AND EXISTS (\n  SELECT 1 FROM public.prestador_demandas d WHE",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "prestador_faturas",
+      "policyCount": 0,
+      "policies": []
+    },
+    {
+      "table": "prestador_documentos",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_collaborator_module_prestador_documentos",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_admin_restrict_collaborator_to_module('prestadores')",
+          "withCheck": "public.gsa_admin_restrict_collaborator_to_module('prestadores')"
+        }
+      ]
+    },
+    {
+      "table": "prestador_historico",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_provider_own_history_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type()='prestador' AND prestador_id=public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "prestador_premios",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_provider_own_premios_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type()='prestador' AND prestador_id=public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "prestador_promocoes",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_provider_promotions_read_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type()='prestador'",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "prestador_promocoes_ativacoes",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_provider_own_promo_activation_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type()='prestador' AND prestador_id=public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "prestador_saques",
+      "policyCount": 0,
+      "policies": []
+    },
+    {
+      "table": "prestador_suporte_demandas",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "gsa_provider_own_support_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type()='prestador' AND prestador_id=public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        },
+        {
+          "name": "gsa_collaborator_module_prestador_suporte_demandas",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_admin_restrict_collaborator_to_module('atendimento')",
+          "withCheck": "public.gsa_admin_restrict_collaborator_to_module('atendimento')"
+        }
+      ]
+    },
+    {
+      "table": "prestador_transacoes",
+      "policyCount": 0,
+      "policies": []
+    },
+    {
+      "table": "prestador_vouchers",
+      "policyCount": 0,
+      "policies": []
+    },
+    {
+      "table": "prestador_agendamentos",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_provider_own_agendamentos_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type()='prestador' AND prestador_id=public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    }
+  ],
+  "parceiro": [
+    {
+      "table": "parceiros",
+      "policyCount": 4,
+      "policies": [
+        {
+          "name": "parceiros_public_read_active",
+          "cmd": "SELECT",
+          "roles": [
+            "anon",
+            "authenticated"
+          ],
+          "qual": "status = 'ativo'",
+          "withCheck": ""
+        },
+        {
+          "name": "gsa_management_partners",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+          "withCheck": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')"
+        },
+        {
+          "name": "gsa_collaborator_module_parceiros",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_admin_restrict_collaborator_to_module('parceiros')",
+          "withCheck": "public.gsa_admin_restrict_collaborator_to_module('parceiros')"
+        },
+        {
+          "name": "parceiros_service_role_read_active",
+          "cmd": "SELECT",
+          "roles": [
+            "service_role"
+          ],
+          "qual": "status = 'ativo'",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "parceiros_resgates",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "parceiros_resgates_admin_all",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated",
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": "true"
+        }
+      ]
+    },
+    {
+      "table": "parceiros_resgates_recursos",
+      "policyCount": 0,
+      "policies": []
+    },
+    {
+      "table": "parceiros_resgates_eventos",
+      "policyCount": 0,
+      "policies": []
+    }
+  ],
+  "fornecedor": [
+    {
+      "table": "fornecedores",
+      "policyCount": 0,
+      "policies": []
+    },
+    {
+      "table": "fornecedor_produtos",
+      "policyCount": 0,
+      "policies": []
+    },
+    {
+      "table": "fornecedores_pedidos",
+      "policyCount": 0,
+      "policies": []
+    }
+  ],
+  "colaborador": [
+    {
+      "table": "colaboradores",
+      "policyCount": 5,
+      "policies": [
+        {
+          "name": "collaborator_self_or_access_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_current_actor_type() <> 'colaborador' OR id = public.gsa_current_actor_id() OR public.gsa",
+          "withCheck": ""
+        },
+        {
+          "name": "collaborator_access_insert",
+          "cmd": "INSERT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "",
+          "withCheck": "public.gsa_current_actor_type() <> 'colaborador' OR public.gsa_collaborator_has_module('acessos')"
+        },
+        {
+          "name": "collaborator_access_update",
+          "cmd": "UPDATE",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_current_actor_type() <> 'colaborador' OR public.gsa_collaborator_has_module('acessos')",
+          "withCheck": "public.gsa_current_actor_type() <> 'colaborador' OR public.gsa_collaborator_has_module('acessos')"
+        },
+        {
+          "name": "collaborator_access_delete",
+          "cmd": "DELETE",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_current_actor_type() <> 'colaborador' OR public.gsa_collaborator_has_module('acessos')",
+          "withCheck": ""
+        },
+        {
+          "name": "service_role_all_colaboradores",
+          "cmd": "ALL",
+          "roles": [
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": "true"
+        }
+      ]
+    },
+    {
+      "table": "os_suporte_mensagens",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_client_own_os_suporte_mensagens",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente'\n    AND EXISTS (\n      SELECT 1 FROM public.ordens_servico o",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "suporte_mensagens",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "gsa_support_message_participant_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "(\n      public.gsa_jwt_actor_type() IN ('admin', 'colaborador')\n      AND public.gsa_admin_has_modul",
+          "withCheck": ""
+        },
+        {
+          "name": "gsa_support_message_participant_insert",
+          "cmd": "INSERT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "",
+          "withCheck": "length(trim(mensagem)) BETWEEN 1 AND 5000\n    AND (\n      (\n        public.gsa_jwt_actor_type() IN ("
+        }
+      ]
+    }
+  ],
+  "afiliado": [
+    {
+      "table": "gsa_afiliados",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_affiliates_own_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "cliente_id = public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "gsa_afiliado_links",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_affiliate_links_own_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "EXISTS (\n  SELECT 1 FROM public.gsa_afiliados a\n  WHERE a.id = afiliado_id AND a.cliente_id = public",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "gsa_afiliado_conversoes",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_affiliate_conversions_own_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "EXISTS (\n  SELECT 1 FROM public.gsa_afiliados a\n  WHERE a.id = afiliado_id AND a.cliente_id = public",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "gsa_afiliado_saques",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_affiliate_payouts_own_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "EXISTS (\n  SELECT 1 FROM public.gsa_afiliados a\n  WHERE a.id = afiliado_id AND a.cliente_id = public",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "gsa_afiliado_comissoes",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_affiliate_commissions_own_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "EXISTS (\n  SELECT 1 FROM public.gsa_afiliados a\n  WHERE a.id = afiliado_id AND a.cliente_id = public",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "gsa_afiliado_programas",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_affiliate_programs_public_read",
+          "cmd": "SELECT",
+          "roles": [
+            "anon",
+            "authenticated"
+          ],
+          "qual": "ativo",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "gsa_afiliado_indicacoes",
+      "policyCount": 0,
+      "policies": []
+    }
+  ],
+  "anunciante": [
+    {
+      "table": "gsa_advertisers",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_ads_read_advertisers",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "auth_user_id = auth.uid() OR public.gsa_admin_has_module('anuncios')",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "gsa_ad_placements",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_ads_read_placements",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_admin_has_module('anuncios')",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "gsa_ad_requests",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_ads_read_requests",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "advertiser_id = public.gsa_current_advertiser_id() OR public.gsa_admin_has_module('anuncios')",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "gsa_ad_request_placements",
+      "policyCount": 0,
+      "policies": []
+    },
+    {
+      "table": "gsa_ad_proposals",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_ads_read_proposals",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_admin_has_module('anuncios') OR EXISTS (\n  SELECT 1 FROM public.gsa_ad_requests r\n  WHERE",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "gsa_ad_proposal_versions",
+      "policyCount": 0,
+      "policies": []
+    },
+    {
+      "table": "gsa_ad_negotiations",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_ads_read_negotiations",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_admin_has_module('anuncios') OR EXISTS (\n  SELECT 1 FROM public.gsa_ad_proposals p\n  JOIN",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "gsa_ad_campaigns",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_ads_read_campaigns",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "advertiser_id = public.gsa_current_advertiser_id() OR public.gsa_admin_has_module('anuncios')",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "gsa_ad_creatives",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_ads_read_creatives",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_admin_has_module('anuncios') OR EXISTS (\n  SELECT 1 FROM public.gsa_ad_campaigns c\n  WHER",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "gsa_ad_campaign_placements",
+      "policyCount": 0,
+      "policies": []
+    },
+    {
+      "table": "gsa_ad_daily_metrics",
+      "policyCount": 0,
+      "policies": []
+    },
+    {
+      "table": "gsa_ad_audit_logs",
+      "policyCount": 0,
+      "policies": []
+    },
+    {
+      "table": "gsa_hero_banners",
+      "policyCount": 0,
+      "policies": []
+    }
+  ],
+  "clientes": [
+    {
+      "table": "clientes",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "service_role_all_clientes",
+          "cmd": "ALL",
+          "roles": [
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": "true"
+        },
+        {
+          "name": "gsa_client_own_profile_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente' AND id = public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "cliente_documentos",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_client_own_documents_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente' AND cliente_id = public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "cliente_enderecos",
+      "policyCount": 0,
+      "policies": []
+    },
+    {
+      "table": "cliente_cartoes",
+      "policyCount": 0,
+      "policies": []
+    },
+    {
+      "table": "cliente_premios",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "gsa_client_own_premios_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        },
+        {
+          "name": "gsa_management_cliente_premios",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+          "withCheck": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')"
+        }
+      ]
+    },
+    {
+      "table": "notificacoes",
+      "policyCount": 3,
+      "policies": [
+        {
+          "name": "collaborator_notification_visibility",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_current_actor_type() <> 'colaborador'\r\n  OR destinatario_tipo = 'broadcast_todos'\r\n  OR (",
+          "withCheck": ""
+        },
+        {
+          "name": "gsa_client_own_notifications_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente'\n  AND (\n    cliente_id = public.gsa_jwt_actor_id()\n    OR de",
+          "withCheck": ""
+        },
+        {
+          "name": "gsa_provider_own_notifications_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'prestador'\n  AND (\n    prestador_id = public.gsa_jwt_actor_id()\n    O",
+          "withCheck": ""
+        }
+      ]
+    }
+  ],
+  "financeiro": [
+    {
+      "table": "saques",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "saques_select_public_temp",
+          "cmd": "SELECT",
+          "roles": [
+            "public"
+          ],
+          "qual": "true",
+          "withCheck": ""
+        },
+        {
+          "name": "gsa_client_own_withdrawals_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente' AND cliente_id = public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "faturas",
+      "policyCount": 3,
+      "policies": [
+        {
+          "name": "service_role_all_faturas",
+          "cmd": "ALL",
+          "roles": [
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": "true"
+        },
+        {
+          "name": "faturas_public_read",
+          "cmd": "SELECT",
+          "roles": [
+            "anon",
+            "authenticated"
+          ],
+          "qual": "true",
+          "withCheck": ""
+        },
+        {
+          "name": "gsa_client_own_invoices_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente' AND cliente_id = public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "pagamentos",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "service_role_all_pagamentos",
+          "cmd": "ALL",
+          "roles": [
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": "true"
+        },
+        {
+          "name": "gsa_client_own_pagamentos_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type()='cliente' AND EXISTS (SELECT 1 FROM public.faturas f WHERE f.id=fatura_i",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "carteira_lancamentos",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "service_role_all_carteira_lancamentos",
+          "cmd": "ALL",
+          "roles": [
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": "true"
+        },
+        {
+          "name": "gsa_client_own_wallet_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente' AND cliente_id = public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "extrato_financeiro",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "service_role_all_extrato_financeiro",
+          "cmd": "ALL",
+          "roles": [
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": "true"
+        },
+        {
+          "name": "gsa_client_own_extrato_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "transferencias",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "transferencias_select_public_temp",
+          "cmd": "SELECT",
+          "roles": [
+            "public"
+          ],
+          "qual": "true",
+          "withCheck": ""
+        },
+        {
+          "name": "gsa_client_own_transfers_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente'\n  AND public.gsa_jwt_actor_id() IN (cliente_origem_id, clien",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "emprestimos",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_client_own_loans_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente' AND cliente_id = public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "emprestimo_parcelas",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_client_own_emprestimo_parcelas_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "pontos_movimentacoes",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_client_own_points_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente' AND cliente_id = public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "points_transactions",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_client_own_points_transactions_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "cobrancas",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "service_role_all_cobrancas",
+          "cmd": "ALL",
+          "roles": [
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": "true"
+        },
+        {
+          "name": "gsa_client_own_cobrancas_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    }
+  ],
+  "marketplace": [
+    {
+      "table": "produtos",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "marketplace_products_read",
+          "cmd": "SELECT",
+          "roles": [
+            "public"
+          ],
+          "qual": "true",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "produto_variantes",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "produto_variantes_catalogo_select",
+          "cmd": "SELECT",
+          "roles": [
+            "anon",
+            "authenticated"
+          ],
+          "qual": "ativo AND EXISTS (\n    SELECT 1 FROM public.produtos p\n    WHERE p.id = produto_variantes.produto_id",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "orcamentos",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_client_own_orcamentos_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "ordens_compra",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_client_own_ordens_compra_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "loja_pedido_itens",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "loja_pedido_itens_cliente_select",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_session_is_valid()\n    AND public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id",
+          "withCheck": ""
+        },
+        {
+          "name": "loja_pedido_itens_staff_select",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_is_admin()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "loja_carrinhos",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "gsa_client_own_cart",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+          "withCheck": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()"
+        },
+        {
+          "name": "gsa_management_cart",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+          "withCheck": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')"
+        }
+      ]
+    },
+    {
+      "table": "loja_favoritos",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "gsa_client_own_favoritos",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+          "withCheck": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()"
+        },
+        {
+          "name": "gsa_management_favoritos",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+          "withCheck": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')"
+        }
+      ]
+    },
+    {
+      "table": "loja_solicitacoes",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_client_own_loja_solicitacoes_hardened",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+          "withCheck": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()"
+        }
+      ]
+    },
+    {
+      "table": "vouchers",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_client_own_vouchers_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "cupons_loja",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "marketplace_coupons_read",
+          "cmd": "SELECT",
+          "roles": [
+            "public"
+          ],
+          "qual": "true",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "cupons_ativados",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_client_own_coupon_activations_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "promocoes",
+      "policyCount": 0,
+      "policies": []
+    },
+    {
+      "table": "promocoes_quantidade",
+      "policyCount": 0,
+      "policies": []
+    },
+    {
+      "table": "promocoes_quantidade_ativadas",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "gsa_client_own_qty_promo_activations",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() = 'cliente'\n    AND cliente_id = public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        },
+        {
+          "name": "gsa_management_qty_promo_activations",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')",
+          "withCheck": "public.gsa_jwt_actor_type() IN ('admin', 'colaborador')"
+        }
+      ]
+    },
+    {
+      "table": "promocoes_quantidade_uso",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_client_own_promo_usage_hardened",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_actor_type()='cliente' AND cliente_id=public.gsa_jwt_actor_id()",
+          "withCheck": ""
+        }
+      ]
+    }
+  ],
+  "gsatv_core": [
+    {
+      "table": "gsa_tv_channels",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "gsa_tv_channels_public_read",
+          "cmd": "SELECT",
+          "roles": [
+            "anon",
+            "authenticated",
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": ""
+        },
+        {
+          "name": "gsa_tv_channels_admin_write",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated",
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": "true"
+        }
+      ]
+    },
+    {
+      "table": "gsa_tv_channel_secrets",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_tv_channel_secrets_service_role_access",
+          "cmd": "ALL",
+          "roles": [
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": "true"
+        }
+      ]
+    },
+    {
+      "table": "gsa_tv_media_items",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "gsa_tv_media_public_read",
+          "cmd": "SELECT",
+          "roles": [
+            "anon",
+            "authenticated",
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": ""
+        },
+        {
+          "name": "gsa_tv_media_admin_write",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated",
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": "true"
+        }
+      ]
+    },
+    {
+      "table": "gsa_tv_schedule_slots",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "gsa_tv_schedule_public_read",
+          "cmd": "SELECT",
+          "roles": [
+            "anon",
+            "authenticated",
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": ""
+        },
+        {
+          "name": "gsa_tv_schedule_admin_write",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated",
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": "true"
+        }
+      ]
+    },
+    {
+      "table": "gsa_tv_playlists",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_tv_playlists_admin_access",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated",
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": "true"
+        }
+      ]
+    },
+    {
+      "table": "gsa_tv_incidents",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_tv_incidents_admin_access",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated",
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": "true"
+        }
+      ]
+    },
+    {
+      "table": "gsa_tv_audit_log",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_tv_audit_log_admin_access",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated",
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": "true"
+        }
+      ]
+    },
+    {
+      "table": "gsa_tv_jobs",
+      "policyCount": 1,
+      "policies": [
+        {
+          "name": "gsa_tv_jobs_admin_access",
+          "cmd": "ALL",
+          "roles": [
+            "authenticated",
+            "service_role"
+          ],
+          "qual": "true",
+          "withCheck": "true"
+        }
+      ]
+    },
+    {
+      "table": "system_settings",
+      "policyCount": 2,
+      "policies": [
+        {
+          "name": "system_settings_admin_secret_read",
+          "cmd": "SELECT",
+          "roles": [
+            "authenticated"
+          ],
+          "qual": "public.gsa_jwt_is_admin()",
+          "withCheck": ""
+        },
+        {
+          "name": "system_settings_public_read",
+          "cmd": "SELECT",
+          "roles": [
+            "anon",
+            "authenticated"
+          ],
+          "qual": "key = ANY (ARRAY[\n      'afiliado_bonus_boas_vindas_ativo','afiliado_bonus_boas_vindas_valor',\n     ",
+          "withCheck": ""
+        }
+      ]
+    },
+    {
+      "table": "sistema_sessoes",
+      "policyCount": 0,
+      "policies": []
+    }
+  ]
+}

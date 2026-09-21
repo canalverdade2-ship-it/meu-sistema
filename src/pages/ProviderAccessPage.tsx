@@ -106,6 +106,7 @@ export function ProviderAccessPage({
   const [errors, setErrors] = useState<ProviderErrors>({});
   const [confirmed, setConfirmed] = useState(false);
   const [registrationStage, setRegistrationStage] = useState<'form' | 'whatsapp' | 'setup_pin' | 'success'>('form');
+  const [registrationVerificationToken, setRegistrationVerificationToken] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -116,6 +117,7 @@ export function ProviderAccessPage({
     setPinError(false);
     setAttemptsLeft(null);
     setRegistrationStage('form');
+    setRegistrationVerificationToken('');
     setErrors({});
   }, [initialMode]);
 
@@ -149,6 +151,7 @@ export function ProviderAccessPage({
     setPinError(false);
     setAttemptsLeft(null);
     setRegistrationStage('form');
+    setRegistrationVerificationToken('');
     setErrors({});
     onModeChange(nextMode);
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
@@ -263,11 +266,14 @@ export function ProviderAccessPage({
           area_servico: providerData.area_servico.trim(),
           pin, // envia o PIN para ativação imediata
         },
+        p_verification_token: registrationVerificationToken,
       });
       if (error) throw error;
 
       setProviderData(createEmptyProvider());
       setConfirmed(false);
+      setRegistrationStage('success');
+      toast.success('Cadastro enviado para análise com sucesso!');
       window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível enviar o cadastro de prestador.');
@@ -752,8 +758,13 @@ export function ProviderAccessPage({
                 <div role="tabpanel" className="pt-9">
                   <WhatsAppPinVerification
                     initialPhone={providerData.telefone}
-                    onVerified={(verifiedPhone) => {
+                    documento={providerData.documento.replace(/\D/g, '')}
+                    secureProviderRegistration
+                    onVerified={(verifiedPhone, verificationToken) => {
                       updateProvider('telefone', verifiedPhone);
+                      if (verificationToken) {
+                        setRegistrationVerificationToken(verificationToken);
+                      }
                       setRegistrationStage('setup_pin');
                     }}
                     onCancel={() => setRegistrationStage('form')}
@@ -764,6 +775,33 @@ export function ProviderAccessPage({
               {mode === 'register' && registrationStage === 'setup_pin' && (
                 <div role="tabpanel" className="pt-9">
                   <SetupAccessPin onComplete={submitFinalRegistration} loading={loading} />
+                </div>
+              )}
+
+              {mode === 'register' && registrationStage === 'success' && (
+                <div role="tabpanel" className="pt-9 text-center">
+                  <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                    <CheckCircle2 className="h-10 w-10" />
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#267153]">
+                    Cadastro Concluído
+                  </p>
+                  <h2 className="mt-3 text-3xl font-black tracking-[-0.035em] text-[#0d2740]">
+                    Cadastro enviado para análise
+                  </h2>
+                  <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-[#657786]">
+                    Seus dados e credenciais foram registrados com sucesso. Nossa equipe entrará em contato após a análise cadastral para liberação dos serviços na Área do Prestador.
+                  </p>
+                  <div className="mt-8">
+                    <button
+                      type="button"
+                      onClick={() => switchMode('login')}
+                      className="inline-flex min-h-14 w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-[#0d2740] px-5 text-sm font-black text-white shadow-lg transition hover:bg-[#164b70] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1f5a86]"
+                    >
+                      Ir para o Login
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               )}
 

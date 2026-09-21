@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Gift, Minus, Package, Plus, ShoppingBag } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { AlertCircle, Gift, Loader2, Minus, Package, Plus, ShoppingBag } from 'lucide-react';
 import { formatCurrency } from '../../../lib/utils';
 import { Modal } from '../../ui/Modal';
 import {
@@ -8,53 +8,218 @@ import {
   getProductRemainingQuantityText,
   hasActiveProductDiscount,
 } from '../../../lib/productPricing';
+import {
+  applyVariantToProduct,
+  buildVariationSelection,
+  fetchPublicProductVariations,
+  findVariantForSelections,
+} from '../../../lib/productVariations';
+import type { ProductVariationSelection, ProductVariationsPayload } from '../../../types/productVariations';
 
 interface QuantityModalProps {
   isOpen: boolean;
   onClose: () => void;
   item: any;
-  onConfirm: (quantity: number) => void;
+  onConfirm: (quantity: number, variation?: ProductVariationSelection) => void;
   initialQty?: number;
+  initialVariantId?: string | null;
 }
 
-export default function QuantityModal({ isOpen, onClose, item, onConfirm, initialQty = 1 }: QuantityModalProps) {
+export default function QuantityModal({ isOpen, onClose, item, onConfirm, initialQty = 1, initialVariantId }: QuantityModalProps) {
   const [quantity, setQuantity] = useState(initialQty);
+  const [variations, setVariations] = useState<ProductVariationsPayload>({ grupos: [], variantes: [] });
+  const [selections, setSelections] = useState<Record<string, string>>({});
+  const [loadingVariations, setLoadingVariations] = useState(false);
+  const [variationError, setVariationError] = useState('');
 
   useEffect(() => {
     if (isOpen) setQuantity(Math.max(1, initialQty));
   }, [isOpen, initialQty]);
 
+  useEffect(() => {
+    let active = true;
+    if (!isOpen || !item?.id || !item?.possui_variacoes) {
+      setVariations({ grupos: [], variantes: [] });
+      setSelections({});
+      setVariationError('');
+      setLoadingVariations(false);
+      return () => { active = false; };
+    }
+    setLoadingVariations(true);
+    setVariationError('');
+    fetchPublicProductVariations(item.id)
+      .then((data) => {
+        if (!active) return;
+        setVariations(data);
+        const initialVariant = data.variantes.find((variant) => variant.id === initialVariantId);
+        if (initialVariant) {
+          setSelections(initialVariant.selecoes || {});
+          return;
+        }
+        const automatic: Record<string, string> = {};
+        data.grupos.forEach((group) => {
+          if (group.opcoes.length === 1) automatic[group.chave] = group.opcoes[0].chave;
+        });
+        setSelections(automatic);
+      })
+      .catch((error) => {
+        if (!active) return;
+        console.error('Erro ao carregar variações:', error);
+        setVariationError('Não foi possível carregar as opções deste produto. Tente novamente.');
+      })
+      .finally(() => { if (active) setLoadingVariations(false); });
+    return () => { active = false; };
+  }, [isOpen, item?.id, item?.possui_variacoes, initialVariantId]);
+
+  const selectedVariant = useMemo(
+    () => findVariantForSelections(variations, selections),
+    [variations, selections],
+  );
+  const selectedOptionImage = useMemo(() => {
+    if (selectedVariant?.imagem_url) return selectedVariant.imagem_url;
+    for (const group of variations.grupos) {
+      const selectedKey = selections[group.chave];
+      if (!selectedKey) continue;
+      const option = group.opcoes.find((opt) => opt.chave === selectedKey);
+      if (option?.imagem_url) return option.imagem_url;
+    }
+    const matchingVariant = variations.variantes.find((variant) => {
+      if (!variant.imagem_url) return false;
+      return Object.entries(selections).every(
+        ([groupKey, optionKey]) => !optionKey || variant.selecoes?.[groupKey] === optionKey
+      );
+    });
+    return matchingVariant?.imagem_url || null;
+  }, [selectedVariant, variations, selections]);
+  const selectedItem = useMemo(
+    () => {
+      const base = selectedVariant ? applyVariantToProduct(item, selectedVariant) : item;
+      if (selectedOptionImage && !base.imagem_url) {
+        return { ...base, imagem_url: selectedOptionImage };
+      }
+      if (selectedOptionImage && base.imagem_url !== selectedOptionImage && !selectedVariant?.imagem_url) {
+        return { ...base, imagem_url: selectedOptionImage };
+      }
+      return base;
+    },
+    [item, selectedVariant, selectedOptionImage],
+  );
+  const requiresVariation = Boolean(item?.possui_variacoes);
+
+  useEffect(() => {
+    if (!selectedVariant?.controle_estoque) return;
+    const available = Math.max(0, Number(selectedVariant.estoque_disponivel || 0));
+    setQuantity((current) => available > 0 ? Math.min(current, available) : 1);
+  }, [selectedVariant?.id, selectedVariant?.controle_estoque, selectedVariant?.estoque_disponivel]);
+
   if (!isOpen || !item) return null;
 
   // Não força mínimo de 1 quando o estoque real é 0 — isso permitia "adicionar 1 unidade"
   // de um item esgotado através deste modal.
-  const maxQuantity = item.controle_estoque ? Math.max(0, Number(item.estoque_disponivel || 0)) : 99;
-  const isOutOfStock = item.controle_estoque && maxQuantity <= 0;
-  const breakdown = getProductQuantityPriceBreakdown(item, quantity);
-  const hasDiscount = hasActiveProductDiscount(item);
+  const maxQuantity = selectedItem.controle_estoque ? Math.max(0, Number(selectedItem.estoque_disponivel || 0)) : 99;
+  const isOutOfStock = selectedItem.controle_estoque && maxQuantity <= 0;
+  const breakdown = getProductQuantityPriceBreakdown(selectedItem, quantity);
+  const hasDiscount = hasActiveProductDiscount(selectedItem);
   const mixedPrice = breakdown.quantidadeComDesconto > 0 && breakdown.quantidadeSemDesconto > 0;
-  const promotionAvailability = getProductRemainingQuantityText(item);
-  const total = hasDiscount ? breakdown.subtotalFinal : Number(item.valor || 0) * quantity;
+  const promotionAvailability = getProductRemainingQuantityText(selectedItem);
+  const total = hasDiscount ? breakdown.subtotalFinal : Number(selectedItem.valor || 0) * quantity;
+  const variationIncomplete = requiresVariation && !selectedVariant;
+
+  const optionAvailable = (groupKey: string, optionKey: string) => variations.variantes.some((variant) => {
+    if (variant.ativo === false || variant.selecoes?.[groupKey] !== optionKey) return false;
+    if (variant.controle_estoque && Number(variant.estoque_disponivel || 0) <= 0) return false;
+    return true;
+  });
+
+  const selectOption = (groupKey: string, optionKey: string) => {
+    setSelections((current) => {
+      const next = { ...current, [groupKey]: optionKey };
+      for (const [otherGroup, otherOption] of Object.entries(next)) {
+        if (otherGroup === groupKey) continue;
+        const compatible = variations.variantes.some((variant) => (
+          variant.ativo !== false
+          && variant.selecoes?.[groupKey] === optionKey
+          && variant.selecoes?.[otherGroup] === otherOption
+          && (!variant.controle_estoque || Number(variant.estoque_disponivel || 0) > 0)
+        ));
+        if (!compatible) delete next[otherGroup];
+      }
+      return next;
+    });
+  };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Escolha a quantidade" size="sm">
+    <Modal isOpen={isOpen} onClose={onClose} title={requiresVariation ? 'Escolha as opções e a quantidade' : 'Escolha a quantidade'} size="sm">
       <div className="space-y-5">
         <div className="flex items-center gap-4 rounded-[16px] border border-slate-200 bg-slate-50 p-3.5">
           <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white">
-            {item.imagem_url ? (
-              <img src={item.imagem_url} alt={item.nome} className="h-full w-full object-contain" />
+            {selectedItem.imagem_url ? (
+              <img src={selectedItem.imagem_url} alt={selectedItem.nome} className="h-full w-full object-contain" />
             ) : (
               <Package className="h-8 w-8 text-slate-300" aria-hidden="true" />
             )}
           </div>
           <div className="min-w-0">
-            <h3 className="line-clamp-2 text-base font-extrabold leading-5 text-slate-950">{item.nome}</h3>
+            <h3 className="line-clamp-2 text-base font-extrabold leading-5 text-slate-950">{selectedItem.nome}</h3>
             <p className="mt-1 text-sm font-black text-[#17345f]">
-              {formatCurrency(hasDiscount ? getProductEffectivePrice(item) : Number(item.valor || 0))}
+              {formatCurrency(hasDiscount ? getProductEffectivePrice(selectedItem) : Number(selectedItem.valor || 0))}
               <span className="ml-1 text-xs font-semibold text-slate-500">por unidade</span>
             </p>
           </div>
         </div>
+
+        {requiresVariation && (
+          <section className="rounded-[16px] border border-slate-200 bg-white p-4" aria-label="Variações do produto">
+            {loadingVariations ? (
+              <div className="flex items-center justify-center gap-2 py-5 text-sm font-bold text-slate-500">
+                <Loader2 className="h-4 w-4 animate-spin" /> Carregando opções...
+              </div>
+            ) : variationError ? (
+              <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-bold text-red-700">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> {variationError}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {variations.grupos.map((group) => (
+                  <div key={group.chave}>
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="text-xs font-extrabold text-slate-950">{group.nome}</h4>
+                      <span className="text-[10px] font-bold text-slate-400">
+                        {selections[group.chave] ? 'Selecionado' : 'Escolha uma opção'}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {group.opcoes.map((option) => {
+                        const selected = selections[group.chave] === option.chave;
+                        const available = optionAvailable(group.chave, option.chave);
+                        return (
+                          <button key={option.chave} type="button" disabled={!available}
+                            onClick={() => selectOption(group.chave, option.chave)}
+                            className={`inline-flex min-h-10 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-extrabold transition ${selected
+                              ? 'border-[#17345f] bg-[#17345f] text-white shadow-sm'
+                              : available
+                                ? 'border-slate-200 bg-white text-slate-700 hover:border-[#17345f]'
+                                : 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300 line-through'
+                            }`}>
+                            {option.imagem_url && <img src={option.imagem_url} alt="" className="h-6 w-6 rounded-md object-cover" />}
+                            {!option.imagem_url && option.cor_hex && <span className="h-4 w-4 rounded-full border border-white/50" style={{ backgroundColor: option.cor_hex }} />}
+                            {option.nome}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+                {selectedVariant && (
+                  <div className={`rounded-xl border px-3 py-2.5 text-xs font-bold ${isOutOfStock ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-800'}`}>
+                    {isOutOfStock ? 'Esta combinação está esgotada.' : selectedVariant.controle_estoque ? `${selectedVariant.estoque_disponivel} unidade(s) desta combinação` : 'Combinação disponível'}
+                    {selectedVariant.sku && <span className="ml-2 font-mono text-[10px] opacity-70">SKU {selectedVariant.sku}</span>}
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        )}
 
         <section className="rounded-[16px] border border-slate-200 bg-white p-5" aria-labelledby="quantity-title">
           <div className="flex items-center justify-between gap-4">
@@ -62,9 +227,9 @@ export default function QuantityModal({ isOpen, onClose, item, onConfirm, initia
               <h4 id="quantity-title" className="text-sm font-extrabold text-slate-950">Quantidade</h4>
               <p className="mt-1 text-xs text-slate-500">Selecione quantas unidades deseja comprar.</p>
             </div>
-            {item.controle_estoque && (
+            {selectedItem.controle_estoque && (
               <span className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-600">
-                {item.estoque_disponivel} disponíveis
+                {selectedItem.estoque_disponivel} disponíveis
               </span>
             )}
           </div>
@@ -128,14 +293,16 @@ export default function QuantityModal({ isOpen, onClose, item, onConfirm, initia
           </div>
         )}
 
+        <p className="text-[11px] text-center text-slate-500 font-medium">Preço e estoque serão confirmados no checkout.</p>
+
         <button
           type="button"
-          onClick={() => onConfirm(quantity)}
-          disabled={isOutOfStock}
+          onClick={() => onConfirm(quantity, selectedVariant ? buildVariationSelection(selectedVariant) : undefined)}
+          disabled={isOutOfStock || variationIncomplete || loadingVariations || Boolean(variationError)}
           className="inline-flex min-h-13 w-full items-center justify-center gap-2.5 rounded-xl bg-[#17345f] px-5 py-4 text-sm font-extrabold text-white transition hover:bg-[#102746] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
         >
           <ShoppingBag className="h-5 w-5" aria-hidden="true" />
-          {isOutOfStock ? 'Produto esgotado' : `Adicionar ${quantity} ${quantity === 1 ? 'unidade' : 'unidades'}`}
+          {isOutOfStock ? 'Combinação esgotada' : variationIncomplete ? 'Selecione todas as opções' : `Adicionar ${quantity} ${quantity === 1 ? 'unidade' : 'unidades'}`}
         </button>
       </div>
     </Modal>

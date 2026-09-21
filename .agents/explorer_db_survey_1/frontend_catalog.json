@@ -1,0 +1,1147 @@
+{
+  "rpcs": {
+    "gsa_supplier_session_access_state": [
+      "src/App.tsx"
+    ],
+    "gsa_admin_save_function": [
+      "src/components/admin/AcessosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaAcessosView.tsx"
+    ],
+    "gsa_admin_set_collaborator_status": [
+      "src/components/admin/AcessosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaAcessosView.tsx"
+    ],
+    "gsa_admin_review_deletion_request": [
+      "src/components/admin/AcessosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaAcessosView.tsx"
+    ],
+    "gsa_admin_advertising_overview": [
+      "src/components/admin/AdvertisingAdminModule.tsx"
+    ],
+    "gsa_admin_update_ad_request_status": [
+      "src/components/admin/AdvertisingAdminModule.tsx"
+    ],
+    "gsa_admin_create_ad_proposal": [
+      "src/components/admin/AdvertisingAdminModule.tsx"
+    ],
+    "gsa_admin_review_ad_creative": [
+      "src/components/admin/AdvertisingAdminModule.tsx"
+    ],
+    "gsa_admin_mark_ad_payment": [
+      "src/components/admin/AdvertisingAdminModule.tsx"
+    ],
+    "gsa_admin_update_ad_campaign_status": [
+      "src/components/admin/AdvertisingAdminModule.tsx"
+    ],
+    "gsa_admin_update_ad_placement": [
+      "src/components/admin/AdvertisingAdminModule.tsx"
+    ],
+    "gsa_admin_update_affiliate_details": [
+      "src/components/admin/AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_set_affiliate_status": [
+      "src/components/admin/AffiliateAdminModule.tsx",
+      "src/components/admin/super-domains/pessoas/AfiliadosSection.tsx"
+    ],
+    "gsa_admin_decide_affiliate_payout": [
+      "src/components/admin/AffiliateAdminModule.tsx",
+      "src/components/admin/super-domains/pessoas/AfiliadosSection.tsx"
+    ],
+    "gsa_admin_release_affiliate_commissions": [
+      "src/components/admin/AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_update_global_saque_minimo": [
+      "src/components/admin/AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_update_affiliate_program": [
+      "src/components/admin/AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_update_affiliate_points_settings": [
+      "src/components/admin/AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_adjust_affiliate_balance": [
+      "src/components/admin/AffiliateAdminModule.tsx",
+      "src/components/admin/super-domains/pessoas/AfiliadosSection.tsx"
+    ],
+    "gsa_admin_ensure_calculator_pro_products": [
+      "src/components/admin/CalculatorProAdminPanel.tsx"
+    ],
+    "gsa_admin_save_calculator_pro_product": [
+      "src/components/admin/CalculatorProAdminPanel.tsx"
+    ],
+    "gsa_admin_set_calculator_pro_voucher_status": [
+      "src/components/admin/CalculatorProAdminPanel.tsx"
+    ],
+    "gsa_admin_classified_action": [
+      "src/components/admin/ClassifiedsModule.tsx"
+    ],
+    "gsa_admin_update_settings_secure": [
+      "src/components/admin/ConfiguracoesModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaConfiguracoesView.tsx"
+    ],
+    "gsa_admin_save_company": [
+      "src/components/admin/ConfiguracoesModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaConfiguracoesView.tsx"
+    ],
+    "gsa_admin_save_payment_method": [
+      "src/components/admin/ConfiguracoesModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaConfiguracoesView.tsx"
+    ],
+    "increment_comentarios": [
+      "src/components/admin/demandas/DemandasComentarios.tsx"
+    ],
+    "gsa_admin_fiscal_update": [
+      "src/components/admin/FiscalModule.tsx",
+      "src/components/admin/super-domains/financeiro/FiscalView.tsx"
+    ],
+    "gsa_admin_cancel_subscription": [
+      "src/components/admin/OrdensAssinaturaModule.tsx"
+    ],
+    "gsa_admin_extend_subscription": [
+      "src/components/admin/OrdensAssinaturaModule.tsx"
+    ],
+    "gsa_admin_import_products_batch_v2": [
+      "src/components/admin/products/BulkProductImportModal.tsx"
+    ],
+    "gsa_admin_check_product_barcode": [
+      "src/components/admin/ProdutosModule.tsx"
+    ],
+    "gsa_admin_update_resource_status": [
+      "src/components/admin/ProtectionAdminModule.tsx"
+    ],
+    "gsa_admin_save_protection_entity": [
+      "src/components/admin/ProtectionAdminModule.tsx"
+    ],
+    "gsa_admin_create_protection_proposal": [
+      "src/components/admin/ProtectionAdminModule.tsx"
+    ],
+    "gsa_admin_upsert_site_campaign": [
+      "src/components/admin/SiteCampaignAdminModule.tsx"
+    ],
+    "gsa_admin_set_site_campaign_status": [
+      "src/components/admin/SiteCampaignAdminModule.tsx"
+    ],
+    "gsa_admin_duplicate_site_campaign": [
+      "src/components/admin/SiteCampaignAdminModule.tsx"
+    ],
+    "gsa_admin_delete_site_campaign": [
+      "src/components/admin/SiteCampaignDeletionPanel.tsx"
+    ],
+    "gsa_admin_set_site_campaign_permissions": [
+      "src/components/admin/SiteCampaignPermissionMatrix.tsx"
+    ],
+    "gsa_admin_alterar_status_cliente": [
+      "src/components/admin/super-domains/contratos/CrmClientesView.tsx"
+    ],
+    "gsa_admin_ajustar_saldo_cliente": [
+      "src/components/admin/super-domains/contratos/CrmClientesView.tsx"
+    ],
+    "gsa_admin_desbloquear_pin_cliente": [
+      "src/components/admin/super-domains/contratos/CrmClientesView.tsx"
+    ],
+    "fn_marcar_faturas_vencidas": [
+      "src/components/admin/super-domains/financeiro/FaturamentoView.tsx"
+    ],
+    "gsa_admin_adjust_points": [
+      "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx"
+    ],
+    "gsa_admin_processar_saque_prestador": [
+      "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx"
+    ],
+    "gsa_admin_processar_saque": [
+      "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx",
+      "src/tests/super-domains-adversarial-challenger.test.ts"
+    ],
+    "gsa_admin_travel_link_lead": [
+      "src/components/admin/TravelAdminModule.tsx"
+    ],
+    "gsa_admin_travel_update_status": [
+      "src/components/admin/TravelAdminModule.tsx"
+    ],
+    "gsa_admin_travel_create_proposal": [
+      "src/components/admin/TravelAdminModule.tsx"
+    ],
+    "gsa_admin_save_travel_category": [
+      "src/components/admin/ViagensCategoriasModule.tsx"
+    ],
+    "gsa_public_lookup_referral": [
+      "src/components/auth/ClientAccessModal.tsx",
+      "src/pages/BusinessRegistrationPage.tsx"
+    ],
+    "gsa_public_register_client": [
+      "src/components/auth/ClientAccessModal.tsx",
+      "src/pages/BusinessRegistrationPage.tsx"
+    ],
+    "gsa_public_register_provider": [
+      "src/components/auth/RestrictedAccessModal.tsx",
+      "src/pages/ProviderAccessPage.tsx"
+    ],
+    "gsa_solicitar_pin_whatsapp": [
+      "src/components/auth/WhatsAppPinVerification.tsx"
+    ],
+    "gsa_validar_pin_whatsapp": [
+      "src/components/auth/WhatsAppPinVerification.tsx"
+    ],
+    "gsa_verify_own_pin": [
+      "src/components/client/ClientProfile.tsx"
+    ],
+    "rpc_criar_anuncio_classificado": [
+      "src/components/client/marketplace/classifieds/CreateListingWizard.tsx"
+    ],
+    "rpc_reenviar_anuncio_classificado": [
+      "src/components/client/marketplace/classifieds/EditClassifiedListingPage.tsx"
+    ],
+    "gsa_public_affiliate_programs": [
+      "src/components/public/AffiliatePublicPage.tsx"
+    ],
+    "gsa_public_track_affiliate_click": [
+      "src/features/affiliates/attribution.ts"
+    ],
+    "gsa_public_resgatar_beneficio_parceiro": [
+      "src/features/partners/service.ts"
+    ],
+    "gsa_admin_set_partner_status": [
+      "src/features/partners/service.ts"
+    ],
+    "gsa_admin_set_notification_state": [
+      "src/hooks/useAdminNotifications.tsx"
+    ],
+    "gsa_admin_mark_all_notifications": [
+      "src/hooks/useAdminNotifications.tsx"
+    ],
+    "gsa_ping_session": [
+      "src/hooks/useAutoLogout.ts",
+      "src/lib/sessionService.ts"
+    ],
+    "get_client_pendency_counts": [
+      "src/hooks/useClientNotifications.tsx"
+    ],
+    "gsa_public_registration_settings": [
+      "src/hooks/usePublicRegistrationSettings.ts"
+    ],
+    "gsa_advertiser_portal_snapshot": [
+      "src/lib/advertiserAccess.ts"
+    ],
+    "gsa_client_operational_write": [
+      "src/lib/clientOperationalWrite.ts"
+    ],
+    "gsa_validate_session": [
+      "src/lib/deleteRequest.ts",
+      "src/lib/sessionService.ts"
+    ],
+    "gsa_log_action": [
+      "src/lib/logService.ts"
+    ],
+    "gsa_admin_sync_product_variations": [
+      "src/lib/productVariations.ts"
+    ],
+    "gsa_provider_financial_snapshot": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_dashboard_snapshot": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_pendency_snapshot": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_request_withdrawal": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_cancel_withdrawal": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_redeem_voucher": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_redeem_prize": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_activate_promotion": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_update_profile": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_create_schedule": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_complete_schedule": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_delete_schedule": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_submit_document": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_transition_demand": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_create_ticket": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_send_ticket_message": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_request_profile_change": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_request_demand_support": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_mark_notification_read": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_mark_all_notifications_read": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_session_access_state": [
+      "src/lib/providerSessionAccess.ts"
+    ],
+    "gsa_public_service_catalog": [
+      "src/lib/serviceCatalog.ts"
+    ],
+    "gsa_admin_service_catalog_snapshot": [
+      "src/lib/serviceCatalog.ts"
+    ],
+    "gsa_end_session": [
+      "src/lib/sessionService.ts"
+    ],
+    "gsa_get_client_session_access_state": [
+      "src/lib/sessionService.ts"
+    ],
+    "gsa_get_collaborator_session_access_state": [
+      "src/lib/sessionService.ts"
+    ],
+    "gsa_update_client_pin": [
+      "src/lib/sessionService.ts"
+    ],
+    "gsa_public_site_campaigns": [
+      "src/lib/siteCampaigns.ts"
+    ],
+    "gsa_public_site_campaign_event": [
+      "src/lib/siteCampaigns.ts"
+    ],
+    "gsa_supplier_dashboard_snapshot": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_supplier_request_product": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_supplier_update_profile": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_supplier_mark_order_seen": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_supplier_mark_notification_read": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_supplier_mark_notifications_read": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_supplier_submit_delivery": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_admin_supplier_set_status": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_admin_review_supplier_product": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_admin_create_supplier_order": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_admin_review_supplier_delivery": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_admin_update_supplier_payable": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_criar_vaquinha": [
+      "src/lib/vaquinhaService.ts"
+    ],
+    "gsa_obter_vaquinha": [
+      "src/lib/vaquinhaService.ts"
+    ],
+    "gsa_confirmar_contribuicao_vaquinha": [
+      "src/lib/vaquinhaService.ts"
+    ],
+    "gsa_advertiser_save_creative": [
+      "src/pages/AdvertiserPortal.tsx"
+    ],
+    "gsa_advertiser_submit_creative": [
+      "src/pages/AdvertiserPortal.tsx"
+    ],
+    "gsa_advertiser_update_profile": [
+      "src/pages/AdvertiserPortal.tsx"
+    ],
+    "gsa_public_get_career_application": [
+      "src/pages/Careers/CareersAccessPage.tsx"
+    ],
+    "gsa_public_submit_career_application": [
+      "src/pages/Careers/CareersLandingPage.tsx"
+    ],
+    "gsa_public_confirm_career_resume": [
+      "src/pages/Careers/CareersLandingPage.tsx"
+    ],
+    "processar_bonus_boas_vindas_seguro": [
+      "src/pages/ClientPortal.tsx"
+    ],
+    "gsa_public_register_supplier": [
+      "src/pages/Fornecedor/FornecedorAccessPage.tsx"
+    ],
+    "gsa_admin_baixar_fatura": [
+      "src/tests/super-domains-adversarial-challenger.test.ts"
+    ],
+    "gsa_admin_approve_budget": [
+      "src/tests/super-domains-adversarial-challenger.test.ts"
+    ],
+    "gsa_admin_save_collaborator": [
+      "src/tests/super-domains-adversarial-challenger.test.ts"
+    ],
+    "check_file_references": [
+      "src/validation/step4_integrity_audit.ts"
+    ],
+    "get_database_details": [
+      "src/validation/step4_integrity_audit.ts"
+    ],
+    "gsa_client_extend_subscription": [
+      "src/validation/step6_subscriptions.ts"
+    ],
+    "gsa_client_cancel_subscription": [
+      "src/validation/step6_subscriptions.ts"
+    ]
+  },
+  "tables": {
+    "produtos": [
+      "src/App.tsx",
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/admin/ProdutosModule.tsx",
+      "src/components/admin/relatorios/RelatorioLoja.tsx",
+      "src/components/client/ClientGSAStore.tsx",
+      "src/components/client/ClientProdutos.tsx",
+      "src/components/client/store/CheckoutModal.tsx",
+      "src/components/client/store/CheckoutPage.tsx",
+      "src/components/client/store/EcommerceHeader.tsx",
+      "src/components/client/store/EcommerceHome.tsx",
+      "src/components/client/store/ProductPage.tsx",
+      "src/components/client/store/WishlistPage.tsx",
+      "src/components/client/StoreHub.tsx",
+      "src/components/public/PublicVIPPresentationPage.tsx",
+      "src/lib/adminStoreOperations.ts",
+      "src/pages/Afiliado/AfiliadoDashboard.tsx",
+      "src/validation/master_block2.ts"
+    ],
+    "servicos": [
+      "src/App.tsx",
+      "src/components/admin/ServicosModule.tsx",
+      "src/components/client/ClientGSAStore.tsx",
+      "src/components/client/store/CheckoutPage.tsx",
+      "src/components/client/store/WishlistPage.tsx"
+    ],
+    "assinaturas": [
+      "src/App.tsx",
+      "src/components/admin/AssinaturasModule.tsx",
+      "src/components/admin/relatorios/RelatorioFinanceiro.tsx",
+      "src/components/admin/relatorios/RelatorioOperacional.tsx",
+      "src/components/client/ClientGSAStore.tsx",
+      "src/components/client/store/CheckoutPage.tsx",
+      "src/components/client/store/WishlistPage.tsx",
+      "src/validation/master_block2.ts",
+      "src/validation/step6_subscriptions.ts"
+    ],
+    "loja_carrinhos": [
+      "src/App.tsx",
+      "src/components/client/ClientGSAStore.tsx",
+      "src/components/client/ClientProdutos.tsx",
+      "src/components/client/store/CheckoutPage.tsx",
+      "src/components/client/store/EcommerceHeader.tsx",
+      "src/components/client/store/EcommerceHome.tsx",
+      "src/components/client/store/ProductPage.tsx",
+      "src/components/client/store/PurchasesPage.tsx",
+      "src/lib/adminStoreOperations.ts"
+    ],
+    "loja_categorias": [
+      "src/components/admin/AssinaturasModule.tsx",
+      "src/components/admin/LojaCategoriasModule.tsx",
+      "src/components/admin/ProdutosModule.tsx",
+      "src/components/admin/ScrapingAdminModule.tsx",
+      "src/components/admin/ServicosModule.tsx",
+      "src/components/client/ClientGSAStore.tsx"
+    ],
+    "classificados_midias": [
+      "src/components/admin/ClassifiedsModule.tsx"
+    ],
+    "demanda_comentarios": [
+      "src/components/admin/demandas/DemandasComentarios.tsx"
+    ],
+    "prestador_demandas": [
+      "src/components/admin/demandas/DemandasComentarios.tsx",
+      "src/components/admin/demandas/DemandasDashboard.tsx",
+      "src/components/admin/demandas/DemandasDetalhesModal.tsx",
+      "src/components/admin/demandas/NovaDemandaModal.tsx",
+      "src/components/admin/DemandasColaboradorModule.tsx",
+      "src/components/admin/PainelRentabilidade.tsx",
+      "src/components/admin/relatorios/RelatorioPrestadores.tsx",
+      "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+      "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+      "src/components/prestador/PrestadorAgenda.tsx",
+      "src/components/prestador/PrestadorDemandas.tsx",
+      "src/validation/master_block3.ts",
+      "src/validation/step2_sales_flow.ts"
+    ],
+    "colaboradores": [
+      "src/components/admin/demandas/DemandasDashboard.tsx",
+      "src/components/admin/demandas/NovaDemandaModal.tsx",
+      "src/components/admin/DemandasColaboradorModule.tsx",
+      "src/components/admin/relatorios/RelatorioOperacional.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/SystemMonitorModule.tsx",
+      "src/pages/AdminPanel.tsx",
+      "src/validation/master_block4.ts"
+    ],
+    "os_notas": [
+      "src/components/admin/demandas/DemandasDetalhesModal.tsx",
+      "src/components/client/ClientServicos.tsx",
+      "src/lib/osService.ts"
+    ],
+    "os_suporte_mensagens": [
+      "src/components/admin/demandas/DemandasDetalhesModal.tsx",
+      "src/components/client/ClientServicos.tsx"
+    ],
+    "ordens_servico": [
+      "src/components/admin/demandas/NovaDemandaModal.tsx",
+      "src/components/admin/PainelRentabilidade.tsx",
+      "src/components/admin/relatorios/RelatorioExecutivo.tsx",
+      "src/components/admin/relatorios/RelatorioOS.tsx",
+      "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+      "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+      "src/components/client/ClientServicos.tsx",
+      "src/lib/whatsappNotificationService.ts",
+      "src/validation/step2_sales_flow.ts"
+    ],
+    "prestadores": [
+      "src/components/admin/demandas/NovaDemandaModal.tsx",
+      "src/components/admin/DemandasColaboradorModule.tsx",
+      "src/components/admin/relatorios/RelatorioPrestadores.tsx",
+      "src/components/admin/super-domains/pessoas/NovoPrestadorDrawer.tsx",
+      "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+      "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+      "src/components/admin/super-domains/pessoas/PrestadoresSection.tsx",
+      "src/components/admin/SystemMonitorModule.tsx",
+      "src/components/prestador/PrestadorFinanceiro.tsx",
+      "src/hooks/useProviderNotifications.tsx",
+      "src/validation/find_prestador.ts",
+      "src/validation/find_records.ts",
+      "src/validation/master_block3.ts",
+      "src/validation/step2_sales_flow.ts",
+      "src/validation/step3_finance_gamification.ts"
+    ],
+    "prestador_demandas_historico": [
+      "src/components/admin/DemandasColaboradorModule.tsx",
+      "src/components/prestador/PrestadorDemandas.tsx",
+      "src/lib/demandService.ts"
+    ],
+    "gsa_tv_channels": [
+      "src/components/admin/GsaTvModule.tsx"
+    ],
+    "gsa_tv_media_items": [
+      "src/components/admin/GsaTvModule.tsx"
+    ],
+    "gsa_tv_schedule_slots": [
+      "src/components/admin/GsaTvModule.tsx"
+    ],
+    "gsa_tv_playlists": [
+      "src/components/admin/GsaTvModule.tsx"
+    ],
+    "gsa_tv_incidents": [
+      "src/components/admin/GsaTvModule.tsx"
+    ],
+    "gsa_tv_audit_log": [
+      "src/components/admin/GsaTvModule.tsx"
+    ],
+    "gsa_tv_jobs": [
+      "src/components/admin/GsaTvModule.tsx"
+    ],
+    "system_settings": [
+      "src/components/admin/infra/WhatsAppQRCodeManager.tsx",
+      "src/components/admin/ScrapingAdminModule.tsx",
+      "src/components/admin/super-domains/financeiro/CobrancaView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+      "src/components/client/ClientFinanceiro.tsx",
+      "src/components/client/ClientGSAStore.tsx",
+      "src/components/client/store/CheckoutModal.tsx",
+      "src/components/client/store/CheckoutPage.tsx",
+      "src/components/client/store/ProductPage.tsx",
+      "src/components/ui/GSAChatbotWidget.tsx",
+      "src/components/ui/WhatsAppButton.tsx",
+      "src/hooks/usePixDiscount.ts",
+      "src/hooks/usePublicRegistrationSettings.ts",
+      "src/pages/ClientPortal.tsx",
+      "src/utils/emprestimoUtils.ts",
+      "src/utils/n8nWhatsApp.ts",
+      "src/utils/referralHelpers.ts"
+    ],
+    "gsa_whatsapp_ramais": [
+      "src/components/admin/infra/WhatsAppQRCodeManager.tsx"
+    ],
+    "ordens_assinatura": [
+      "src/components/admin/OrdensAssinaturaModule.tsx",
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/admin/relatorios/RelatorioFinanceiro.tsx",
+      "src/components/admin/relatorios/RelatorioOperacional.tsx",
+      "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "src/components/client/ClientAssinaturas.tsx",
+      "src/components/client/store/PurchasesPage.tsx",
+      "src/components/client/StoreHub.tsx",
+      "src/validation/master_block2.ts",
+      "src/validation/step6_subscriptions.ts"
+    ],
+    "ordens_compra": [
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/admin/relatorios/RelatorioOperacional.tsx",
+      "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+      "src/components/client/ClientProdutos.tsx",
+      "src/components/client/store/PurchasesPage.tsx",
+      "src/components/client/StoreHub.tsx"
+    ],
+    "faturas": [
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/admin/PainelRentabilidade.tsx",
+      "src/components/admin/relatorios/RelatorioClientes.tsx",
+      "src/components/admin/relatorios/RelatorioExecutivo.tsx",
+      "src/components/admin/relatorios/RelatorioFinanceiro.tsx",
+      "src/components/admin/relatorios/RelatorioLoja.tsx",
+      "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+      "src/components/client/ClientFinanceiro.tsx",
+      "src/components/client/ClientMeuCredito.tsx",
+      "src/components/client/financeiro/FaturasList.tsx",
+      "src/components/client/StoreHub.tsx",
+      "src/lib/pixService.ts",
+      "src/utils/promotions.ts",
+      "src/utils/referral.ts",
+      "src/utils/riskProfile.ts",
+      "src/validation/master_block2.ts",
+      "src/validation/step2_sales_flow.ts",
+      "src/validation/step3_finance_gamification.ts",
+      "src/validation/step6_subscriptions.ts"
+    ],
+    "cupons_loja": [
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "src/components/client/ClientGSAStore.tsx",
+      "src/components/client/ClientMeuCredito.tsx",
+      "src/components/client/financeiro/FaturasList.tsx",
+      "src/components/client/store/CheckoutModal.tsx",
+      "src/components/client/store/CheckoutPage.tsx",
+      "src/components/client/store/CouponsPage.tsx",
+      "src/components/client/store/StoreHubCoupons.tsx",
+      "src/components/client/StoreHub.tsx"
+    ],
+    "points_transactions": [
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/client/ClientPontos.tsx",
+      "src/components/client/financeiro/FaturasList.tsx",
+      "src/components/client/StoreHub.tsx"
+    ],
+    "pontos_movimentacoes": [
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/admin/relatorios/RelatorioGamificacao.tsx",
+      "src/components/client/ClientPontos.tsx",
+      "src/components/client/financeiro/FaturasList.tsx",
+      "src/components/client/StoreHub.tsx",
+      "src/pages/ClientPortal.tsx",
+      "src/utils/gamification.ts"
+    ],
+    "extrato_financeiro": [
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/client/ClientVouchers.tsx",
+      "src/components/client/financeiro/ExtratoList.tsx",
+      "src/components/client/financeiro/FaturasList.tsx",
+      "src/components/client/StoreHub.tsx",
+      "src/utils/referral.ts",
+      "src/validation/step5_reports_consolidation.ts"
+    ],
+    "orcamentos": [
+      "src/components/admin/PainelRentabilidade.tsx",
+      "src/components/admin/relatorios/RelatorioOS.tsx",
+      "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+      "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "src/components/client/ClientMeuCredito.tsx",
+      "src/components/client/ClientOrcamentos.tsx",
+      "src/components/client/ClientPromocoes.tsx",
+      "src/components/client/financeiro/FaturasList.tsx",
+      "src/components/client/store/CheckoutModal.tsx",
+      "src/components/client/store/CheckoutPage.tsx",
+      "src/components/client/store/CouponsPage.tsx",
+      "src/components/client/store/ProductReviews.tsx",
+      "src/components/client/store/PurchasesPage.tsx",
+      "src/components/client/store/StoreHubCoupons.tsx",
+      "src/components/client/StoreHub.tsx",
+      "src/hooks/useClientNotifications.tsx",
+      "src/lib/pixService.ts",
+      "src/pages/ClientPortal.tsx",
+      "src/validation/step2_sales_flow.ts",
+      "src/validation/step5_reports_consolidation.ts"
+    ],
+    "clientes": [
+      "src/components/admin/PainelRentabilidade.tsx",
+      "src/components/admin/relatorios/RelatorioClientes.tsx",
+      "src/components/admin/relatorios/RelatorioCredito.tsx",
+      "src/components/admin/relatorios/RelatorioExecutivo.tsx",
+      "src/components/admin/relatorios/RelatorioFinanceiro.tsx",
+      "src/components/admin/relatorios/RelatorioGamificacao.tsx",
+      "src/components/admin/super-domains/contratos/AreaVipView.tsx",
+      "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+      "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+      "src/components/admin/super-domains/contratos/HubEmpresasView.tsx",
+      "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "src/components/admin/SystemMonitorModule.tsx",
+      "src/components/admin/SystemStatusIndicator.tsx",
+      "src/components/admin/TravelAdminModule.tsx",
+      "src/components/client/ClientAffiliatePanel.tsx",
+      "src/components/client/ClientEmprestimos.tsx",
+      "src/components/client/ClientFinanceiro.tsx",
+      "src/components/client/ClientGSAStore.tsx",
+      "src/components/client/ClientIndiqueGanhe.tsx",
+      "src/components/client/ClientOrcamentos.tsx",
+      "src/components/client/ClientPontos.tsx",
+      "src/components/client/ClientPromocoes.tsx",
+      "src/components/client/ClientSuporte.tsx",
+      "src/components/client/ClientTransferencias.tsx",
+      "src/components/client/financeiro/PaymentModal.tsx",
+      "src/components/client/store/CheckoutModal.tsx",
+      "src/components/client/store/CheckoutPage.tsx",
+      "src/components/client/store/EcommerceHeader.tsx",
+      "src/components/client/store/ProductReviews.tsx",
+      "src/components/client/store/PurchasesPage.tsx",
+      "src/features/partners/service.ts",
+      "src/hooks/useClientNotifications.tsx",
+      "src/lib/sessionService.ts",
+      "src/lib/whatsappNotificationService.ts",
+      "src/pages/Afiliado/AfiliadoDashboard.tsx",
+      "src/pages/ClientPortal.tsx",
+      "src/utils/gamification.ts",
+      "src/utils/referral.ts",
+      "src/utils/riskProfile.ts",
+      "src/validation/find_records.ts",
+      "src/validation/master_block2.ts",
+      "src/validation/step1_referral.ts",
+      "src/validation/step3_finance_gamification.ts",
+      "src/validation/step4_integrity_audit.ts",
+      "src/validation/step5_reports_consolidation.ts"
+    ],
+    "indicacoes": [
+      "src/components/admin/PainelRentabilidade.tsx",
+      "src/components/admin/relatorios/RelatorioMarketing.tsx",
+      "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "src/components/client/ClientIndiqueGanhe.tsx",
+      "src/pages/ClientPortal.tsx",
+      "src/utils/referral.ts",
+      "src/validation/step1_referral.ts",
+      "src/validation/step5_reports_consolidation.ts"
+    ],
+    "prestador_documentos": [
+      "src/components/admin/prestadores/AdminPrestadorDocumentos.tsx",
+      "src/components/prestador/PrestadorDocumentos.tsx"
+    ],
+    "documentos_prestador": [
+      "src/components/admin/prestadores/AdminPrestadorDocumentos.tsx",
+      "src/lib/pdfSharingService.ts"
+    ],
+    "prestador_premios": [
+      "src/components/admin/prestadores/AdminPrestadorPremios.tsx",
+      "src/components/prestador/PrestadorPremios.tsx"
+    ],
+    "prestador_promocoes": [
+      "src/components/admin/prestadores/AdminPrestadorPromocoes.tsx",
+      "src/components/prestador/PrestadorPromocoes.tsx"
+    ],
+    "prestador_promocoes_ativacoes": [
+      "src/components/admin/prestadores/AdminPrestadorPromocoes.tsx",
+      "src/components/prestador/PrestadorPromocoes.tsx"
+    ],
+    "prestador_vouchers": [
+      "src/components/admin/prestadores/AdminPrestadorVouchers.tsx",
+      "src/components/prestador/PrestadorVouchers.tsx"
+    ],
+    "loja_estoque_historico": [
+      "src/components/admin/ProdutosModule.tsx"
+    ],
+    "client_levels": [
+      "src/components/admin/relatorios/RelatorioClientes.tsx",
+      "src/components/admin/relatorios/RelatorioGamificacao.tsx",
+      "src/components/client/ClientAreaVIP.tsx",
+      "src/hooks/useVipLevels.ts"
+    ],
+    "cobrancas": [
+      "src/components/admin/relatorios/RelatorioCobranca.tsx",
+      "src/components/admin/super-domains/financeiro/CobrancaView.tsx",
+      "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+      "src/utils/riskProfile.ts"
+    ],
+    "loja_credito_solicitacoes": [
+      "src/components/admin/relatorios/RelatorioCredito.tsx",
+      "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+      "src/components/client/ClientMeuCredito.tsx",
+      "src/components/client/store/CheckoutModal.tsx",
+      "src/components/client/store/CheckoutPage.tsx"
+    ],
+    "emprestimos": [
+      "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+      "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+      "src/components/client/ClientEmprestimos.tsx",
+      "src/components/client/ClientOrcamentos.tsx",
+      "src/lib/privateStorage.ts",
+      "src/lib/supabase.ts",
+      "src/utils/emprestimoUtils.ts",
+      "src/utils/riskProfile.ts"
+    ],
+    "emprestimo_parcelas": [
+      "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+      "src/components/client/ClientEmprestimos.tsx",
+      "src/utils/emprestimoUtils.ts",
+      "src/utils/riskProfile.ts"
+    ],
+    "saques": [
+      "src/components/admin/relatorios/RelatorioExecutivo.tsx",
+      "src/components/admin/relatorios/RelatorioFinanceiro.tsx",
+      "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+      "src/components/admin/super-domains/financeiro/FluxoCaixaView.tsx",
+      "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+      "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx",
+      "src/components/client/ClientFinanceiro.tsx",
+      "src/components/client/financeiro/SaquesList.tsx"
+    ],
+    "pagamentos": [
+      "src/components/admin/relatorios/RelatorioFinanceiro.tsx",
+      "src/components/client/ClientVouchers.tsx",
+      "src/validation/step3_finance_gamification.ts"
+    ],
+    "transferencias": [
+      "src/components/admin/relatorios/RelatorioFinanceiro.tsx",
+      "src/components/admin/super-domains/financeiro/FluxoCaixaView.tsx",
+      "src/components/client/ClientFinanceiro.tsx",
+      "src/components/client/ClientPontos.tsx",
+      "src/components/client/ClientTransferencias.tsx",
+      "src/components/client/financeiro/ExtratoList.tsx"
+    ],
+    "ordens_fiscais": [
+      "src/components/admin/relatorios/RelatorioFiscal.tsx",
+      "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+      "src/components/client/ClientFinanceiro.tsx",
+      "src/components/client/financeiro/FaturasList.tsx",
+      "src/components/client/financeiro/NotasFiscaisList.tsx",
+      "src/lib/privateStorage.ts",
+      "src/validation/master_block3.ts"
+    ],
+    "cliente_premios": [
+      "src/components/admin/relatorios/RelatorioGamificacao.tsx",
+      "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "src/components/client/ClientPremios.tsx"
+    ],
+    "loja_solicitacoes": [
+      "src/components/admin/relatorios/RelatorioLoja.tsx",
+      "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "src/components/client/ClientOrcamentos.tsx",
+      "src/components/client/StoreHub.tsx"
+    ],
+    "vouchers": [
+      "src/components/admin/relatorios/RelatorioMarketing.tsx",
+      "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "src/components/client/ClientVouchers.tsx",
+      "src/components/client/financeiro/PaymentModal.tsx",
+      "src/validation/step1_referral.ts"
+    ],
+    "promocoes": [
+      "src/components/admin/relatorios/RelatorioMarketing.tsx",
+      "src/components/client/ClientPromocoes.tsx",
+      "src/components/client/store/PromotionsPage.tsx",
+      "src/hooks/useClientNotifications.tsx",
+      "src/validation/master_block2.ts"
+    ],
+    "cliente_promocoes": [
+      "src/components/admin/relatorios/RelatorioMarketing.tsx",
+      "src/components/client/ClientOrcamentos.tsx",
+      "src/components/client/ClientPromocoes.tsx",
+      "src/components/client/store/PromotionsPage.tsx",
+      "src/components/client/StoreHub.tsx",
+      "src/hooks/useClientNotifications.tsx",
+      "src/utils/promotions.ts"
+    ],
+    "solicitacoes_exclusao": [
+      "src/components/admin/relatorios/RelatorioOperacional.tsx",
+      "src/lib/deleteRequest.ts",
+      "src/validation/master_block4.ts",
+      "src/validation/step4_integrity_audit.ts"
+    ],
+    "prestador_faturas": [
+      "src/components/admin/relatorios/RelatorioPrestadores.tsx"
+    ],
+    "prestador_saques": [
+      "src/components/admin/relatorios/RelatorioPrestadores.tsx",
+      "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+      "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx",
+      "src/components/prestador/PrestadorFinanceiro.tsx"
+    ],
+    "tickets": [
+      "src/components/admin/relatorios/RelatorioSuporte.tsx",
+      "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+      "src/components/client/ClientEmprestimos.tsx",
+      "src/components/client/ClientFinanceiro.tsx",
+      "src/components/client/ClientPremios.tsx",
+      "src/components/client/ClientSuporte.tsx",
+      "src/components/prestador/PrestadorSuporte.tsx",
+      "src/pages/Afiliado/AfiliadoDashboard.tsx",
+      "src/pages/ClientPortal.tsx",
+      "src/validation/master_block2.ts"
+    ],
+    "automacao_scraping_configs": [
+      "src/components/admin/ScrapingAdminModule.tsx"
+    ],
+    "viagens_categorias": [
+      "src/components/admin/ScrapingAdminModule.tsx",
+      "src/components/admin/ViagensCategoriasModule.tsx"
+    ],
+    "automacao_scraping_logs": [
+      "src/components/admin/ScrapingExecutionMonitorModal.tsx"
+    ],
+    "ticket_mensagens": [
+      "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+      "src/components/client/ClientSuporte.tsx",
+      "src/components/prestador/PrestadorSuporte.tsx",
+      "src/validation/master_block2.ts"
+    ],
+    "contratos": [
+      "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx"
+    ],
+    "saude_contratos": [
+      "src/components/admin/super-domains/contratos/GsaSaudeView.tsx"
+    ],
+    "seguros_apolices": [
+      "src/components/admin/super-domains/contratos/GsaSegurosView.tsx"
+    ],
+    "loja_reembolsos": [
+      "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+      "src/components/client/StoreHub.tsx"
+    ],
+    "carteira_lancamentos": [
+      "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+      "src/utils/referral.ts",
+      "src/validation/step5_reports_consolidation.ts"
+    ],
+    "sistema_logs": [
+      "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+      "src/validation/master_block3.ts",
+      "src/validation/master_block4.ts",
+      "src/validation/step4_integrity_audit.ts"
+    ],
+    "prestador_historico": [
+      "src/components/admin/super-domains/pessoas/NovoPrestadorDrawer.tsx",
+      "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx"
+    ],
+    "fornecedores": [
+      "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+      "src/components/admin/SystemMonitorModule.tsx",
+      "src/pages/Fornecedor/FornecedorDashboard.tsx"
+    ],
+    "gsa_afiliados": [
+      "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+      "src/components/admin/SystemMonitorModule.tsx"
+    ],
+    "viagens_pacotes": [
+      "src/components/admin/TravelAdminModule.tsx",
+      "src/components/client/marketplace/travel/TravelCategoryPage.tsx",
+      "src/components/client/marketplace/travel/TravelPackageDetailPage.tsx",
+      "src/components/client/marketplace/travel/TravelQuoteRequestPage.tsx"
+    ],
+    "viagens_pacote_imagens": [
+      "src/components/admin/TravelAdminModule.tsx"
+    ],
+    "viagens_propostas": [
+      "src/components/admin/TravelAdminModule.tsx",
+      "src/components/client/marketplace/travel/TravelProposalsPage.tsx"
+    ],
+    "level_history": [
+      "src/components/client/ClientAreaVIP.tsx",
+      "src/components/client/ClientPontos.tsx"
+    ],
+    "emprestimo_historico": [
+      "src/components/client/ClientEmprestimos.tsx",
+      "src/utils/emprestimoUtils.ts"
+    ],
+    "emprestimo_comentarios": [
+      "src/components/client/ClientEmprestimos.tsx"
+    ],
+    "emprestimo_documentos": [
+      "src/components/client/ClientEmprestimos.tsx"
+    ],
+    "cupons_ativados": [
+      "src/components/client/ClientGSAStore.tsx",
+      "src/components/client/store/CheckoutModal.tsx",
+      "src/components/client/store/CheckoutPage.tsx",
+      "src/components/client/store/CouponsPage.tsx",
+      "src/components/client/store/StoreHubCoupons.tsx"
+    ],
+    "promocoes_quantidade_ativadas": [
+      "src/components/client/ClientGSAStore.tsx",
+      "src/components/client/store/CheckoutPage.tsx",
+      "src/components/client/store/PromotionsPage.tsx",
+      "src/components/client/StoreHub.tsx"
+    ],
+    "promocoes_quantidade": [
+      "src/components/client/ClientGSAStore.tsx",
+      "src/components/client/store/CheckoutPage.tsx",
+      "src/components/client/store/PromotionsPage.tsx",
+      "src/components/client/StoreHub.tsx"
+    ],
+    "loja_credito_documentos": [
+      "src/components/client/ClientMeuCredito.tsx"
+    ],
+    "loja_credito_movimentacoes": [
+      "src/components/client/ClientMeuCredito.tsx"
+    ],
+    "loja_avaliacoes": [
+      "src/components/client/ClientOrcamentos.tsx",
+      "src/components/client/store/OrderReviewModal.tsx",
+      "src/lib/storeReviews.ts"
+    ],
+    "documentos_cliente": [
+      "src/components/client/ClientOrcamentos.tsx",
+      "src/components/client/ClientProfile.tsx"
+    ],
+    "empresa": [
+      "src/components/client/ClientPontos.tsx",
+      "src/components/client/financeiro/PaymentModal.tsx",
+      "src/lib/pdf.ts",
+      "src/validation/master_block3.ts"
+    ],
+    "cliente_documentos": [
+      "src/components/client/ClientProfile.tsx"
+    ],
+    "fatura_contestacoes": [
+      "src/components/client/financeiro/FaturasList.tsx"
+    ],
+    "classificados_anuncios": [
+      "src/components/client/marketplace/classifieds/ClassifiedDetailPage.tsx",
+      "src/components/client/marketplace/classifieds/ClassifiedsClientDashboard.tsx",
+      "src/components/client/marketplace/classifieds/EditClassifiedListingPage.tsx",
+      "src/components/client/marketplace/classifieds/GeneralClassifiedsPage.tsx",
+      "src/components/client/marketplace/classifieds/MyClassifiedsPage.tsx",
+      "src/components/client/marketplace/classifieds/RealEstateMarketplacePage.tsx",
+      "src/components/client/marketplace/classifieds/VehiclesMarketplacePage.tsx"
+    ],
+    "classificados_propostas": [
+      "src/components/client/marketplace/classifieds/ClassifiedsClientDashboard.tsx",
+      "src/components/client/marketplace/classifieds/MyNegotiationsPage.tsx"
+    ],
+    "classificados_transacoes": [
+      "src/components/client/marketplace/classifieds/ClassifiedsClientDashboard.tsx",
+      "src/components/client/marketplace/classifieds/MyClassifiedSalesPage.tsx"
+    ],
+    "classificados_comissoes": [
+      "src/components/client/marketplace/classifieds/ClassifiedsClientDashboard.tsx",
+      "src/components/client/marketplace/classifieds/MyClassifiedCommissionsPage.tsx"
+    ],
+    "classificados_comissoes_config": [
+      "src/components/client/marketplace/classifieds/CreateListingWizard.tsx"
+    ],
+    "viagens_transacoes": [
+      "src/components/client/marketplace/travel/MyTripsPage.tsx",
+      "src/components/client/marketplace/travel/TravelCancellationsPage.tsx",
+      "src/components/client/marketplace/travel/TravelReservationPage.tsx"
+    ],
+    "viagens_orcamentos": [
+      "src/components/client/marketplace/travel/TravelQuoteRequestPage.tsx"
+    ],
+    "viagens_passageiros": [
+      "src/components/client/marketplace/travel/TravelReservationPage.tsx"
+    ],
+    "viagens_passageiro_documentos": [
+      "src/components/client/marketplace/travel/TravelReservationPage.tsx"
+    ],
+    "blog_posts": [
+      "src/components/client/store/BlogHome.tsx",
+      "src/components/client/store/BlogPostPage.tsx"
+    ],
+    "loja_pedido_itens": [
+      "src/components/client/store/PurchasesPage.tsx",
+      "src/components/client/StoreHub.tsx"
+    ],
+    "promocoes_quantidade_uso": [
+      "src/components/client/StoreHub.tsx"
+    ],
+    "suporte_mensagens": [
+      "src/components/common/SupportConversationModal.tsx"
+    ],
+    "prestador_suporte_demandas": [
+      "src/components/common/SupportConversationModal.tsx"
+    ],
+    "prestador_agendamentos": [
+      "src/components/prestador/PrestadorAgenda.tsx"
+    ],
+    "prestador_transacoes": [
+      "src/components/prestador/PrestadorFinanceiro.tsx",
+      "src/validation/step2_sales_flow.ts"
+    ],
+    "parceiros": [
+      "src/features/partners/service.ts"
+    ],
+    "parceiros_resgates": [
+      "src/features/partners/service.ts"
+    ],
+    "notificacoes": [
+      "src/hooks/useClientNotifications.tsx",
+      "src/hooks/useProviderNotifications.tsx",
+      "src/lib/notifications.tsx",
+      "src/lib/notificationService.ts",
+      "src/validation/master_block3.ts",
+      "src/validation/step3_finance_gamification.ts",
+      "src/validation/step6_subscriptions.ts"
+    ],
+    "notificacao_leituras": [
+      "src/hooks/useProviderNotifications.tsx"
+    ],
+    "produto_fornecedor_config": [
+      "src/lib/adminStoreOperations.ts"
+    ],
+    "produto_variantes": [
+      "src/lib/adminStoreOperations.ts",
+      "src/lib/productVariations.ts"
+    ],
+    "produto_variacao_grupos": [
+      "src/lib/adminStoreOperations.ts",
+      "src/lib/productVariations.ts"
+    ],
+    "produto_variacao_opcoes": [
+      "src/lib/productVariations.ts"
+    ],
+    "produto_variante_opcoes": [
+      "src/lib/productVariations.ts"
+    ],
+    "...": [
+      "src/lib/supabaseWrapper.ts"
+    ],
+    "loja_vaquinha_contribuicoes": [
+      "src/lib/vaquinhaService.ts"
+    ],
+    "loja_favoritos": [
+      "src/lib/wishlistStorage.ts"
+    ],
+    "gsa-ad-creatives": [
+      "src/pages/AdvertiserPortal.tsx"
+    ],
+    "gsa_client_operation_requests": [
+      "src/validation/step6_subscriptions.ts"
+    ]
+  }
+}

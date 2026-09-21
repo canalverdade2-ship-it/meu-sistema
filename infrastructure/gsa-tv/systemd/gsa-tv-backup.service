@@ -1,0 +1,13 @@
+[Unit]
+Description=Full verified backup for GSA TV (PostgreSQL + SQLite + media)
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/gsa-tv/backup/gsa-tv-backup-full.sh
+User=root
+Group=root
+StandardOutput=journal
+StandardError=journal
+

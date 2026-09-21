@@ -1,0 +1,1 @@
+sudo docker exec -e PGPASSWORD='GSA_SENHA_FORTE_2026' evo-postgres psql -U supabase_admin -d gsahub -t -c "SELECT cmd, roles FROM pg_policies WHERE tablename = 'automacao_scraping_logs';"

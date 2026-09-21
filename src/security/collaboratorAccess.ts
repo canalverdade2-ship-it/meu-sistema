@@ -64,6 +64,7 @@ export function defaultAdminPath(adminType: AdminType | undefined, modules: stri
     'configuracoes',
     'acessos',
     'sistema',
+    'gsa-tv',
   ];
   const first = priority.find((module) => hasAdminModuleAccess(module, adminType, normalized));
   return first ? adminModulePath(first) : '/admin/dashboard';

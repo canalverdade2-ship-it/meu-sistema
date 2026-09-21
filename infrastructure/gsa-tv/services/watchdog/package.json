@@ -1,0 +1,8 @@
+{
+  "name": "gsa-tv-watchdog",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/app.js",
+  "scripts": { "start": "node src/app.js" },
+  "dependencies": { "pg": "^8.16.3" }
+}

@@ -516,10 +516,10 @@ export function CalculatorProAdminPanel() {
 
                 <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
                   <label className="text-xs font-black text-neutral-600">Preço do acesso (R$)
-                    <input type="number" min={0} step="0.01" value={(product.preco_centavos / 100).toFixed(2)} onChange={(event) => updateProduct(product.tool_id, { preco_centavos: Math.round(Number(event.target.value || 0) * 100) })} className="mt-2 min-h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
+                    <input type="number" min={0} step="0.01" inputMode="decimal" value={(product.preco_centavos / 100).toFixed(2)} onChange={(event) => updateProduct(product.tool_id, { preco_centavos: Math.round(Number(event.target.value || 0) * 100) })} className="mt-2 min-h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
                   </label>
                   <label className="text-xs font-black text-neutral-600">Duração após compra
-                    <input type="number" min={15} value={product.duracao_acesso_minutos} onChange={(event) => updateProduct(product.tool_id, { duracao_acesso_minutos: Number(event.target.value) })} className="mt-2 min-h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
+                    <input type="number" min={15} inputMode="numeric" value={product.duracao_acesso_minutos} onChange={(event) => updateProduct(product.tool_id, { duracao_acesso_minutos: Number(event.target.value) })} className="mt-2 min-h-11 w-full rounded-xl border border-neutral-200 px-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100" />
                     <span className="mt-1 block text-[10px] font-medium text-neutral-400">{durationLabel(product.duracao_acesso_minutos)}</span>
                   </label>
                 </div>

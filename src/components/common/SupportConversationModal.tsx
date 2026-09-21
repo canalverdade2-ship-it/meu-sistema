@@ -4,6 +4,7 @@ import { Modal } from '../ui/Modal';
 import { toast } from 'react-hot-toast';
 import { Send, CheckCircle } from 'lucide-react';
 import { formatDateTime } from '../../lib/utils';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 interface SupportConversationModalProps {
   isOpen: boolean;
@@ -26,70 +27,8 @@ export function SupportConversationModal({ isOpen, onClose, suporte, onUpdate, a
     setCurrentSuporte(suporte);
   }, [suporte]);
 
-  useEffect(() => {
-    if (isOpen && currentSuporte) {
-      let isMounted = true;
-      const fetchMensagensSafe = async () => {
-        if (!currentSuporte) return;
-        const { data, error } = await supabase
-          .from('suporte_mensagens')
-          .select('*')
-          .eq('suporte_id', currentSuporte.id)
-          .order('created_at', { ascending: true });
-        
-        if (error) {
-          console.error('Erro ao buscar mensagens:', error);
-          return;
-        }
-        if (isMounted) setMensagens(data || []);
-      };
-
-      fetchMensagensSafe();
-      
-      const messagesChannel = supabase
-        .channel(`suporte_mensagens_${currentSuporte.id}`)
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'suporte_mensagens',
-          filter: `suporte_id=eq.${currentSuporte.id}`
-        }, (payload) => {
-          if (isMounted) {
-            setMensagens((prev) => {
-              if (prev.some(m => m.id === payload.new.id)) return prev;
-              return [...prev, payload.new];
-            });
-          }
-        })
-        .subscribe();
-
-      const statusChannel = supabase
-        .channel(`suporte_status_${currentSuporte.id}`)
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'prestador_suporte_demandas',
-          filter: `id=eq.${currentSuporte.id}`
-        }, (payload) => {
-          if (isMounted) {
-            setCurrentSuporte(payload.new);
-            if (payload.new.status === 'fechado') {
-              toast.success('Este suporte foi finalizado.');
-            }
-          }
-        })
-        .subscribe();
-
-      return () => {
-        isMounted = false;
-        supabase.removeChannel(messagesChannel);
-        supabase.removeChannel(statusChannel);
-      };
-    }
-  }, [isOpen, currentSuporte?.id, autorTipo]);
-
-  const fetchMensagens = async () => {
-    if (!currentSuporte) return;
+  const fetchMensagensSafe = async () => {
+    if (!currentSuporte?.id) return;
     const { data, error } = await supabase
       .from('suporte_mensagens')
       .select('*')
@@ -102,6 +41,46 @@ export function SupportConversationModal({ isOpen, onClose, suporte, onUpdate, a
     }
     setMensagens(data || []);
   };
+
+  useEffect(() => {
+    if (isOpen && currentSuporte?.id) {
+      void fetchMensagensSafe();
+    }
+  }, [isOpen, currentSuporte?.id, autorTipo]);
+
+  useRealtimeSubscription(
+    [
+      {
+        table: 'suporte_mensagens',
+        event: 'INSERT',
+        filter: currentSuporte?.id ? `suporte_id=eq.${currentSuporte.id}` : undefined,
+        enabled: Boolean(isOpen && currentSuporte?.id),
+        onPayload: (payload) => {
+          if (payload.new) {
+            setMensagens((prev) => {
+              if (prev.some((m) => m.id === (payload.new as any).id)) return prev;
+              return [...prev, payload.new];
+            });
+          }
+        },
+      },
+      {
+        table: 'prestador_suporte_demandas',
+        event: 'UPDATE',
+        filter: currentSuporte?.id ? `id=eq.${currentSuporte.id}` : undefined,
+        enabled: Boolean(isOpen && currentSuporte?.id),
+        onPayload: (payload) => {
+          if (payload.new) {
+            setCurrentSuporte(payload.new);
+            if ((payload.new as any).status === 'fechado') {
+              toast.success('Este suporte foi finalizado.');
+            }
+          }
+        },
+      },
+    ],
+    [isOpen, currentSuporte?.id]
+  );
 
   const handleEnviarMensagem = async (e: React.FormEvent) => {
     e.preventDefault();

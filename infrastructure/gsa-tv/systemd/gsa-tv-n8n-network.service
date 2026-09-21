@@ -1,0 +1,14 @@
+[Unit]
+Description=Ensure private n8n network for GSA TV automation
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/gsa-tv/n8n-bridge/ensure-network.sh
+User=root
+Group=root
+NoNewPrivileges=true
+ProtectHome=true
+

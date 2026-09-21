@@ -125,6 +125,12 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
     };
   }, []);
 
+  useEffect(() => {
+    if (voucherTab === 'sem-indicacao' && settings.ativo && settings.codigo) {
+      setVoucherInput(settings.codigo);
+    }
+  }, [voucherTab, settings.ativo, settings.codigo]);
+
   const activeStep = stage === 'authorization' ? 1 : stage === 'company' ? 2 : 3;
 
   const updateField = <K extends keyof RegistrationData>(field: K, value: RegistrationData[K]) => {
@@ -714,7 +720,7 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
                       </Field>
 
                       <Field label="Número" error={errors.numero} htmlFor="business-number">
-                        <input
+                        <input 
                           id="business-number"
                           name="numero"
                           type="text"
@@ -722,7 +728,7 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
                           required
                           maxLength={20}
                           value={registrationData.numero}
-                          onChange={(event) => updateField('numero', event.target.value)}
+                          inputMode="numeric" onChange={(event) => updateField('numero', event.target.value)}
                           aria-invalid={Boolean(errors.numero)}
                           aria-describedby={errors.numero ? 'business-number-error' : undefined}
                           className={inputClass(errors.numero)}
@@ -876,7 +882,11 @@ export function BusinessRegistrationPage({ onBack, onLogin }: BusinessRegistrati
 
               {stage === 'setup_pin' && (
                 <div className="pt-9">
-                  <SetupAccessPin onComplete={submitFinalRegistration} loading={loading} />
+                  <SetupAccessPin 
+                    onComplete={submitFinalRegistration} 
+                    loading={loading} 
+                    onSuccess={onLogin}
+                  />
                 </div>
               )}
             </div>

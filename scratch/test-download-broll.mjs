@@ -1,0 +1,17 @@
+import { runSshScript } from './ssh2-run.mjs';
+
+async function main() {
+  const script = `
+BDIR="/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/broll"
+mkdir -p "$BDIR"
+
+# Download a direct tech video sample
+curl -sL -A "Mozilla/5.0" -o "$BDIR/cyber_network.mp4" "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" || true
+
+ls -lh "$BDIR"
+`;
+  const res = await runSshScript(script);
+  console.log(res.stdout);
+}
+
+main().catch(console.error);

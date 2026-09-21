@@ -1,0 +1,27 @@
+services:
+  encoder-engine:
+    image: gsa-tv/encoder-engine:1.0.0
+    container_name: gsa-tv-encoder-engine
+    restart: unless-stopped
+    network_mode: host
+    env_file: /opt/gsa-tv/control-plane/.env
+    environment:
+      ENCODER_ENGINE_PORT: "9210"
+      ENCODER_UDP_PORT: "12345"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - /opt/gsa-tv/cache/media:/media:ro
+      - /opt/gsa-tv/fallback:/fallback:ro
+      - /opt/gsa-tv/preview:/preview:ro
+      - /opt/gsa-tv/runtime:/runtime
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:9210/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 15s
+      timeout: 3s
+      retries: 3

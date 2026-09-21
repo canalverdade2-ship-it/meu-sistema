@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, createContext, useContext } from 'react';
 import { supabase } from '../lib/supabase';
 import { playPremiumBeep } from '../lib/utils';
 import { showAnimatedToast } from '../lib/notifications';
@@ -6,8 +6,8 @@ import { sessionService } from '../lib/sessionService';
 import { callClientRpc } from '../lib/clientRpc';
 
 // Constantes de reconexão
-const HEARTBEAT_INTERVAL_MS = 120000; // 120s polling de fallback (reduzido para evitar flood)
-const RECONNECT_DELAY_MS = 15000;     // 15s delay para reconexão (backoff para evitar cascata)
+const HEARTBEAT_INTERVAL_MS = 60000; // 60s polling de fallback
+const RECONNECT_DELAY_MS = 3000;     // 3s delay para reconexão
 
 export interface ClientPendencyCounts {
   financeiro_faturas_pendentes: number;
@@ -130,13 +130,24 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
 
       const orcamentos_abertos = realOrcamentosCount || 0;
 
+      // Buscar vouchers reais filtrando os globais de Indicação (IDC), igual a View ClientVouchers
+      const { data: activeVouchers } = await supabase
+        .from('vouchers')
+        .select('cliente_id, codigo_voucher')
+        .eq('status', 'ativo')
+        .or(`cliente_id.eq.${clientId},cliente_id.is.null`);
+        
+      const realVouchersCount = activeVouchers 
+        ? activeVouchers.filter(v => !(v.cliente_id === null && v.codigo_voucher?.startsWith('IDC'))).length 
+        : (data.vouchers_ativos || 0);
+
       const counts: ClientPendencyCounts = {
         financeiro_faturas_pendentes: data.financeiro_faturas_pendentes || 0,
         financeiro_faturas_vencidas: data.financeiro_faturas_vencidas || 0,
         financeiro_saques_analise: data.financeiro_saques_analise || 0,
         orcamentos_abertos: orcamentos_abertos,
         servicos_andamento: data.servicos_andamento || 0,
-        vouchers_ativos: data.vouchers_ativos || 0,
+        vouchers_ativos: realVouchersCount,
         suporte_tickets_ativos: data.suporte_tickets_ativos || 0,
         suporte_mensagens_nao_lidas: data.suporte_mensagens_nao_lidas || 0,
         indicacoes_abertas: data.indicacoes_abertas || 0,
@@ -150,7 +161,7 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
         moduleServicos: data.servicos_andamento || 0,
         moduleOrcamentos: orcamentos_abertos,
         moduleSuporte: (data.suporte_tickets_ativos || 0) + (data.suporte_mensagens_nao_lidas || 0),
-        moduleVouchers: data.vouchers_ativos || 0,
+        moduleVouchers: realVouchersCount,
         moduleIndiqueGanhe: data.indicacoes_abertas || 0,
         moduleProdutos: data.produtos_analise || 0,
         moduleAssinaturas: data.assinaturas_analise || 0,
@@ -341,15 +352,14 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
         || (
           payload.eventType === 'UPDATE'
           && (
-            ['bloqueado', 'inativo', 'excluido'].includes(String(next?.status || '').toLowerCase())
+            ['bloqueado', 'excluido'].includes(String(next?.status || '').toLowerCase())
             || next?.bloqueado === true
-            || next?.cadastro_aprovado === false
           )
         );
 
       if (revoked) {
         void sessionService.endSession().finally(() => {
-          window.location.replace('/?msg=revoked');
+          window.dispatchEvent(new CustomEvent('gsa-session-revoked', { detail: { reason: 'revoked' } }));
         });
       }
     });
@@ -378,7 +388,7 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
     };
   }, [clientId, fetchPendencies, fetchNotifications]);
 
-  const markAsRead = async (id: string) => {
+  const markAsRead = useCallback(async (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, lida: true } : n));
     setUnreadNotifications(prev => Math.max(0, prev - 1));
     try {
@@ -387,9 +397,9 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
       console.error('Erro ao registrar leitura da notificação:', error);
       await fetchNotifications();
     }
-  };
+  }, [fetchNotifications]);
 
-  const markAllAsRead = async () => {
+  const markAllAsRead = useCallback(async () => {
     const unreadIds = notifications.filter((notification) => !notification.lida).map((notification) => notification.id);
     setNotifications(prev => prev.map(n => ({ ...n, lida: true })));
     setUnreadNotifications(0);
@@ -401,17 +411,19 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
       console.error('Erro ao registrar leituras das notificações:', error);
       await fetchNotifications();
     }
-  };
+  }, [notifications, fetchNotifications]);
+
+  const value = useMemo(() => ({ 
+    pendencies, 
+    notifications, 
+    unreadNotifications,
+    markAsRead,
+    markAllAsRead,
+    refreshCounts: fetchPendencies 
+  }), [pendencies, notifications, unreadNotifications, markAsRead, markAllAsRead, fetchPendencies]);
 
   return (
-    <ClientNotificationContext.Provider value={{ 
-      pendencies, 
-      notifications, 
-      unreadNotifications,
-      markAsRead,
-      markAllAsRead,
-      refreshCounts: fetchPendencies 
-    }}>
+    <ClientNotificationContext.Provider value={value}>
       {children}
     </ClientNotificationContext.Provider>
   );

@@ -16,6 +16,9 @@ import { VIP_LEVELS } from '../../constants';
 import { getProductEffectivePrice, getProductDiscountPercentage, getProductQuantityPriceBreakdown } from '../../lib/productPricing';
 import { calculateProductRating } from '../../lib/productRatings';
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
+import { callClientRpc } from '../../lib/clientRpc';
+import { applyVariantToProduct, buildVariationSelection, fetchPublicVariantsByIds } from '../../lib/productVariations';
+import type { ProductVariationSelection } from '../../types/productVariations';
 
 // Roteamento
 import { useAppLocation } from '../../routing/useAppLocation';
@@ -28,7 +31,6 @@ const roundMoney = (value: number): number => Math.round(value * 100) / 100;
 const QuantityModal = React.lazy(() => import('./store/QuantityModal'));
 const StoreItemCard = React.lazy(() => import('./store/StoreItemCard'));
 const CartDrawer = React.lazy(() => import('./store/CartDrawer'));
-const CheckoutModal = React.lazy(() => import('./store/CheckoutModal'));
 const ProductDetailsModal = React.lazy(() => import('./store/ProductDetailsModal'));
 const FilterModal = React.lazy(() => import('./store/FilterModal'));
 const AvailableCouponsModal = React.lazy(() => import('./store/AvailableCouponsModal'));
@@ -47,6 +49,8 @@ interface CartItem {
   client_levels?: any;
   item_detalhes?: Produto | Servico | Assinatura;
   prazo_meses?: number;
+  produto_variante_id?: string | null;
+  opcoes_variacao?: ProductVariationSelection | null;
 };
 
 const PENDING_STORE_CHECKOUT_KEY = 'gsa_pending_store_checkout';
@@ -284,13 +288,32 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     return item ? { item, tipo } : null;
   }, [selectedDetailsId, produtos, servicos, assinaturas]);
 
-  const buildGuestCartItem = (item: any, tipo: ItemType, quantidade = 1, prazo_meses?: number): CartItem => ({
+  const buildGuestCartItem = (
+    item: any,
+    tipo: ItemType,
+    quantidade = 1,
+    prazo_meses?: number,
+    variation?: ProductVariationSelection,
+  ): CartItem => ({
     id: `guest-${tipo}-${item.id}`,
     item_id: item.id,
     tipo,
     quantidade,
-    item_detalhes: item,
-    prazo_meses
+    item_detalhes: variation
+      ? applyVariantToProduct(item, {
+          id: variation.variante_id,
+          nome: variation.nome,
+          sku: variation.sku,
+          valor: variation.valor,
+          imagem_url: variation.imagem_url,
+          controle_estoque: variation.controle_estoque,
+          estoque_disponivel: variation.estoque_disponivel,
+          combinacao: variation.opcoes,
+        })
+      : item,
+    prazo_meses,
+    produto_variante_id: variation?.variante_id || null,
+    opcoes_variacao: variation || null,
   });
 
   const savePendingStoreCheckout = (customItems?: CartItem[]) => {
@@ -308,7 +331,9 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
         item_id: item.item_id,
         tipo: item.tipo,
         quantidade: item.quantidade,
-        prazo_meses: item.prazo_meses
+        prazo_meses: item.prazo_meses,
+        produto_variante_id: item.produto_variante_id || null,
+        opcoes_variacao: item.opcoes_variacao || null,
       })),
       createdAt: new Date().toISOString()
     }));
@@ -354,18 +379,24 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       const productIds = pendingItems.filter(c => c.tipo === 'produto').map(c => c.item_id);
       const serviceIds = pendingItems.filter(c => c.tipo === 'servico').map(c => c.item_id);
       const subscriptionIds = pendingItems.filter(c => c.tipo === 'assinatura').map(c => c.item_id);
+      const variantIds = pendingItems.filter((c: any) => c.tipo === 'produto').map((c: any) => c.produto_variante_id);
 
-      const [prodRes, servRes, assRes] = await Promise.all([
+      const [prodRes, servRes, assRes, variants] = await Promise.all([
         productIds.length > 0 ? supabase.from('produtos').select('*').in('id', productIds) : Promise.resolve({ data: [] }),
         serviceIds.length > 0 ? supabase.from('servicos').select('*').in('id', serviceIds) : Promise.resolve({ data: [] }),
-        subscriptionIds.length > 0 ? supabase.from('assinaturas').select('*').in('id', subscriptionIds) : Promise.resolve({ data: [] })
+        subscriptionIds.length > 0 ? supabase.from('assinaturas').select('*').in('id', subscriptionIds) : Promise.resolve({ data: [] }),
+        fetchPublicVariantsByIds(variantIds),
       ]);
 
       const guestItems: CartItem[] = [];
       for (const item of pendingItems) {
         let itemDetails = null;
+        let variationSelection: ProductVariationSelection | null = item.opcoes_variacao || null;
         if (item.tipo === 'produto') {
-          itemDetails = prodRes.data?.find((p: any) => p.id === item.item_id);
+          const baseProduct = prodRes.data?.find((p: any) => p.id === item.item_id);
+          const variant = variants.find((entry: any) => entry.id === item.produto_variante_id);
+          itemDetails = variant ? applyVariantToProduct(baseProduct, variant) : baseProduct;
+          if (variant) variationSelection = buildVariationSelection(variant);
         } else if (item.tipo === 'servico') {
           itemDetails = servRes.data?.find((s: any) => s.id === item.item_id);
         } else if (item.tipo === 'assinatura') {
@@ -379,7 +410,9 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
             tipo: item.tipo,
             quantidade: Math.max(1, Number(item.quantidade || 1)),
             item_detalhes: itemDetails,
-            prazo_meses: item.prazo_meses
+            prazo_meses: item.prazo_meses,
+            produto_variante_id: item.produto_variante_id || null,
+            opcoes_variacao: variationSelection,
           });
         }
       }
@@ -410,7 +443,14 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     let parsed: any;
     try { parsed = JSON.parse(rawCart); } catch { return false; }
 
-    const pendingItems: Array<{ item_id: string; tipo: string; quantidade: number; prazo_meses?: number }> = 
+    const pendingItems: Array<{
+      item_id: string;
+      tipo: string;
+      quantidade: number;
+      prazo_meses?: number;
+      produto_variante_id?: string | null;
+      opcoes_variacao?: ProductVariationSelection | null;
+    }> =
       Array.isArray(parsed?.items) ? parsed.items : [];
     if (pendingItems.length === 0) {
       localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
@@ -442,7 +482,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       // Evita duplicar linhas quando o cliente já possui o mesmo item no carrinho da conta
       const { data: existingCart } = await supabase
         .from('loja_carrinhos')
-        .select('id, item_id, tipo, quantidade')
+        .select('id, item_id, tipo, quantidade, produto_variante_id')
         .eq('cliente_id', clientId);
 
       const existingMap = new Map<string, any>(
@@ -469,7 +509,11 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
             clientId,
             'loja_carrinhos',
             'update',
-            { quantidade: novaQuantidade, updated_at: new Date().toISOString() },
+            {
+              quantidade: novaQuantidade,
+              updated_at: new Date().toISOString(),
+              ...(pendingItem.produto_variante_id ? { produto_variante_id: pendingItem.produto_variante_id } : {}),
+            },
             { id: existing.id },
           );
           existing.quantidade = novaQuantidade;
@@ -482,6 +526,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
             updated_at: new Date().toISOString()
           };
           if (prazoMeses) insertData.prazo_meses = prazoMeses;
+          if (pendingItem.produto_variante_id) insertData.produto_variante_id = pendingItem.produto_variante_id;
           console.log('TRYING TO INSERT:', insertData); const res = await clientOperationalWrite(clientId, 'loja_carrinhos', 'insert', insertData); console.log('INSERT SUCCESS:', res);
           existingMap.set(key, { id: null, item_id: pendingItem.item_id, tipo: pendingItem.tipo, quantidade });
         }
@@ -493,10 +538,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       const activatedCouponIds = Array.isArray(parsedCoupons?.activatedCouponIds) ? parsedCoupons.activatedCouponIds : [];
       for (const cupomId of activatedCouponIds) {
         if (!cupomId) continue;
-        const { error } = await supabase
-          .from('cupons_ativados')
-          .insert({ cliente_id: clientId, cupom_id: cupomId });
-        if (error && error.code !== '23505') throw error;
+        await callClientRpc('gsa_client_activate_store_coupon', { p_cupom_id: cupomId });
       }
 
       if (imported) {
@@ -731,17 +773,22 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       const productIds = data.filter(c => c.tipo === 'produto').map(c => c.item_id);
       const serviceIds = data.filter(c => c.tipo === 'servico').map(c => c.item_id);
       const subscriptionIds = data.filter(c => c.tipo === 'assinatura').map(c => c.item_id);
+      const variantIds = data.filter(c => c.tipo === 'produto').map(c => c.produto_variante_id);
 
-      const [prodRes, servRes, assRes] = await Promise.all([
+      const [prodRes, servRes, assRes, variants] = await Promise.all([
         productIds.length > 0 ? supabase.from('produtos').select('*').in('id', productIds) : Promise.resolve({ data: [] }),
         serviceIds.length > 0 ? supabase.from('servicos').select('*').in('id', serviceIds) : Promise.resolve({ data: [] }),
-        subscriptionIds.length > 0 ? supabase.from('assinaturas').select('*').in('id', subscriptionIds) : Promise.resolve({ data: [] })
+        subscriptionIds.length > 0 ? supabase.from('assinaturas').select('*').in('id', subscriptionIds) : Promise.resolve({ data: [] }),
+        fetchPublicVariantsByIds(variantIds),
       ]);
 
       const enrichedCart = data.map((c: any) => {
         let itemDetails = null;
         if (c.tipo === 'produto') {
-          itemDetails = prodRes.data?.find((p: any) => p.id === c.item_id);
+          const baseProduct = prodRes.data?.find((p: any) => p.id === c.item_id);
+          const variant = variants.find((entry: any) => entry.id === c.produto_variante_id);
+          itemDetails = variant ? applyVariantToProduct(baseProduct, variant) : baseProduct;
+          if (variant) c.opcoes_variacao = buildVariationSelection(variant);
         } else if (c.tipo === 'servico') {
           itemDetails = servRes.data?.find((s: any) => s.id === c.item_id);
         } else if (c.tipo === 'assinatura') {
@@ -773,7 +820,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
 
   const addToCart = async (item: any, tipo: ItemType) => {
     if (!item?.id || !tipo) {
-      toast.error('NÃ£o foi possÃ­vel identificar este item.');
+      toast.error('Não foi possível identificar este item.');
       return;
     }
 
@@ -825,17 +872,17 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     }
   };
 
-  const confirmAddToCart = async (qty: number, prazo_meses?: number) => {
+  const confirmAddToCart = async (qty: number, prazo_meses?: number, variation?: ProductVariationSelection) => {
     if (addingToCartRef.current) return;
     addingToCartRef.current = true;
     try {
-      await executarAddToCart(qty, prazo_meses);
+      await executarAddToCart(qty, prazo_meses, variation);
     } finally {
       addingToCartRef.current = false;
     }
   };
 
-  const executarAddToCart = async (qty: number, prazo_meses?: number) => {
+  const executarAddToCart = async (qty: number, prazo_meses?: number, variation?: ProductVariationSelection) => {
     let item, tipo;
     
     if (selectedItemForQty) {
@@ -851,22 +898,47 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
     // Revalida o estoque no momento da confirmação (pode ter mudado desde a abertura do modal)
     if (tipo === 'produto') {
       try {
-        const { data: freshProduct } = await supabase
-          .from('produtos')
-          .select('controle_estoque, estoque_disponivel')
-          .eq('id', item.id)
-          .maybeSingle();
-
-        if (freshProduct?.controle_estoque) {
-          const disponivel = Number(freshProduct.estoque_disponivel || 0);
-          if (disponivel <= 0) {
-            toast.error('Produto sem estoque disponível no momento.');
-            setSelectedQtyId(null);
+        if (item.possui_variacoes) {
+          if (!variation?.variante_id) {
+            toast.error('Selecione todas as opções do produto.');
             return;
           }
-          if (qty > disponivel) {
-            toast.error(`Apenas ${disponivel} unidade(s) disponível(is) em estoque.`);
+          const freshVariant = (await fetchPublicVariantsByIds([variation.variante_id]))[0];
+          if (!freshVariant || freshVariant.produto_id !== item.id || freshVariant.ativo === false) {
+            toast.error('A combinação selecionada não está mais disponível.');
             return;
+          }
+          item = applyVariantToProduct(item, freshVariant);
+          variation = buildVariationSelection(freshVariant);
+          if (freshVariant.controle_estoque) {
+            const disponivel = Number(freshVariant.estoque_disponivel || 0);
+            if (disponivel <= 0) {
+              toast.error('Esta combinação está sem estoque no momento.');
+              return;
+            }
+            if (qty > disponivel) {
+              toast.error(`Apenas ${disponivel} unidade(s) desta combinação estão disponíveis.`);
+              return;
+            }
+          }
+        } else {
+          const { data: freshProduct } = await supabase
+            .from('produtos')
+            .select('controle_estoque, estoque_disponivel')
+            .eq('id', item.id)
+            .maybeSingle();
+
+          if (freshProduct?.controle_estoque) {
+            const disponivel = Number(freshProduct.estoque_disponivel || 0);
+            if (disponivel <= 0) {
+              toast.error('Produto sem estoque disponível no momento.');
+              setSelectedQtyId(null);
+              return;
+            }
+            if (qty > disponivel) {
+              toast.error(`Apenas ${disponivel} unidade(s) disponível(is) em estoque.`);
+              return;
+            }
           }
         }
       } catch (err) {
@@ -878,9 +950,16 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       setCartItems(prev => {
         const existing = prev.find(c => c.item_id === item.id);
         if (existing) {
-          return prev.map(c => c.item_id === item.id ? { ...c, quantidade: qty, prazo_meses } : c);
+          return prev.map(c => c.item_id === item.id ? {
+            ...c,
+            quantidade: qty,
+            prazo_meses,
+            item_detalhes: item,
+            produto_variante_id: variation?.variante_id || null,
+            opcoes_variacao: variation || null,
+          } : c);
         }
-        return [...prev, buildGuestCartItem(item, tipo, qty, prazo_meses)];
+        return [...prev, buildGuestCartItem(item, tipo, qty, prazo_meses, variation)];
       });
       toast.success('Item adicionado ao carrinho!');
       setSelectedQtyId(null);
@@ -889,14 +968,21 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       return;
     }
     
-    // Buscar o estado mais atual do banco para evitar race conditions
+    // Buscar o estado mais atual do banco para evitar race conditions, filtrando pela variação
     let currentCart = null;
     try {
-      const result = await supabase.from('loja_carrinhos')
-        .select('id')
+      let query = supabase.from('loja_carrinhos')
+        .select('id, quantidade')
         .eq('cliente_id', clientId)
-        .eq('item_id', item.id)
-        .maybeSingle();
+        .eq('item_id', item.id);
+
+      if (variation?.variante_id) {
+        query = query.eq('produto_variante_id', variation.variante_id);
+      } else {
+        query = query.is('produto_variante_id', null);
+      }
+
+      const result = await query.maybeSingle();
       currentCart = result.data;
     } catch (error) {
       console.error('[GSAStore] Erro ao buscar carrinho atual:', error);
@@ -906,8 +992,15 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
 
     try {
       if (import.meta.env.DEV) console.log('[GSAStore] Confirmando adição ao carrinho:', { clientId, itemId: item.id, qty });
-      const { data: authUser } = await supabase.auth.getUser();
-      if (import.meta.env.DEV) console.log('[GSAStore] Usuário autenticado:', authUser?.user?.id);
+      
+      // Optimistic UI imediato
+      setCartItems(prev => {
+        const existing = prev.find(c => c.item_id === item.id && c.produto_variante_id === (variation?.variante_id || null));
+        if (existing) {
+          return prev.map(c => c.id === existing.id ? { ...c, quantidade: qty } : c);
+        }
+        return [...prev, buildGuestCartItem(item, tipo, qty, prazo_meses, variation)];
+      });
 
       if (currentCart) {
         const updateData: any = { quantidade: qty, updated_at: new Date().toISOString() };
@@ -923,6 +1016,7 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
           updated_at: new Date().toISOString()
         };
         if (prazo_meses) insertData.prazo_meses = prazo_meses;
+        if (variation?.variante_id) insertData.produto_variante_id = variation.variante_id;
 
         await clientOperationalWrite(clientId, 'loja_carrinhos', 'insert', insertData);
         toast.success('Item adicionado ao carrinho!');
@@ -949,6 +1043,9 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
       setCartItems(prev => prev.map(item => item.id === cartId ? { ...item, quantidade: newQty } : item));
       return;
     }
+
+    // Optimistic UI imediato
+    setCartItems(prev => prev.map(item => item.id === cartId ? { ...item, quantidade: newQty } : item));
 
     try {
       await clientOperationalWrite(clientId, 'loja_carrinhos', 'update', {
@@ -1456,20 +1553,6 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
           }}
         />
 
-        {/* Checkout Modal */}
-        <CheckoutModal 
-          isOpen={route.query.modal === 'checkout'} 
-          onClose={() => updateRouteQuery({ modal: null })} 
-          cartItems={cartItems} 
-          promosAplicadas={promosAplicadas}
-          clientId={clientId} 
-          onSuccess={(orderId) => { 
-            updateRouteQuery({ modal: null }); 
-            fetchCart(); 
-            if (onFinalSuccess) onFinalSuccess(orderId);
-          }}
-        />
-
         {/* Details Modal */}
         <ProductDetailsModal 
           isOpen={!!route.itemId && !['quantidade', 'duracao'].includes(route.query.modal || '')} 
@@ -1489,7 +1572,8 @@ export function ClientGSAStore({ clientId, initialAssinaturaId, onSuccess: onFin
           onClose={() => updateRouteQuery({ modal: null })} 
           item={selectedItemForQty?.item} 
           initialQty={cartItems.find(c => c.item_id === selectedItemForQty?.item?.id)?.quantidade || 1}
-          onConfirm={(qty) => confirmAddToCart(qty)} 
+          initialVariantId={cartItems.find(c => c.item_id === selectedItemForQty?.item?.id)?.produto_variante_id || null}
+          onConfirm={(qty, variation) => confirmAddToCart(qty, undefined, variation)}
         />
 
         {/* Subscription Duration Modal */}

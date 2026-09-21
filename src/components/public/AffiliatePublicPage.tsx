@@ -61,7 +61,7 @@ const HERO_TRUST_ITEMS = [
 ] as const;
 
 const PARTICIPATION_STEPS = [
-  'Faça login com sua conta GSA',
+  'Crie seu acesso ou entre com sua conta GSA',
   'Ative seu perfil de afiliado',
   'Cadastre ou confirme sua chave PIX',
   'Escolha um programa e gere seu link oficial',
@@ -73,12 +73,12 @@ const PROCESS_STEPS = [
   {
     number: '01',
     title: 'Ative o perfil',
-    description: 'A ativação é vinculada à sua conta GSA e confirmada com CPF ou CNPJ e PIN de acesso.',
+    description: 'Qualquer pessoa pode criar o perfil com CPF ou CNPJ e PIN de acesso.',
     icon: UserRoundCheck,
-    modalLead: 'O perfil de afiliado funciona como uma extensão da sua conta GSA. Por isso, a ativação aproveita o cadastro que você já possui e mantém seus dados, acessos e histórico dentro do mesmo ambiente.',
+    modalLead: 'Você pode começar diretamente como afiliado. Se já tiver uma conta GSA, o sistema vincula os perfis; se ainda não tiver, cria uma identidade segura para o Portal do Afiliado.',
     details: [
       'Clique em “Ativar meu perfil” e escolha a opção de ativação do Programa de Afiliados.',
-      'Informe o mesmo CPF ou CNPJ e o PIN utilizados na sua conta GSA para confirmar sua identidade.',
+      'Informe CPF ou CNPJ, dados de contato e crie seu PIN. Contas existentes serão vinculadas automaticamente.',
       'Confira o nome de exibição e cadastre o tipo e a chave PIX que serão utilizados nos pagamentos.',
       'Leia e aceite os termos vigentes. Após a confirmação, o Portal do Afiliado será liberado para sua conta.',
     ],
@@ -140,7 +140,7 @@ const GOVERNANCE_ITEMS = [
 const FAQ_ITEMS = [
   {
     question: 'Quem pode participar?',
-    answer: 'Clientes com conta GSA ativa podem autenticar o acesso e solicitar a ativação do perfil de afiliado. A disponibilidade depende das regras vigentes do programa.',
+    answer: 'Qualquer pessoa com CPF ou CNPJ válido pode criar um perfil de afiliado. Quem já possui conta GSA terá os perfis vinculados automaticamente.',
   },
   {
     question: 'Quando a comissão fica disponível?',
@@ -347,7 +347,7 @@ export function AffiliatePublicPage({ onBack, onLogin, onRegister }: AffiliatePu
               </h1>
 
               <p className="mt-7 max-w-2xl text-base leading-8 text-[#c8d0da] sm:text-lg">
-                Uma operação estruturada para clientes GSA que desejam divulgar produtos, serviços e soluções do ecossistema com rastreamento, acompanhamento de resultados e solicitação de recebimento por PIX.
+                Uma operação estruturada para pessoas e empresas que desejam divulgar produtos, serviços e soluções do ecossistema GSA com rastreamento, acompanhamento de resultados e recebimento por PIX.
               </p>
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -394,7 +394,7 @@ export function AffiliatePublicPage({ onBack, onLogin, onRegister }: AffiliatePu
                 <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#8d6829]">Guia de participação</p>
                 <h2 id="participation-title" className="mt-3 text-3xl font-semibold tracking-[-0.035em] text-[#0b1522]">Como participar</h2>
                 <p className="mt-4 text-sm leading-7 text-[#56606d]">
-                  O acesso é vinculado à conta GSA e todo o acompanhamento é realizado dentro do Portal do Afiliado.
+                  O acesso pode ser criado diretamente como afiliado e todo o acompanhamento é realizado dentro do Portal do Afiliado.
                 </p>
               </div>
 
@@ -420,7 +420,7 @@ export function AffiliatePublicPage({ onBack, onLogin, onRegister }: AffiliatePu
         <section className="border-b border-[#c9c2b6] bg-[#e9e4da]" aria-label="Garantias operacionais do Programa de Afiliados">
           <dl className="mx-auto grid max-w-[1440px] divide-y divide-[#c9c2b6] px-5 sm:px-8 md:grid-cols-3 md:divide-x md:divide-y-0 lg:px-12">
             {[
-              { icon: ShieldCheck, title: 'Acesso protegido', text: 'Autenticação pela conta GSA antes da ativação.' },
+              { icon: ShieldCheck, title: 'Acesso protegido', text: 'Identidade validada por documento e PIN de acesso.' },
               { icon: Clock3, title: 'Regras registradas', text: 'Percentual, janela e carência permanecem vinculados à operação.' },
               { icon: BadgeCheck, title: 'Histórico operacional', text: 'Links, comissões e saques ficam disponíveis no portal.' },
             ].map(({ icon: Icon, title, text }) => (
@@ -559,7 +559,7 @@ export function AffiliatePublicPage({ onBack, onLogin, onRegister }: AffiliatePu
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8d6829]">Próximo passo</p>
                 <h2 className="mt-4 max-w-3xl text-4xl font-semibold leading-[1.08] tracking-[-0.04em] text-[#0b1522]">Transforme boas indicações em uma relação comercial organizada.</h2>
-                <p className="mt-4 max-w-2xl text-sm leading-7 text-[#5c6470]">A ativação confirma sua conta GSA, registra os termos vigentes e prepara o portal para gerar seus primeiros links.</p>
+                <p className="mt-4 max-w-2xl text-sm leading-7 text-[#5c6470]">A ativação registra sua identidade, os termos vigentes e prepara o portal para gerar seus primeiros links.</p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
                 <button type="button" onClick={onRegister} className="inline-flex min-h-14 items-center justify-center gap-3 bg-[#0b1522] px-7 text-sm font-bold text-white transition-colors hover:bg-[#24364b]">

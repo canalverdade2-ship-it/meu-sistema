@@ -1,0 +1,9 @@
+{
+  "where": {
+    "key": {
+      "remoteJid": "5511971858372@s.whatsapp.net",
+      "fromMe": true
+    }
+  },
+  "limit": 10
+}

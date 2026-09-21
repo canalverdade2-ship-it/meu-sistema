@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { useRealtimeSubscription } from './useRealtime';
 
 export interface PublicRegistrationSettings {
   ativo: boolean;
@@ -58,6 +59,16 @@ export function usePublicRegistrationSettings(enabled: boolean) {
       setLoading(false);
     }
   }, [enabled]);
+
+  useRealtimeSubscription(
+    {
+      table: 'system_settings',
+      debounceMs: 300,
+      enabled,
+      onChange: refresh,
+    },
+    [enabled, refresh]
+  );
 
   useEffect(() => {
     void refresh();

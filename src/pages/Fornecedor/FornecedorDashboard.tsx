@@ -99,16 +99,7 @@ export function FornecedorDashboard({ fornecedorId, onLogout }: { fornecedorId: 
       .channel(`supplier-sync:${fornecedorId}`)
       .on('broadcast', { event: 'refresh' }, () => void load(true))
       .subscribe();
-    const interval = window.setInterval(() => {
-      if (document.visibilityState === 'visible') void load(true);
-    }, 30_000);
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') void load(true);
-    };
-    document.addEventListener('visibilitychange', onVisibility);
     return () => {
-      window.clearInterval(interval);
-      document.removeEventListener('visibilitychange', onVisibility);
       void supabase.removeChannel(channel);
     };
   }, [fornecedorId, load]);
@@ -255,7 +246,7 @@ export function FornecedorDashboard({ fornecedorId, onLogout }: { fornecedorId: 
           )}
           {active === 'pedidos' && <Orders orders={snapshot.orders} loading={loading} onOpen={(order) => void openOrder(order)} />}
           {active === 'entregas' && <Deliveries deliveries={snapshot.deliveries} loading={loading} onGoToOrders={() => navigate(routes.supplier.orders())} />}
-          {active === 'financeiro' && <Payables supplierId={snapshot.supplier.id} payables={snapshot.payables} loading={loading} />}
+          {active === 'financeiro' && <Payables supplier={snapshot.supplier} payables={snapshot.payables} loading={loading} />}
           {active === 'perfil' && (
             <Profile
               supplier={snapshot.supplier}
@@ -532,7 +523,7 @@ function Deliveries({ deliveries, loading, onGoToOrders }: { deliveries: Array<R
   );
 }
 
-function Payables({ supplierId, payables, loading }: { supplierId: string; payables: Array<Record<string, any>>; loading: boolean }) {
+function Payables({ supplier, payables, loading }: { supplier: Record<string, any>; payables: Array<Record<string, any>>; loading: boolean }) {
   const { isSendingWhatsApp, sendToWhatsApp } = useWhatsAppDocument();
   
   return (
@@ -541,9 +532,8 @@ function Payables({ supplierId, payables, loading }: { supplierId: string; payab
         <button
           onClick={async () => {
             try {
-              const { data: sData } = await supabase.from('fornecedores').select('nome_fantasia, razao_social, telefone').eq('id', supplierId).single();
-              if (!sData?.telefone) { toast.error("Telefone não encontrado."); return; }
-              const supplierName = sData.nome_fantasia || sData.razao_social || 'Fornecedor';
+              if (!supplier?.telefone) { toast.error("Telefone não encontrado."); return; }
+              const supplierName = supplier.nome_fantasia || supplier.razao_social || 'Fornecedor';
               
               const formattedTransactions = payables.map(t => ({
                 data: t.data_vencimento,
@@ -560,7 +550,7 @@ function Payables({ supplierId, payables, loading }: { supplierId: string; payab
                 clienteNome: supplierName,
               });
               
-              await sendToWhatsApp(sData.telefone, msg, pdfBase64, `extrato_fornecedor_${new Date().getTime()}.pdf`);
+              await sendToWhatsApp(supplier.telefone, msg, pdfBase64, `extrato_fornecedor_${new Date().getTime()}.pdf`);
             } catch (e) {
               console.error(e);
               toast.error("Erro ao gerar extrato financeiro.");
@@ -820,8 +810,8 @@ function DeliveryModal({ order, supplierId, saving, onClose, onSubmit }: {
               {items.map((item, index) => (
                 <div key={item.pedido_item_id} className="grid gap-2 rounded-xl bg-neutral-50 p-3 sm:grid-cols-[1fr_110px_130px]">
                   <div><p className="text-sm font-bold">{item.nome}</p><p className="text-xs text-neutral-400">Saldo do pedido: {item.max}</p></div>
-                  <input type="number" min="0" max={item.max} value={item.quantidade_entregue} onChange={(event) => setItems((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, quantidade_entregue: event.target.value } : entry))} className="rounded-lg border border-neutral-200 p-2" />
-                  <input type="number" min="0" step="0.01" value={item.custo_unitario_nota} onChange={(event) => setItems((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, custo_unitario_nota: event.target.value } : entry))} className="rounded-lg border border-neutral-200 p-2" />
+                  <input  type="number" min="0" max={item.max} value={item.quantidade_entregue} inputMode="numeric" onChange={(event) => setItems((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, quantidade_entregue: event.target.value } : entry))} className="rounded-lg border border-neutral-200 p-2" />
+                  <input  type="number" min="0" step="0.01" value={item.custo_unitario_nota} inputMode="numeric" onChange={(event) => setItems((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, custo_unitario_nota: event.target.value } : entry))} className="rounded-lg border border-neutral-200 p-2" />
                 </div>
               ))}
             </div>

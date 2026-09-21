@@ -36,25 +36,22 @@ export function usePixDiscount() {
     }
 
     if (!fetchPromise) {
-      fetchPromise = supabase
-        .from('system_settings')
-        .select('key, value')
-        .in('key', [
-          'loja_pix_desconto_ativo',
-          'loja_pix_desconto_porcentagem',
-          'loja_pix_desconto_tipo_aplicacao',
-          'loja_pix_desconto_categorias',
-          'loja_pix_desconto_produtos',
-          'loja_pix_desconto_permitir_pontos',
-          'loja_pix_desconto_permitir_saldo_carteira',
-        ])
-        .then(({ data, error }) => {
-          if (error) {
-            fetchPromise = null;
-            return DEFAULT_STATE;
-          }
+      fetchPromise = (async (): Promise<PixDiscountSettings> => {
+        try {
+          const { data, error } = await supabase
+            .from('system_settings')
+            .select('key, value')
+            .in('key', [
+              'loja_pix_desconto_ativo',
+              'loja_pix_desconto_porcentagem',
+              'loja_pix_desconto_tipo_aplicacao',
+              'loja_pix_desconto_categorias',
+              'loja_pix_desconto_produtos',
+              'loja_pix_desconto_permitir_pontos',
+              'loja_pix_desconto_permitir_saldo_carteira',
+            ]);
 
-          if (!data || data.length === 0) {
+          if (error || !data || data.length === 0) {
             fetchPromise = null;
             return DEFAULT_STATE;
           }
@@ -84,11 +81,11 @@ export function usePixDiscount() {
 
           cachedPixDiscount = result;
           return result;
-        })
-        .catch(() => {
+        } catch {
           fetchPromise = null;
           return DEFAULT_STATE;
-        });
+        }
+      })();
     }
 
     fetchPromise.then((result) => {

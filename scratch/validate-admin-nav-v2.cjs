@@ -1,0 +1,11 @@
+const fs = require('fs');
+const s = fs.readFileSync('src/pages/AdminPanel.tsx', 'utf8');
+const nav = s.slice(s.indexOf('const NAV_AREAS'), s.indexOf('function LiveClock'));
+const navIds = [...nav.matchAll(/id: '([^']+)'/g)].map((m) => m[1]);
+const rendered = [...s.matchAll(/normalizedActive === '([^']+)'/g)].map((m) => m[1]);
+if (s.includes("activeModule === 'fiscal'")) rendered.push('fiscal');
+if (s.includes("['trabalhe-conosco', 'careers']")) rendered.push('trabalhe-conosco');
+const uniq = (items) => [...new Set(items)];
+const missing = uniq(rendered).filter((id) => id !== 'dashboard' && !navIds.includes(id));
+console.log(JSON.stringify({ nav: uniq(navIds), rendered: uniq(rendered), missing }, null, 2));
+if (missing.length) process.exitCode = 2;

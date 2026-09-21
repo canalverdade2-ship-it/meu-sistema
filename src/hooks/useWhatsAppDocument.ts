@@ -33,7 +33,8 @@ export function useWhatsAppDocument() {
         {
           mediaBase64: base64Data,
           fileName: fileName,
-          pdfUrl: pdfUrl
+          pdfUrl: pdfUrl,
+          enableVariation: true,
         }
       );
 

@@ -1,0 +1,334 @@
+                  {etapaCheckout === 2 && (
+                    <div className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-200/90 shadow-sm space-y-6 animate-in fade-in duration-300">
+                      
+                      {/* Seção de Fidelidade e Carteira */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between border-b border-neutral-100 pb-3.5">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+                              <Gift className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <h2 className="text-base font-black text-neutral-900 uppercase tracking-wide">
+                                Resgate de Pontos & Saldo da Carteira
+                              </h2>
+                              <p className="text-xs text-neutral-500 font-medium">
+                                Abata o valor do pedido com seus pontos VIP ou saldo em conta
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Box de Pontos VIP */}
+                          <div className="rounded-2xl border border-purple-800/40 bg-gradient-to-br from-purple-950 via-indigo-950 to-purple-900 p-5 text-white shadow-sm space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2.5">
+                                <div className="rounded-xl bg-amber-400 p-2 text-purple-950 shadow-xs">
+                                  <Coins className="h-4 w-4" />
+                                </div>
+                                <div>
+                                  <h3 className="text-xs font-black uppercase tracking-wider text-white">Resgatar Pontos VIP</h3>
+                                  <p className="text-[10px] text-purple-200 font-medium">100 pts = R$ 1,00</p>
+                                </div>
+                              </div>
+
+                              <label className="relative inline-flex cursor-pointer items-center">
+                                <input 
+                                  type="checkbox" 
+                                  checked={usarPontos} 
+                                  disabled={saldoPontos <= 0 || maxPontosValidos <= 0}
+                                  onChange={e => handleTogglePontos(e.target.checked)}
+                                  className="peer sr-only" 
+                                />
+                                <div className="h-6 w-11 rounded-full bg-purple-950 peer-checked:bg-amber-400 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-full peer-checked:after:bg-purple-950 border border-purple-400/40"></div>
+                              </label>
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs pt-2 border-t border-purple-800/50">
+                              <span className="text-purple-200/80">Saldo Disponível:</span>
+                              <span className="font-black text-amber-300">
+                                👑 {saldoPontos.toLocaleString()} pts ({formatCurrency(saldoPontos / 100)})
+                              </span>
+                            </div>
+
+                            {usarPontos && (
+                              <div className="space-y-2.5 pt-2">
+                                <div className="flex items-center gap-2">
+                                  <input  
+                                    type="number" 
+                                    value={pontosAplicados || ''} 
+                                    min="0"
+                                    max={maxPontosValidos}
+                                    inputMode="numeric"
+onChange={(e) => handlePontosChange(parseInt(e.target.value) || 0)}
+                                    className="flex-1 rounded-xl border border-purple-400/40 bg-white px-3.5 py-2 text-xs font-black text-neutral-900 focus:outline-none" 
+                                    placeholder="Ex: 500"
+                                  />
+                                  <span className="text-xs font-black text-amber-300 shrink-0">
+                                    - {formatCurrency(descontoPontos)}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-1.5">
+                                  {saldoPontos >= 100 && maxPontosValidos >= 100 && (
+                                    <button type="button" onClick={() => handlePontosChange(100)} className="rounded-lg bg-purple-900/80 px-2.5 py-1 text-[10px] font-black text-amber-200 cursor-pointer hover:bg-purple-800">100 pts</button>
+                                  )}
+                                  {saldoPontos >= 500 && maxPontosValidos >= 500 && (
+                                    <button type="button" onClick={() => handlePontosChange(500)} className="rounded-lg bg-purple-900/80 px-2.5 py-1 text-[10px] font-black text-amber-200 cursor-pointer hover:bg-purple-800">500 pts</button>
+                                  )}
+                                  <button type="button" onClick={() => handlePontosChange(maxPontosValidos)} className="ml-auto rounded-lg bg-amber-400 px-3 py-1 text-[10px] font-black text-purple-950 cursor-pointer hover:bg-amber-300">Máximo ({maxPontosValidos.toLocaleString()} pts)</button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Box de Saldo da Carteira Virtual */}
+                          <div className="rounded-2xl border border-emerald-700/50 bg-gradient-to-br from-emerald-950 via-teal-950 to-emerald-900 p-5 text-white shadow-sm space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2.5">
+                                <div className="rounded-xl bg-emerald-400 p-2 text-emerald-950 shadow-xs">
+                                  <Wallet className="h-4 w-4" />
+                                </div>
+                                <div>
+                                  <h3 className="text-xs font-black uppercase tracking-wider text-white">Usar Saldo da Carteira</h3>
+                                  <p className="text-[10px] text-emerald-200 font-medium">Abata o valor do seu saldo</p>
+                                </div>
+                              </div>
+
+                              <label className="relative inline-flex cursor-pointer items-center">
+                                <input 
+                                  type="checkbox" 
+                                  checked={usarSaldoCarteira} 
+                                  disabled={saldoCarteira <= 0 || maxSaldoValido <= 0}
+                                  onChange={e => handleToggleSaldoCarteira(e.target.checked)}
+                                  className="peer sr-only" 
+                                />
+                                <div className="h-6 w-11 rounded-full bg-emerald-950 peer-checked:bg-emerald-400 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-full peer-checked:after:bg-emerald-950 border border-emerald-300/40"></div>
+                              </label>
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs pt-2 border-t border-emerald-800/60">
+                              <span className="text-emerald-200/80">Saldo Disponível:</span>
+                              <span className="font-black text-emerald-300">{formatCurrency(saldoCarteira)}</span>
+                            </div>
+
+                            {usarSaldoCarteira && (
+                              <div className="space-y-2.5 pt-2">
+                                <div className="flex items-center gap-2">
+                                  <input  
+                                    type="number" 
+                                    value={saldoCarteiraAplicado ? Number(saldoCarteiraAplicado.toFixed(2)) : ''} 
+                                    min="0"
+                                    max={maxSaldoValido}
+                                    step="0.01"
+                                    inputMode="numeric"
+onChange={(e) => handleSaldoCarteiraChange(parseFloat(e.target.value) || 0)}
+                                    className="flex-1 rounded-xl border border-emerald-400/40 bg-white px-3.5 py-2 text-xs font-black text-neutral-900 focus:outline-none" 
+                                    placeholder="Ex: 50.00"
+                                  />
+                                  <span className="text-xs font-black text-emerald-300 shrink-0">
+                                    - {formatCurrency(descontoCarteira)}
+                                  </span>
+                                </div>
+                                <button type="button" onClick={() => handleSaldoCarteiraChange(maxSaldoValido)} className="block ml-auto rounded-lg bg-emerald-400 px-3 py-1 text-[10px] font-black text-emerald-950 cursor-pointer hover:bg-emerald-300">Usar Máximo ({formatCurrency(maxSaldoValido)})</button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Seção de Escolha de Forma de Pagamento */}
+                      <div className="space-y-4 pt-4 border-t border-neutral-100">
+                        <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <CreditCard className="h-5 w-5 text-emerald-600" />
+                            <div>
+                              <h3 className="text-sm font-black text-neutral-900 uppercase tracking-wide">
+                                Escolha a Forma de Pagamento
+                              </h3>
+                              <p className="text-[11px] text-neutral-500 font-medium">
+                                Selecione como deseja realizar o pagamento deste pedido
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          {/* PIX */}
+                          {checkoutMetodoPixAtivo && (
+                            <div 
+                              onClick={handleSelectPix}
+                              className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                                formaPagamento === 'pix' 
+                                  ? 'border-emerald-600 bg-emerald-50/50 shadow-xs ring-2 ring-emerald-600/10' 
+                                  : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'
+                              }`}
+                            >
+                              <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                                formaPagamento === 'pix' ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-neutral-300 bg-white'
+                              }`}>
+                                {formaPagamento === 'pix' && <div className="h-2 w-2 rounded-full bg-white" />}
+                              </div>
+                              <div className="flex-1 space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-black text-neutral-900 uppercase">PIX Instantâneo</span>
+                                  {lojaPixDescontoAtivo && isPixDiscountEligible ? (
+                                    <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[9px] font-black text-white">
+                                      -{pixPercentage}% OFF
+                                    </span>
+                                  ) : lojaPixDescontoAtivo && (pixDiscountBlockedByPoints || pixDiscountBlockedByWallet) ? (
+                                    <span className="rounded bg-amber-100 text-amber-800 px-1.5 py-0.5 text-[9px] font-bold" title="Desconto de 5% no PIX não aplicável devido ao uso de saldo/pontos">
+                                      Sem desc. (Saldo/Pontos)
+                                    </span>
+                                  ) : null}
+                                </div>
+                                <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
+                                  {isPixDiscountEligible 
+                                    ? `Aprovação imediata e desconto de ${pixPercentage}% no PIX.`
+                                    : (pixDiscountBlockedByPoints || pixDiscountBlockedByWallet)
+                                    ? `Aprovação imediata via PIX (desconto de ${pixPercentage}% anulado pelo uso de saldo/pontos).`
+                                    : 'Aprovação imediata do pedido via PIX.'}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Cartão de Crédito */}
+                          {checkoutMetodoCartaoAtivo && (
+                            <div 
+                              onClick={() => setFormaPagamento('cartao')}
+                              className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                                formaPagamento === 'cartao' 
+                                  ? 'border-[#17345f] bg-blue-50/30 shadow-xs ring-2 ring-[#17345f]/10' 
+                                  : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'
+                              }`}
+                            >
+                              <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                                formaPagamento === 'cartao' ? 'border-[#17345f] bg-[#17345f] text-white' : 'border-neutral-300 bg-white'
+                              }`}>
+                                {formaPagamento === 'cartao' && <div className="h-2 w-2 rounded-full bg-white" />}
+                              </div>
+                              <div className="flex-1 space-y-2 min-w-0">
+                                <span className="text-xs font-black text-neutral-900 uppercase block">Cartão de Crédito</span>
+                                <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
+                                  Pague online com segurança em até 12x via InfinitePay.
+                                </p>
+
+                                {formaPagamento === 'cartao' && (
+                                  <div className="pt-2 border-t border-blue-200/60 flex flex-col gap-1.5" onClick={e => e.stopPropagation()}>
+                                    <label className="text-[11px] font-bold text-neutral-700">Quantidade de Parcelas:</label>
+                                    <select
+                                      value={parcelasCartao}
+                                      onChange={e => setParcelasCartao(parseInt(e.target.value) || 1)}
+                                      className="w-full px-2.5 py-2 bg-white border border-blue-200 rounded-xl text-xs font-bold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#17345f]"
+                                    >
+                                      {Array.from({ length: 12 }, (_, i) => i + 1).map(p => {
+                                        const calc = calcularParcelaCartao(p, totalHojeSemJuros);
+                                        return (
+                                          <option key={p} value={p}>
+                                            {p}x de {formatCurrency(calc.parcela)} {calc.comJuros ? `(Total: ${formatCurrency(calc.total)} c/ juros)` : '(sem juros à vista)'}
+                                          </option>
+                                        );
+                                      })}
+                                    </select>
+                                    <p className="text-[10px] text-neutral-500">
+                                      * Parcelamento com juros por conta do comprador calculados pela InfinitePay.
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Boleto Bancário */}
+                          {checkoutMetodoBoletoAtivo && (
+                            <div 
+                              onClick={() => setFormaPagamento('boleto')}
+                              className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                                formaPagamento === 'boleto' 
+                                  ? 'border-[#17345f] bg-blue-50/30 shadow-xs ring-2 ring-[#17345f]/10' 
+                                  : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'
+                              }`}
+                            >
+                              <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                                formaPagamento === 'boleto' ? 'border-[#17345f] bg-[#17345f] text-white' : 'border-neutral-300 bg-white'
+                              }`}>
+                                {formaPagamento === 'boleto' && <div className="h-2 w-2 rounded-full bg-white" />}
+                              </div>
+                              <div className="flex-1 space-y-1">
+                                <span className="text-xs font-black text-neutral-900 uppercase block">Boleto Bancário</span>
+                                <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
+                                  Valor integral à vista com compensação bancária.
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Crédito GSA Store */}
+                          {solicitacaoAtivaId && limiteCreditoDisponivel > 0 && (
+                            <div 
+                              onClick={() => setFormaPagamento('credito_loja')}
+                              className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                                formaPagamento === 'credito_loja' 
+                                  ? 'border-indigo-600 bg-indigo-50/50 shadow-xs ring-2 ring-indigo-600/10' 
+                                  : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'
+                              }`}
+                            >
+                              <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                                formaPagamento === 'credito_loja' ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-neutral-300 bg-white'
+                              }`}>
+                                {formaPagamento === 'credito_loja' && <div className="h-2 w-2 rounded-full bg-white" />}
+                              </div>
+                              <div className="flex-1 space-y-2 min-w-0">
+                                <div className="flex flex-wrap items-center justify-between gap-1">
+                                  <span className="text-xs font-black text-indigo-950 uppercase">Crédito GSA Store</span>
+                                  <span className="text-[11px] font-black text-indigo-700">Disp: {formatCurrency(limiteCreditoDisponivel)}</span>
+                                </div>
+                                <p className="text-[11px] text-neutral-500 font-medium leading-relaxed">
+                                  Compre agora e pague parcelado com seu limite pré-aprovado.
+                                </p>
+
+                                {formaPagamento === 'credito_loja' && opcaoPagamentoParcelado && (
+                                  <div className="pt-2 border-t border-indigo-200/60 flex flex-col gap-1.5">
+                                    <label className="text-[11px] font-bold text-neutral-700">Parcelamento:</label>
+                                    <select
+                                      value={numParcelas}
+                                      onChange={e => setNumParcelas(parseInt(e.target.value) || 1)}
+                                      className="w-full px-2 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs font-bold text-neutral-900 focus:outline-none"
+                                    >
+                                      {Array.from({ length: maxParcelas }, (_, i) => i + 1).map(p => (
+                                        <option key={p} value={p}>
+                                          {p}x de {formatCurrency(totalHojeFinal / p)} ({calcularTaxaJuros(p)}% juros)
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Navegação da Etapa 2 */}
+                      <div className="flex items-center justify-between pt-4 border-t border-neutral-100">
+                        <button
+                          type="button"
+                          onClick={() => setEtapaCheckout(1)}
+                          className="inline-flex items-center gap-2 rounded-2xl border border-neutral-300 bg-white px-5 py-3 text-xs font-black text-neutral-700 shadow-2xs hover:bg-neutral-50 cursor-pointer"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                          <span>Voltar para Endereço & Cupons</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setEtapaCheckout(3)}
+                          className="inline-flex items-center gap-2 rounded-2xl bg-[#17345f] px-8 py-3.5 text-xs font-black text-white shadow-md shadow-[#17345f]/20 transition-all hover:bg-[#102746] cursor-pointer"
+                        >
+                          <span>Avançar para Resumo do Pedido</span>
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>

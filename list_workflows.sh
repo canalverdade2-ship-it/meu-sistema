@@ -1,0 +1,1 @@
+sudo docker exec n8n n8n export:workflow --all > /tmp/wfs.json && jq -r '.[] | .name + " | Active: " + (.active|tostring)' /tmp/wfs.json

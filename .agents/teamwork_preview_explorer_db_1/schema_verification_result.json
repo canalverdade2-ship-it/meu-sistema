@@ -1,0 +1,165 @@
+{
+  "verifiedTablesCount": 103,
+  "missingTables": [
+    "gsa_tv_channels (in src\\components\\admin\\GsaTvModule.tsx)",
+    "gsa_tv_media_items (in src\\components\\admin\\GsaTvModule.tsx)",
+    "gsa_tv_schedule_slots (in src\\components\\admin\\GsaTvModule.tsx)",
+    "gsa_tv_playlists (in src\\components\\admin\\GsaTvModule.tsx)",
+    "gsa_tv_incidents (in src\\components\\admin\\GsaTvModule.tsx)",
+    "gsa_tv_audit_log (in src\\components\\admin\\GsaTvModule.tsx)",
+    "gsa_tv_jobs (in src\\components\\admin\\GsaTvModule.tsx)",
+    "contratos (in src\\components\\admin\\super-domains\\contratos\\ContratosDocumentosView.tsx)",
+    "blog_posts (in src\\components\\client\\store\\BlogHome.tsx)",
+    "blog_posts (in src\\components\\client\\store\\BlogPostPage.tsx)",
+    "loja_vaquinha_contribuicoes (in src\\lib\\vaquinhaService.ts)"
+  ],
+  "distinctMissingColumns": [
+    {
+      "table": "demanda_comentarios",
+      "column": "prestador_id",
+      "files": [
+        "src\\components\\admin\\demandas\\DemandasComentarios.tsx"
+      ]
+    },
+    {
+      "table": "demanda_comentarios",
+      "column": "colaborador_id",
+      "files": [
+        "src\\components\\admin\\demandas\\DemandasComentarios.tsx"
+      ]
+    },
+    {
+      "table": "demanda_comentarios",
+      "column": "titulo",
+      "files": [
+        "src\\components\\admin\\demandas\\DemandasComentarios.tsx"
+      ]
+    },
+    {
+      "table": "ordens_fiscais",
+      "column": "nome",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx"
+      ]
+    },
+    {
+      "table": "ordens_fiscais",
+      "column": "cpf",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx"
+      ]
+    },
+    {
+      "table": "ordens_fiscais",
+      "column": "cnpj",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx"
+      ]
+    },
+    {
+      "table": "ordens_fiscais",
+      "column": "email",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx"
+      ]
+    },
+    {
+      "table": "ordens_fiscais",
+      "column": "telefone",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx"
+      ]
+    },
+    {
+      "table": "cupons_ativados",
+      "column": "promocao_quantidade_id",
+      "files": [
+        "src\\components\\client\\ClientGSAStore.tsx"
+      ]
+    },
+    {
+      "table": "clientes",
+      "column": "quantidade",
+      "files": [
+        "src\\components\\client\\store\\EcommerceHeader.tsx"
+      ]
+    },
+    {
+      "table": "prestador_documentos",
+      "column": "updated_at",
+      "files": [
+        "src\\components\\prestador\\PrestadorDocumentos.tsx"
+      ]
+    },
+    {
+      "table": "prestadores",
+      "column": "nome_completo",
+      "files": [
+        "src\\components\\prestador\\PrestadorFinanceiro.tsx"
+      ]
+    },
+    {
+      "table": "prestador_promocoes",
+      "column": "data_inicio",
+      "files": [
+        "src\\components\\prestador\\PrestadorPromocoes.tsx"
+      ]
+    },
+    {
+      "table": "tickets",
+      "column": "updated_at",
+      "files": [
+        "src\\components\\prestador\\PrestadorSuporte.tsx"
+      ]
+    },
+    {
+      "table": "faturas",
+      "column": "fase_negociacao",
+      "files": [
+        "src\\lib\\pixService.ts"
+      ]
+    },
+    {
+      "table": "clientes",
+      "column": "key",
+      "files": [
+        "src\\pages\\ClientPortal.tsx"
+      ]
+    },
+    {
+      "table": "clientes",
+      "column": "value",
+      "files": [
+        "src\\pages\\ClientPortal.tsx"
+      ]
+    },
+    {
+      "table": "emprestimo_historico",
+      "column": "value",
+      "files": [
+        "src\\utils\\emprestimoUtils.ts"
+      ]
+    },
+    {
+      "table": "produtos",
+      "column": "saldo_pontos",
+      "files": [
+        "src\\validation\\master_block2.ts"
+      ]
+    },
+    {
+      "table": "faturas",
+      "column": "indicacao_origem_id",
+      "files": [
+        "src\\validation\\step3_finance_gamification.ts"
+      ]
+    },
+    {
+      "table": "clientes",
+      "column": "count",
+      "files": [
+        "src\\validation\\step4_integrity_audit.ts"
+      ]
+    }
+  ]
+}

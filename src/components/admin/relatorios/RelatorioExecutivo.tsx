@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, Users, ClipboardList, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { formatarMoeda, formatarNumero, getRangeDatas } from './utils/relatorioExport';
+import { toast } from 'react-hot-toast';
 
 interface Props { periodo: string; dataInicio?: string; dataFim?: string; }
 

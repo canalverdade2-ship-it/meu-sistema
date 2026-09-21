@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import { navigate } from '../../routing/navigationService';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
 
@@ -63,8 +64,18 @@ function resourceFor(domain: Domain, tab: DataTab) {
   return `${domain}_${tab}`;
 }
 
-function statusOptions(tab: Tab) {
-  const options: Partial<Record<Tab, string[]>> = {
+function statusOptions(domain: Domain, tab: Tab) {
+  const saude: Partial<Record<Tab, string[]>> = {
+    parceiros: ['ativo', 'inativo', 'suspenso'],
+    cotacoes: ['rascunho', 'enviada', 'em_analise', 'consultando_parceiros', 'propostas_disponiveis', 'aguardando_cliente', 'proposta_aceita', 'documentacao_pendente', 'analise_operadora', 'aprovada', 'ativada', 'recusada', 'expirada', 'cancelada'],
+    propostas: ['enviada', 'visualizada', 'aceita', 'recusada', 'expirada', 'cancelada'],
+    contratos: ['ativo', 'suspenso', 'cancelado', 'encerrado'],
+    assessorias: ['pendente', 'pago', 'cancelado', 'reembolsado', 'isento'],
+    comissoes: ['prevista', 'recebida_parcial', 'recebida_total', 'divergencia', 'estorno', 'chargeback', 'cancelada'],
+    documentos: ['pendente', 'enviado', 'em_analise', 'aprovado', 'recusado', 'correcao_solicitada'],
+    atendimentos: ['aberto', 'em_atendimento', 'aguardando_cliente', 'resolvido', 'fechado'],
+  };
+  const seguros: Partial<Record<Tab, string[]>> = {
     parceiros: ['ativo', 'inativo'],
     cotacoes: ['recebida', 'em_analise', 'aguardando_dados', 'propostas_disponiveis', 'encerrada', 'cancelada'],
     propostas: ['rascunho', 'enviada', 'visualizada', 'aceita', 'recusada', 'expirada', 'cancelada'],
@@ -76,7 +87,7 @@ function statusOptions(tab: Tab) {
     sinistros: ['comunicado', 'documentacao_pendente', 'encaminhado_seguradora', 'em_analise', 'indenizado', 'negado', 'encerrado'],
     atendimentos: ['aberto', 'em_atendimento', 'aguardando_cliente', 'resolvido', 'encerrado'],
   };
-  return options[tab] || [];
+  return (domain === 'saude' ? saude : seguros)[tab] || [];
 }
 
 function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
@@ -159,6 +170,13 @@ function ProtectionDashboard({ domain, accent, onOpen }: { domain: Domain; accen
   }, [domain]);
 
   useEffect(() => { void load(); }, [load]);
+  useRealtimeSubscription([
+    { table: domain === 'saude' ? 'saude_contratos' : 'seguros_apolices', onChange: load, debounceMs: 300 },
+    { table: `${domain}_parceiros`, onChange: load, debounceMs: 300 },
+    { table: `${domain}_cotacoes`, onChange: load, debounceMs: 300 },
+    { table: `${domain}_propostas`, onChange: load, debounceMs: 300 },
+    { table: `${domain}_atendimentos`, onChange: load, debounceMs: 300 },
+  ], [domain, load]);
   if (loading) return <PanelState icon={Loader2} text="Carregando indicadores..." spin />;
 
   return (
@@ -211,6 +229,7 @@ function ProtectionList({ domain, tab, accent, initialItemId }: { domain: Domain
   }, [appliedSearch, page, resource]);
 
   useEffect(() => { void load(); }, [load]);
+  useRealtimeSubscription({ table: resource, onChange: load, debounceMs: 300 }, [resource, load]);
 
   const updateStatus = async (item: any, status: string) => {
     setProcessingId(item.id);
@@ -246,7 +265,7 @@ function ProtectionList({ domain, tab, accent, initialItemId }: { domain: Domain
 
         {loading ? <PanelState icon={Loader2} text="Carregando registros..." spin />
           : result.items.length === 0 ? <PanelState icon={Search} text="Nenhum registro encontrado." />
-            : <div className="divide-y divide-neutral-100">{result.items.map((item) => <article key={item.id} className={`flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center ${highlighted?.id === item.id ? 'bg-indigo-50/70' : ''}`}><div className="min-w-0"><h3 className="truncate font-black text-neutral-900">{item.nome || item.titulo || item.protocolo || item.numero || `Registro ${String(item.id).slice(0, 8)}`}</h3><p className="mt-1 truncate text-sm text-neutral-500">{item.resumo || item.email || item.assunto || item.categoria || (item.created_at ? formatDateTime(item.created_at) : 'Sem descrição')}</p>{item.valor != null && <p className="mt-1 text-sm font-bold">{formatCurrency(Number(item.valor))}</p>}</div><div className="flex shrink-0 items-center gap-2">{item.status && statusOptions(tab).length > 0 && <select disabled={processingId === item.id} value={item.status} onChange={(event) => void updateStatus(item, event.target.value)} className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-bold disabled:opacity-50">{Array.from(new Set([item.status, ...statusOptions(tab)])).map((status) => <option key={status} value={status}>{String(status).replaceAll('_', ' ')}</option>)}</select>}{canEditPartner && <button type="button" onClick={() => { setEditing(item); setShowEditor(true); }} className="rounded-xl border border-neutral-200 px-3 py-2 text-xs font-black">Editar</button>}</div></article>)}</div>}
+            : <div className="divide-y divide-neutral-100">{result.items.map((item) => <article key={item.id} className={`flex flex-col justify-between gap-4 p-5 sm:flex-row sm:items-center ${highlighted?.id === item.id ? 'bg-indigo-50/70' : ''}`}><div className="min-w-0"><h3 className="truncate font-black text-neutral-900">{item.nome || item.titulo || item.protocolo || item.numero || `Registro ${String(item.id).slice(0, 8)}`}</h3><p className="mt-1 truncate text-sm text-neutral-500">{item.resumo || item.email || item.assunto || item.categoria || (item.created_at ? formatDateTime(item.created_at) : 'Sem descrição')}</p>{item.valor != null && <p className="mt-1 text-sm font-bold">{formatCurrency(Number(item.valor))}</p>}</div><div className="flex shrink-0 items-center gap-2">{item.status && statusOptions(domain, tab).length > 0 && <select disabled={processingId === item.id} value={item.status} onChange={(event) => void updateStatus(item, event.target.value)} className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-bold disabled:opacity-50">{Array.from(new Set([item.status, ...statusOptions(domain, tab)])).map((status) => <option key={status} value={status}>{String(status).replaceAll('_', ' ')}</option>)}</select>}{canEditPartner && <button type="button" onClick={() => { setEditing(item); setShowEditor(true); }} className="rounded-xl border border-neutral-200 px-3 py-2 text-xs font-black">Editar</button>}</div></article>)}</div>}
       </section>
 
       <div className="flex items-center justify-between"><p className="text-xs font-bold text-neutral-400">Página {page} de {totalPages}</p><div className="flex gap-2"><button type="button" disabled={page <= 1 || loading} onClick={() => setPage((value) => Math.max(1, value - 1))} className="rounded-xl border border-neutral-200 p-2 disabled:opacity-40"><ChevronLeft className="h-4 w-4" /></button><button type="button" disabled={page >= totalPages || loading} onClick={() => setPage((value) => value + 1)} className="rounded-xl border border-neutral-200 p-2 disabled:opacity-40"><ChevronRight className="h-4 w-4" /></button></div></div>

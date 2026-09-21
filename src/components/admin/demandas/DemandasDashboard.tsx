@@ -3,6 +3,7 @@ import { BarChart3, TrendingUp, CheckCircle2, Clock, AlertCircle, RefreshCw } fr
 import { supabase } from '../../../lib/supabase';
 import { format, startOfMonth, startOfWeek, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useRealtimeSubscription } from '../../../hooks/useRealtime';
 
 interface Props {
   adminType?: 'admin' | 'colaborador';
@@ -14,7 +15,6 @@ export function DemandasDashboard({ adminType, colaboradorId }: Props) {
   const [periodo, setPeriodo] = useState<'semana' | 'mes' | 'trimestre'>('mes');
   const [dados, setDados] = useState<any>(null);
 
-  useEffect(() => { carregar(); }, [periodo]);
 
   const carregar = async () => {
     setLoading(true);
@@ -76,9 +76,16 @@ export function DemandasDashboard({ adminType, colaboradorId }: Props) {
     urgente: 'bg-red-500', alta: 'bg-orange-500', normal: 'bg-blue-500', baixa: 'bg-neutral-400'
   };
   const PRIO_LABELS: Record<string, string> = {
-    urgente: '🔴 Urgente', alta: '🟠 Alta', normal: '🔵 Normal', baixa: '⚪ Baixa'
+    urgente: '🔴 Urgente', alta: '🟠 Alta', normal: '🔵 Normal', baixa: '??� Baixa'
   };
 
+  useEffect(() => { carregar(); }, [periodo]);
+
+  useRealtimeSubscription([
+    { table: 'prestador_demandas', onChange: carregar, debounceMs: 300 },
+    { table: 'colaboradores', onChange: carregar, debounceMs: 300 },
+    { table: 'prestadores', onChange: carregar, debounceMs: 300 },
+  ], [periodo]);
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -87,7 +94,7 @@ export function DemandasDashboard({ adminType, colaboradorId }: Props) {
         <div className="flex items-center gap-2">
           {(['semana', 'mes', 'trimestre'] as const).map(p => (
             <button key={p} onClick={() => setPeriodo(p)} disabled={loading} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all disabled:opacity-50 ${periodo === p ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
-              {p === 'semana' ? 'Semana' : p === 'mes' ? 'Mês' : 'Trimestre'}
+              {p === 'semana' ? 'Semana' : p === 'mes' ? 'M�s' : 'Trimestre'}
             </button>
           ))}
           <button onClick={carregar} disabled={loading} className="h-9 w-9 rounded-xl bg-neutral-100 flex items-center justify-center text-neutral-500 hover:bg-neutral-200 transition-all disabled:opacity-50">
@@ -100,9 +107,9 @@ export function DemandasDashboard({ adminType, colaboradorId }: Props) {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {[
           { label: 'Total', valor: dados?.total, icon: BarChart3, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-          { label: 'Concluídas', valor: dados?.concluidas, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: 'Conclu�das', valor: dados?.concluidas, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
           { label: 'Em Andamento', valor: dados?.abertas, icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Em Análise (Vendas)', valor: dados?.emAnalise, icon: TrendingUp, color: 'text-violet-600', bg: 'bg-violet-50' },
+          { label: 'Em An�lise (Vendas)', valor: dados?.emAnalise, icon: TrendingUp, color: 'text-violet-600', bg: 'bg-violet-50' },
           { label: 'Vencidas 🔴', valor: dados?.vencidas, icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50' },
         ].map((k, i) => (
           <div key={i} className={`rounded-2xl ${k.bg} p-4`}>
@@ -127,7 +134,7 @@ export function DemandasDashboard({ adminType, colaboradorId }: Props) {
             {dados?.taxaSla}%
           </span>
         </div>
-        <p className="text-xs text-neutral-400 mt-2">% de demandas concluídas dentro do prazo</p>
+        <p className="text-xs text-neutral-400 mt-2">% de demandas conclu�das dentro do prazo</p>
       </div>
 
       {/* Por Prioridade */}
@@ -176,7 +183,7 @@ export function DemandasDashboard({ adminType, colaboradorId }: Props) {
 
       {dados?.rankingColab?.length === 0 && (
         <div className="rounded-2xl bg-neutral-50 p-12 text-center">
-          <p className="text-neutral-400 text-sm">Nenhum dado de equipe no período selecionado.</p>
+          <p className="text-neutral-400 text-sm">Nenhum dado de equipe no per�odo selecionado.</p>
         </div>
       )}
     </div>

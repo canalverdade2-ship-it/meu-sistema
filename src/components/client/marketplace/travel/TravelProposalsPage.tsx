@@ -6,35 +6,49 @@ import { navigate } from '../../../../routing/navigationService';
 import { routes } from '../../../../routing/routeCatalog';
 import { formatCurrency } from '../../../../lib/utils';
 import { toast } from 'react-hot-toast';
+import { useRealtimeSubscription } from '../../../../hooks/useRealtime';
 
 export function TravelProposalsPage({ clientId, onBack }: { clientId: string, onBack: () => void }) {
   const [propostas, setPropostas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchPropostas() {
-      try {
-        const { data, error } = await supabase
-          .from('viagens_propostas')
-          .select(`
-            *,
-            viagens_solicitacoes_reserva (protocolo)
-          `)
-          .eq('cliente_id', clientId)
-          .order('created_at', { ascending: false });
+  const fetchPropostas = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('viagens_propostas')
+        .select(`
+          *,
+          viagens_solicitacoes_reserva (protocolo)
+        `)
+        .eq('cliente_id', clientId)
+        .order('created_at', { ascending: false });
 
-        if (error) throw error;
-        setPropostas(data || []);
-      } catch (err) {
-        console.error(err);
-        toast.error('Não foi possível carregar suas propostas.');
-      } finally {
-        setLoading(false);
-      }
+      if (error) throw error;
+      setPropostas(data || []);
+    } catch (err) {
+      console.error(err);
+      toast.error('Não foi possível carregar suas propostas.');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchPropostas();
   }, [clientId]);
+
+  useRealtimeSubscription(
+    [
+      {
+        table: 'viagens_propostas',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        debounceMs: 300,
+        onChange: fetchPropostas,
+      },
+    ],
+    [clientId]
+  );
 
   const handleAceitarProposta = async (propostaId: string) => {
     if (acceptingId) return;

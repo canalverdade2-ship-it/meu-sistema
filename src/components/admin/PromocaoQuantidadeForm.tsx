@@ -212,11 +212,12 @@ export function PromocaoQuantidadeForm({ initialData, onSuccess, onCancel, onDel
             <div>
               <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1 block">Quantidade Mínima *</label>
               <div className="flex items-center">
-                <input 
+                <input  
                   type="number" 
                   min="1"
                   value={quantidadeMinima} 
-                  onChange={e => setQuantidadeMinima(parseInt(e.target.value) || 1)} 
+                  inputMode="numeric"
+onChange={(e) => setQuantidadeMinima(parseInt(e.target.value) || 1)} 
                   required
                   className="w-full bg-white border border-neutral-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" 
                 />
@@ -280,11 +281,12 @@ export function PromocaoQuantidadeForm({ initialData, onSuccess, onCancel, onDel
             {['unidade_gratis', 'ganhe_outro_produto'].includes(tipoPromocao) && (
               <div>
                 <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1 block">Quantidade do Brinde *</label>
-                <input 
+                <input  
                   type="number" 
                   min="1"
                   value={quantidadeBrinde} 
-                  onChange={e => setQuantidadeBrinde(parseInt(e.target.value) || 1)} 
+                  inputMode="numeric"
+onChange={(e) => setQuantidadeBrinde(parseInt(e.target.value) || 1)} 
                   required
                   className="w-full bg-white border border-neutral-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" 
                 />
@@ -327,11 +329,12 @@ export function PromocaoQuantidadeForm({ initialData, onSuccess, onCancel, onDel
                 </div>
                 <div>
                   <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1 block">Valor do Desconto *</label>
-                  <input 
+                  <input  
                     type="number" 
                     min="0.01" step="0.01"
                     value={descontoValor} 
-                    onChange={e => setDescontoValor(parseFloat(e.target.value) || 0)} 
+                    inputMode="numeric"
+onChange={(e) => setDescontoValor(parseFloat(e.target.value) || 0)} 
                     required
                     className="w-full bg-white border border-neutral-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" 
                   />
@@ -364,11 +367,12 @@ export function PromocaoQuantidadeForm({ initialData, onSuccess, onCancel, onDel
             </div>
             <div>
               <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1 block">Uso Máximo por Cliente *</label>
-              <input 
+              <input  
                 type="number" 
                 min="1"
                 value={usoMaximo} 
-                onChange={e => setUsoMaximo(parseInt(e.target.value) || 1)} 
+                inputMode="numeric"
+onChange={(e) => setUsoMaximo(parseInt(e.target.value) || 1)} 
                 required
                 className="w-full bg-white border border-neutral-200 rounded-xl px-4 py-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" 
               />

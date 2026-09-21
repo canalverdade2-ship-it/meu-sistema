@@ -7,6 +7,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { vaquinhaService, Vaquinha, VaquinhaContribuicao } from '../../../lib/vaquinhaService';
 import { formatCurrency } from '../../../utils/formatters';
+import { maskPhone } from '../../../lib/utils';
 import { navigate } from '../../../routing/navigationService';
 import { routes } from '../../../routing/routeCatalog';
 import { supabase } from '../../../lib/supabase';
@@ -421,12 +422,13 @@ export function VaquinhaPublicPage({ vaquinhaIdOrCode }: VaquinhaPublicPageProps
                   </div>
 
                   <div className="mt-2.5">
-                    <input
+                    <input 
                       type="number"
                       min="1"
                       step="any"
                       placeholder="Ou digite outro valor (ex: R$ 75,00)"
                       value={customValor}
+                      inputMode="numeric"
                       onChange={(e) => {
                         const v = e.target.value === '' ? '' : Number(e.target.value);
                         setCustomValor(v);
@@ -457,11 +459,13 @@ export function VaquinhaPublicPage({ vaquinhaIdOrCode }: VaquinhaPublicPageProps
                     <label className="block text-xs font-black text-neutral-700 uppercase tracking-wider mb-1">
                       Seu WhatsApp (Opcional)
                     </label>
-                    <input
+                    <input 
                       type="tel"
                       placeholder="(11) 99999-9999"
+                      maxLength={15}
                       value={telefoneContribuinte}
-                      onChange={(e) => setTelefoneContribuinte(e.target.value)}
+                      inputMode="numeric"
+                      onChange={(e) => setTelefoneContribuinte(maskPhone(e.target.value))}
                       className="w-full px-4 py-3 bg-white border border-neutral-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                   </div>

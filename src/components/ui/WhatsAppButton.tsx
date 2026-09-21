@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
+import { useAppLocation } from '../../routing/useAppLocation';
 
 // Helper global para sinalizar ao botão quando modais críticos estão abertos
 export function notifyWhatsAppModal(open: boolean) {
@@ -8,6 +9,7 @@ export function notifyWhatsAppModal(open: boolean) {
 }
 
 export function WhatsAppButton() {
+  const route = useAppLocation();
   const [settings, setSettings] = useState({
     ativo: true,
     telefone: '11920857756',
@@ -19,6 +21,7 @@ export function WhatsAppButton() {
 
   const [movedToTop, setMovedToTop] = useState(false);
   const [isCheckoutMobile, setIsCheckoutMobile] = useState(false);
+  const [hasOpenModalInDom, setHasOpenModalInDom] = useState(false);
 
   const fetchSettings = async () => {
     try {
@@ -41,39 +44,69 @@ export function WhatsAppButton() {
 
   useEffect(() => {
     fetchSettings();
-
-    const channel = supabase
-      .channel('whatsapp-float-sync')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, () => {
-        fetchSettings();
-      })
-      .subscribe();
+    const settingsInterval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void fetchSettings();
+    }, 60_000);
 
     const handleModalState = (e: Event) => {
       const { open } = (e as CustomEvent).detail;
-      setMovedToTop(open);
+      setMovedToTop(Boolean(open));
     };
     window.addEventListener('whatsapp-modal-state', handleModalState);
 
     const checkCheckoutMobile = () => {
-      const isCheckout = typeof window !== 'undefined' && window.location.pathname.includes('/checkout');
+      const isCheckout = typeof window !== 'undefined' && (window.location.pathname.includes('/checkout') || window.location.pathname.includes('/carrinho'));
       const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
       setIsCheckoutMobile(isCheckout && isMobile);
     };
 
+    // Observador do DOM para detectar quando o carrinho ou modais estão abertos
+    const checkDomModals = () => {
+      if (typeof document === 'undefined') return;
+      const cartOpen = Boolean(
+        document.querySelector('[aria-labelledby="gsa-cart-title"]') ||
+        document.querySelector('[data-cart-drawer]') ||
+        (document.body && document.body.style.overflow === 'hidden' && !document.querySelector('.admin-panel'))
+      );
+      setHasOpenModalInDom(cartOpen);
+    };
+
     checkCheckoutMobile();
+    checkDomModals();
+
+    const observer = new MutationObserver(() => {
+      checkDomModals();
+    });
+
+    if (typeof document !== 'undefined' && document.body) {
+      observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+    }
+
     window.addEventListener('resize', checkCheckoutMobile);
     window.addEventListener('popstate', checkCheckoutMobile);
 
     return () => {
-      supabase.removeChannel(channel);
+      window.clearInterval(settingsInterval);
       window.removeEventListener('whatsapp-modal-state', handleModalState);
       window.removeEventListener('resize', checkCheckoutMobile);
       window.removeEventListener('popstate', checkCheckoutMobile);
+      observer.disconnect();
     };
   }, []);
 
-  if (!settings.ativo || movedToTop || isCheckoutMobile) return null;
+  // Oculta imediatamente se:
+  // 1. O carrinho estiver aberto (via URL ?modal=carrinho ou ?modal=checkout ou qualquer ?modal=)
+  // 2. Rota for checkout
+  // 3. Sinal de modal aberto (movedToTop)
+  // 4. Carrinho aberto detectado no DOM (hasOpenModalInDom)
+  // 5. Versão mobile do checkout
+  const isUrlModalOpen = Boolean(route.query?.modal) || Boolean(route.itemId);
+  const isCheckoutRoute = route.pathname.includes('/checkout') || route.pathname.includes('/loja/checkout');
+
+  if (!settings.ativo || movedToTop || isCheckoutMobile || isUrlModalOpen || isCheckoutRoute || hasOpenModalInDom) {
+    return null;
+  }
+
 
   // Cleanup phone
   const cleanPhone = settings.telefone.replace(/\D/g, '');
@@ -105,7 +138,7 @@ export function WhatsAppButton() {
         dragMomentum={false}
         whileDrag={{ cursor: 'grabbing', scale: 1.1, zIndex: 10000 }}
         transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-        className={`fixed bottom-[100px] z-[9999] flex items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg ring-4 ring-white transition-shadow hover:shadow-[0_8px_25px_rgba(37,211,102,0.5)] cursor-pointer ${positionClass} ${sizeClass}`}
+        className={`gsa-floating-whatsapp fixed bottom-[100px] z-[9999] flex items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg ring-4 ring-white transition-shadow hover:shadow-[0_8px_25px_rgba(37,211,102,0.5)] cursor-pointer ${positionClass} ${sizeClass}`}
         title={settings.tooltip}
       >
         <svg

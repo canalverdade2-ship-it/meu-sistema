@@ -1,0 +1,1 @@
+PGPASSWORD='GSA_SENHA_FORTE_2026' psql -h 127.0.0.1 -p 5433 -U supabase_admin -d gsahub -c "SELECT proname, pg_get_function_arguments(oid) FROM pg_proc WHERE proname = 'gsa_admin_delete_products_bulk';" > /tmp/args.txt

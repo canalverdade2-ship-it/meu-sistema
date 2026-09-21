@@ -56,14 +56,14 @@ for (const contract of requiredWizardContracts) {
 }
 
 const requiredProposalContracts = [
-  'clientOperationalWrite<{ id: string }>',
-  "'tickets', 'insert'",
-  'Proposta Classificados:',
+  "supabase.rpc('rpc_criar_proposta_classificado'",
+  'p_valor_proposta: amount',
   'notificationService.notifyAdmin(',
   "'propostas'",
-  'navigate(routes.client.ticket(ticket.id))',
-  'valor_proposto: amount',
-  'A negociação deve permanecer dentro dos canais da GSA',
+  "tab: 'propostas'",
+  'navigate(routes.marketplace.classifieds.negociacoes())',
+  'Proposta registrada nos Classificados GSA.',
+  'negociação protegida dos Classificados',
 ];
 
 for (const contract of requiredProposalContracts) {
@@ -105,7 +105,6 @@ if (/\.storage\.from\s*\(/.test(storage)) {
 }
 
 const requiredGatewayContracts = [
-  "const BUCKET = 'classificados-midias'",
   "Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')",
   'admin.auth.getUser(accessToken)',
   "metadata.gsa_actor_type !== 'cliente'",
@@ -117,8 +116,6 @@ const requiredGatewayContracts = [
   ".from('clientes')",
   'validImageSignature(file)',
   'file.size > MAX_IMAGE_BYTES',
-  'authenticated.admin.storage.from(BUCKET).upload',
-  'authenticated.admin.storage.from(BUCKET).remove',
   'pathBelongsToClient(path, authenticated.clientId)',
 ];
 

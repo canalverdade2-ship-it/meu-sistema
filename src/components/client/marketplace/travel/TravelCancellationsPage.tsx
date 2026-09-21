@@ -5,6 +5,7 @@ import { callClientRpc } from '../../../../lib/clientRpc';
 import { formatCurrency } from '../../../../lib/utils';
 import { toast } from 'react-hot-toast';
 import { Modal } from '../../../ui/Modal';
+import { useRealtimeSubscription } from '../../../../hooks/useRealtime';
 
 const ACTIVE_CANCELLATION_STATUSES = ['solicitado', 'em_analise', 'reembolso_aprovado'];
 const CLOSED_TRIP_STATUSES = ['cancelada', 'reembolsada', 'concluida'];
@@ -104,6 +105,23 @@ export function TravelCancellationsPage({
   useEffect(() => {
     void fetchTrips();
   }, [clientId]);
+
+  useRealtimeSubscription(
+    [
+      {
+        table: 'viagens_transacoes',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        debounceMs: 300,
+        onChange: () => { void fetchTrips(); },
+      },
+      {
+        table: 'viagens_cancelamentos',
+        debounceMs: 300,
+        onChange: () => { void fetchTrips(); },
+      },
+    ],
+    [clientId]
+  );
 
   const openCancellation = (trip: any) => {
     const cancellations = sortCancellations(trip.viagens_cancelamentos || []);

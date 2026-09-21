@@ -12,6 +12,7 @@ import {
 import { generateUUID } from '../../../../lib/utils';
 import { navigate } from '../../../../routing/navigationService';
 import { routes } from '../../../../routing/routeCatalog';
+import { useRealtimeSubscription } from '../../../../hooks/useRealtime';
 
 const getStoragePath = (url: string) => {
   const marker = '/storage/v1/object/public/classificados-midias/';
@@ -79,6 +80,24 @@ export function EditClassifiedListingPage({ clientId, anuncioId }: { clientId: s
       toast.error(error?.message || 'Não foi possível carregar o anúncio.');
     } finally { setLoading(false); }
   };
+
+  useRealtimeSubscription(
+    [
+      {
+        table: 'classificados_anuncios',
+        filter: anuncioId ? `id=eq.${anuncioId}` : undefined,
+        debounceMs: 300,
+        onChange: () => { void load(); },
+      },
+      {
+        table: 'classificados_midias',
+        filter: anuncioId ? `anuncio_id=eq.${anuncioId}` : undefined,
+        debounceMs: 300,
+        onChange: () => { void load(); },
+      },
+    ],
+    [anuncioId, clientId]
+  );
 
   const marked = new Set<string>(Array.isArray(adjustment?.campos) ? adjustment.campos : []);
   const highlight = (field: string) => marked.has(field) ? 'border-orange-500 ring-2 ring-orange-100' : 'border-black/10';
@@ -148,8 +167,8 @@ export function EditClassifiedListingPage({ clientId, anuncioId }: { clientId: s
           <div className="mt-7 grid gap-5 md:grid-cols-2">
             <label className="md:col-span-2"><span className="mb-2 block text-sm font-black">Título</span><input value={form.titulo} onChange={(e)=>setForm({...form,titulo:e.target.value})} className={`w-full rounded-xl border px-4 py-3 outline-none ${highlight('titulo')}`} /></label>
             <label className="md:col-span-2"><span className="mb-2 block text-sm font-black">Descrição</span><textarea value={form.descricao} onChange={(e)=>setForm({...form,descricao:e.target.value})} rows={6} className={`w-full resize-none rounded-xl border px-4 py-3 outline-none ${highlight('descricao')}`} /></label>
-            <label><span className="mb-2 block text-sm font-black">Preço</span><input value={form.preco} onChange={(e)=>setForm({...form,preco:formatPriceInput(e.target.value)})} className={`w-full rounded-xl border px-4 py-3 outline-none ${highlight('preco')}`} /></label>
-            <label><span className="mb-2 block text-sm font-black">CEP</span><input value={form.cep} onChange={(e)=>setForm({...form,cep:e.target.value})} className={`w-full rounded-xl border px-4 py-3 outline-none ${highlight('cep')}`} /></label>
+            <label><span className="mb-2 block text-sm font-black">Preço</span><input inputMode="numeric" value={form.preco} onChange={(e)=>setForm({...form,preco:formatPriceInput(e.target.value)})} className={`w-full rounded-xl border px-4 py-3 outline-none ${highlight('preco')}`} /></label>
+            <label><span className="mb-2 block text-sm font-black">CEP</span><input inputMode="numeric" maxLength={9} value={form.cep} onChange={(e)=>{ let v = e.target.value.replace(/\D/g, ''); if (v.length > 5) v = v.replace(/^(\d{5})(\d)/, '$1-$2'); setForm({...form,cep:v}); }} className={`w-full rounded-xl border px-4 py-3 outline-none ${highlight('cep')}`} /></label>
             <label><span className="mb-2 block text-sm font-black">Cidade</span><input value={form.cidade} onChange={(e)=>setForm({...form,cidade:e.target.value})} className={`w-full rounded-xl border px-4 py-3 outline-none ${highlight('cidade')}`} /></label>
             <label><span className="mb-2 block text-sm font-black">Estado</span><input value={form.estado} onChange={(e)=>setForm({...form,estado:e.target.value})} maxLength={2} className={`w-full rounded-xl border px-4 py-3 outline-none ${highlight('estado')}`} /></label>
             <label className="md:col-span-2"><span className="mb-2 block text-sm font-black">Bairro</span><input value={form.bairro} onChange={(e)=>setForm({...form,bairro:e.target.value})} className={`w-full rounded-xl border px-4 py-3 outline-none ${highlight('bairro')}`} /></label>

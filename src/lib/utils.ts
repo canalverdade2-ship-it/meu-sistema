@@ -23,6 +23,39 @@ export const formatShortId = (prefix: string, rawId?: string | null) => {
   return str.toUpperCase().startsWith(prefix.toUpperCase()) ? str.toUpperCase() : `${prefix}-${str.toUpperCase()}`;
 };
 
+export const formatLancamentoDescricao = (rawDescricao?: string | null): { titulo: string; autor?: string; detalhe?: string } => {
+  if (!rawDescricao || !rawDescricao.trim()) {
+    return { titulo: 'Lançamento de Pontos' };
+  }
+
+  let text = rawDescricao.trim();
+  let autor: string | undefined;
+
+  // Extrair [POR: Nome / Cargo] se existir
+  const porMatch = text.match(/\[POR:\s*([^\]]+)\]/i);
+  if (porMatch) {
+    autor = porMatch[1].trim();
+    text = text.replace(/\[POR:[^\]]+\]/gi, '').trim();
+  }
+
+  // Limpar prefixos e sufixos técnicos feios
+  text = text.replace(/\(Admin\)/gi, '').trim();
+  text = text.replace(/^Ajuste manual de pontos$/i, 'Ajuste de Pontos');
+  text = text.replace(/^Ajuste manual de saldo$/i, 'Ajuste de Saldo');
+  text = text.replace(/^Lancamento manual de credito$/i, 'Crédito Adicionado');
+  text = text.replace(/^Lancamento manual de debito$/i, 'Débito Realizado');
+
+  // Se ficou vazio após limpeza
+  if (!text) {
+    text = 'Ajuste de Pontos';
+  }
+
+  return {
+    titulo: text,
+    autor: autor && autor !== 'Administrador' && autor !== 'admin' ? autor : undefined
+  };
+};
+
 export const formatDate = (date: string | Date | null | undefined) => {
   if (!date) return '-';
   try {

@@ -1,0 +1,8 @@
+const puppeteer=require('/usr/lib/node_modules/@wonderwhy-er/desktop-commander/node_modules/puppeteer');
+const fs=require('fs');const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const PROJECT=process.argv[2]||'ac1da714-fe03-4812-b62d-fb92d575e554';
+const OUT=process.argv[3]||'/home/opc/gsa-ai/work/identity-flow-20260907/census.json';
+(async()=>{const b=await puppeteer.connect({browserURL:'http://127.0.0.1:9228'});let p=(await b.pages()).find(x=>x.url().includes(`/project/${PROJECT}`));if(!p){p=await b.newPage();await p.goto(`https://flow.google.com/project/${PROJECT}`,{waitUntil:'domcontentloaded',timeout:60000});await sleep(3000)}await p.bringToFront();await p.keyboard.press('Escape');
+const s=await p.$('.cdk-virtual-scrollable.page-container');if(!s)throw Error('scroll');const seen={};let max=0;
+for(let y=0;;y+=420){await p.evaluate((e,y)=>e.scrollTop=y,s,y);await sleep(450);const info=await p.evaluate(e=>({top:e.scrollTop,h:e.clientHeight,sh:e.scrollHeight,rows:[...document.querySelectorAll('flow-grid-tile-container flow-video-tile img.thumbnail')].map(img=>({id:(img.src.match(/\/image\/([^?]+)/)||[])[1]||'',aria:img.closest('flow-grid-tile-container')?.getAttribute('aria-label')||''}))}),s);max=info.sh;for(const r of info.rows)if(r.id)seen[r.id]={...r,y:info.top};if(info.top+info.h>=info.sh-5)break;if(y>info.sh+1000)break;}
+fs.writeFileSync(OUT,JSON.stringify({project:PROJECT,count:Object.keys(seen).length,scrollHeight:max,items:Object.values(seen)},null,2));console.log('COUNT',Object.keys(seen).length,'HEIGHT',max);await b.disconnect()})().catch(e=>{console.error(e);process.exit(1)});

@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { generateUUID } from './utils';
-import { uploadToR2, getPrivateR2Url, removeFromR2 } from './r2Storage';
+import { uploadToR2, getPrivateR2Url, removeFromR2, privateBucketPath } from './r2Storage';
 
 export const PRIVATE_DOCUMENT_BUCKET = 'gsa-private-documents';
 export const PRIVATE_DOCUMENT_PREFIX = `r2://${PRIVATE_DOCUMENT_BUCKET}/`;
@@ -194,7 +194,7 @@ export async function resolvePrivateFileReference(reference: string, expiresInSe
   const parsed = parsePrivateDocumentReference(reference);
   if (!parsed) return reference;
 
-  return await getPrivateR2Url(parsed.path);
+  return await getPrivateR2Url(privateBucketPath(parsed.bucket, parsed.path));
 }
 
 export async function removePrivateDocument(reference: string) {

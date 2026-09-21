@@ -1,0 +1,14 @@
+{
+  "name": "gsa-tv-playout-api",
+  "version": "1.0.0",
+  "description": "GSA TV Playout API — proxy seguro sobre o ffplayout",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js"
+  },
+  "dependencies": {
+    "pg": "8.13.1"
+  },
+  "engines": { "node": ">=20" }
+}

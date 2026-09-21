@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { EcommerceHeader } from './EcommerceHeader';
+import { useRealtimeSubscription } from '../../../hooks/useRealtime';
+import { useStoreConfig } from './useStoreConfig';
 
 import StoreItemCard from './StoreItemCard';
 import { TermosDeUsoDialog } from '../../public/TermosDeUsoDialog';
@@ -167,7 +169,7 @@ function HorizontalShelf({
       {/* Horizontal Carousel Strip */}
       <div
         ref={containerRef}
-        className="flex gap-3.5 overflow-x-auto scroll-smooth pt-3.5 pb-2.5 px-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x"
+        className="flex gap-3.5 overflow-x-auto scroll-smooth pt-3.5 pb-2.5 px-2 snap-x snap-proximity [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden overscroll-x-contain touch-pan-y touch-pan-x"
       >
         {items.map((item, idx) => (
           <div
@@ -238,7 +240,7 @@ function SectionHeader({
 
 /* ─── Flash Sale Timer ─── */
 function FlashSaleTimer() {
-  const { h, m, s } = useCountdown(23);
+  const { h, m, s } = useCountdown();
   return (
     <div className="flex items-center gap-2">
       <Flame size={16} className="text-orange-500 animate-pulse shrink-0" />
@@ -261,6 +263,7 @@ export function EcommerceHome({
   onOpenCart,
   cartItemCount = 0,
 }: EcommerceHomeProps) {
+  const { freeShippingThreshold } = useStoreConfig();
   const [loading, setLoading] = useState(true);
   const [maisVendidos, setMaisVendidos] = useState<any[]>([]);
   const [novidades, setNovidades] = useState<any[]>([]);
@@ -322,94 +325,132 @@ export function EcommerceHome({
     };
   }, [clientId, cartItemCount]);
 
-  /* Home data fetch */
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const { data } = await supabase
-          .from('produtos')
-          .select('*')
-          .eq('status', 'ativo')
-          .eq('visivel_na_loja', true)
-          .order('created_at', { ascending: false })
-          .limit(150);
+  const fetchHomeData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await supabase
+        .from('produtos')
+        .select('*')
+        .eq('status', 'ativo')
+        .eq('visivel_na_loja', true)
+        .order('created_at', { ascending: false })
+        .limit(150);
 
-        if (data && data.length > 0) {
-          // Lançamentos: os 12 produtos mais recentes cadastrados
-          setNovidades(data.slice(0, 12));
+      if (data && data.length > 0) {
+        // Lançamentos: os 12 produtos mais recentes cadastrados
+        setNovidades(data.slice(0, 12));
 
-          // Mais Vendidos: ordenados por maior avaliação em estrelas e volume de reviews
-          const sortedMaisVendidos = [...data].sort((a, b) => {
-            const ratA = calculateProductRating(a);
-            const ratB = calculateProductRating(b);
-            if (ratB.rating !== ratA.rating) return ratB.rating - ratA.rating;
-            if (ratB.totalCount !== ratA.totalCount) return ratB.totalCount - ratA.totalCount;
-            const scoreA = (Number(a.total_vendas || a.vendas_count || 0) * 10) + (a.destaque ? 20 : 0);
-            const scoreB = (Number(b.total_vendas || b.vendas_count || 0) * 10) + (b.destaque ? 20 : 0);
-            return scoreB - scoreA;
+        // Mais Vendidos: ordenados por maior avaliação em estrelas e volume de reviews
+        const sortedMaisVendidos = [...data].sort((a, b) => {
+          const ratA = calculateProductRating(a);
+          const ratB = calculateProductRating(b);
+          if (ratB.rating !== ratA.rating) return ratB.rating - ratA.rating;
+          if (ratB.totalCount !== ratA.totalCount) return ratB.totalCount - ratA.totalCount;
+          const scoreA = (Number(a.total_vendas || a.vendas_count || 0) * 10) + (a.destaque ? 20 : 0);
+          const scoreB = (Number(b.total_vendas || b.vendas_count || 0) * 10) + (b.destaque ? 20 : 0);
+          return scoreB - scoreA;
+        });
+        setMaisVendidos(sortedMaisVendidos.slice(0, 12));
+        
+        // Ofertas do Dia: produtos com maior porcentagem de desconto real (% OFF decrescente)
+        const comDescontoCadastrado = data.filter(p => 
+          (Number(p.desconto_percentual || 0) > 0) || 
+          (p.valor_promocional && Number(p.valor_promocional) < Number(p.valor)) ||
+          Boolean(p.desconto_ativo)
+        );
+
+        if (comDescontoCadastrado.length >= 6) {
+          const sortedOfertas = [...comDescontoCadastrado].sort((a, b) => {
+            const discA = getProductDiscountPercentage(a);
+            const discB = getProductDiscountPercentage(b);
+            if (discB !== discA) return discB - discA;
+            return Number(b.valor || 0) - Number(a.valor || 0);
           });
-          setMaisVendidos(sortedMaisVendidos.slice(0, 12));
-          
-          // Ofertas do Dia: produtos com maior porcentagem de desconto real (% OFF decrescente)
-          const comDescontoCadastrado = data.filter(p => 
-            (Number(p.desconto_percentual || 0) > 0) || 
-            (p.valor_promocional && Number(p.valor_promocional) < Number(p.valor)) ||
-            Boolean(p.desconto_ativo)
-          );
-
-          if (comDescontoCadastrado.length >= 6) {
-            const sortedOfertas = [...comDescontoCadastrado].sort((a, b) => {
-              const discA = getProductDiscountPercentage(a);
-              const discB = getProductDiscountPercentage(b);
-              if (discB !== discA) return discB - discA;
-              return Number(b.valor || 0) - Number(a.valor || 0);
-            });
-            setOfertas(sortedOfertas.slice(0, 12));
-          } else {
-            const discountTiers = [35, 30, 28, 25, 22, 20, 18, 15];
-            const ofertasDoDia = getDailyRotatingList(data, 24, 107).map((prod, idx) => {
-              const precoOriginal = Number(prod.valor || 0);
-              if (prod.valor_promocional && Number(prod.valor_promocional) < precoOriginal) {
-                return prod;
-              }
-              const pct = discountTiers[(getDailySeed() + idx) % discountTiers.length];
-              const precoRelampago = Math.round(precoOriginal * (1 - pct / 100) * 100) / 100;
-              return {
-                ...prod,
-                desconto_percentual: pct,
-                valor_promocional: precoRelampago,
-                _oferta_relampago_diaria: true,
-              };
-            });
-            ofertasDoDia.sort((a, b) => {
-              const discA = getProductDiscountPercentage(a);
-              const discB = getProductDiscountPercentage(b);
-              if (discB !== discA) return discB - discA;
-              return Number(b.valor || 0) - Number(a.valor || 0);
-            });
-            setOfertas(ofertasDoDia.slice(0, 12));
-          }
-
-          setRecomendados(getDailyRotatingList(data, 8, 77));
-
-          const eletroData = data.filter(p => /fone|smart|tv|cabo|carregador|usb|eletr|airfryer|forno|mixer|bluetooth|caixa|led|bateria|sound|relogio|computador|notebook|teclado|mouse/i.test(p.nome) || p.categoria_id === 'c7abd6df-c781-44f3-9120-9983b720b6ef');
-          const casaData = data.filter(p => /toalha|mesa|cama|manta|cozinha|panela|fritadeira|almofada|decor|tapete|organizador|lençol|copo|garrafa|xícara|prato|travesseiro|cortina/i.test(p.nome));
-          const modaData = data.filter(p => /camiset|sapato|bota|roupa|mochila|bolsa|calça|bermuda|tenis|vestido|jaqueta|meia|chinelo|sandalia|acessorio|cinto|carteira/i.test(p.nome) || p.categoria_id === 'e58c3ab6-f1c5-49df-8d31-54c16ec4c52b');
-          const belezaData = data.filter(p => /creme|colágeno|pele|cabelo|shampoo|perfume|beleza|anti-rugas|hidratante|maquiagem|facial|corpo|sabonete|condicionador|estética/i.test(p.nome));
-
-          setEletronicos(eletroData.length >= 3 ? eletroData.slice(0, 12) : data.slice(0, 8));
-          setCasa(casaData.length >= 3 ? casaData.slice(0, 12) : data.slice(4, 12));
-          setModa(modaData.length >= 3 ? modaData.slice(0, 12) : data.slice(8, 16));
-          setBeleza(belezaData.length >= 3 ? belezaData.slice(0, 12) : data.slice(12, 20));
+          setOfertas(sortedOfertas.slice(0, 12));
+        } else {
+          const discountTiers = [35, 30, 28, 25, 22, 20, 18, 15];
+          const ofertasDoDia = getDailyRotatingList(data, 24, 107).map((prod, idx) => {
+            const precoOriginal = Number(prod.valor || 0);
+            if (prod.valor_promocional && Number(prod.valor_promocional) < precoOriginal) {
+              return prod;
+            }
+            const pct = discountTiers[(getDailySeed() + idx) % discountTiers.length];
+            const precoRelampago = Math.round(precoOriginal * (1 - pct / 100) * 100) / 100;
+            return {
+              ...prod,
+              desconto_percentual: pct,
+              valor_promocional: precoRelampago,
+              _oferta_relampago_diaria: true,
+            };
+          });
+          ofertasDoDia.sort((a, b) => {
+            const discA = getProductDiscountPercentage(a);
+            const discB = getProductDiscountPercentage(b);
+            if (discB !== discA) return discB - discA;
+            return Number(b.valor || 0) - Number(a.valor || 0);
+          });
+          setOfertas(ofertasDoDia.slice(0, 12));
         }
-      } catch (err) {
-        console.error('Erro home:', err);
-      } finally {
-        setLoading(false);
+
+        setRecomendados(getDailyRotatingList(data, 8, 77));
+
+        const eletroData = data.filter(p => /fone|smart|tv|cabo|carregador|usb|eletr|airfryer|forno|mixer|bluetooth|caixa|led|bateria|sound|relogio|computador|notebook|teclado|mouse/i.test(p.nome) || p.categoria_id === 'c7abd6df-c781-44f3-9120-9983b720b6ef');
+        const casaData = data.filter(p => /toalha|mesa|cama|manta|cozinha|panela|fritadeira|almofada|decor|tapete|organizador|lençol|copo|garrafa|xícara|prato|travesseiro|cortina/i.test(p.nome));
+        const modaData = data.filter(p => /camiset|sapato|bota|roupa|mochila|bolsa|calça|bermuda|tenis|vestido|jaqueta|meia|chinelo|sandalia|acessorio|cinto|carteira/i.test(p.nome) || p.categoria_id === 'e58c3ab6-f1c5-49df-8d31-54c16ec4c52b');
+        const belezaData = data.filter(p => /creme|colágeno|pele|cabelo|shampoo|perfume|beleza|anti-rugas|hidratante|maquiagem|facial|corpo|sabonete|condicionador|estética/i.test(p.nome));
+
+        setEletronicos(eletroData.length >= 3 ? eletroData.slice(0, 12) : data.slice(0, 8));
+        setCasa(casaData.length >= 3 ? casaData.slice(0, 12) : data.slice(4, 12));
+        setModa(modaData.length >= 3 ? modaData.slice(0, 12) : data.slice(8, 16));
+        setBeleza(belezaData.length >= 3 ? belezaData.slice(0, 12) : data.slice(12, 20));
       }
-    })();
+    } catch (err) {
+      console.error('Erro home:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void fetchHomeData();
+  }, [fetchHomeData]);
+
+  useRealtimeSubscription(
+    [
+      {
+        table: 'produtos',
+        debounceMs: 300,
+        onPayload: (payload: any) => {
+          if (payload?.eventType === 'UPDATE' && payload?.new) {
+            const updateItem = (item: any) => item.id === payload.new.id ? { ...item, ...payload.new } : item;
+            setNovidades(prev => prev.map(updateItem));
+            setMaisVendidos(prev => prev.map(updateItem));
+            setOfertas(prev => prev.map(updateItem));
+            setRecomendados(prev => prev.map(updateItem));
+            setEletronicos(prev => prev.map(updateItem));
+            setCasa(prev => prev.map(updateItem));
+            setModa(prev => prev.map(updateItem));
+            setBeleza(prev => prev.map(updateItem));
+          } else {
+            fetchHomeData();
+          }
+        },
+      },
+      {
+        table: 'loja_carrinhos',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: () => {
+          if (clientId) {
+            supabase.from('loja_carrinhos').select('quantidade').eq('cliente_id', clientId)
+              .then(({ data }) => {
+                if (data) setLocalCartCount(data.reduce((a, c) => a + (Number(c.quantidade) || 1), 0));
+              });
+          }
+        },
+      },
+    ],
+    [clientId, fetchHomeData]
+  );
 
   return (
     <div className="min-h-screen bg-[#f4f5f7]">
@@ -719,7 +760,7 @@ export function EcommerceHome({
                         Frete Grátis
                       </span>
                       <h3 className="mt-3 text-xl font-black text-white leading-tight">
-                        Grátis em compras <span className="text-emerald-300">acima de R$ 99</span>
+                        Grátis em compras <span className="text-emerald-300">acima de R$ {freeShippingThreshold}</span>
                       </h3>
                       <p className="mt-1.5 text-xs text-white/80 font-medium leading-relaxed">
                         Entrega expressa para todo o Brasil

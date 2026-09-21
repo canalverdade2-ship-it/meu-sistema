@@ -1,0 +1,386 @@
+{
+  "5ab98510-06c2-4496-8dc7-d30ae02cd05c": {
+    "id": "5ab98510-06c2-4496-8dc7-d30ae02cd05c",
+    "aria": "GSA Mistérios official closing b…",
+    "video_url": "https://flow-content.google/video/5ab98510-06c2-4496-8dc7-d30ae02cd05c?Expires=1788810882&KeyName=labs-flow-prod-cdn-key&Signature=K90foUGb6qLWY13dwI2q902cYdk",
+    "prompt_name": "GSA Mistérios",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:05:16.942Z"
+  },
+  "58ac24cd-e566-4ed6-b5eb-e3a29773e444": {
+    "id": "58ac24cd-e566-4ed6-b5eb-e3a29773e444",
+    "aria": "GSA Mistérios official televisio…",
+    "video_url": "https://flow-content.google/video/58ac24cd-e566-4ed6-b5eb-e3a29773e444?Expires=1788810810&KeyName=labs-flow-prod-cdn-key&Signature=I2AFi9_4MsTJ00Ua7lkmsTSgF_E",
+    "prompt_name": "GSA Mistérios",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:05:19.246Z"
+  },
+  "eb58453d-495a-47d3-b13c-99c7a099cf07": {
+    "id": "eb58453d-495a-47d3-b13c-99c7a099cf07",
+    "aria": "GSA Planeta Terra official closing",
+    "video_url": "https://flow-content.google/video/eb58453d-495a-47d3-b13c-99c7a099cf07?Expires=1788810718&KeyName=labs-flow-prod-cdn-key&Signature=o1_LUv6PG1GIHvGCd0ZIkwt8GOc",
+    "prompt_name": "GSA Planeta Terra",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:05:21.735Z"
+  },
+  "62f48094-96bb-4230-8f76-32402875eecc": {
+    "id": "62f48094-96bb-4230-8f76-32402875eecc",
+    "aria": "GSA Planeta Terra opening broadcast",
+    "video_url": "https://flow-content.google/video/62f48094-96bb-4230-8f76-32402875eecc?Expires=1788810634&KeyName=labs-flow-prod-cdn-key&Signature=vQd_s4HcqFdfGmCGZUpfJ8jIQnI",
+    "prompt_name": "GSA Planeta Terra",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:05:24.137Z"
+  },
+  "d1035019-8ecc-46d4-865b-7044b7e2f7e5": {
+    "id": "d1035019-8ecc-46d4-865b-7044b7e2f7e5",
+    "aria": "GSA Desenhos official television…",
+    "video_url": "https://flow-content.google/video/d1035019-8ecc-46d4-865b-7044b7e2f7e5?Expires=1788810543&KeyName=labs-flow-prod-cdn-key&Signature=ckLgu5L-IADuK6MzrQs_cYL3E4U",
+    "prompt_name": "GSA Desenhos",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:05:26.420Z"
+  },
+  "405fdb31-215b-4214-971d-fc423671192f": {
+    "id": "405fdb31-215b-4214-971d-fc423671192f",
+    "aria": "GSA Desenhos official opening br…",
+    "video_url": "https://flow-content.google/video/405fdb31-215b-4214-971d-fc423671192f?Expires=1788810459&KeyName=labs-flow-prod-cdn-key&Signature=6G93j4HdesxwVKcsh78EuLYpc0Y",
+    "prompt_name": "GSA Desenhos",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:05:28.657Z"
+  },
+  "20fe5302-312e-42ff-9331-8dda30d56327": {
+    "id": "20fe5302-312e-42ff-9331-8dda30d56327",
+    "aria": "GSA Sessão Pipoca closing broadcast",
+    "video_url": "https://flow-content.google/video/20fe5302-312e-42ff-9331-8dda30d56327?Expires=1788810366&KeyName=labs-flow-prod-cdn-key&Signature=9zD5Q_RivV2hfvZXN8c2SxKRkKI",
+    "prompt_name": "GSA Sessão Pipoca",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:05:31.070Z"
+  },
+  "3a3cb5be-e639-4608-8e85-16a0c04a87c7": {
+    "id": "3a3cb5be-e639-4608-8e85-16a0c04a87c7",
+    "aria": "GSA Sessão Pipoca opening broadcast",
+    "video_url": "https://flow-content.google/video/3a3cb5be-e639-4608-8e85-16a0c04a87c7?Expires=1788810288&KeyName=labs-flow-prod-cdn-key&Signature=CHGeqlDJLecZS1ElIlIVxzC0vmw",
+    "prompt_name": "GSA Sessão Pipoca",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:05:33.581Z"
+  },
+  "fe2ccdab-4f51-4533-8c10-7488b9207e0f": {
+    "id": "fe2ccdab-4f51-4533-8c10-7488b9207e0f",
+    "aria": "GSA Cinema official closing",
+    "video_url": "https://flow-content.google/video/fe2ccdab-4f51-4533-8c10-7488b9207e0f?Expires=1788810192&KeyName=labs-flow-prod-cdn-key&Signature=yeshR3RC9QotnBG7Xt76Pd_gX1k",
+    "prompt_name": "GSA Cinema",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:05:36.207Z"
+  },
+  "7597da8a-c19a-4fce-a4f7-8281dca02aa2": {
+    "id": "7597da8a-c19a-4fce-a4f7-8281dca02aa2",
+    "aria": "GSA Cinema official opening",
+    "video_url": "https://flow-content.google/video/7597da8a-c19a-4fce-a4f7-8281dca02aa2?Expires=1788810113&KeyName=labs-flow-prod-cdn-key&Signature=cKnVOoEEZw0SH6FkOM3c8jpLgww",
+    "prompt_name": "GSA Cinema",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:05:38.551Z"
+  },
+  "364b8f80-9a14-4a4c-a761-dec496b8e9ba": {
+    "id": "364b8f80-9a14-4a4c-a761-dec496b8e9ba",
+    "aria": "GSA Esportes official closing br…",
+    "video_url": "https://flow-content.google/video/364b8f80-9a14-4a4c-a761-dec496b8e9ba?Expires=1788810010&KeyName=labs-flow-prod-cdn-key&Signature=yj3BrUjWnYjW9-Mvgzymnqa2p2k",
+    "prompt_name": "GSA Esportes",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:05:40.909Z"
+  },
+  "ada6da90-0215-41f2-8b2b-1a9813addf2a": {
+    "id": "ada6da90-0215-41f2-8b2b-1a9813addf2a",
+    "aria": "GSA Esportes official opening br…",
+    "video_url": "https://flow-content.google/video/ada6da90-0215-41f2-8b2b-1a9813addf2a?Expires=1788809933&KeyName=labs-flow-prod-cdn-key&Signature=MgYjF46WzOp--A3o1UFHu6nBNbo",
+    "prompt_name": "GSA Esportes",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:08:31.109Z"
+  },
+  "d92432b3-f94a-4003-a68f-4f23207ae115": {
+    "id": "d92432b3-f94a-4003-a68f-4f23207ae115",
+    "aria": "GSA Tá na Rede closing broadcast…",
+    "video_url": "https://flow-content.google/video/d92432b3-f94a-4003-a68f-4f23207ae115?Expires=1788811514&KeyName=labs-flow-prod-cdn-key&Signature=dJQdiB9Wa2EdrzcP9vurXv9W38I",
+    "prompt_name": "GSA Tá na Rede",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:13:50.562Z"
+  },
+  "e5d080c9-d2a8-4b09-babe-dbd54ff4ea9c": {
+    "id": "e5d080c9-d2a8-4b09-babe-dbd54ff4ea9c",
+    "aria": "GSA Tá na Rede opening",
+    "video_url": "https://flow-content.google/video/e5d080c9-d2a8-4b09-babe-dbd54ff4ea9c?Expires=1788811514&KeyName=labs-flow-prod-cdn-key&Signature=3kwMhUmJKmALB-ZsO5sjiSgl_kc",
+    "prompt_name": "GSA Tá na Rede",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:20:01.946Z"
+  },
+  "f5279a62-de63-4e72-a37b-7bc0ca9218bd": {
+    "id": "f5279a62-de63-4e72-a37b-7bc0ca9218bd",
+    "aria": "GSA Music official television cl…",
+    "video_url": "https://flow-content.google/video/f5279a62-de63-4e72-a37b-7bc0ca9218bd?Expires=1788812399&KeyName=labs-flow-prod-cdn-key&Signature=yVrx6bcLbflP75tr7AMG-hSXuDs",
+    "prompt_name": "GSA Music",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:20:05.725Z"
+  },
+  "79be546f-1cd6-46d1-a1ad-020e7494b64b": {
+    "id": "79be546f-1cd6-46d1-a1ad-020e7494b64b",
+    "aria": "GSA Music official opening broad…",
+    "video_url": "https://flow-content.google/video/79be546f-1cd6-46d1-a1ad-020e7494b64b?Expires=1788812399&KeyName=labs-flow-prod-cdn-key&Signature=MOXlw_6Z4DNjU8dC5NC4A1In17g",
+    "prompt_name": "GSA Music",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:20:09.240Z"
+  },
+  "ee839f32-2832-4733-a128-3b2551c50281": {
+    "id": "ee839f32-2832-4733-a128-3b2551c50281",
+    "aria": "GSA Hora da Palavra closing",
+    "video_url": "https://flow-content.google/video/ee839f32-2832-4733-a128-3b2551c50281?Expires=1788812399&KeyName=labs-flow-prod-cdn-key&Signature=svO0rkRtyE-87hmT5LUvmV7U2p8",
+    "prompt_name": "GSA Hora da Palavra",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:20:12.743Z"
+  },
+  "a9ba6019-76d7-4af1-8a4b-f454c156b2d2": {
+    "id": "a9ba6019-76d7-4af1-8a4b-f454c156b2d2",
+    "aria": "Television broadcast opening log…",
+    "video_url": "https://flow-content.google/video/a9ba6019-76d7-4af1-8a4b-f454c156b2d2?Expires=1788812399&KeyName=labs-flow-prod-cdn-key&Signature=Lmk5_7rouRH_czJ9FhQJDOLrhw4",
+    "prompt_name": "GSA Hora da Palavra",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:20:16.449Z"
+  },
+  "84af9d08-a9a9-4d83-9072-9fbdf4c60427": {
+    "id": "84af9d08-a9a9-4d83-9072-9fbdf4c60427",
+    "aria": "Television broadcast closing ident",
+    "video_url": "https://flow-content.google/video/84af9d08-a9a9-4d83-9072-9fbdf4c60427?Expires=1788812399&KeyName=labs-flow-prod-cdn-key&Signature=Q6GFk_p0ToeNURVuTiQdUkj8nsE",
+    "prompt_name": "GSA Histórias da Bíblia",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:20:20.286Z"
+  },
+  "a8cfd4dc-496a-4bd4-8201-a6d0caf1c1a3": {
+    "id": "a8cfd4dc-496a-4bd4-8201-a6d0caf1c1a3",
+    "aria": "Official opening of television b…",
+    "video_url": "https://flow-content.google/video/a8cfd4dc-496a-4bd4-8201-a6d0caf1c1a3?Expires=1788812399&KeyName=labs-flow-prod-cdn-key&Signature=qCJvA6bLldX6uUAIYIu4QxjsL44",
+    "prompt_name": "GSA Histórias da Bíblia",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:20:23.967Z"
+  },
+  "6e6c574e-d8e6-473d-aa3a-12b368ed984b": {
+    "id": "6e6c574e-d8e6-473d-aa3a-12b368ed984b",
+    "aria": "Opening of Biblical Stories broa…",
+    "video_url": "https://flow-content.google/video/6e6c574e-d8e6-473d-aa3a-12b368ed984b?Expires=1788812399&KeyName=labs-flow-prod-cdn-key&Signature=Xm301G0x6LfbPleIWmcLK5sbQ38",
+    "prompt_name": "GSA Histórias da Bíblia",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:20:27.730Z"
+  },
+  "f7f52510-e445-4e2a-bce6-e9b610e17703": {
+    "id": "f7f52510-e445-4e2a-bce6-e9b610e17703",
+    "aria": "GSA Em Fé official opening",
+    "video_url": "https://flow-content.google/video/f7f52510-e445-4e2a-bce6-e9b610e17703?Expires=1788812402&KeyName=labs-flow-prod-cdn-key&Signature=uQcPPOkZa1KjkjkjgFSgSTJdLnE",
+    "prompt_name": "GSA Em Fé",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:20:31.266Z"
+  },
+  "ba41463d-6496-4cf0-b8f0-e95a99cffbfd": {
+    "id": "ba41463d-6496-4cf0-b8f0-e95a99cffbfd",
+    "aria": "GSA Sabor official closing",
+    "video_url": "https://flow-content.google/video/ba41463d-6496-4cf0-b8f0-e95a99cffbfd?Expires=1788812402&KeyName=labs-flow-prod-cdn-key&Signature=Yg__8pECbj1AguTdTlc6t2-jZ9Q",
+    "prompt_name": "GSA Sabor",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:20:34.873Z"
+  },
+  "a107d80d-5734-41ee-9cb3-37adf527310f": {
+    "id": "a107d80d-5734-41ee-9cb3-37adf527310f",
+    "aria": "GSA Sabor official opening",
+    "video_url": "https://flow-content.google/video/a107d80d-5734-41ee-9cb3-37adf527310f?Expires=1788812402&KeyName=labs-flow-prod-cdn-key&Signature=P0GJn1JUFRyuGbKNgqBI6qDCRHU",
+    "prompt_name": "GSA Sabor",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:20:38.384Z"
+  },
+  "467cb2a7-2884-4a8d-ac53-25507648dd26": {
+    "id": "467cb2a7-2884-4a8d-ac53-25507648dd26",
+    "aria": "GSA Bem Viver closing broadcast",
+    "video_url": "https://flow-content.google/video/467cb2a7-2884-4a8d-ac53-25507648dd26?Expires=1788812402&KeyName=labs-flow-prod-cdn-key&Signature=wUVGHm3aah-gNy9woXXvoIBRruc",
+    "prompt_name": "GSA Bem Viver",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:20:41.932Z"
+  },
+  "e1f611d6-a120-4f36-ba8f-4b8d8b08cb6e": {
+    "id": "e1f611d6-a120-4f36-ba8f-4b8d8b08cb6e",
+    "aria": "GSA Em Fé closing broadcast",
+    "video_url": "https://flow-content.google/video/e1f611d6-a120-4f36-ba8f-4b8d8b08cb6e?Expires=1788812399&KeyName=labs-flow-prod-cdn-key&Signature=YoTj80t5XtGcoqWK3kfeWmtcavw",
+    "prompt_name": "GSA Em Fé",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:20:45.437Z"
+  },
+  "059cc3c6-3946-4783-be11-9bba7d61c871": {
+    "id": "059cc3c6-3946-4783-be11-9bba7d61c871",
+    "aria": "GSA Bem Viver opening broadcast",
+    "video_url": "https://flow-content.google/video/059cc3c6-3946-4783-be11-9bba7d61c871?Expires=1788812402&KeyName=labs-flow-prod-cdn-key&Signature=AXnoRCwRZ8w7bmvLiWMpMSiG05o",
+    "prompt_name": "GSA Bem Viver",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:20:48.932Z"
+  },
+  "b9f58306-e18d-4276-b47f-87fc4cd2db37": {
+    "id": "b9f58306-e18d-4276-b47f-87fc4cd2db37",
+    "aria": "GSA Bem Viver opening broadcast",
+    "video_url": "https://flow-content.google/video/b9f58306-e18d-4276-b47f-87fc4cd2db37?Expires=1788812402&KeyName=labs-flow-prod-cdn-key&Signature=5ATfDVR5-l6a8OiopGWnNzpnNO0",
+    "prompt_name": "GSA Bem Viver",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:20:52.444Z"
+  },
+  "db152d5e-529a-469a-a082-f06e0e7e471a": {
+    "id": "db152d5e-529a-469a-a082-f06e0e7e471a",
+    "aria": "GSA Destinos official closing br…",
+    "video_url": "https://flow-content.google/video/db152d5e-529a-469a-a082-f06e0e7e471a?Expires=1788812402&KeyName=labs-flow-prod-cdn-key&Signature=edUCzPedT0Ye0JbQ8WoDS9oI83I",
+    "prompt_name": "GSA Destinos",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:20:56.220Z"
+  },
+  "36bb8aaf-be4c-4d37-bdab-fd55548bbb6e": {
+    "id": "36bb8aaf-be4c-4d37-bdab-fd55548bbb6e",
+    "aria": "GSA Destinos official opening br…",
+    "video_url": "https://flow-content.google/video/36bb8aaf-be4c-4d37-bdab-fd55548bbb6e?Expires=1788812402&KeyName=labs-flow-prod-cdn-key&Signature=NQarMmbo8yMC-QC3HIrCRXXlLJA",
+    "prompt_name": "GSA Destinos",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:20:59.469Z"
+  },
+  "10f8f2d4-51b5-46f0-b1e6-7d2fcce24f8d": {
+    "id": "10f8f2d4-51b5-46f0-b1e6-7d2fcce24f8d",
+    "aria": "GSA Mundo official broadcast ope…",
+    "video_url": "https://flow-content.google/video/10f8f2d4-51b5-46f0-b1e6-7d2fcce24f8d?Expires=1788812406&KeyName=labs-flow-prod-cdn-key&Signature=VaGjD4HCBI94iQMdNqX0XVSxWnc",
+    "prompt_name": "GSA Mundo",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:21:03.691Z"
+  },
+  "d67be652-80fa-4cb8-a506-42892f6d9d28": {
+    "id": "d67be652-80fa-4cb8-a506-42892f6d9d28",
+    "aria": "GSA Agro official closing broadcast",
+    "video_url": "https://flow-content.google/video/d67be652-80fa-4cb8-a506-42892f6d9d28?Expires=1788812406&KeyName=labs-flow-prod-cdn-key&Signature=kDc-Nz_4rWB6kFPDk2ZvJmg6DXI",
+    "prompt_name": "GSA Agro",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:21:07.125Z"
+  },
+  "349894b2-2fa4-4913-9328-d173d798e1bc": {
+    "id": "349894b2-2fa4-4913-9328-d173d798e1bc",
+    "aria": "GSA Mundo official closing ident",
+    "video_url": "https://flow-content.google/video/349894b2-2fa4-4913-9328-d173d798e1bc?Expires=1788812406&KeyName=labs-flow-prod-cdn-key&Signature=uSPGFikBz4YANIK3qAPoLJ6Pph0",
+    "prompt_name": "GSA Mundo",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:21:11.025Z"
+  },
+  "6dd283a2-9813-4057-991d-6e292e5a9197": {
+    "id": "6dd283a2-9813-4057-991d-6e292e5a9197",
+    "aria": "GSA Agro official opening",
+    "video_url": "https://flow-content.google/video/6dd283a2-9813-4057-991d-6e292e5a9197?Expires=1788812409&KeyName=labs-flow-prod-cdn-key&Signature=Oc-3OiDoiSZkpVJ12B4yKp6785w",
+    "prompt_name": "GSA Agro",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:21:14.617Z"
+  },
+  "b8c935b5-b186-46c3-a7ab-d1916b81d52f": {
+    "id": "b8c935b5-b186-46c3-a7ab-d1916b81d52f",
+    "aria": "GSA Motor official closing",
+    "video_url": "https://flow-content.google/video/b8c935b5-b186-46c3-a7ab-d1916b81d52f?Expires=1788812421&KeyName=labs-flow-prod-cdn-key&Signature=b6hO7gUMQFXMgUUmmDh1JPsSGng",
+    "prompt_name": "GSA Motor",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:21:18.110Z"
+  },
+  "2d4c4894-1542-451d-963a-7f7672868bec": {
+    "id": "2d4c4894-1542-451d-963a-7f7672868bec",
+    "aria": "GSA Motor official opening",
+    "video_url": "https://flow-content.google/video/2d4c4894-1542-451d-963a-7f7672868bec?Expires=1788812421&KeyName=labs-flow-prod-cdn-key&Signature=Y0KOpxoV4R8_fOmOJGadk9D-vVY",
+    "prompt_name": "GSA Motor",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:21:21.860Z"
+  },
+  "2d0a534e-200e-4f14-8d37-e894e930215f": {
+    "id": "2d0a534e-200e-4f14-8d37-e894e930215f",
+    "aria": "GSA Tech official broadcast closing",
+    "video_url": "https://flow-content.google/video/2d0a534e-200e-4f14-8d37-e894e930215f?Expires=1788812421&KeyName=labs-flow-prod-cdn-key&Signature=3zVcj2LmYZqS20OsQqVZVH5cU-A",
+    "prompt_name": "GSA Tech",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:21:25.504Z"
+  },
+  "57ec7003-f482-4a7a-81c0-c122f79651ef": {
+    "id": "57ec7003-f482-4a7a-81c0-c122f79651ef",
+    "aria": "GSA News Noite official opening",
+    "video_url": "https://flow-content.google/video/57ec7003-f482-4a7a-81c0-c122f79651ef?Expires=1788812428&KeyName=labs-flow-prod-cdn-key&Signature=G9h023gbG3hzb1RtIffV3JH7anQ",
+    "prompt_name": "GSA News Noite",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:21:29.491Z"
+  },
+  "9ea97ea6-ed49-48cf-a959-c3f31a064871": {
+    "id": "9ea97ea6-ed49-48cf-a959-c3f31a064871",
+    "aria": "GSA Cidadania official broadcast…",
+    "video_url": "https://flow-content.google/video/9ea97ea6-ed49-48cf-a959-c3f31a064871?Expires=1788812432&KeyName=labs-flow-prod-cdn-key&Signature=utS_zJXWhObHO2sA7beCxvDetDU",
+    "prompt_name": "GSA Cidadania",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:21:33.333Z"
+  },
+  "412a3b0c-8f62-4a59-9d0c-31691a139464": {
+    "id": "412a3b0c-8f62-4a59-9d0c-31691a139464",
+    "aria": "GSA Business official closing br…",
+    "video_url": "https://flow-content.google/video/412a3b0c-8f62-4a59-9d0c-31691a139464?Expires=1788812432&KeyName=labs-flow-prod-cdn-key&Signature=1u8ccBw4XuioSX6ScRn02yDZItk",
+    "prompt_name": "GSA Business",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:21:37.204Z"
+  },
+  "b698272d-acb4-49c1-a61d-d99d2d1c86bf": {
+    "id": "b698272d-acb4-49c1-a61d-d99d2d1c86bf",
+    "aria": "GSA News closing broadcast",
+    "video_url": "https://flow-content.google/video/b698272d-acb4-49c1-a61d-d99d2d1c86bf?Expires=1788812432&KeyName=labs-flow-prod-cdn-key&Signature=G6AMUwYOuHZzsFcStfN4iDmDQG8",
+    "prompt_name": "GSA News Noite",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:21:41.135Z"
+  },
+  "1e8d8ba6-b31f-471a-a25c-949e175fa377": {
+    "id": "1e8d8ba6-b31f-471a-a25c-949e175fa377",
+    "aria": "GSA Tempo official broadcast clo…",
+    "video_url": "https://flow-content.google/video/1e8d8ba6-b31f-471a-a25c-949e175fa377?Expires=1788812432&KeyName=labs-flow-prod-cdn-key&Signature=Py883YP8Et6pPDo8_MKT-cWU6d0",
+    "prompt_name": "GSA Tempo",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:21:44.773Z"
+  },
+  "47aad232-2165-487a-b279-a16e2e180513": {
+    "id": "47aad232-2165-487a-b279-a16e2e180513",
+    "aria": "GSA Business official opening br…",
+    "video_url": "https://flow-content.google/video/47aad232-2165-487a-b279-a16e2e180513?Expires=1788812439&KeyName=labs-flow-prod-cdn-key&Signature=-00wVV3zKeVTbE4djsdrVCD7kqA",
+    "prompt_name": "GSA Business",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:21:48.411Z"
+  },
+  "23e729f5-8eba-435a-a624-c50d97d5603d": {
+    "id": "23e729f5-8eba-435a-a624-c50d97d5603d",
+    "aria": "GSA Cidadania official broadcast…",
+    "video_url": "https://flow-content.google/video/23e729f5-8eba-435a-a624-c50d97d5603d?Expires=1788812453&KeyName=labs-flow-prod-cdn-key&Signature=WuaccXEUmd-rHSXYDTP3jaAUly0",
+    "prompt_name": "GSA Cidadania",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:21:52.075Z"
+  },
+  "ccabe4ba-e8fc-4cfd-9320-bec2f23d26cd": {
+    "id": "ccabe4ba-e8fc-4cfd-9320-bec2f23d26cd",
+    "aria": "GSA Tempo official opening broad…",
+    "video_url": "https://flow-content.google/video/ccabe4ba-e8fc-4cfd-9320-bec2f23d26cd?Expires=1788812457&KeyName=labs-flow-prod-cdn-key&Signature=FwAYM0gyvyXz5jhJPabIVzTj_nw",
+    "prompt_name": "GSA Tempo",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:21:55.697Z"
+  },
+  "95b2d113-1723-48ff-9691-9264b1c3ea5c": {
+    "id": "95b2d113-1723-48ff-9691-9264b1c3ea5c",
+    "aria": "GSA Meio Dia News closing",
+    "video_url": "https://flow-content.google/video/95b2d113-1723-48ff-9691-9264b1c3ea5c?Expires=1788812457&KeyName=labs-flow-prod-cdn-key&Signature=WaR5txNT2Z-CSqzGYvA9uL1gvJM",
+    "prompt_name": "GSA Meio Dia News",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:21:58.806Z"
+  },
+  "7fc10c44-397b-4c80-b686-e04453eb46dc": {
+    "id": "7fc10c44-397b-4c80-b686-e04453eb46dc",
+    "aria": "GSA Meio Dia News opening",
+    "video_url": "https://flow-content.google/video/7fc10c44-397b-4c80-b686-e04453eb46dc?Expires=1788812457&KeyName=labs-flow-prod-cdn-key&Signature=AXReABXmKlJdQMPxZiR8cV_0iEQ",
+    "prompt_name": "GSA Meio Dia News",
+    "kind": "opening",
+    "captured_at": "2026-09-07T14:22:02.717Z"
+  },
+  "439d67c5-20e5-4f2a-a2fb-6535c22c4185": {
+    "id": "439d67c5-20e5-4f2a-a2fb-6535c22c4185",
+    "aria": "Television broadcast closing ident",
+    "video_url": "https://flow-content.google/video/439d67c5-20e5-4f2a-a2fb-6535c22c4185?Expires=1788812464&KeyName=labs-flow-prod-cdn-key&Signature=vqG4qC85S5N8hBdyeoXa-RidLio",
+    "prompt_name": "GSA Manhã News",
+    "kind": "closing",
+    "captured_at": "2026-09-07T14:22:06.121Z"
+  }
+}

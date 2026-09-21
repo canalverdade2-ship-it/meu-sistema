@@ -1,0 +1,859 @@
+[
+  {
+    "file": "src\\components\\admin\\CollaboratorDashboard.tsx",
+    "line": 93,
+    "channelNameExpr": "`collaborator-dashboard-${colaboradorId || 'unknown'}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel(`collaborator-dashboard-${colaboradorId || 'unknown'}`);\r\n    tables.forEach((table) => (channel as any).on('postgres_changes', { event: '*', schema: 'public', table }, refresh));\r\n    channel.subscribe();\r\n    return () => {\r\n      window.clearTimeout(timer);\r\n      supabase.removeChannel(channel).catch(console.error);\r\n    };\r\n  }, [colaboradorId, fetchData, modules]);\r\n\r\n  const cards: Metric[] = [\r\n    has('cadastro') && { id: 'clientes', label: 'Clientes ativos', value: String(metrics.clientes || 0), helper: `${metrics.cadastrosPendentes || 0} cadastros para revisar`, icon: Users, module: 'cadastro', tab: 'clientes' },\r\n    (has('prestadores') || has('cadastro')) && { id: 'prestadores', label: 'Prestadores pendentes', value: String(metrics.prestadoresPendentes || 0), helper: 'Aguardando análise', icon: BriefcaseBusiness, module: 'prestadores' },\r\n    has('operacoes') && { id: 'orcamentos', label: 'Orçamentos pendentes', value: String(metrics.orcamentos || 0), helper: `${metrics.ordens || 0} ordens em andamento`, icon: ClipboardList, module: 'operacoes', tab: 'orcamentos' },\r\n    has('demandas') && { id: 'demandas', label: 'Minhas demandas', value: String(metrics.demandas || 0), helper: 'Somente itens atribuídos a você', icon: CheckCircle2, module: 'demandas' },\r\n    has('financeiro') && { id: 'faturas', label: 'Faturas pendentes', value: String(metrics.faturas || 0), helper: `${metrics.saques || 0} saques aguardando`, icon: Wallet, module: 'financeiro', tab: 'em_aberto' },\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table }"
+    ]
+  },
+  {
+    "file": "src\\components\\admin\\LojaCategoriasModule.tsx",
+    "line": 30,
+    "channelNameExpr": "'categorias-changes'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel('categorias-changes')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'loja_categorias' }, () => {\r\n        fetchCategorias();\r\n      }).subscribe();\r\n      \r\n    return () => {\r\n      supabase.removeChannel(channel);\r\n    };\r\n  }, []);\r\n\r\n  const fetchCategorias = async () => {\r\n    setIsLoading(true);\r\n    try {\r\n      const { data, error } = await supabase\r\n        .from('loja_categorias')\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'loja_categorias' }"
+    ]
+  },
+  {
+    "file": "src\\components\\admin\\PainelRentabilidade.tsx",
+    "line": 57,
+    "channelNameExpr": "channelId",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel(channelId)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'faturas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ordens_servico' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'orcamentos' }, debouncedFetch)\n      .subscribe();\n\n    return () => {\n      clearTimeout(timeoutId);\n      supabase.removeChannel(channel);\n    };\n  }, [tipo, orcamentoId, osId, faturaId]);\n\n  // Sincronização imediata quando houver overrideData (para modais de edição)\n  useEffect(() => {",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'faturas' }",
+      "{ event: '*', schema: 'public', table: 'ordens_servico' }",
+      "{ event: '*', schema: 'public', table: 'prestador_demandas' }",
+      "{ event: '*', schema: 'public', table: 'orcamentos' }"
+    ]
+  },
+  {
+    "file": "src\\components\\admin\\prestadores\\AdminPrestadorPremios.tsx",
+    "line": 46,
+    "channelNameExpr": "`admin-premios-${prestadorId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const sub = supabase.channel(`admin-premios-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_premios', filter: `prestador_id=eq.${prestadorId}` }, fetchPremiosLocal)\r\n      .subscribe();\r\n    return () => { \r\n      isMounted = false;\r\n      supabase.removeChannel(sub); \r\n    };\r\n  }, [prestadorId]);\r\n\r\n  const handleCreate = async (e: React.FormEvent) => {\r\n    e.preventDefault();\r\n    setActionLoading(true);\r\n    try {\r\n      const { error } = await supabase.from('prestador_premios').insert([{\r\n        prestador_id: prestadorId,\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'prestador_premios', filter: `prestador_id=eq.${prestadorId}"
+    ]
+  },
+  {
+    "file": "src\\components\\admin\\prestadores\\AdminPrestadorPromocoes.tsx",
+    "line": 67,
+    "channelNameExpr": "'admin-promocoes-global'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const sub = supabase.channel('admin-promocoes-global')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, fetchPromocoesLocal)\r\n      .subscribe();\r\n    return () => { \r\n      isMounted = false;\r\n      supabase.removeChannel(sub); \r\n    };\r\n  }, [activeTab]);\r\n\r\n  const getFilteredPromocoes = () => {\r\n    return promocoes.filter(p => {\r\n      if (activeTab === 'ativa') return p.status === 'ativa';\r\n      return p.status === 'encerrada' || p.status === 'suspensa';\r\n    });\r\n  };\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'prestador_promocoes' }"
+    ]
+  },
+  {
+    "file": "src\\components\\admin\\prestadores\\AdminPrestadorVouchers.tsx",
+    "line": 46,
+    "channelNameExpr": "`admin-vouchers-${prestadorId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const sub = supabase.channel(`admin-vouchers-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers' }, fetchVouchersLocal)\r\n      .subscribe();\r\n    return () => { \r\n      isMounted = false;\r\n      supabase.removeChannel(sub); \r\n    };\r\n  }, [prestadorId]);\r\n\r\n  const handleCreate = async (e: React.FormEvent) => {\r\n    e.preventDefault();\r\n    setActionLoading(true);\r\n    try {\r\n      const codigo = 'PRST-' + Math.random().toString(36).substring(2, 8).toUpperCase();\r\n      const { error } = await supabase.from('prestador_vouchers').insert([{\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'prestador_vouchers' }"
+    ]
+  },
+  {
+    "file": "src\\components\\admin\\ScrapingExecutionMonitorModal.tsx",
+    "line": 73,
+    "channelNameExpr": "`realtime_scraping_logs_${automacao.id}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel(`realtime_scraping_logs_${automacao.id}`)\r\n      .on(\r\n        'postgres_changes',\r\n        {\r\n          event: '*',\r\n          schema: 'public',\r\n          table: 'automacao_scraping_logs',\r\n          filter: `automacao_id=eq.${automacao.id}`,\r\n        },\r\n        () => {\r\n          fetchLogsQuiet();\r\n        }\r\n      )\r\n      .subscribe();\r\n\r",
+    "onMatches": [
+      "{\r\n          event: '*',\r\n          schema: 'public',\r\n          table: 'automacao_scraping_logs',\r\n          filter: `automacao_id=eq.${automacao.id}"
+    ]
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaCollaboratorDashboard.tsx",
+    "line": 107,
+    "channelNameExpr": "`collaborator-dashboard-${colaboradorId || 'unknown'}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel(`collaborator-dashboard-${colaboradorId || 'unknown'}`);\n    tables.forEach((table) =>\n      (channel as any).on('postgres_changes', { event: '*', schema: 'public', table }, refresh)\n    );\n    channel.subscribe();\n    return () => {\n      window.clearTimeout(timer);\n      supabase.removeChannel(channel).catch(console.error);\n    };\n  }, [colaboradorId, fetchData, modules]);\n\n  const cards: MetricItem[] = [\n    has('cadastro') && {\n      id: 'clientes',\n      label: 'Clientes Ativos',",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table }"
+    ]
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx",
+    "line": 162,
+    "channelNameExpr": "`admin-orcamentos-sd1-${Date.now(",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel(`admin-orcamentos-sd1-${Date.now()}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'orcamentos' }, () => {\r\n        debouncedFetch();\r\n      })\r\n      .subscribe();\r\n\r\n    return () => {\r\n      clearTimeout(timeoutId);\r\n      supabase.removeChannel(channel);\r\n    };\r\n  }, [statusFilter]);\r\n\r\n  // Handle standard approval\r\n  const handleApproveStandard = async (orc: Orcamento) => {\r\n    if (isSubmitting) return;\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'orcamentos' }"
+    ]
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx",
+    "line": 151,
+    "channelNameExpr": "`admin-os-sd1-${Date.now(",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel(`admin-os-sd1-${Date.now()}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ordens_servico' }, () => {\r\n        debouncedFetch();\r\n      })\r\n      .subscribe();\r\n\r\n    return () => {\r\n      clearTimeout(timeoutId);\r\n      supabase.removeChannel(channel);\r\n    };\r\n  }, [statusFilter]);\r\n\r\n  // Handle finalize OS\r\n  const handleFinalizeOS = async (os: OS) => {\r\n    if (isSubmitting) return;\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'ordens_servico' }"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\ClientAreaVIP.tsx",
+    "line": 82,
+    "channelNameExpr": "'client-vip-changes'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel('client-vip-changes')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'client_levels' }, () => {\r\n        fetchLevels();\r\n      })\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'level_history', filter: `cliente_id=eq.${cliente.id}` }, () => {\r\n        fetchLevels();\r\n        fetchHistory();\r\n      })\r\n      .subscribe();\r\n\r\n    return () => {\r\n      supabase.removeChannel(channel);\r\n    };\r\n  }, []);\r\n\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'client_levels' }",
+      "{ event: 'INSERT', schema: 'public', table: 'level_history', filter: `cliente_id=eq.${cliente.id}"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\ClientEmprestimos.tsx",
+    "line": 96,
+    "channelNameExpr": "`client-emprestimos-${clientId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel(`client-emprestimos-${clientId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimos', filter: `cliente_id=eq.${clientId}` }, () => {\r\n        fetchData();\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_parcelas', filter: `cliente_id=eq.${clientId}` }, () => {\r\n        fetchData();\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_comentarios' }, () => {\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_historico' }, () => {\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_documentos' }, () => {\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'emprestimos', filter: `cliente_id=eq.${clientId}",
+      "{ event: '*', schema: 'public', table: 'emprestimo_parcelas', filter: `cliente_id=eq.${clientId}",
+      "{ event: '*', schema: 'public', table: 'emprestimo_comentarios' }",
+      "{ event: '*', schema: 'public', table: 'emprestimo_historico' }",
+      "{ event: '*', schema: 'public', table: 'emprestimo_documentos' }"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 621,
+    "channelNameExpr": "'gsa-store-items'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": true,
+    "blockSnippet": "    const storeChannel = supabase.channel('gsa-store-items')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'servicos' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'assinaturas' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .subscribe();\r\n\r\n\r\n    // Canais de Cupons\r\n    const couponChannel = supabase.channel('gsa-store-coupons')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cupons_loja' }, () => {\r\n        // Se houver checkout aberto, ele vai re-renderizar e podemos validar cupons se necessário\r\n        // Por ora, apenas garantimos que os dados estão frescos se houvesse uma lista de cupons\r\n      })\r\n      .subscribe();\r\n\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'produtos' }",
+      "{ event: '*', schema: 'public', table: 'servicos' }",
+      "{ event: '*', schema: 'public', table: 'assinaturas' }",
+      "{ event: '*', schema: 'public', table: 'cupons_loja' }",
+      "{ event: '*', schema: 'public', table: 'promocoes_quantidade' }",
+      "{ event: '*', schema: 'public', table: 'loja_carrinhos', filter: `cliente_id=eq.${clientId}",
+      "{ event: '*', schema: 'public', table: 'system_settings' }"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 629,
+    "channelNameExpr": "'gsa-store-coupons'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": true,
+    "blockSnippet": "    const couponChannel = supabase.channel('gsa-store-coupons')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cupons_loja' }, () => {\r\n        // Se houver checkout aberto, ele vai re-renderizar e podemos validar cupons se necessário\r\n        // Por ora, apenas garantimos que os dados estão frescos se houvesse uma lista de cupons\r\n      })\r\n      .subscribe();\r\n\r\n    // Canal de Promoções Inteligentes (VIP)\r\n    const promoChannel = supabase.channel('gsa-store-promos')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'promocoes_quantidade' }, async () => {\r\n        // Re-busca as promoções ativas DIRETAMENTE no canal para evitar problemas de HMR/Closure\r\n        const { data: promos } = await supabase.from('promocoes_quantidade')\r\n          .select('*, produto_brinde:produtos!produto_brinde_id(*), produto_gatilho:produtos!produto_gatilho_id(nome)')\r\n          .eq('status', 'ativa');\r\n        if (promos) setPromocoesAtivas(promos);\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'produtos' }",
+      "{ event: '*', schema: 'public', table: 'servicos' }",
+      "{ event: '*', schema: 'public', table: 'assinaturas' }",
+      "{ event: '*', schema: 'public', table: 'cupons_loja' }",
+      "{ event: '*', schema: 'public', table: 'promocoes_quantidade' }",
+      "{ event: '*', schema: 'public', table: 'loja_carrinhos', filter: `cliente_id=eq.${clientId}",
+      "{ event: '*', schema: 'public', table: 'system_settings' }"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 637,
+    "channelNameExpr": "'gsa-store-promos'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const promoChannel = supabase.channel('gsa-store-promos')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'promocoes_quantidade' }, async () => {\r\n        // Re-busca as promoções ativas DIRETAMENTE no canal para evitar problemas de HMR/Closure\r\n        const { data: promos } = await supabase.from('promocoes_quantidade')\r\n          .select('*, produto_brinde:produtos!produto_brinde_id(*), produto_gatilho:produtos!produto_gatilho_id(nome)')\r\n          .eq('status', 'ativa');\r\n        if (promos) setPromocoesAtivas(promos);\r\n      })\r\n      .subscribe();\r\n\r\n    const cartChannel = supabase.channel(`cart-${clientId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'loja_carrinhos', filter: `cliente_id=eq.${clientId}` }, () => {\r\n        fetchCart();\r\n      }).subscribe();\r\n      \r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'cupons_loja' }",
+      "{ event: '*', schema: 'public', table: 'promocoes_quantidade' }",
+      "{ event: '*', schema: 'public', table: 'loja_carrinhos', filter: `cliente_id=eq.${clientId}",
+      "{ event: '*', schema: 'public', table: 'system_settings' }"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 647,
+    "channelNameExpr": "`cart-${clientId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const cartChannel = supabase.channel(`cart-${clientId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'loja_carrinhos', filter: `cliente_id=eq.${clientId}` }, () => {\r\n        fetchCart();\r\n      }).subscribe();\r\n      \r\n    const waChannel = supabase.channel('wa-sync-store')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, () => {\r\n        fetchWASettings();\r\n      }).subscribe();\r\n\r\n    fetchWASettings();\r\n\r\n    const handleOpenCart = () => {\r\n      updateRouteQuery({ modal: 'carrinho' });\r\n    };\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'promocoes_quantidade' }",
+      "{ event: '*', schema: 'public', table: 'loja_carrinhos', filter: `cliente_id=eq.${clientId}",
+      "{ event: '*', schema: 'public', table: 'system_settings' }"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 652,
+    "channelNameExpr": "'wa-sync-store'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const waChannel = supabase.channel('wa-sync-store')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, () => {\r\n        fetchWASettings();\r\n      }).subscribe();\r\n\r\n    fetchWASettings();\r\n\r\n    const handleOpenCart = () => {\r\n      updateRouteQuery({ modal: 'carrinho' });\r\n    };\r\n    window.addEventListener('open-store-cart', handleOpenCart);\r\n\r\n    // Escuta o evento global para ocultar o botão flutuante do carrinho\r\n    const handleModalState = (e: Event) => {\r\n      \r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'loja_carrinhos', filter: `cliente_id=eq.${clientId}",
+      "{ event: '*', schema: 'public', table: 'system_settings' }"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\ClientPremios.tsx",
+    "line": 102,
+    "channelNameExpr": "'premios-updates'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel('premios-updates')\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'cliente_premios',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r\n        fetchPremios();\r\n      })\r\n      .subscribe();\r\n\r\n    return () => {\r\n      supabase.removeChannel(channel);\r\n    };\r\n  }, [clientId, activeTab]);\r",
+    "onMatches": [
+      "{\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'cliente_premios',\r\n        filter: `cliente_id=eq.${clientId}"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\ClientPromocoes.tsx",
+    "line": 88,
+    "channelNameExpr": "'client-promocoes-updates'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel('client-promocoes-updates')\n      .on('postgres_changes', {\n        event: '*',\n        schema: 'public',\n        table: 'promocoes'\n      }, () => {\n        fetchData();\n      })\n      .subscribe();\n\n    const channelMinhasPromos = supabase\n      .channel('client-minhas-promocoes-updates')\n      .on('postgres_changes', {\n        event: '*',\n        schema: 'public',",
+    "onMatches": [
+      "{\n        event: '*',\n        schema: 'public',\n        table: 'promocoes'\n      }",
+      "{\n        event: '*',\n        schema: 'public',\n        table: 'cliente_promocoes',\n        filter: `cliente_id=eq.${clientId}"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\ClientPromocoes.tsx",
+    "line": 99,
+    "channelNameExpr": "'client-minhas-promocoes-updates'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel('client-minhas-promocoes-updates')\n      .on('postgres_changes', {\n        event: '*',\n        schema: 'public',\n        table: 'cliente_promocoes',\n        filter: `cliente_id=eq.${clientId}`\n      }, () => {\n        fetchData();\n      })\n      .subscribe();\n\n    return () => {\n      supabase.removeChannel(channelPromos);\n      supabase.removeChannel(channelMinhasPromos);\n    };",
+    "onMatches": [
+      "{\n        event: '*',\n        schema: 'public',\n        table: 'promocoes'\n      }",
+      "{\n        event: '*',\n        schema: 'public',\n        table: 'cliente_promocoes',\n        filter: `cliente_id=eq.${clientId}"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\ClientServicos.tsx",
+    "line": 637,
+    "channelNameExpr": "'notas-updates'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel('notas-updates')\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'os_notas',\r\n        filter: `os_id=eq.${osId}`\r\n      }, () => {\r\n        fetchNotas();\r\n      })\r\n      .subscribe();\r\n\r\n    return () => {\r\n      supabase.removeChannel(channel);\r\n    };\r\n  }, [osId]);\r",
+    "onMatches": [
+      "{\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'os_notas',\r\n        filter: `os_id=eq.${osId}"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\ClientServicos.tsx",
+    "line": 692,
+    "channelNameExpr": "'os-suporte-chat'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel('os-suporte-chat')\r\n      .on('postgres_changes', {\r\n        event: 'INSERT',\r\n        schema: 'public',\r\n        table: 'os_suporte_mensagens',\r\n        filter: `os_id=eq.${osId}`\r\n      }, (payload) => {\r\n        setMensagens((prev) => {\r\n          if (prev.find(m => m.id === payload.new.id)) return prev;\r\n          return [...prev, payload.new];\r\n        });\r\n        setTimeout(() => {\r\n          if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;\r\n        }, 100);\r\n      })\r",
+    "onMatches": [
+      "{\r\n        event: 'INSERT',\r\n        schema: 'public',\r\n        table: 'os_suporte_mensagens',\r\n        filter: `os_id=eq.${osId}"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\financeiro\\ExtratoList.tsx",
+    "line": 43,
+    "channelNameExpr": "'extrato-upd'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel('extrato-upd').on('postgres_changes', { event: '*', schema: 'public', table: 'extrato_financeiro', filter: `cliente_id=eq.${clientId}` }, () => fetchExtrato()).subscribe();\r\n    return () => { supabase.removeChannel(channel); };\r\n  }, [clientId, monthFilter]);\r\n\r\n  const fetchExtrato = async () => {\r\n    let { data } = await supabase.from('extrato_financeiro').select('*').eq('cliente_id', clientId).order('data', { ascending: false });\r\n    if (data && monthFilter) {\r\n      data = data.filter(item => String(item.data).includes(monthFilter));\r\n    }\r\n    setExtrato(data || []);\r\n  };\r\n\r\n  const handleEstornar = async () => {\r\n    if (!selectedTransferencia) return;\r\n    setIsEstornando(true);\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'extrato_financeiro', filter: `cliente_id=eq.${clientId}"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\financeiro\\FaturasList.tsx",
+    "line": 196,
+    "channelNameExpr": "'client-faturas-updates'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel('client-faturas-updates')\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'faturas',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r\n        fetchFaturas();\r\n        onRefresh();\r\n      })\r\n      .subscribe();\r\n\r\n    return () => {\r\n      supabase.removeChannel(channel);\r\n    };\r",
+    "onMatches": [
+      "{\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'faturas',\r\n        filter: `cliente_id=eq.${clientId}"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\financeiro\\NotasFiscaisList.tsx",
+    "line": 169,
+    "channelNameExpr": "'client-nf-updates'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel('client-nf-updates')\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'ordens_fiscais',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r\n        fetchOrdens();\r\n      })\r\n      .subscribe();\r\n\r\n    return () => { supabase.removeChannel(channel); };\r\n  }, [clientId]);\r\n\r\n  const fetchOrdens = async () => {\r",
+    "onMatches": [
+      "{\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'ordens_fiscais',\r\n        filter: `cliente_id=eq.${clientId}"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\store\\CheckoutPixModal.tsx",
+    "line": 171,
+    "channelNameExpr": "`pix-orc-${orderId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel(`pix-orc-${orderId}`)\n      .on('postgres_changes', {\n        event: 'UPDATE', schema: 'public', table: 'orcamentos', filter: `id=eq.${orderId}`,\n      }, (payload) => {\n        const newStatus = String(payload?.new?.status || '').toLowerCase();\n        if (['pago', 'aprovado', 'em_expedicao', 'em_transporte', 'concluido'].includes(newStatus)) {\n          handlePaymentApproved();\n        }\n      }).subscribe();\n\n    const channelFat = supabase\n      .channel(`pix-fat-${orderId}`)\n      .on('postgres_changes', {\n        event: 'UPDATE', schema: 'public', table: 'faturas', filter: `orcamento_id=eq.${orderId}`,\n      }, (payload) => {",
+    "onMatches": [
+      "{\n        event: 'UPDATE', schema: 'public', table: 'orcamentos', filter: `id=eq.${orderId}",
+      "{\n        event: 'UPDATE', schema: 'public', table: 'faturas', filter: `orcamento_id=eq.${orderId}"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\store\\CheckoutPixModal.tsx",
+    "line": 182,
+    "channelNameExpr": "`pix-fat-${orderId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel(`pix-fat-${orderId}`)\n      .on('postgres_changes', {\n        event: 'UPDATE', schema: 'public', table: 'faturas', filter: `orcamento_id=eq.${orderId}`,\n      }, (payload) => {\n        const newStatus = String(payload?.new?.status || '').toLowerCase();\n        if (newStatus === 'pago') handlePaymentApproved();\n      }).subscribe();\n\n    return () => {\n      clearInterval(pollInterval);\n      supabase.removeChannel(channelOrc);\n      supabase.removeChannel(channelFat);\n    };\n  }, [isOpen, orderId, isPaid, checkStatusNow, handlePaymentApproved]);\n",
+    "onMatches": [
+      "{\n        event: 'UPDATE', schema: 'public', table: 'orcamentos', filter: `id=eq.${orderId}",
+      "{\n        event: 'UPDATE', schema: 'public', table: 'faturas', filter: `orcamento_id=eq.${orderId}"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\store\\CouponsPage.tsx",
+    "line": 170,
+    "channelNameExpr": "'realtime-coupons-page'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel('realtime-coupons-page')\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cupons_loja' }, () => {\n        fetchCupons();\n      })\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cupons_ativados' }, () => {\n        fetchCupons();\n      })\n      .subscribe();\n\n    return () => {\n      supabase.removeChannel(channel);\n    };\n  }, [fetchCupons]);\n\n  // Ação de Ativar Cupom",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'cupons_loja' }",
+      "{ event: '*', schema: 'public', table: 'cupons_ativados' }"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\store\\ProductPage.tsx",
+    "line": 290,
+    "channelNameExpr": "unknown",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel(`presence:product:${productId}`, {\r\n      config: { presence: { key: presenceKey } }\r\n    });\r\n\r\n    channel\r\n      .on('presence', { event: 'sync' }, () => {\r\n        const state = channel.presenceState();\r\n        const count = Object.keys(state).length;\r\n        setRealViewersCount(Math.max(1, count));\r\n      })\r\n      .subscribe(async (status) => {\r\n        if (status === 'SUBSCRIBED') {\r\n          await channel.track({\r\n            online_at: new Date().toISOString(),\r\n            user: clientId ? 'client' : 'visitor'\r",
+    "onMatches": []
+  },
+  {
+    "file": "src\\components\\client\\store\\PromotionsPage.tsx",
+    "line": 206,
+    "channelNameExpr": "'realtime-promotions-page'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel('realtime-promotions-page')\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'promocoes_quantidade' }, () => {\n        fetchPromotions();\n      })\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cliente_promocoes' }, () => {\n        fetchPromotions();\n      })\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'promocoes_quantidade_ativadas' }, () => {\n        fetchPromotions();\n      })\n      .subscribe();\n\n    return () => {\n      supabase.removeChannel(channel);\n    };",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'promocoes_quantidade' }",
+      "{ event: '*', schema: 'public', table: 'cliente_promocoes' }",
+      "{ event: '*', schema: 'public', table: 'promocoes_quantidade_ativadas' }"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\store\\VaquinhaPublicPage.tsx",
+    "line": 83,
+    "channelNameExpr": "`vaquinha-${vaquinha.id}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel(`vaquinha-${vaquinha.id}`)\r\n      .on(\r\n        'postgres_changes',\r\n        { event: '*', schema: 'public', table: 'loja_vaquinha_contribuicoes', filter: `vaquinha_id=eq.${vaquinha.id}` },\r\n        () => {\r\n          fetchVaquinhaData(true);\r\n        }\r\n      )\r\n      .on(\r\n        'postgres_changes',\r\n        { event: '*', schema: 'public', table: 'loja_vaquinhas', filter: `id=eq.${vaquinha.id}` },\r\n        () => {\r\n          fetchVaquinhaData(true);\r\n        }\r\n      )\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'loja_vaquinha_contribuicoes', filter: `vaquinha_id=eq.${vaquinha.id}",
+      "{ event: '*', schema: 'public', table: 'loja_vaquinhas', filter: `id=eq.${vaquinha.id}"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\StoreHub.tsx",
+    "line": 636,
+    "channelNameExpr": "`purchases-${clientId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel(`purchases-${clientId}`)\r\n      .on('postgres_changes', { \r\n        event: '*', \r\n        schema: 'public', \r\n        table: 'orcamentos',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r\n        fetchAllPurchases();\r\n        fetchRecentOrders();\r\n      })\r\n      .subscribe();\r\n\r\n    // Inscrição Realtime para reembolsos\r\n    const refundsChannel = supabase\r\n      .channel(`refunds-${clientId}`)\r",
+    "onMatches": [
+      "{ \r\n        event: '*', \r\n        schema: 'public', \r\n        table: 'orcamentos',\r\n        filter: `cliente_id=eq.${clientId}",
+      "{\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'loja_reembolsos',\r\n        filter: `cliente_id=eq.${clientId}",
+      "{\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'cliente_promocoes',\r\n        filter: `cliente_id=eq.${clientId}"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\StoreHub.tsx",
+    "line": 650,
+    "channelNameExpr": "`refunds-${clientId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel(`refunds-${clientId}`)\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'loja_reembolsos',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r\n        fetchMyRefunds();\r\n      })\r\n      .subscribe();\r\n\r\n    // Inscrição Realtime para promoções VIP\r\n    const promosChannel = supabase\r\n      .channel(`promos-${clientId}`)\r\n      .on('postgres_changes', {\r",
+    "onMatches": [
+      "{\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'loja_reembolsos',\r\n        filter: `cliente_id=eq.${clientId}",
+      "{\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'cliente_promocoes',\r\n        filter: `cliente_id=eq.${clientId}",
+      "{\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'loja_solicitacoes',\r\n        filter: `cliente_id=eq.${clientId}"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\StoreHub.tsx",
+    "line": 663,
+    "channelNameExpr": "`promos-${clientId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel(`promos-${clientId}`)\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'cliente_promocoes',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r\n        fetchVipPromos();\r\n      })\r\n      .subscribe();\r\n\r\n    // Inscrição Realtime para solicitações de troca/devolução do cliente\r\n    const exchangesChannel = supabase\r\n      .channel(`exchanges-${clientId}`)\r\n      .on('postgres_changes', {\r",
+    "onMatches": [
+      "{\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'cliente_promocoes',\r\n        filter: `cliente_id=eq.${clientId}",
+      "{\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'loja_solicitacoes',\r\n        filter: `cliente_id=eq.${clientId}"
+    ]
+  },
+  {
+    "file": "src\\components\\client\\StoreHub.tsx",
+    "line": 676,
+    "channelNameExpr": "`exchanges-${clientId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel(`exchanges-${clientId}`)\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'loja_solicitacoes',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r\n        fetchMyExchanges();\r\n      })\r\n      .subscribe();\r\n\r\n    return () => {\r\n      supabase.removeChannel(channel);\r\n      supabase.removeChannel(refundsChannel);\r\n      supabase.removeChannel(promosChannel);\r",
+    "onMatches": [
+      "{\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'loja_solicitacoes',\r\n        filter: `cliente_id=eq.${clientId}"
+    ]
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorAgenda.tsx",
+    "line": 67,
+    "channelNameExpr": "`provider-agenda-${prestadorId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel(`provider-agenda-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, () => void load())\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void load())\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r\n    if (!initialItemId || !schedules.length) return;\r\n    const schedule = schedules.find((item) => item.id === initialItemId);\r\n    if (!schedule) return;\r\n    setActiveTab(schedule.status === 'concluido' ? 'concluidos' : 'agendados');\r\n    setHighlightedId(schedule.id);\r\n    const timer = window.setTimeout(() => setHighlightedId(null), 3000);\r\n    return () => window.clearTimeout(timer);\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}",
+      "{ event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}"
+    ]
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorDemandas.tsx",
+    "line": 146,
+    "channelNameExpr": "`provider-demands-${prestadorId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel(`provider-demands-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void loadDemands())\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_suporte_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void refreshCounts())\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId, refreshCounts]);\r\n\r\n  useEffect(() => {\r\n    if (!selected) {\r\n      setHistory([]);\r\n      return;\r\n    }\r\n    void loadHistory(selected.id);\r\n    const channel = supabase.channel(`provider-demand-history-${selected.id}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas_historico', filter: `demanda_id=eq.${selected.id}` }, () => void loadHistory(selected.id))\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}",
+      "{ event: '*', schema: 'public', table: 'prestador_suporte_demandas', filter: `prestador_id=eq.${prestadorId}",
+      "{ event: '*', schema: 'public', table: 'prestador_demandas_historico', filter: `demanda_id=eq.${selected.id}"
+    ]
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorDemandas.tsx",
+    "line": 159,
+    "channelNameExpr": "`provider-demand-history-${selected.id}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel(`provider-demand-history-${selected.id}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas_historico', filter: `demanda_id=eq.${selected.id}` }, () => void loadHistory(selected.id))\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [selected?.id]);\r\n\r\n  useEffect(() => {\r\n    if (!selected) return;\r\n    const current = demands.find((demand) => demand.id === selected.id);\r\n    if (current) setSelected(current);\r\n  }, [demands]);\r\n\r\n  useEffect(() => {\r\n    if (!initialItemId || !demands.length) return;\r\n    const target = demands.find((demand) => demand.id === initialItemId);\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'prestador_demandas_historico', filter: `demanda_id=eq.${selected.id}"
+    ]
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorDocumentos.tsx",
+    "line": 57,
+    "channelNameExpr": "`provider-documents-${prestadorId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel(`provider-documents-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r\n    if (!initialItemId || !documents.length) return;\r\n    const document = documents.find((item) => item.id === initialItemId);\r\n    if (!document) return;\r\n    setHighlightedId(document.id);\r\n    const timer = window.setTimeout(() => setHighlightedId(null), 3000);\r\n    return () => window.clearTimeout(timer);\r\n  }, [initialItemId, documents]);\r\n\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}"
+    ]
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorFinanceiro.tsx",
+    "line": 89,
+    "channelNameExpr": "`provider-finance-${prestadorId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel(`provider-finance-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void loadData())\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, () => void loadData())\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r\n    if (!initialItemId || (!transactions.length && !withdrawals.length)) return;\r\n    const transaction = transactions.find((item) => item.id === initialItemId);\r\n    const withdrawal = withdrawals.find((item) => item.id === initialItemId);\r\n    if (withdrawal) {\r\n      setActiveTab('saques');\r\n      setSelectedWithdrawal(withdrawal);\r\n    } else if (transaction) {\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}",
+      "{ event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}"
+    ]
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorPremios.tsx",
+    "line": 48,
+    "channelNameExpr": "`provider-prizes-${prestadorId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel(`provider-prizes-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_premios', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r\n    if (!initialItemId || !prizes.length) return;\r\n    const prize = prizes.find((item) => item.id === initialItemId);\r\n    if (!prize) return;\r\n    setHighlightedId(prize.id);\r\n    setDetails(prize);\r\n    const timer = window.setTimeout(() => setHighlightedId(null), 3000);\r\n    return () => window.clearTimeout(timer);\r\n  }, [initialItemId, prizes]);\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'prestador_premios', filter: `prestador_id=eq.${prestadorId}"
+    ]
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorPromocoes.tsx",
+    "line": 53,
+    "channelNameExpr": "`provider-promotions-${prestadorId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel(`provider-promotions-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes_ativacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, () => void load(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r\n    if (!initialItemId || !promotions.length) return;\r\n    const promotion = promotions.find((item) => item.id === initialItemId);\r\n    if (!promotion) return;\r\n    setActiveTab(promotion.status === 'ativa' ? 'ativas' : 'historico');\r\n    setHighlightedId(promotion.id);\r\n    const timer = window.setTimeout(() => setHighlightedId(null), 3000);\r\n    return () => window.clearTimeout(timer);\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'prestador_promocoes_ativacoes', filter: `prestador_id=eq.${prestadorId}",
+      "{ event: '*', schema: 'public', table: 'prestador_promocoes' }"
+    ]
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+    "line": 97,
+    "channelNameExpr": "`provider-tickets-${prestadorId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel(`provider-tickets-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, () => void loadTickets(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [activeTab, prestadorId, initialItemId]);\r\n\r\n  useEffect(() => {\r\n    if (!selectedTicket) {\r\n      setMessages([]);\r\n      return;\r\n    }\r\n    void loadMessages(selectedTicket.id);\r\n    const channel = supabase.channel(`provider-ticket-messages-${selectedTicket.id}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_mensagens', filter: `ticket_id=eq.${selectedTicket.id}` }, () => void loadMessages(selectedTicket.id))\r\n      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tickets', filter: `id=eq.${selectedTicket.id}` }, (payload) => {\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}",
+      "{ event: '*', schema: 'public', table: 'ticket_mensagens', filter: `ticket_id=eq.${selectedTicket.id}",
+      "{ event: 'UPDATE', schema: 'public', table: 'tickets', filter: `id=eq.${selectedTicket.id}"
+    ]
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+    "line": 109,
+    "channelNameExpr": "`provider-ticket-messages-${selectedTicket.id}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel(`provider-ticket-messages-${selectedTicket.id}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_mensagens', filter: `ticket_id=eq.${selectedTicket.id}` }, () => void loadMessages(selectedTicket.id))\r\n      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tickets', filter: `id=eq.${selectedTicket.id}` }, (payload) => {\r\n        setSelectedTicket((current) => current ? { ...current, ...(payload.new as ProviderTicket) } : current);\r\n      })\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [selectedTicket?.id]);\r\n\r\n  useEffect(() => {\r\n    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;\r\n  }, [messages]);\r\n\r\n  const visibleTickets = useMemo(() => initialItemId ? tickets.filter((item) => item.status === activeTab) : tickets, [activeTab, initialItemId, tickets]);\r\n\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'ticket_mensagens', filter: `ticket_id=eq.${selectedTicket.id}",
+      "{ event: 'UPDATE', schema: 'public', table: 'tickets', filter: `id=eq.${selectedTicket.id}"
+    ]
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorVouchers.tsx",
+    "line": 49,
+    "channelNameExpr": "`provider-vouchers-${prestadorId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel(`provider-vouchers-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r\n    if (!initialItemId || !vouchers.length) return;\r\n    const voucher = vouchers.find((item) => item.id === initialItemId);\r\n    if (!voucher) return;\r\n    setHighlightedId(voucher.id);\r\n    const timer = window.setTimeout(() => setHighlightedId(null), 3000);\r\n    return () => window.clearTimeout(timer);\r\n  }, [initialItemId, vouchers]);\r\n\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}"
+    ]
+  },
+  {
+    "file": "src\\components\\ui\\WhatsAppButton.tsx",
+    "line": 49,
+    "channelNameExpr": "'whatsapp-float-sync'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel('whatsapp-float-sync')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, () => {\r\n        fetchSettings();\r\n      })\r\n      .subscribe();\r\n\r\n    const handleModalState = (e: Event) => {\r\n      const { open } = (e as CustomEvent).detail;\r\n      setMovedToTop(Boolean(open));\r\n    };\r\n    window.addEventListener('whatsapp-modal-state', handleModalState);\r\n\r\n    const checkCheckoutMobile = () => {\r\n      const isCheckout = typeof window !== 'undefined' && (window.location.pathname.includes('/checkout') || window.location.pathname.includes('/carrinho'));\r\n      const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'system_settings' }"
+    ]
+  },
+  {
+    "file": "src\\hooks\\useAdminNotifications.tsx",
+    "line": 350,
+    "channelNameExpr": "'admin-notifications-secure'",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel('admin-notifications-secure')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_notificacoes' }, () => scheduleRefresh(true))\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'notificacoes' }, () => scheduleRefresh(true));\r\n\r\n    for (const tbl of operationalTables) {\r\n      channel = channel.on('postgres_changes', { event: '*', schema: 'public', table: tbl }, () => scheduleRefresh(false));\r\n    }\r\n\r\n    channel.subscribe();\r\n\r\n    const HEARTBEAT_INTERVAL_MS = 60_000;\r\n    const interval = window.setInterval(() => {\r\n      if (document.visibilityState === 'visible') void refreshAll(false);\r\n    }, HEARTBEAT_INTERVAL_MS);\r\n\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'admin_notificacoes' }",
+      "{ event: '*', schema: 'public', table: 'notificacoes' }",
+      "{ event: '*', schema: 'public', table: tbl }"
+    ]
+  },
+  {
+    "file": "src\\hooks\\useAutoLogout.ts",
+    "line": 47,
+    "channelNameExpr": "`sessao-live-${sessaoId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": true,
+    "blockSnippet": "        .channel(`sessao-live-${sessaoId}`)\r\n        .on(\r\n          'postgres_changes',\r\n          {\r\n            event: 'UPDATE',\r\n            schema: 'public',\r\n            table: 'sistema_sessoes',\r\n            filter: `id=eq.${sessaoId}`,\r\n          },\r\n          (payload) => {\r\n            if (payload.new && payload.new.status === 'encerrado') {\r\n              performLogout('superseded');\r\n            }\r\n          },\r\n        )\r",
+    "onMatches": [
+      "{\r\n            event: 'UPDATE',\r\n            schema: 'public',\r\n            table: 'sistema_sessoes',\r\n            filter: `id=eq.${sessaoId}"
+    ]
+  },
+  {
+    "file": "src\\hooks\\useClientNotifications.tsx",
+    "line": 267,
+    "channelNameExpr": "`notif-client-${clientId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": true,
+    "blockSnippet": "    const channel = supabase.channel(`notif-client-${clientId}`);\r\n    const scopedTables = [\r\n      'faturas', 'saques', 'orcamentos', 'ordens_servico', 'vouchers',\r\n      'tickets', 'indicacoes', 'cliente_documentos', 'emprestimos',\r\n      'emprestimo_parcelas', 'cliente_promocoes', 'loja_credito_solicitacoes',\r\n    ];\r\n\r\n    scopedTables.forEach((table) => {\r\n      channel.on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table,\r\n        filter: `cliente_id=eq.${clientId}`,\r\n      }, () => debouncedFetch());\r\n    });\r",
+    "onMatches": [
+      "{\r\n        event: '*',\r\n        schema: 'public',\r\n        table,\r\n        filter: `cliente_id=eq.${clientId}",
+      "{\r\n      event: '*',\r\n      schema: 'public',\r\n      table: 'promocoes',\r\n    }"
+    ]
+  },
+  {
+    "file": "src\\hooks\\useClientNotifications.tsx",
+    "line": 318,
+    "channelNameExpr": "`notif-direct-${clientId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": true,
+    "blockSnippet": "    const notifChannel = supabase.channel(`notif-direct-${clientId}`)\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes' }, (payload) => {\r\n        const n = payload.new as any;\r\n        const isForMe = n.cliente_id && String(n.cliente_id) === String(clientId);\r\n        const isBroadcast = ['broadcast_clientes', 'broadcast_todos'].includes(n.destinatario_tipo);\r\n        \r\n        if (isForMe || isBroadcast) {\r\n          console.log('[Realtime Client] Nova notificação recebida:', n.titulo);\r\n          playPremiumBeep();\r\n          showAnimatedToast(n.titulo, n.mensagem, n.modulo || 'bell');\r\n          fetchNotifications();\r\n        }\r\n      })\r\n      .subscribe();\r\n\r",
+    "onMatches": [
+      "{ event: 'INSERT', schema: 'public', table: 'notificacoes' }",
+      "{ \r\n      event: '*', \r\n      schema: 'public', \r\n      table: 'clientes',\r\n      filter: `id=eq.${clientId}"
+    ]
+  },
+  {
+    "file": "src\\hooks\\useClientNotifications.tsx",
+    "line": 334,
+    "channelNameExpr": "`client-security-${clientId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const securityChannel = supabase.channel(`client-security-${clientId}`);\r\n    \r\n    securityChannel.on('postgres_changes', { \r\n      event: '*', \r\n      schema: 'public', \r\n      table: 'clientes',\r\n      filter: `id=eq.${clientId}`\r\n    }, (payload) => {\r\n      const next = payload.new as any;\r\n      const revoked = payload.eventType === 'DELETE'\r\n        || (\r\n          payload.eventType === 'UPDATE'\r\n          && (\r\n            ['bloqueado', 'inativo', 'excluido'].includes(String(next?.status || '').toLowerCase())\r\n            || next?.bloqueado === true\r",
+    "onMatches": [
+      "{ \r\n      event: '*', \r\n      schema: 'public', \r\n      table: 'clientes',\r\n      filter: `id=eq.${clientId}"
+    ]
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 218,
+    "channelNameExpr": "`provider-scoped-${prestadorId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    const channel = supabase.channel(`provider-scoped-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `prestador_id=eq.${prestadorId}` }, (payload) => {\r\n        const row = payload.new as any;\r\n        playPremiumBeep();\r\n        showAnimatedToast(row.titulo || 'Nova notificação', row.mensagem || '', row.modulo || 'bell');\r\n        scheduleRefresh();\r\n      })\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: 'destinatario_tipo=in.(broadcast_prestadores,broadcast_todos)' }, (payload) => {\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}",
+      "{ event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}",
+      "{ event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}",
+      "{ event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}",
+      "{ event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}",
+      "{ event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}",
+      "{ event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}",
+      "{ event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `prestador_id=eq.${prestadorId}",
+      "{ event: 'INSERT', schema: 'public', table: 'notificacoes', filter: 'destinatario_tipo=in.(broadcast_prestadores,broadcast_todos)' }",
+      "{ event: '*', schema: 'public', table: 'prestadores', filter: `id=eq.${prestadorId}"
+    ]
+  },
+  {
+    "file": "src\\hooks\\useRealtime.ts",
+    "line": 118,
+    "channelNameExpr": "channelName",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": true,
+    "blockSnippet": "    let channel = supabase.channel(channelName);\n\n    enabledConfigs.forEach((config, idx) => {\n      const eventType = config.event || '*';\n      const schemaName = config.schema || 'public';\n      const filterStr = config.filter;\n\n      const changeOptions: {\n        event: RealtimePostgresEvent;\n        schema: string;\n        table: string;\n        filter?: string;\n      } = {\n        event: eventType,\n        schema: schemaName,",
+    "onMatches": []
+  },
+  {
+    "file": "src\\hooks\\useRealtimeTable.ts",
+    "line": 12,
+    "channelNameExpr": "channelName",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    let ch = supabase.channel(channelName);\n    for (const table of tableList) {\n      ch = ch.on('postgres_changes', { event: '*', schema: 'public', table }, () => { onRefreshRef.current(); });\n    }\n    ch.subscribe((status, err) => { if (err) console.error('[useRealtimeTable] error:', err); });\n    return () => { supabase.removeChannel(ch).catch(console.error); };\n  // eslint-disable-next-line react-hooks/exhaustive-deps\n  }, [JSON.stringify(Array.isArray(tables) ? tables : [tables]), channelPrefix]);\n}\r\n",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table }"
+    ]
+  },
+  {
+    "file": "src\\hooks\\useVipLevels.ts",
+    "line": 49,
+    "channelNameExpr": "`vip-changes-${Math.random(",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel(`vip-changes-${Math.random().toString(36).slice(2)}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'client_levels' }, () => {\r\n        fetchLevels();\r\n      })\r\n      .subscribe();\r\n\r\n    return () => {\r\n      supabase.removeChannel(channel);\r\n    };\r\n  }, []);\r\n\r\n\r\n  return { levels, loading, refreshLevels: fetchLevels };\r\n}\r\n",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'client_levels' }"
+    ]
+  },
+  {
+    "file": "src\\lib\\supabaseRealtime.ts",
+    "line": 53,
+    "channelNameExpr": "channelName",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "    .channel(channelName)\n    .on('postgres_changes', changeConfig as any, (payload: RealtimePostgresChangesPayload<T>) => {\n      try {\n        onChange(payload);\n      } catch (err) {\n        console.error(`[subscribeToTable] Error handling payload for ${table}:`, err);\n      }\n    })\n    .subscribe();\n\n  return () => {\n    supabase.removeChannel(channel).catch((err) => {\n      console.warn(`[subscribeToTable] Cleanup error on channel ${channelName}:`, err);\n    });\n  };",
+    "onMatches": []
+  },
+  {
+    "file": "src\\lib\\supplierOperations.ts",
+    "line": 117,
+    "channelNameExpr": "`supplier-sync:${supplierId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": true,
+    "blockSnippet": "  const channel = supabase.channel(`supplier-sync:${supplierId}`);\r\n  try {\r\n    await new Promise<void>((resolve) => {\r\n      const timeout = window.setTimeout(resolve, 1_500);\r\n      channel.subscribe((status) => {\r\n        if (status === 'SUBSCRIBED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {\r\n          window.clearTimeout(timeout);\r\n          resolve();\r\n        }\r\n      });\r\n    });\r\n    await channel.send({ type: 'broadcast', event: 'refresh', payload: { supplierId } });\r\n  } catch (error) {\r\n    console.warn('Não foi possível emitir a atualização instantânea do fornecedor:', error);\r\n  } finally {\r",
+    "onMatches": []
+  },
+  {
+    "file": "src\\pages\\ClientPortal.tsx",
+    "line": 508,
+    "channelNameExpr": "`cliente-updates-${clientId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": true,
+    "blockSnippet": "      .channel(`cliente-updates-${clientId}`)\n      .on('postgres_changes', {\n        event: 'UPDATE',\n        schema: 'public',\n        table: 'clientes',\n        filter: `id=eq.${clientId}`\n      }, (payload) => {\n        const newData = payload.new as any;\n        \n        // Merge flat columns from payload (no joins in realtime payload)\n        setCliente(prev => prev ? { ...prev, ...newData } : null);\n        \n        // Fetch full data with joins to get updated level objects\n        fetchClienteRef.current();\n        ",
+    "onMatches": [
+      "{\n        event: 'UPDATE',\n        schema: 'public',\n        table: 'clientes',\n        filter: `id=eq.${clientId}"
+    ]
+  },
+  {
+    "file": "src\\pages\\ClientPortal.tsx",
+    "line": 549,
+    "channelNameExpr": "`level-history-${clientId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel(`level-history-${clientId}`)\n      .on('postgres_changes', {\n        event: 'INSERT',\n        schema: 'public',\n        table: 'level_history',\n        filter: `cliente_id=eq.${clientId}`\n      }, () => {\n        // Admin or Trigger inserted a level history record — fetch updated client data\n        playPremiumBeep();\n        toast.success('👑 PARABÉNS! Você subiu de Nível VIP! Seus novos benefícios foram liberados automaticamente.', {\n          duration: 7000,\n          style: {\n            background: '#1a1a1a',\n            color: '#ffd700',\n            fontWeight: 'bold',",
+    "onMatches": [
+      "{\n        event: 'INSERT',\n        schema: 'public',\n        table: 'level_history',\n        filter: `cliente_id=eq.${clientId}"
+    ]
+  },
+  {
+    "file": "src\\pages\\ClientPortal.tsx",
+    "line": 656,
+    "channelNameExpr": "`vip-module-config-${clientId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel(`vip-module-config-${clientId}`)\n      .on('postgres_changes', {\n        event: '*',\n        schema: 'public',\n        table: 'system_settings',\n      }, () => {\n        fetchVipModuleConfig();\n        fetchModalIndicacaoConfig();\n      })\n      .subscribe();\n    return () => {\n      supabase.removeChannel(vipConfigChannel);\n    };\n  }, []);\n",
+    "onMatches": [
+      "{\n        event: '*',\n        schema: 'public',\n        table: 'system_settings',\n      }"
+    ]
+  },
+  {
+    "file": "src\\pages\\Fornecedor\\FornecedorDashboard.tsx",
+    "line": 99,
+    "channelNameExpr": "`supplier-sync:${fornecedorId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel(`supplier-sync:${fornecedorId}`)\r\n      .on('broadcast', { event: 'refresh' }, () => void load(true))\r\n      .subscribe();\r\n    const interval = window.setInterval(() => {\r\n      if (document.visibilityState === 'visible') void load(true);\r\n    }, 30_000);\r\n    const onVisibility = () => {\r\n      if (document.visibilityState === 'visible') void load(true);\r\n    };\r\n    document.addEventListener('visibilitychange', onVisibility);\r\n    return () => {\r\n      window.clearInterval(interval);\r\n      document.removeEventListener('visibilitychange', onVisibility);\r\n      void supabase.removeChannel(channel);\r\n    };\r",
+    "onMatches": []
+  },
+  {
+    "file": "src\\pages\\SecureAdminPanel.tsx",
+    "line": 115,
+    "channelNameExpr": "`collaborator-access-${props.colaboradorId}`",
+    "isUnstableName": false,
+    "hasRemoveChannel": true,
+    "hasUnsubscribeOnly": false,
+    "hasNoCleanup": false,
+    "blockSnippet": "      .channel(`collaborator-access-${props.colaboradorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'colaboradores', filter: `id=eq.${props.colaboradorId}` }, refresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'colaborador_modulos', filter: `colaborador_id=eq.${props.colaboradorId}` }, refresh)\r\n      .subscribe();\r\n\r\n    const interval = window.setInterval(refresh, 30_000);\r\n    const onVisibility = () => { if (document.visibilityState === 'visible') refresh(); };\r\n    document.addEventListener('visibilitychange', onVisibility);\r\n\r\n    return () => {\r\n      window.clearInterval(interval);\r\n      document.removeEventListener('visibilitychange', onVisibility);\r\n      window.removeEventListener('gsa-session-revoked', onRevoked);\r\n      supabase.removeChannel(channel).catch(console.error);\r\n    };\r",
+    "onMatches": [
+      "{ event: '*', schema: 'public', table: 'colaboradores', filter: `id=eq.${props.colaboradorId}",
+      "{ event: '*', schema: 'public', table: 'colaborador_modulos', filter: `colaborador_id=eq.${props.colaboradorId}"
+    ]
+  }
+]

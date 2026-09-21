@@ -197,11 +197,12 @@ export function ExcelImportSource({ onCandidatesReady }: ExcelImportSourceProps)
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Linha de Cabeçalho (1-indexado)
             </label>
-            <input
+            <input 
               type="number"
               min={1}
               value={headerRow + 1}
-              onChange={e => {
+              inputMode="numeric"
+onChange={e => {
                 const val = parseInt(e.target.value) - 1;
                 setHeaderRow(val >= 0 ? val : 0);
               }}

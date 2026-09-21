@@ -1,0 +1,31 @@
+import fs from 'node:fs';
+const file = String.raw`C:\Users\Adriano Farias\Downloads\remix-9.10_-grupo-gsa---gestão-de-serviços - Copia (4)\src\components\client\ClientMeuCredito.tsx`;
+let text = fs.readFileSync(file, 'utf8');
+const one = (oldText, newText, label) => {
+  const count = text.split(oldText).length - 1;
+  if (count !== 1) throw new Error(`${label}: esperado 1, encontrado ${count}`);
+  text = text.replace(oldText, newText);
+};
+one(`import { ConfirmDialog } from '../ui/ConfirmDialog';`,
+  `import { ConfirmDialog } from '../ui/ConfirmDialog';\nimport { CreditDisputeModal } from './CreditDisputeModal';\nimport { listClientCreditDisputes } from '../../features/creditDisputes/service';\nimport type { CreditDispute } from '../../features/creditDisputes/types';`, 'imports');
+one(`  const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);`,
+  `  const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);\n  const [creditDisputes, setCreditDisputes] = useState<CreditDispute[]>([]);\n  const [selectedDisputeMovement, setSelectedDisputeMovement] = useState<LojaCreditoMovimentacao | null>(null);`, 'state');
+one(`      setMovimentacoes(movData || []);`,
+  `      setMovimentacoes(movData || []);\n      try { setCreditDisputes(await listClientCreditDisputes()); }\n      catch (disputeError) { console.warn('Não foi possível carregar as contestações de crédito:', disputeError); setCreditDisputes([]); }`, 'load');
+const realtimePattern = /(      \{\r?\n        table: 'loja_credito_documentos',\r?\n        onChange: loadData,\r?\n      \},)/;
+if (!realtimePattern.test(text)) throw new Error('realtime: bloco não encontrado');
+text = text.replace(realtimePattern, `$1\n      {\n        table: 'notificacoes',\n        filter: clientId ? \`cliente_id=eq.\${clientId}\` : undefined,\n        onChange: loadData,\n      },`);
+
+one(`  // Função para salvar cadastro pendente e criar a solicitação`,
+`  const getCreditDisputeForMovement = (movementId: string) =>\n    creditDisputes.find((item) => item.movimentacao_id === movementId) || null;\n\n  const isWithinDisputeWindow = (mov: LojaCreditoMovimentacao) => {\n    if (mov.tipo !== 'compra' || !mov.created_at) return false;\n    return Date.now() <= new Date(mov.created_at).getTime() + 90 * 24 * 60 * 60 * 1000;\n  };\n\n  const disputeStatusLabel = (status: string) => ({\n    aberta: 'Contestação registrada', em_analise: 'Contestação em análise',\n    aguardando_documentos: 'Aguardando documentos', deferida: 'Contestação aprovada',\n    parcialmente_deferida: 'Parcialmente aprovada', indeferida: 'Contestação não aprovada',\n    cancelada_cliente: 'Contestação cancelada', resolvida_por_estorno: 'Resolvida por estorno',\n  } as Record<string, string>)[status] || 'Ver contestação';\n\n  const renderCreditDisputeAction = (mov: LojaCreditoMovimentacao) => {\n    if (mov.tipo !== 'compra') return null;\n    const dispute = getCreditDisputeForMovement(mov.id);\n    if (dispute) return <button type=\"button\" onClick={() => setSelectedDisputeMovement(mov)} className=\"mt-1.5 rounded-lg bg-indigo-50 px-2.5 py-1 text-[9.5px] font-black text-indigo-700 ring-1 ring-indigo-100 hover:bg-indigo-100\">{disputeStatusLabel(dispute.status)}</button>;\n    if (!isWithinDisputeWindow(mov)) return <span className=\"mt-1.5 block text-[9px] font-semibold text-neutral-400\">Prazo de contestação encerrado</span>;\n    return <button type=\"button\" onClick={() => setSelectedDisputeMovement(mov)} className=\"mt-1.5 rounded-lg bg-amber-50 px-2.5 py-1 text-[9.5px] font-black text-amber-700 ring-1 ring-amber-100 hover:bg-amber-100\">Contestar compra</button>;\n  };\n\n  // Função para salvar cadastro pendente e criar a solicitação`, 'helpers');
+const dateLine = `                                      <p className="text-[9px] text-neutral-400 mt-0.5">{formatDateTime(mov.created_at)}</p>`;
+const dateCount = text.split(dateLine).length - 1;
+if (dateCount !== 2) throw new Error(`actions: esperado 2, encontrado ${dateCount}`);
+text = text.split(dateLine).join(`${dateLine}\n                                      {renderCreditDisputeAction(mov)}`);
+one(
+  `      {/* Modal de Detalhes da Amortização */}`,
+  `      <CreditDisputeModal\n        isOpen={Boolean(selectedDisputeMovement)}\n        movement={selectedDisputeMovement}\n        dispute={selectedDisputeMovement ? getCreditDisputeForMovement(selectedDisputeMovement.id) : null}\n        clientId={clientId}\n        onClose={() => setSelectedDisputeMovement(null)}\n        onChanged={loadData}\n      />\n\n      {/* Modal de Detalhes da Amortização */}`,
+  'modal',
+);
+fs.writeFileSync(file, text, 'utf8');
+console.log('CLIENT_PATCH_OK');

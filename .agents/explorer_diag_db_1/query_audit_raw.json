@@ -1,0 +1,2632 @@
+{
+  "issues": [
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/App.tsx",
+      "line": 76,
+      "table": "loja_carrinhos",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/App.tsx",
+      "line": 76,
+      "table": "loja_carrinhos",
+      "column": "item_id",
+      "detail": "Column 'item_id' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/App.tsx",
+      "line": 76,
+      "table": "loja_carrinhos",
+      "column": "tipo",
+      "detail": "Column 'tipo' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/App.tsx",
+      "line": 76,
+      "table": "loja_carrinhos",
+      "column": "quantidade",
+      "detail": "Column 'quantidade' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/ClientesModule.tsx",
+      "line": 346,
+      "table": "faturas",
+      "column": "valor",
+      "detail": "Column 'valor' not found in table 'faturas'. Known columns: gerada_automaticamente, mes_referencia, pacote_nivel_id, itens_faturados, historico_pagamentos, quitacao_fatura_id, orcamento_id, metadata, cobranca_suspensa, affiliate_attribution_id, id, codigo_fatura, os_id, ordem_compra_id, ordem_assinatura_id, cliente_id, valor_total, valor_pago, valor_final_pendente, status, tipo, data_vencimento, data_pagamento, forma_pagamento_escolhida, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/ClientesModule.tsx",
+      "line": 370,
+      "table": "orcamentos",
+      "column": "valor_total",
+      "detail": "Column 'valor_total' not found in table 'orcamentos'. Known columns: origem_renovacao_id, tipo_renovacao, promocao_desconto_manual, promocao_id, comprovante_concorrente, status_quitacao_credito, valor_quitacao_acordo, contato_publico, public_request_hash, checkout_request_id, subtotal_preco_tabela, pacote_servico_id, affiliate_attribution_id, anexos, comprovante_concorrente_urls, id, codigo_orcamento, cliente_id, servico_id, produto_id, assinatura_id, categoria, valor_servico, valor_produto, valor_assinatura, valor_adicional, descricao_adicional, acrescimo, desconto, total, status, fase_negociacao, quantidade, data_criacao"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/ClientesModule.tsx",
+      "line": 418,
+      "table": "emprestimos",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/ClientesModule.tsx",
+      "line": 418,
+      "table": "emprestimos",
+      "column": "codigo_contrato",
+      "detail": "Column 'codigo_contrato' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/ClientesModule.tsx",
+      "line": 418,
+      "table": "emprestimos",
+      "column": "valor_solicitado",
+      "detail": "Column 'valor_solicitado' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/ClientesModule.tsx",
+      "line": 418,
+      "table": "emprestimos",
+      "column": "status",
+      "detail": "Column 'status' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/ClientesModule.tsx",
+      "line": 591,
+      "table": "emprestimos",
+      "column": "contrato_url",
+      "detail": "Column 'contrato_url' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/CreditoModule.tsx",
+      "line": 263,
+      "table": "clientes",
+      "column": "limite_credito_total",
+      "detail": "Column 'limite_credito_total' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/CreditoModule.tsx",
+      "line": 263,
+      "table": "clientes",
+      "column": "limite_credito_disponivel",
+      "detail": "Column 'limite_credito_disponivel' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/CreditoModule.tsx",
+      "line": 263,
+      "table": "clientes",
+      "column": "opcao_pagamento_parcelado",
+      "detail": "Column 'opcao_pagamento_parcelado' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/CreditoModule.tsx",
+      "line": 263,
+      "table": "clientes",
+      "column": "max_parcelas",
+      "detail": "Column 'max_parcelas' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/demandas/DemandasComentarios.tsx",
+      "line": 98,
+      "table": "prestador_demandas",
+      "column": "colaborador_id",
+      "detail": "Column 'colaborador_id' not found in table 'prestador_demandas'. Known columns: id, prestador_id, os_id, titulo, descricao, valor_proposto_admin, valor_proposto_prestador, valor_final, status, data_inicio, data_conclusao, created_at, updated_at, detalhes, prazo_entrega, link_entrega, data_entrega_prestador, observacao_entrega, motivo_negociacao, is_contraproposta_final, ajuste_solicitado, prazo_ajuste, status_ajuste"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/demandas/DemandasDashboard.tsx",
+      "line": 32,
+      "table": "prestador_demandas",
+      "column": "colaborador_id",
+      "detail": "Column 'colaborador_id' not found in table 'prestador_demandas'. Known columns: id, prestador_id, os_id, titulo, descricao, valor_proposto_admin, valor_proposto_prestador, valor_final, status, data_inicio, data_conclusao, created_at, updated_at, detalhes, prazo_entrega, link_entrega, data_entrega_prestador, observacao_entrega, motivo_negociacao, is_contraproposta_final, ajuste_solicitado, prazo_ajuste, status_ajuste"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/demandas/DemandasDashboard.tsx",
+      "line": 32,
+      "table": "prestador_demandas",
+      "column": "prioridade",
+      "detail": "Column 'prioridade' not found in table 'prestador_demandas'. Known columns: id, prestador_id, os_id, titulo, descricao, valor_proposto_admin, valor_proposto_prestador, valor_final, status, data_inicio, data_conclusao, created_at, updated_at, detalhes, prazo_entrega, link_entrega, data_entrega_prestador, observacao_entrega, motivo_negociacao, is_contraproposta_final, ajuste_solicitado, prazo_ajuste, status_ajuste"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/demandas/DemandasDashboard.tsx",
+      "line": 32,
+      "table": "prestador_demandas",
+      "column": "prazo_limite",
+      "detail": "Column 'prazo_limite' not found in table 'prestador_demandas'. Known columns: id, prestador_id, os_id, titulo, descricao, valor_proposto_admin, valor_proposto_prestador, valor_final, status, data_inicio, data_conclusao, created_at, updated_at, detalhes, prazo_entrega, link_entrega, data_entrega_prestador, observacao_entrega, motivo_negociacao, is_contraproposta_final, ajuste_solicitado, prazo_ajuste, status_ajuste"
+    },
+    {
+      "type": "UNKNOWN_JOINED_TABLE",
+      "file": "src/components/admin/demandas/NovaDemandaModal.tsx",
+      "line": 52,
+      "table": "ordens_servico",
+      "detail": "Joined relation/table 'orcamento_id' (in 'orcamentos:orcamento_id(anexos)') not found in schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/ecommerce/PricingPanel.tsx",
+      "line": 36,
+      "table": "pricing_configs",
+      "detail": "Table 'pricing_configs' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/ecommerce/PricingPanel.tsx",
+      "line": 63,
+      "table": "pricing_configs",
+      "detail": "Table 'pricing_configs' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 103,
+      "table": "emprestimo_parcelas",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 103,
+      "table": "emprestimo_parcelas",
+      "column": "valor",
+      "detail": "Column 'valor' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 103,
+      "table": "emprestimo_parcelas",
+      "column": "status",
+      "detail": "Column 'status' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 103,
+      "table": "emprestimo_parcelas",
+      "column": "data_vencimento",
+      "detail": "Column 'data_vencimento' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 103,
+      "table": "emprestimo_parcelas",
+      "column": "numero_parcela",
+      "detail": "Column 'numero_parcela' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 103,
+      "table": "emprestimo_parcelas",
+      "column": "data_pagamento",
+      "detail": "Column 'data_pagamento' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 139,
+      "table": "emprestimos",
+      "column": "valor_aprovado",
+      "detail": "Column 'valor_aprovado' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 139,
+      "table": "emprestimos",
+      "column": "status",
+      "detail": "Column 'status' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 140,
+      "table": "emprestimo_parcelas",
+      "column": "status",
+      "detail": "Column 'status' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 141,
+      "table": "emprestimos",
+      "column": "taxa_servico",
+      "detail": "Column 'taxa_servico' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 178,
+      "table": "emprestimo_parcelas",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 178,
+      "table": "emprestimo_parcelas",
+      "column": "valor",
+      "detail": "Column 'valor' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 178,
+      "table": "emprestimo_parcelas",
+      "column": "status",
+      "detail": "Column 'status' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 178,
+      "table": "emprestimo_parcelas",
+      "column": "data_vencimento",
+      "detail": "Column 'data_vencimento' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 178,
+      "table": "emprestimo_parcelas",
+      "column": "numero_parcela",
+      "detail": "Column 'numero_parcela' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "line": 178,
+      "table": "emprestimo_parcelas",
+      "column": "data_pagamento",
+      "detail": "Column 'data_pagamento' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/GsaTvModule.tsx",
+      "line": 240,
+      "table": "gsa_tv_channels",
+      "detail": "Table 'gsa_tv_channels' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/GsaTvModule.tsx",
+      "line": 258,
+      "table": "gsa_tv_media_items",
+      "detail": "Table 'gsa_tv_media_items' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/GsaTvModule.tsx",
+      "line": 280,
+      "table": "gsa_tv_schedule_slots",
+      "detail": "Table 'gsa_tv_schedule_slots' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/GsaTvModule.tsx",
+      "line": 299,
+      "table": "gsa_tv_playlists",
+      "detail": "Table 'gsa_tv_playlists' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/GsaTvModule.tsx",
+      "line": 309,
+      "table": "gsa_tv_incidents",
+      "detail": "Table 'gsa_tv_incidents' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/GsaTvModule.tsx",
+      "line": 319,
+      "table": "gsa_tv_audit_log",
+      "detail": "Table 'gsa_tv_audit_log' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/GsaTvModule.tsx",
+      "line": 336,
+      "table": "gsa_tv_jobs",
+      "detail": "Table 'gsa_tv_jobs' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/GsaTvModule.tsx",
+      "line": 439,
+      "table": "gsa_tv_audit_log",
+      "detail": "Table 'gsa_tv_audit_log' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/GsaTvModule.tsx",
+      "line": 493,
+      "table": "gsa_tv_media_items",
+      "detail": "Table 'gsa_tv_media_items' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/GsaTvModule.tsx",
+      "line": 538,
+      "table": "gsa_tv_schedule_slots",
+      "detail": "Table 'gsa_tv_schedule_slots' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/GsaTvModule.tsx",
+      "line": 556,
+      "table": "gsa_tv_schedule_slots",
+      "detail": "Table 'gsa_tv_schedule_slots' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/GsaTvModule.tsx",
+      "line": 570,
+      "table": "gsa_tv_channels",
+      "detail": "Table 'gsa_tv_channels' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/LojaTrocasModule.tsx",
+      "line": 54,
+      "table": "loja_solicitacoes",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/LojaTrocasModule.tsx",
+      "line": 54,
+      "table": "loja_solicitacoes",
+      "column": "cliente_id",
+      "detail": "Column 'cliente_id' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/LojaTrocasModule.tsx",
+      "line": 54,
+      "table": "loja_solicitacoes",
+      "column": "tipo",
+      "detail": "Column 'tipo' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/LojaTrocasModule.tsx",
+      "line": 54,
+      "table": "loja_solicitacoes",
+      "column": "status",
+      "detail": "Column 'status' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/LojaTrocasModule.tsx",
+      "line": 54,
+      "table": "loja_solicitacoes",
+      "column": "motivo",
+      "detail": "Column 'motivo' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/LojaTrocasModule.tsx",
+      "line": 54,
+      "table": "loja_solicitacoes",
+      "column": "metodo_entrega",
+      "detail": "Column 'metodo_entrega' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/LojaTrocasModule.tsx",
+      "line": 54,
+      "table": "loja_solicitacoes",
+      "column": "endereco_devolucao",
+      "detail": "Column 'endereco_devolucao' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/LojaTrocasModule.tsx",
+      "line": 54,
+      "table": "loja_solicitacoes",
+      "column": "data_agendamento",
+      "detail": "Column 'data_agendamento' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/LojaTrocasModule.tsx",
+      "line": 54,
+      "table": "loja_solicitacoes",
+      "column": "rastreio_cliente",
+      "detail": "Column 'rastreio_cliente' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/LojaTrocasModule.tsx",
+      "line": 54,
+      "table": "loja_solicitacoes",
+      "column": "rastreio_admin",
+      "detail": "Column 'rastreio_admin' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/LojaTrocasModule.tsx",
+      "line": 54,
+      "table": "loja_solicitacoes",
+      "column": "valor_diferenca",
+      "detail": "Column 'valor_diferenca' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/LojaTrocasModule.tsx",
+      "line": 54,
+      "table": "loja_solicitacoes",
+      "column": "resposta_admin",
+      "detail": "Column 'resposta_admin' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/LojaTrocasModule.tsx",
+      "line": 54,
+      "table": "loja_solicitacoes",
+      "column": "historico_status",
+      "detail": "Column 'historico_status' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/LojaTrocasModule.tsx",
+      "line": 54,
+      "table": "loja_solicitacoes",
+      "column": "created_at",
+      "detail": "Column 'created_at' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/LojaTrocasModule.tsx",
+      "line": 54,
+      "table": "loja_solicitacoes",
+      "column": "updated_at",
+      "detail": "Column 'updated_at' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/OrcamentosModule.tsx",
+      "line": 1232,
+      "table": "emprestimos",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/OrdensServicoModule.tsx",
+      "line": 171,
+      "table": "prestador_demandas",
+      "column": "codigo_demanda",
+      "detail": "Column 'codigo_demanda' not found in table 'prestador_demandas'. Known columns: id, prestador_id, os_id, titulo, descricao, valor_proposto_admin, valor_proposto_prestador, valor_final, status, data_inicio, data_conclusao, created_at, updated_at, detalhes, prazo_entrega, link_entrega, data_entrega_prestador, observacao_entrega, motivo_negociacao, is_contraproposta_final, ajuste_solicitado, prazo_ajuste, status_ajuste"
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/prestadores/AdminPrestadorDocumentos.tsx",
+      "line": 224,
+      "table": "documentos_prestador",
+      "detail": "Table 'documentos_prestador' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/PromocaoQuantidadeForm.tsx",
+      "line": 56,
+      "table": "produtos",
+      "column": "identificador_preferencial",
+      "detail": "Column 'identificador_preferencial' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/ReembolsosModule.tsx",
+      "line": 72,
+      "table": "faturas",
+      "column": "desconto_voucher_aplicado",
+      "detail": "Column 'desconto_voucher_aplicado' not found in table 'faturas'. Known columns: gerada_automaticamente, mes_referencia, pacote_nivel_id, itens_faturados, historico_pagamentos, quitacao_fatura_id, orcamento_id, metadata, cobranca_suspensa, affiliate_attribution_id, id, codigo_fatura, os_id, ordem_compra_id, ordem_assinatura_id, cliente_id, valor_total, valor_pago, valor_final_pendente, status, tipo, data_vencimento, data_pagamento, forma_pagamento_escolhida, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/ReembolsosModule.tsx",
+      "line": 72,
+      "table": "faturas",
+      "column": "abatimento_carteira_aplicado",
+      "detail": "Column 'abatimento_carteira_aplicado' not found in table 'faturas'. Known columns: gerada_automaticamente, mes_referencia, pacote_nivel_id, itens_faturados, historico_pagamentos, quitacao_fatura_id, orcamento_id, metadata, cobranca_suspensa, affiliate_attribution_id, id, codigo_fatura, os_id, ordem_compra_id, ordem_assinatura_id, cliente_id, valor_total, valor_pago, valor_final_pendente, status, tipo, data_vencimento, data_pagamento, forma_pagamento_escolhida, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/ReembolsosModule.tsx",
+      "line": 72,
+      "table": "faturas",
+      "column": "desconto_pontos_aplicado",
+      "detail": "Column 'desconto_pontos_aplicado' not found in table 'faturas'. Known columns: gerada_automaticamente, mes_referencia, pacote_nivel_id, itens_faturados, historico_pagamentos, quitacao_fatura_id, orcamento_id, metadata, cobranca_suspensa, affiliate_attribution_id, id, codigo_fatura, os_id, ordem_compra_id, ordem_assinatura_id, cliente_id, valor_total, valor_pago, valor_final_pendente, status, tipo, data_vencimento, data_pagamento, forma_pagamento_escolhida, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/ReembolsosModule.tsx",
+      "line": 72,
+      "table": "faturas",
+      "column": "pagamentos(\r\n            id,\r\n            metodo,\r\n            valor,\r\n            data_pagamento\r\n          )",
+      "detail": "Column 'pagamentos(\r\n            id,\r\n            metodo,\r\n            valor,\r\n            data_pagamento\r\n          )' not found in table 'faturas'. Known columns: gerada_automaticamente, mes_referencia, pacote_nivel_id, itens_faturados, historico_pagamentos, quitacao_fatura_id, orcamento_id, metadata, cobranca_suspensa, affiliate_attribution_id, id, codigo_fatura, os_id, ordem_compra_id, ordem_assinatura_id, cliente_id, valor_total, valor_pago, valor_final_pendente, status, tipo, data_vencimento, data_pagamento, forma_pagamento_escolhida, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioCredito.tsx",
+      "line": 20,
+      "table": "clientes",
+      "column": "limite_credito_total",
+      "detail": "Column 'limite_credito_total' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioCredito.tsx",
+      "line": 20,
+      "table": "clientes",
+      "column": "limite_credito_disponivel",
+      "detail": "Column 'limite_credito_disponivel' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+      "line": 20,
+      "table": "emprestimos",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+      "line": 20,
+      "table": "emprestimos",
+      "column": "status",
+      "detail": "Column 'status' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+      "line": 20,
+      "table": "emprestimos",
+      "column": "valor_aprovado",
+      "detail": "Column 'valor_aprovado' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+      "line": 20,
+      "table": "emprestimos",
+      "column": "valor_total_financiado",
+      "detail": "Column 'valor_total_financiado' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+      "line": 20,
+      "table": "emprestimos",
+      "column": "taxa_servico",
+      "detail": "Column 'taxa_servico' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+      "line": 20,
+      "table": "emprestimos",
+      "column": "created_at",
+      "detail": "Column 'created_at' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+      "line": 20,
+      "table": "emprestimos",
+      "column": "juros_total_percentual",
+      "detail": "Column 'juros_total_percentual' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+      "line": 24,
+      "table": "emprestimo_parcelas",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+      "line": 24,
+      "table": "emprestimo_parcelas",
+      "column": "valor",
+      "detail": "Column 'valor' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+      "line": 24,
+      "table": "emprestimo_parcelas",
+      "column": "status",
+      "detail": "Column 'status' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+      "line": 24,
+      "table": "emprestimo_parcelas",
+      "column": "data_vencimento",
+      "detail": "Column 'data_vencimento' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioLoja.tsx",
+      "line": 21,
+      "table": "produtos",
+      "column": "estoque_disponivel",
+      "detail": "Column 'estoque_disponivel' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioLoja.tsx",
+      "line": 21,
+      "table": "produtos",
+      "column": "controle_estoque",
+      "detail": "Column 'controle_estoque' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioLoja.tsx",
+      "line": 22,
+      "table": "loja_solicitacoes",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioLoja.tsx",
+      "line": 22,
+      "table": "loja_solicitacoes",
+      "column": "tipo",
+      "detail": "Column 'tipo' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioLoja.tsx",
+      "line": 22,
+      "table": "loja_solicitacoes",
+      "column": "status",
+      "detail": "Column 'status' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioLoja.tsx",
+      "line": 22,
+      "table": "loja_solicitacoes",
+      "column": "created_at",
+      "detail": "Column 'created_at' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioMarketing.tsx",
+      "line": 21,
+      "table": "indicacoes",
+      "column": "data_criacao",
+      "detail": "Column 'data_criacao' not found in table 'indicacoes'. Known columns: id, codigo_indicacao, indicador_id, indicado_nome, whatsapp_indicado, data_indicacao, voucher_id, status, data_cadastro_indicado, data_conclusao, bonus_indicador, bonus_indicado, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "line": 22,
+      "table": "emprestimos",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "line": 22,
+      "table": "emprestimos",
+      "column": "codigo_emprestimo",
+      "detail": "Column 'codigo_emprestimo' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "line": 22,
+      "table": "emprestimos",
+      "column": "valor_solicitado",
+      "detail": "Column 'valor_solicitado' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "line": 22,
+      "table": "emprestimos",
+      "column": "valor_total_financiado",
+      "detail": "Column 'valor_total_financiado' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "line": 22,
+      "table": "emprestimos",
+      "column": "created_at",
+      "detail": "Column 'created_at' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "line": 22,
+      "table": "emprestimos",
+      "column": "status",
+      "detail": "Column 'status' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "line": 22,
+      "table": "emprestimos",
+      "column": "data_ativacao",
+      "detail": "Column 'data_ativacao' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "line": 32,
+      "table": "faturas",
+      "column": "valor_base_original",
+      "detail": "Column 'valor_base_original' not found in table 'faturas'. Known columns: gerada_automaticamente, mes_referencia, pacote_nivel_id, itens_faturados, historico_pagamentos, quitacao_fatura_id, orcamento_id, metadata, cobranca_suspensa, affiliate_attribution_id, id, codigo_fatura, os_id, ordem_compra_id, ordem_assinatura_id, cliente_id, valor_total, valor_pago, valor_final_pendente, status, tipo, data_vencimento, data_pagamento, forma_pagamento_escolhida, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "line": 32,
+      "table": "faturas",
+      "column": "is_amortizacao_credito",
+      "detail": "Column 'is_amortizacao_credito' not found in table 'faturas'. Known columns: gerada_automaticamente, mes_referencia, pacote_nivel_id, itens_faturados, historico_pagamentos, quitacao_fatura_id, orcamento_id, metadata, cobranca_suspensa, affiliate_attribution_id, id, codigo_fatura, os_id, ordem_compra_id, ordem_assinatura_id, cliente_id, valor_total, valor_pago, valor_final_pendente, status, tipo, data_vencimento, data_pagamento, forma_pagamento_escolhida, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "line": 32,
+      "table": "faturas",
+      "column": "ordens_compra (\r\n            orcamentos ( id, codigo_orcamento, total, acrescimo, desconto, status )\r\n          )",
+      "detail": "Column 'ordens_compra (\r\n            orcamentos ( id, codigo_orcamento, total, acrescimo, desconto, status )\r\n          )' not found in table 'faturas'. Known columns: gerada_automaticamente, mes_referencia, pacote_nivel_id, itens_faturados, historico_pagamentos, quitacao_fatura_id, orcamento_id, metadata, cobranca_suspensa, affiliate_attribution_id, id, codigo_fatura, os_id, ordem_compra_id, ordem_assinatura_id, cliente_id, valor_total, valor_pago, valor_final_pendente, status, tipo, data_vencimento, data_pagamento, forma_pagamento_escolhida, created_at"
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/ScrapingAdminModule.tsx",
+      "line": 125,
+      "table": "automacao_scraping_configs",
+      "detail": "Table 'automacao_scraping_configs' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/ScrapingAdminModule.tsx",
+      "line": 131,
+      "table": "automacao_scraping_configs",
+      "detail": "Table 'automacao_scraping_configs' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/ScrapingAdminModule.tsx",
+      "line": 149,
+      "table": "automacao_scraping_configs",
+      "detail": "Table 'automacao_scraping_configs' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/ScrapingAdminModule.tsx",
+      "line": 166,
+      "table": "viagens_categorias",
+      "detail": "Table 'viagens_categorias' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/ScrapingAdminModule.tsx",
+      "line": 262,
+      "table": "automacao_scraping_configs",
+      "detail": "Table 'automacao_scraping_configs' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/ScrapingExecutionMonitorModal.tsx",
+      "line": 107,
+      "table": "automacao_scraping_logs",
+      "detail": "Table 'automacao_scraping_logs' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/super-domains/contratos/AreaVipView.tsx",
+      "line": 160,
+      "table": "clientes",
+      "column": "created_at",
+      "detail": "Column 'created_at' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+      "line": 201,
+      "table": "contratos",
+      "detail": "Table 'contratos' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+      "line": 304,
+      "table": "contratos",
+      "detail": "Table 'contratos' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+      "line": 374,
+      "table": "contratos",
+      "detail": "Table 'contratos' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+      "line": 82,
+      "table": "clientes",
+      "column": "bloqueado",
+      "detail": "Column 'bloqueado' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+      "line": 86,
+      "table": "carteira_movimentacoes",
+      "detail": "Table 'carteira_movimentacoes' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+      "line": 37,
+      "table": "admin_sessoes",
+      "detail": "Table 'admin_sessoes' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+      "line": 38,
+      "table": "sistema_configuracoes",
+      "detail": "Table 'sistema_configuracoes' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "line": 77,
+      "table": "premios_resgates",
+      "detail": "Table 'premios_resgates' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+      "line": 100,
+      "table": "afiliados",
+      "detail": "Table 'afiliados' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/ViagensCategoriasModule.tsx",
+      "line": 48,
+      "table": "viagens_categorias",
+      "detail": "Table 'viagens_categorias' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/admin/ViagensCategoriasModule.tsx",
+      "line": 134,
+      "table": "viagens_categorias",
+      "detail": "Table 'viagens_categorias' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/ClientGSAStore.tsx",
+      "line": 484,
+      "table": "loja_carrinhos",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/ClientGSAStore.tsx",
+      "line": 484,
+      "table": "loja_carrinhos",
+      "column": "item_id",
+      "detail": "Column 'item_id' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/ClientGSAStore.tsx",
+      "line": 484,
+      "table": "loja_carrinhos",
+      "column": "tipo",
+      "detail": "Column 'tipo' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/ClientGSAStore.tsx",
+      "line": 484,
+      "table": "loja_carrinhos",
+      "column": "quantidade",
+      "detail": "Column 'quantidade' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/ClientGSAStore.tsx",
+      "line": 929,
+      "table": "produtos",
+      "column": "controle_estoque",
+      "detail": "Column 'controle_estoque' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/ClientGSAStore.tsx",
+      "line": 929,
+      "table": "produtos",
+      "column": "estoque_disponivel",
+      "detail": "Column 'estoque_disponivel' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/ClientGSAStore.tsx",
+      "line": 977,
+      "table": "loja_carrinhos",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/ClientOrcamentos.tsx",
+      "line": 177,
+      "table": "loja_solicitacoes",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/client/ClientOrcamentos.tsx",
+      "line": 298,
+      "table": "documentos_cliente",
+      "detail": "Table 'documentos_cliente' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/client/ClientOrcamentos.tsx",
+      "line": 304,
+      "table": "documentos_cliente",
+      "detail": "Table 'documentos_cliente' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/ClientOrcamentos.tsx",
+      "line": 584,
+      "table": "loja_solicitacoes",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/client/ClientOrcamentos.tsx",
+      "line": 1707,
+      "table": "documentos_cliente",
+      "detail": "Table 'documentos_cliente' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/client/ClientOrcamentos.tsx",
+      "line": 1713,
+      "table": "documentos_cliente",
+      "detail": "Table 'documentos_cliente' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/ClientProdutos.tsx",
+      "line": 119,
+      "table": "produtos",
+      "column": "visivel_na_loja",
+      "detail": "Column 'visivel_na_loja' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/ClientProdutos.tsx",
+      "line": 119,
+      "table": "produtos",
+      "column": "controle_estoque",
+      "detail": "Column 'controle_estoque' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/ClientProdutos.tsx",
+      "line": 119,
+      "table": "produtos",
+      "column": "estoque_disponivel",
+      "detail": "Column 'estoque_disponivel' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/ClientProdutos.tsx",
+      "line": 119,
+      "table": "produtos",
+      "column": "tipo_cliente",
+      "detail": "Column 'tipo_cliente' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/ClientProdutos.tsx",
+      "line": 131,
+      "table": "loja_carrinhos",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/ClientProdutos.tsx",
+      "line": 131,
+      "table": "loja_carrinhos",
+      "column": "quantidade",
+      "detail": "Column 'quantidade' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/client/ClientProfile.tsx",
+      "line": 378,
+      "table": "documentos_cliente",
+      "detail": "Table 'documentos_cliente' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/client/ClientProfile.tsx",
+      "line": 384,
+      "table": "documentos_cliente",
+      "detail": "Table 'documentos_cliente' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/client/ClientProfile.tsx",
+      "line": 433,
+      "table": "documentos_cliente",
+      "detail": "Table 'documentos_cliente' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/ClientVouchers.tsx",
+      "line": 89,
+      "table": "extrato_financeiro",
+      "column": "referencia_id",
+      "detail": "Column 'referencia_id' not found in table 'extrato_financeiro'. Known columns: id, cliente_id, tipo, valor, saldo_resultante, descricao, data"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/marketplace/classifieds/MyClassifiedCommissionsPage.tsx",
+      "line": 44,
+      "table": "classificados_comissoes",
+      "column": "classificados_transacoes(\r\n              valor_final,\r\n              status,\r\n              classificados_anuncios(titulo, categoria)\r\n            )",
+      "detail": "Column 'classificados_transacoes(\r\n              valor_final,\r\n              status,\r\n              classificados_anuncios(titulo, categoria)\r\n            )' not found in table 'classificados_comissoes'. Known columns: id, transacao_id, vendedor_id, valor_comissao, status, fatura_id, data_vencimento, created_at, updated_at, percentual, paga_em"
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/client/store/BlogHome.tsx",
+      "line": 26,
+      "table": "blog_posts",
+      "detail": "Table 'blog_posts' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/client/store/BlogPostPage.tsx",
+      "line": 21,
+      "table": "blog_posts",
+      "detail": "Table 'blog_posts' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutModal.tsx",
+      "line": 96,
+      "table": "clientes",
+      "column": "limite_credito_total",
+      "detail": "Column 'limite_credito_total' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutModal.tsx",
+      "line": 96,
+      "table": "clientes",
+      "column": "limite_credito_disponivel",
+      "detail": "Column 'limite_credito_disponivel' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutModal.tsx",
+      "line": 96,
+      "table": "clientes",
+      "column": "opcao_pagamento_parcelado",
+      "detail": "Column 'opcao_pagamento_parcelado' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutModal.tsx",
+      "line": 96,
+      "table": "clientes",
+      "column": "max_parcelas",
+      "detail": "Column 'max_parcelas' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutModal.tsx",
+      "line": 260,
+      "table": "orcamentos",
+      "column": "cupom_desconto_id",
+      "detail": "Column 'cupom_desconto_id' not found in table 'orcamentos'. Known columns: origem_renovacao_id, tipo_renovacao, promocao_desconto_manual, promocao_id, comprovante_concorrente, status_quitacao_credito, valor_quitacao_acordo, contato_publico, public_request_hash, checkout_request_id, subtotal_preco_tabela, pacote_servico_id, affiliate_attribution_id, anexos, comprovante_concorrente_urls, id, codigo_orcamento, cliente_id, servico_id, produto_id, assinatura_id, categoria, valor_servico, valor_produto, valor_assinatura, valor_adicional, descricao_adicional, acrescimo, desconto, total, status, fase_negociacao, quantidade, data_criacao"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutModal.tsx",
+      "line": 260,
+      "table": "orcamentos",
+      "column": "cupom_entrega_id",
+      "detail": "Column 'cupom_entrega_id' not found in table 'orcamentos'. Known columns: origem_renovacao_id, tipo_renovacao, promocao_desconto_manual, promocao_id, comprovante_concorrente, status_quitacao_credito, valor_quitacao_acordo, contato_publico, public_request_hash, checkout_request_id, subtotal_preco_tabela, pacote_servico_id, affiliate_attribution_id, anexos, comprovante_concorrente_urls, id, codigo_orcamento, cliente_id, servico_id, produto_id, assinatura_id, categoria, valor_servico, valor_produto, valor_assinatura, valor_adicional, descricao_adicional, acrescimo, desconto, total, status, fase_negociacao, quantidade, data_criacao"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutModal.tsx",
+      "line": 695,
+      "table": "produtos",
+      "column": "identificador_preferencial",
+      "detail": "Column 'identificador_preferencial' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutModal.tsx",
+      "line": 743,
+      "table": "produtos",
+      "column": "valor_promocional",
+      "detail": "Column 'valor_promocional' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutModal.tsx",
+      "line": 743,
+      "table": "produtos",
+      "column": "desconto_fim_em",
+      "detail": "Column 'desconto_fim_em' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutModal.tsx",
+      "line": 743,
+      "table": "produtos",
+      "column": "desconto_quantidade_limite",
+      "detail": "Column 'desconto_quantidade_limite' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutModal.tsx",
+      "line": 743,
+      "table": "produtos",
+      "column": "desconto_quantidade_utilizada",
+      "detail": "Column 'desconto_quantidade_utilizada' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutModal.tsx",
+      "line": 743,
+      "table": "produtos",
+      "column": "visivel_na_loja",
+      "detail": "Column 'visivel_na_loja' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutModal.tsx",
+      "line": 743,
+      "table": "produtos",
+      "column": "estoque_disponivel",
+      "detail": "Column 'estoque_disponivel' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutModal.tsx",
+      "line": 822,
+      "table": "clientes",
+      "column": "limite_credito_disponivel",
+      "detail": "Column 'limite_credito_disponivel' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 370,
+      "table": "clientes",
+      "column": "limite_credito_total",
+      "detail": "Column 'limite_credito_total' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 370,
+      "table": "clientes",
+      "column": "limite_credito_disponivel",
+      "detail": "Column 'limite_credito_disponivel' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 370,
+      "table": "clientes",
+      "column": "opcao_pagamento_parcelado",
+      "detail": "Column 'opcao_pagamento_parcelado' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 370,
+      "table": "clientes",
+      "column": "max_parcelas",
+      "detail": "Column 'max_parcelas' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 554,
+      "table": "orcamentos",
+      "column": "cupom_desconto_id",
+      "detail": "Column 'cupom_desconto_id' not found in table 'orcamentos'. Known columns: origem_renovacao_id, tipo_renovacao, promocao_desconto_manual, promocao_id, comprovante_concorrente, status_quitacao_credito, valor_quitacao_acordo, contato_publico, public_request_hash, checkout_request_id, subtotal_preco_tabela, pacote_servico_id, affiliate_attribution_id, anexos, comprovante_concorrente_urls, id, codigo_orcamento, cliente_id, servico_id, produto_id, assinatura_id, categoria, valor_servico, valor_produto, valor_assinatura, valor_adicional, descricao_adicional, acrescimo, desconto, total, status, fase_negociacao, quantidade, data_criacao"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 554,
+      "table": "orcamentos",
+      "column": "cupom_entrega_id",
+      "detail": "Column 'cupom_entrega_id' not found in table 'orcamentos'. Known columns: origem_renovacao_id, tipo_renovacao, promocao_desconto_manual, promocao_id, comprovante_concorrente, status_quitacao_credito, valor_quitacao_acordo, contato_publico, public_request_hash, checkout_request_id, subtotal_preco_tabela, pacote_servico_id, affiliate_attribution_id, anexos, comprovante_concorrente_urls, id, codigo_orcamento, cliente_id, servico_id, produto_id, assinatura_id, categoria, valor_servico, valor_produto, valor_assinatura, valor_adicional, descricao_adicional, acrescimo, desconto, total, status, fase_negociacao, quantidade, data_criacao"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 692,
+      "table": "produtos",
+      "column": "identificador_preferencial",
+      "detail": "Column 'identificador_preferencial' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 993,
+      "table": "produtos",
+      "column": "valor_custo",
+      "detail": "Column 'valor_custo' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 993,
+      "table": "produtos",
+      "column": "valor_promocional",
+      "detail": "Column 'valor_promocional' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 993,
+      "table": "produtos",
+      "column": "desconto_tipo",
+      "detail": "Column 'desconto_tipo' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 993,
+      "table": "produtos",
+      "column": "desconto_valor",
+      "detail": "Column 'desconto_valor' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 993,
+      "table": "produtos",
+      "column": "desconto_percentual",
+      "detail": "Column 'desconto_percentual' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 993,
+      "table": "produtos",
+      "column": "desconto_fim_em",
+      "detail": "Column 'desconto_fim_em' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 993,
+      "table": "produtos",
+      "column": "desconto_quantidade_limite",
+      "detail": "Column 'desconto_quantidade_limite' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 993,
+      "table": "produtos",
+      "column": "desconto_quantidade_utilizada",
+      "detail": "Column 'desconto_quantidade_utilizada' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 993,
+      "table": "produtos",
+      "column": "visivel_na_loja",
+      "detail": "Column 'visivel_na_loja' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 993,
+      "table": "produtos",
+      "column": "estoque_disponivel",
+      "detail": "Column 'estoque_disponivel' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 993,
+      "table": "produtos",
+      "column": "controle_estoque",
+      "detail": "Column 'controle_estoque' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CheckoutPage.tsx",
+      "line": 1061,
+      "table": "clientes",
+      "column": "limite_credito_disponivel",
+      "detail": "Column 'limite_credito_disponivel' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CouponsPage.tsx",
+      "line": 103,
+      "table": "orcamentos",
+      "column": "cupom_desconto_id",
+      "detail": "Column 'cupom_desconto_id' not found in table 'orcamentos'. Known columns: origem_renovacao_id, tipo_renovacao, promocao_desconto_manual, promocao_id, comprovante_concorrente, status_quitacao_credito, valor_quitacao_acordo, contato_publico, public_request_hash, checkout_request_id, subtotal_preco_tabela, pacote_servico_id, affiliate_attribution_id, anexos, comprovante_concorrente_urls, id, codigo_orcamento, cliente_id, servico_id, produto_id, assinatura_id, categoria, valor_servico, valor_produto, valor_assinatura, valor_adicional, descricao_adicional, acrescimo, desconto, total, status, fase_negociacao, quantidade, data_criacao"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/CouponsPage.tsx",
+      "line": 103,
+      "table": "orcamentos",
+      "column": "cupom_entrega_id",
+      "detail": "Column 'cupom_entrega_id' not found in table 'orcamentos'. Known columns: origem_renovacao_id, tipo_renovacao, promocao_desconto_manual, promocao_id, comprovante_concorrente, status_quitacao_credito, valor_quitacao_acordo, contato_publico, public_request_hash, checkout_request_id, subtotal_preco_tabela, pacote_servico_id, affiliate_attribution_id, anexos, comprovante_concorrente_urls, id, codigo_orcamento, cliente_id, servico_id, produto_id, assinatura_id, categoria, valor_servico, valor_produto, valor_assinatura, valor_adicional, descricao_adicional, acrescimo, desconto, total, status, fase_negociacao, quantidade, data_criacao"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/EcommerceHeader.tsx",
+      "line": 298,
+      "table": "loja_carrinhos",
+      "column": "quantidade",
+      "detail": "Column 'quantidade' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/EcommerceHeader.tsx",
+      "line": 402,
+      "table": "produtos",
+      "column": "valor_promocional",
+      "detail": "Column 'valor_promocional' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/EcommerceHeader.tsx",
+      "line": 402,
+      "table": "produtos",
+      "column": "imagem_url",
+      "detail": "Column 'imagem_url' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/EcommerceHeader.tsx",
+      "line": 402,
+      "table": "produtos",
+      "column": "categoria_id",
+      "detail": "Column 'categoria_id' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/EcommerceHome.tsx",
+      "line": 296,
+      "table": "loja_carrinhos",
+      "column": "quantidade",
+      "detail": "Column 'quantidade' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/ProductPage.tsx",
+      "line": 168,
+      "table": "produtos",
+      "column": "valor_promocional",
+      "detail": "Column 'valor_promocional' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/ProductPage.tsx",
+      "line": 168,
+      "table": "produtos",
+      "column": "desconto_percentual",
+      "detail": "Column 'desconto_percentual' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/ProductPage.tsx",
+      "line": 168,
+      "table": "produtos",
+      "column": "imagem_url",
+      "detail": "Column 'imagem_url' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/ProductPage.tsx",
+      "line": 183,
+      "table": "produtos",
+      "column": "valor_promocional",
+      "detail": "Column 'valor_promocional' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/ProductPage.tsx",
+      "line": 183,
+      "table": "produtos",
+      "column": "desconto_percentual",
+      "detail": "Column 'desconto_percentual' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/ProductPage.tsx",
+      "line": 183,
+      "table": "produtos",
+      "column": "imagem_url",
+      "detail": "Column 'imagem_url' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/ProductPage.tsx",
+      "line": 246,
+      "table": "loja_carrinhos",
+      "column": "quantidade",
+      "detail": "Column 'quantidade' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/ProductPage.tsx",
+      "line": 488,
+      "table": "loja_carrinhos",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/ProductPage.tsx",
+      "line": 488,
+      "table": "loja_carrinhos",
+      "column": "quantidade",
+      "detail": "Column 'quantidade' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/PurchasesPage.tsx",
+      "line": 540,
+      "table": "loja_carrinhos",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/PurchasesPage.tsx",
+      "line": 540,
+      "table": "loja_carrinhos",
+      "column": "quantidade",
+      "detail": "Column 'quantidade' not found in table 'loja_carrinhos'. Known columns: prazo_meses, produto_variante_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/StoreHubCoupons.tsx",
+      "line": 63,
+      "table": "orcamentos",
+      "column": "cupom_desconto_id",
+      "detail": "Column 'cupom_desconto_id' not found in table 'orcamentos'. Known columns: origem_renovacao_id, tipo_renovacao, promocao_desconto_manual, promocao_id, comprovante_concorrente, status_quitacao_credito, valor_quitacao_acordo, contato_publico, public_request_hash, checkout_request_id, subtotal_preco_tabela, pacote_servico_id, affiliate_attribution_id, anexos, comprovante_concorrente_urls, id, codigo_orcamento, cliente_id, servico_id, produto_id, assinatura_id, categoria, valor_servico, valor_produto, valor_assinatura, valor_adicional, descricao_adicional, acrescimo, desconto, total, status, fase_negociacao, quantidade, data_criacao"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/store/StoreHubCoupons.tsx",
+      "line": 63,
+      "table": "orcamentos",
+      "column": "cupom_entrega_id",
+      "detail": "Column 'cupom_entrega_id' not found in table 'orcamentos'. Known columns: origem_renovacao_id, tipo_renovacao, promocao_desconto_manual, promocao_id, comprovante_concorrente, status_quitacao_credito, valor_quitacao_acordo, contato_publico, public_request_hash, checkout_request_id, subtotal_preco_tabela, pacote_servico_id, affiliate_attribution_id, anexos, comprovante_concorrente_urls, id, codigo_orcamento, cliente_id, servico_id, produto_id, assinatura_id, categoria, valor_servico, valor_produto, valor_assinatura, valor_adicional, descricao_adicional, acrescimo, desconto, total, status, fase_negociacao, quantidade, data_criacao"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/StoreHub.tsx",
+      "line": 237,
+      "table": "clientes",
+      "column": "limite_credito_disponivel",
+      "detail": "Column 'limite_credito_disponivel' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/StoreHub.tsx",
+      "line": 237,
+      "table": "clientes",
+      "column": "limite_credito_total",
+      "detail": "Column 'limite_credito_total' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/StoreHub.tsx",
+      "line": 237,
+      "table": "clientes",
+      "column": "nivel_fidelidade",
+      "detail": "Column 'nivel_fidelidade' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/client/StoreHub.tsx",
+      "line": 248,
+      "table": "loja_pedidos",
+      "detail": "Table 'loja_pedidos' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/components/client/StoreHub.tsx",
+      "line": 269,
+      "table": "cliente_cupons",
+      "detail": "Table 'cliente_cupons' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/StoreHub.tsx",
+      "line": 1255,
+      "table": "loja_solicitacoes",
+      "column": "orcamento_origem_id",
+      "detail": "Column 'orcamento_origem_id' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/client/StoreHub.tsx",
+      "line": 1255,
+      "table": "loja_solicitacoes",
+      "column": "status",
+      "detail": "Column 'status' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorDemandas.tsx",
+      "line": 112,
+      "table": "prestador_demandas",
+      "column": "link_resultado",
+      "detail": "Column 'link_resultado' not found in table 'prestador_demandas'. Known columns: id, prestador_id, os_id, titulo, descricao, valor_proposto_admin, valor_proposto_prestador, valor_final, status, data_inicio, data_conclusao, created_at, updated_at, detalhes, prazo_entrega, link_entrega, data_entrega_prestador, observacao_entrega, motivo_negociacao, is_contraproposta_final, ajuste_solicitado, prazo_ajuste, status_ajuste"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorDemandas.tsx",
+      "line": 112,
+      "table": "prestador_demandas",
+      "column": "arquivos_resultado",
+      "detail": "Column 'arquivos_resultado' not found in table 'prestador_demandas'. Known columns: id, prestador_id, os_id, titulo, descricao, valor_proposto_admin, valor_proposto_prestador, valor_final, status, data_inicio, data_conclusao, created_at, updated_at, detalhes, prazo_entrega, link_entrega, data_entrega_prestador, observacao_entrega, motivo_negociacao, is_contraproposta_final, ajuste_solicitado, prazo_ajuste, status_ajuste"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorDemandas.tsx",
+      "line": 112,
+      "table": "prestador_demandas",
+      "column": "arquivos_briefing",
+      "detail": "Column 'arquivos_briefing' not found in table 'prestador_demandas'. Known columns: id, prestador_id, os_id, titulo, descricao, valor_proposto_admin, valor_proposto_prestador, valor_final, status, data_inicio, data_conclusao, created_at, updated_at, detalhes, prazo_entrega, link_entrega, data_entrega_prestador, observacao_entrega, motivo_negociacao, is_contraproposta_final, ajuste_solicitado, prazo_ajuste, status_ajuste"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorDemandas.tsx",
+      "line": 112,
+      "table": "prestador_demandas",
+      "column": "servicos(nome))\r\n          )",
+      "detail": "Column 'servicos(nome))\r\n          )' not found in table 'prestador_demandas'. Known columns: id, prestador_id, os_id, titulo, descricao, valor_proposto_admin, valor_proposto_prestador, valor_final, status, data_inicio, data_conclusao, created_at, updated_at, detalhes, prazo_entrega, link_entrega, data_entrega_prestador, observacao_entrega, motivo_negociacao, is_contraproposta_final, ajuste_solicitado, prazo_ajuste, status_ajuste"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorDocumentos.tsx",
+      "line": 40,
+      "table": "prestador_documentos",
+      "column": "urls",
+      "detail": "Column 'urls' not found in table 'prestador_documentos'. Known columns: id, prestador_id, nome, tipo, url, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorDocumentos.tsx",
+      "line": 40,
+      "table": "prestador_documentos",
+      "column": "updated_at",
+      "detail": "Column 'updated_at' not found in table 'prestador_documentos'. Known columns: id, prestador_id, nome, tipo, url, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorDocumentos.tsx",
+      "line": 40,
+      "table": "prestador_documentos",
+      "column": "motivo_rejeicao",
+      "detail": "Column 'motivo_rejeicao' not found in table 'prestador_documentos'. Known columns: id, prestador_id, nome, tipo, url, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorDocumentos.tsx",
+      "line": 40,
+      "table": "prestador_documentos",
+      "column": "enviado_por_admin",
+      "detail": "Column 'enviado_por_admin' not found in table 'prestador_documentos'. Known columns: id, prestador_id, nome, tipo, url, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorFinanceiro.tsx",
+      "line": 68,
+      "table": "prestador_saques",
+      "column": "valor_liquido",
+      "detail": "Column 'valor_liquido' not found in table 'prestador_saques'. Known columns: id, prestador_id, valor, status, dados_bancarios, created_at, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorFinanceiro.tsx",
+      "line": 68,
+      "table": "prestador_saques",
+      "column": "taxa_aplicada",
+      "detail": "Column 'taxa_aplicada' not found in table 'prestador_saques'. Known columns: id, prestador_id, valor, status, dados_bancarios, created_at, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorFinanceiro.tsx",
+      "line": 68,
+      "table": "prestador_saques",
+      "column": "tipo_chave_pix",
+      "detail": "Column 'tipo_chave_pix' not found in table 'prestador_saques'. Known columns: id, prestador_id, valor, status, dados_bancarios, created_at, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorFinanceiro.tsx",
+      "line": 68,
+      "table": "prestador_saques",
+      "column": "chave_pix",
+      "detail": "Column 'chave_pix' not found in table 'prestador_saques'. Known columns: id, prestador_id, valor, status, dados_bancarios, created_at, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorFinanceiro.tsx",
+      "line": 68,
+      "table": "prestador_saques",
+      "column": "data_vencimento",
+      "detail": "Column 'data_vencimento' not found in table 'prestador_saques'. Known columns: id, prestador_id, valor, status, dados_bancarios, created_at, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorFinanceiro.tsx",
+      "line": 68,
+      "table": "prestador_saques",
+      "column": "motivo_cancelamento",
+      "detail": "Column 'motivo_cancelamento' not found in table 'prestador_saques'. Known columns: id, prestador_id, valor, status, dados_bancarios, created_at, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorFinanceiro.tsx",
+      "line": 68,
+      "table": "prestador_saques",
+      "column": "observacao",
+      "detail": "Column 'observacao' not found in table 'prestador_saques'. Known columns: id, prestador_id, valor, status, dados_bancarios, created_at, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorFinanceiro.tsx",
+      "line": 198,
+      "table": "prestadores",
+      "column": "nome_completo",
+      "detail": "Column 'nome_completo' not found in table 'prestadores'. Known columns: id, tipo_cadastro, nome_razao, nome_responsavel, documento, email, telefone, cep, area_servico, observacoes, status, credencial_acesso, created_at, updated_at, numero, usuario_id"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorSuporte.tsx",
+      "line": 53,
+      "table": "tickets",
+      "column": "updated_at",
+      "detail": "Column 'updated_at' not found in table 'tickets'. Known columns: prestador_id, id, cliente_id, assunto, descricao, status, data_abertura, data_fechamento"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorSuporte.tsx",
+      "line": 80,
+      "table": "ticket_mensagens",
+      "column": "anexo_url",
+      "detail": "Column 'anexo_url' not found in table 'ticket_mensagens'. Known columns: anexo_nome, id, ticket_id, autor_id, autor_nome, mensagem, tipo, data_envio"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/prestador/PrestadorSuporte.tsx",
+      "line": 80,
+      "table": "ticket_mensagens",
+      "column": "anexo_tipo",
+      "detail": "Column 'anexo_tipo' not found in table 'ticket_mensagens'. Known columns: anexo_nome, id, ticket_id, autor_id, autor_nome, mensagem, tipo, data_envio"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/public/PublicVIPPresentationPage.tsx",
+      "line": 257,
+      "table": "produtos",
+      "column": "imagem_url",
+      "detail": "Column 'imagem_url' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/components/public/PublicVIPPresentationPage.tsx",
+      "line": 257,
+      "table": "produtos",
+      "column": "categoria",
+      "detail": "Column 'categoria' not found in table 'produtos'. Known columns: codigo_barras, desconto_ativo, desconto_prazo_tipo, desconto_limite_quantidade_ativo, avaliacao_media, total_avaliacoes, comentarios_importados, possui_variacoes, id, codigo_produto, nome, descricao, valor, estoque, status, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/hooks/useProviderNotifications.tsx",
+      "line": 158,
+      "table": "notificacoes",
+      "column": "prioridade",
+      "detail": "Column 'prioridade' not found in table 'notificacoes'. Known columns: modulo, tab, item_id, data_criacao, id, cliente_id, prestador_id, titulo, mensagem, lida, tipo, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/hooks/useProviderNotifications.tsx",
+      "line": 158,
+      "table": "notificacoes",
+      "column": "destinatario_tipo",
+      "detail": "Column 'destinatario_tipo' not found in table 'notificacoes'. Known columns: modulo, tab, item_id, data_criacao, id, cliente_id, prestador_id, titulo, mensagem, lida, tipo, created_at"
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/lib/pdfSharingService.ts",
+      "line": 18,
+      "table": "documentos_prestador",
+      "detail": "Table 'documentos_prestador' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/lib/pdfSharingService.ts",
+      "line": 24,
+      "table": "documentos_prestador",
+      "detail": "Table 'documentos_prestador' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/lib/pdfSharingService.ts",
+      "line": 42,
+      "table": "documentos_prestador",
+      "detail": "Table 'documentos_prestador' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/lib/privateStorage.ts",
+      "line": 153,
+      "table": "emprestimos",
+      "column": "cliente_id",
+      "detail": "Column 'cliente_id' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/lib/supabase.ts",
+      "line": 155,
+      "table": "emprestimos",
+      "column": "cliente_id",
+      "detail": "Column 'cliente_id' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/lib/supabaseWrapper.ts",
+      "line": 5,
+      "table": "...",
+      "detail": "Table '...' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/pages/AdvertiserPortal.tsx",
+      "line": 796,
+      "table": "gsa-ad-creatives",
+      "detail": "Table 'gsa-ad-creatives' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_TABLE",
+      "file": "src/pages/AdvertiserPortal.tsx",
+      "line": 831,
+      "table": "gsa-ad-creatives",
+      "detail": "Table 'gsa-ad-creatives' not found in any migration or master schema."
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/utils/gamification.ts",
+      "line": 31,
+      "table": "clientes",
+      "column": "client_levels!nivel_id (\n          nome_nivel,\n          pontos_por_real\n        )",
+      "detail": "Column 'client_levels!nivel_id (\n          nome_nivel,\n          pontos_por_real\n        )' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/utils/paymentPropagation.ts",
+      "line": 48,
+      "table": "faturas",
+      "column": "is_amortizacao_credito",
+      "detail": "Column 'is_amortizacao_credito' not found in table 'faturas'. Known columns: gerada_automaticamente, mes_referencia, pacote_nivel_id, itens_faturados, historico_pagamentos, quitacao_fatura_id, orcamento_id, metadata, cobranca_suspensa, affiliate_attribution_id, id, codigo_fatura, os_id, ordem_compra_id, ordem_assinatura_id, cliente_id, valor_total, valor_pago, valor_final_pendente, status, tipo, data_vencimento, data_pagamento, forma_pagamento_escolhida, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/utils/paymentPropagation.ts",
+      "line": 48,
+      "table": "faturas",
+      "column": "valor_base_original",
+      "detail": "Column 'valor_base_original' not found in table 'faturas'. Known columns: gerada_automaticamente, mes_referencia, pacote_nivel_id, itens_faturados, historico_pagamentos, quitacao_fatura_id, orcamento_id, metadata, cobranca_suspensa, affiliate_attribution_id, id, codigo_fatura, os_id, ordem_compra_id, ordem_assinatura_id, cliente_id, valor_total, valor_pago, valor_final_pendente, status, tipo, data_vencimento, data_pagamento, forma_pagamento_escolhida, created_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/utils/paymentPropagation.ts",
+      "line": 64,
+      "table": "loja_solicitacoes",
+      "column": "id",
+      "detail": "Column 'id' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/utils/paymentPropagation.ts",
+      "line": 64,
+      "table": "loja_solicitacoes",
+      "column": "tipo",
+      "detail": "Column 'tipo' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/utils/paymentPropagation.ts",
+      "line": 64,
+      "table": "loja_solicitacoes",
+      "column": "cliente_id",
+      "detail": "Column 'cliente_id' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/utils/paymentPropagation.ts",
+      "line": 64,
+      "table": "loja_solicitacoes",
+      "column": "historico_status",
+      "detail": "Column 'historico_status' not found in table 'loja_solicitacoes'. Known columns: imagens_anexo, descricao_detalhada"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/utils/paymentPropagation.ts",
+      "line": 105,
+      "table": "clientes",
+      "column": "limite_credito_disponivel",
+      "detail": "Column 'limite_credito_disponivel' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/utils/paymentPropagation.ts",
+      "line": 105,
+      "table": "clientes",
+      "column": "limite_credito_total",
+      "detail": "Column 'limite_credito_total' not found in table 'clientes'. Known columns: cadastro_aprovado, bonus_boas_vindas_pendente, carteira_bloqueada, pontos_bloqueados, pontos, id, codigo_cliente, nome, email, cpf, cnpj, tipo_pessoa, telefone, data_nascimento, cep, endereco, numero, bairro, cidade, estado, observacoes, status, saldo_carteira, saldo_pontos, pontos_totais, saque_liberado_manual, indicacao_origem_id, nivel_id, nivel_manual_id, nivel_manual_info, data_cadastro, updated_at"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/utils/paymentPropagation.ts",
+      "line": 158,
+      "table": "ordens_compra",
+      "column": "orcamento_id",
+      "detail": "Column 'orcamento_id' not found in table 'ordens_compra'. Known columns: nome_produto_contratado, produto_variante_id, id, codigo_ordem, produto_id, cliente_id, status, quantidade, data_criacao"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/utils/paymentPropagation.ts",
+      "line": 198,
+      "table": "ordens_assinatura",
+      "column": "orcamento_id",
+      "detail": "Column 'orcamento_id' not found in table 'ordens_assinatura'. Known columns: prazo_meses, renovacao_automatica, data_vencimento, data_cancelamento, valor_proporcional_cancelamento, nome_assinatura_contratada, id, codigo_ordem, assinatura_id, cliente_id, status, quantidade, data_criacao"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/utils/riskProfile.ts",
+      "line": 36,
+      "table": "emprestimos",
+      "column": "status",
+      "detail": "Column 'status' not found in table 'emprestimos'. Known columns: valor_quitacao_acordo"
+    },
+    {
+      "type": "UNKNOWN_COLUMN",
+      "file": "src/utils/riskProfile.ts",
+      "line": 40,
+      "table": "emprestimo_parcelas",
+      "column": "status",
+      "detail": "Column 'status' not found in table 'emprestimo_parcelas'. Known columns: quitacao_fatura_id"
+    }
+  ],
+  "superDomainQueries": [
+    {
+      "file": "src/components/admin/super-domains/contratos/AreaVipView.tsx",
+      "line": 160,
+      "table": "clientes",
+      "select": "id, nome, email, telefone, nivel_id, pontos_totais, created_at",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id, nome, email, telefone, nivel_id, pontos_totais, created_at')"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/AreaVipView.tsx",
+      "line": 231,
+      "table": "clientes",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": true,
+      "snippet": ".update({"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+      "line": 184,
+      "table": "tickets",
+      "select": "*, clientes(id, nome, email, telefone), prestadores(id, nome_razao, email, telefone), ticket_mensagens(*)",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('*, clientes(id, nome, email, telefone), prestadores(id, nome_razao, email, telefone), ticket_mensagens(*)')\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+      "line": 316,
+      "table": "ticket_mensagens",
+      "select": null,
+      "isInsert": true,
+      "isUpdate": false,
+      "snippet": ".insert([{\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+      "line": 322,
+      "table": "tickets",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": true,
+      "snippet": ".update({\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+      "line": 350,
+      "table": "tickets",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": true,
+      "snippet": ".update({\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+      "line": 201,
+      "table": "contratos",
+      "select": "*",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('*')"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+      "line": 304,
+      "table": "contratos",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": true,
+      "snippet": ".update({"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+      "line": 374,
+      "table": "contratos",
+      "select": null,
+      "isInsert": true,
+      "isUpdate": false,
+      "snippet": ".insert([{"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+      "line": 82,
+      "table": "clientes",
+      "select": "\n            id, codigo_cliente, nome, tipo_pessoa, cpf, cnpj, email, telefone,\n            status, data_cadastro, cep, endereco, numero, bairro, cidade, estado,\n            observacoes, saldo_carteira, saldo_pontos, nivel_id, carteira_bloqueada,\n            pontos_bloqueados, bloqueado, nivel_manual_id\n          ",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select(`"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+      "line": 223,
+      "table": "clientes",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": true,
+      "snippet": ".update({"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+      "line": 265,
+      "table": "clientes",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": true,
+      "snippet": ".update({ saldo_carteira: novoSaldo })"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+      "line": 386,
+      "table": "clientes",
+      "select": null,
+      "isInsert": true,
+      "isUpdate": false,
+      "snippet": ".insert([payload]).select().single()"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/GsaSaudeView.tsx",
+      "line": 145,
+      "table": "saude_contratos",
+      "select": "*",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('*')"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/GsaSegurosView.tsx",
+      "line": 105,
+      "table": "seguros_apolices",
+      "select": "*",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('*')"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/HubEmpresasView.tsx",
+      "line": 126,
+      "table": "empresa",
+      "select": "*",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('*')"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/HubEmpresasView.tsx",
+      "line": 231,
+      "table": "empresa",
+      "select": null,
+      "isInsert": true,
+      "isUpdate": false,
+      "snippet": ".insert([{"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/CobrancaView.tsx",
+      "line": 91,
+      "table": "system_settings",
+      "select": "*",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('*')"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/CobrancaView.tsx",
+      "line": 104,
+      "table": "system_settings",
+      "select": "key, value",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('key, value')"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/CobrancaView.tsx",
+      "line": 111,
+      "table": "cobrancas",
+      "select": "\n          *,\n          faturas(id, codigo_fatura, data_vencimento, valor_total),\n          clientes(id, nome, cpf, cnpj, telefone, email, codigo_cliente),\n          cobranca_historico(*),\n          cobranca_acordo_parcelas(*)\n        ",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select(`"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+      "line": 72,
+      "table": "emprestimos",
+      "select": "\n          *,\n          clientes(id, nome, cpf, cnpj, email, telefone, saldo_carteira, codigo_cliente),\n          emprestimo_parcelas(id, numero_parcela, valor, data_vencimento, status),\n          emprestimo_documentos(id, tipo, arquivo_url, status)\n        ",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select(`"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+      "line": 103,
+      "table": "loja_credito_solicitacoes",
+      "select": "\n          *,\n          clientes(id, nome, cpf, cnpj, email, telefone, codigo_cliente)\n        ",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select(`"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "line": 97,
+      "table": "faturas",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select(`\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "line": 262,
+      "table": "faturas",
+      "select": "*, clientes(nome, telefone)",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('*, clientes(nome, telefone)')\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "line": 330,
+      "table": "ordens_fiscais",
+      "select": null,
+      "isInsert": true,
+      "isUpdate": false,
+      "snippet": ".insert([{\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "line": 418,
+      "table": "clientes",
+      "select": "id, nome, cpf, cnpj, email, telefone",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id, nome, cpf, cnpj, email, telefone')\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "line": 435,
+      "table": "ordens_servico",
+      "select": "id, codigo_os, orcamentos(total)",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id, codigo_os, orcamentos(total)').eq('cliente_id', clienteId).eq('status', 'andamento'),\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "line": 436,
+      "table": "ordens_compra",
+      "select": "id, codigo_ordem, orcamentos(total)",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id, codigo_ordem, orcamentos(total)').eq('cliente_id', clienteId).eq('status', 'em_analise'),\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "line": 437,
+      "table": "ordens_assinatura",
+      "select": "id, codigo_ordem, orcamentos(total)",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id, codigo_ordem, orcamentos(total)').eq('cliente_id', clienteId).eq('status', 'em_analise')\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+      "line": 89,
+      "table": "faturas",
+      "select": "valor_total",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('valor_total').in('status', ['pendente', 'vencida', 'pendente_pagamento', 'revisada']),"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+      "line": 90,
+      "table": "saques",
+      "select": "id",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id', { count: 'exact', head: true }).eq('status', 'pendente'),"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+      "line": 91,
+      "table": "cobrancas",
+      "select": "id",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id', { count: 'exact', head: true }).neq('status', 'quitado'),"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+      "line": 92,
+      "table": "ordens_fiscais",
+      "select": "id",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id', { count: 'exact', head: true }).eq('status_emissao', 'pendente_emissao')"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FluxoCaixaView.tsx",
+      "line": 77,
+      "table": "saques",
+      "select": "*, clientes(id, nome, codigo_cliente, cpf, saldo_carteira, telefone, email)",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('*, clientes(id, nome, codigo_cliente, cpf, saldo_carteira, telefone, email)')"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FluxoCaixaView.tsx",
+      "line": 91,
+      "table": "transferencias",
+      "select": "\n          *,\n          cliente_origem:clientes!cliente_origem_id(id, nome, cpf, data_cadastro, saldo_carteira, saldo_pontos, telefone),\n          cliente_destino:clientes!cliente_destino_id(id, nome, cpf, data_cadastro, saldo_carteira, saldo_pontos, telefone)\n        ",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select(`"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+      "line": 51,
+      "table": "loja_reembolsos",
+      "select": "*, clientes(id, nome, cpf, email, telefone)",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('*, clientes(id, nome, cpf, email, telefone)')"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+      "line": 73,
+      "table": "loja_reembolsos",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": true,
+      "snippet": ".update({"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+      "line": 86,
+      "table": "carteira_movimentacoes",
+      "select": null,
+      "isInsert": true,
+      "isUpdate": false,
+      "snippet": ".insert([{"
+    },
+    {
+      "file": "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+      "line": 37,
+      "table": "admin_sessoes",
+      "select": "*",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('*').order('criado_em', { ascending: false }).limit(200)).catch(() => ({ data: [] as any[], error: null })),"
+    },
+    {
+      "file": "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+      "line": 38,
+      "table": "sistema_configuracoes",
+      "select": "*",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('*').limit(50)).catch(() => ({ data: [] as any[], error: null })),"
+    },
+    {
+      "file": "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "line": 65,
+      "table": "colaboradores",
+      "select": "id, nome, email, created_at, status",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id, nome, email, created_at, status')"
+    },
+    {
+      "file": "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "line": 86,
+      "table": "clientes",
+      "select": "id, nome, email, data_cadastro, status",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id, nome, email, data_cadastro, status').limit(100)"
+    },
+    {
+      "file": "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+      "line": 90,
+      "table": "orcamentos",
+      "select": "id, status",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id, status', { count: 'exact', head: false }),"
+    },
+    {
+      "file": "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+      "line": 91,
+      "table": "ordens_servico",
+      "select": "id",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id', { count: 'exact', head: true }).eq('status', 'andamento'),"
+    },
+    {
+      "file": "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+      "line": 92,
+      "table": "prestador_demandas",
+      "select": "id",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id', { count: 'exact', head: true }).in('status', ['aberta', 'em_andamento']),"
+    },
+    {
+      "file": "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+      "line": 93,
+      "table": "ordens_compra",
+      "select": "id",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id', { count: 'exact', head: true }).eq('status', 'processamento')"
+    },
+    {
+      "file": "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "line": 72,
+      "table": "orcamentos",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select(`\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "line": 218,
+      "table": "orcamentos",
+      "select": "status",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('status')\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "line": 282,
+      "table": "orcamentos",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": true,
+      "snippet": ".update({\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "line": 829,
+      "table": "orcamentos",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": true,
+      "snippet": ".update({\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+      "line": 62,
+      "table": "ordens_servico",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select(`\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+      "line": 170,
+      "table": "ordens_servico",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": true,
+      "snippet": ".update({\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+      "line": 211,
+      "table": "ordens_servico",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": true,
+      "snippet": ".update({\r"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "line": 77,
+      "table": "premios_resgates",
+      "select": "\n          *,\n          cliente:clientes(nome, email, cpf, cnpj)\n        ",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select(`"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "line": 97,
+      "table": "vouchers",
+      "select": "\n          *,\n          cliente:clientes(nome, email, cpf)\n        ",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select(`"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "line": 117,
+      "table": "cupons_loja",
+      "select": "*",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('*')"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "line": 134,
+      "table": "loja_solicitacoes",
+      "select": "\n          *,\n          cliente:clientes(nome, email)\n        ",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select(`"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "line": 154,
+      "table": "indicacoes",
+      "select": "*",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('*')"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "line": 190,
+      "table": "clientes",
+      "select": "id, nome",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id, nome')"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/NovoPrestadorDrawer.tsx",
+      "line": 73,
+      "table": "prestadores",
+      "select": null,
+      "isInsert": true,
+      "isUpdate": false,
+      "snippet": ".insert([{"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/NovoPrestadorDrawer.tsx",
+      "line": 95,
+      "table": "prestador_historico",
+      "select": null,
+      "isInsert": true,
+      "isUpdate": false,
+      "snippet": ".insert([{"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+      "line": 77,
+      "table": "prestadores",
+      "select": "id",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id', { count: 'exact', head: true })"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+      "line": 83,
+      "table": "prestador_saques",
+      "select": "id",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id', { count: 'exact', head: true })"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+      "line": 88,
+      "table": "saques",
+      "select": "id",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id', { count: 'exact', head: true })"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+      "line": 94,
+      "table": "fornecedores",
+      "select": "id",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id', { count: 'exact', head: true })"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+      "line": 100,
+      "table": "afiliados",
+      "select": "id",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('id', { count: 'exact', head: true })"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+      "line": 97,
+      "table": "prestador_demandas",
+      "select": "*",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('*')"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+      "line": 117,
+      "table": "prestadores",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": true,
+      "snippet": ".update(editForm)"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+      "line": 152,
+      "table": "prestadores",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": true,
+      "snippet": ".update(updatePayload)"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+      "line": 158,
+      "table": "prestador_historico",
+      "select": null,
+      "isInsert": true,
+      "isUpdate": false,
+      "snippet": ".insert([{"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+      "line": 247,
+      "table": "prestadores",
+      "select": null,
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".delete()"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/PrestadoresSection.tsx",
+      "line": 36,
+      "table": "prestadores",
+      "select": "*",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select('*')"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx",
+      "line": 41,
+      "table": "prestador_saques",
+      "select": "\n          *,\n          prestador:prestadores(nome_razao, documento, email, telefone, saldo_carteira)\n        ",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select(`"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx",
+      "line": 52,
+      "table": "saques",
+      "select": "\n          *,\n          cliente:clientes(nome, email, telefone, cpf, cnpj, tipo_pessoa)\n        ",
+      "isInsert": false,
+      "isUpdate": false,
+      "snippet": ".select(`"
+    }
+  ],
+  "totalQueries": 1013
+}

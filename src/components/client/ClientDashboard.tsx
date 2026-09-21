@@ -16,7 +16,7 @@ interface MenuItem {
 
 interface ClientDashboardProps {
   menuItems: MenuItem[];
-  onNavigate: (module: Module) => void;
+  onNavigate: (module: Module, tab?: string) => void;
   cliente: Cliente;
   vipModuleConfig?: { ativo: boolean; oculto: boolean };
 }
@@ -268,7 +268,7 @@ export function ClientDashboard({ menuItems, onNavigate, cliente, vipModuleConfi
                   hover: { scale: 1.02, y: -2 }
                 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => handleModuleClick({ id: 'financeiro', label: 'Financeiro', icon: CreditCard, count: 0 })}
+                onClick={() => onNavigate('financeiro', 'extrato')}
                 className={`rounded-3xl bg-[#1a1a1a] ring-1 ring-white/10 flex flex-col items-center justify-between text-center transition-all relative overflow-hidden group h-[4.75rem] cursor-pointer ${isBlocked ? 'opacity-90' : 'hover:shadow-xl'}`}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>

@@ -19,6 +19,7 @@ import { callAdminRpc } from '../../lib/adminRpc';
 import { formatCurrency, formatDate, formatDateTime } from '../../lib/utils';
 import { removePrivateDocument, uploadPrivateDocument } from '../../lib/privateStorage';
 import { SecureAttachmentButton } from '../ui/SecureAttachmentButton';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 type Props = { initialItemId?: string; colaboradorId?: string; colaboradorNome?: string };
 type Tab = 'pendentes' | 'emitidas' | 'canceladas' | 'todas';
@@ -77,6 +78,11 @@ export function FiscalModule({ initialItemId }: Props) {
   }, [activeTab, appliedSearch, page]);
 
   useEffect(() => { void load(); }, [load]);
+
+  useRealtimeSubscription([
+    { table: 'ordens_fiscais', onChange: load, debounceMs: 300 },
+    { table: 'faturas', onChange: load, debounceMs: 300 },
+  ], [load]);
 
   useEffect(() => {
     if (!initialItemId || result.items.length === 0) return;
@@ -195,5 +201,5 @@ function StatusIcon({ status }: { status?: string }) {
 }
 
 function Detail({ label, value }: { label: string; value?: string | number | null }) {
-  return <div className="rounded-xl bg-neutral-50 p-4"><p className="text-[10px] font-black uppercase tracking-wider text-neutral-400">{label}</p><p className="mt-1 font-bold text-neutral-900">{value || '—'}</p></div>;
+  return <div className="rounded-xl bg-neutral-50 p-4"><p className="text-[10px] font-black uppercase tracking-wider text-neutral-400">{label}</p><p className="mt-1 font-bold text-neutral-900">{value || '—'}</p></div>;
 }

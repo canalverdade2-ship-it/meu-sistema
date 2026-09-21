@@ -117,7 +117,7 @@ export function MediaImportSource({ type, onCandidatesReady }: MediaImportSource
         throw new Error('Resposta inválida do servidor de IA.');
       }
 
-      // Fix mojibake (e.g. "Ã©" → "é") on the client side as a safety net
+      // Fix mojibake (e.g. "é" → "é") on the client side as a safety net
       // even if the Edge Function already cleaned it, this handles edge cases
       const fixMojibake = (str: string | null): string | null => {
         if (!str) return str;

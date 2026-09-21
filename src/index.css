@@ -4,6 +4,7 @@
    DESIGN TOKENS — GSA Enterprise System
    ═══════════════════════════════════════════════════ */
 :root {
+  /* Legacy & Core Brand */
   --brand: #4F46E5;
   --brand-hover: #4338CA;
   --brand-light: rgba(79, 70, 229, 0.08);
@@ -12,21 +13,68 @@
   --sidebar-width-open: 280px;
   --sidebar-width-closed: 80px;
 
+  /* Surface & Canvas (Enterprise Light) */
+  --canvas-bg: #F8FAFC;          /* slate-50 */
   --surface: #FFFFFF;
-  --surface-secondary: #FAFAFA;
-  --surface-tertiary: #F4F4F5;
+  --surface-primary: #FFFFFF;    /* pure white */
+  --surface-secondary: #F1F5F9;  /* slate-100 */
+  --surface-tertiary: #E2E8F0;   /* slate-200 */
+  --surface-subtle: #F8FAFC;     /* slate-50 */
   --surface-border: rgba(0, 0, 0, 0.06);
 
-  --text-primary: #111111;
-  --text-secondary: #6B7280;
-  --text-muted: #9CA3AF;
+  /* Borders & Dividers */
+  --border-subtle: #E2E8F0;      /* slate-200 */
+  --border-strong: #CBD5E1;      /* slate-300 */
+  --border-focus: #6366F1;       /* indigo-500 */
+
+  /* Typography & Foreground */
+  --text-primary: #0F172A;       /* slate-900 - high contrast */
+  --text-secondary: #475569;     /* slate-600 */
+  --text-muted: #94A3B8;         /* slate-400 */
   --text-inverse: #FFFFFF;
 
-  --success: #10B981;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-  --info: #3B82F6;
+  /* Brand / Primary (Enterprise Indigo & Navy) */
+  --brand-primary: #4F46E5;      /* indigo-600 */
+  --brand-subtle: #EEF2FF;       /* indigo-50 */
+  --brand-border: #C7D2FE;       /* indigo-200 */
+  --brand-navy: #0F172A;         /* slate-900 */
 
+  /* Semantic Status Palette */
+  --success: #10B981;
+  --status-success-bg: #ECFDF5;      /* emerald-50 */
+  --status-success-border: #A7F3D0;  /* emerald-200 */
+  --status-success-text: #065F46;    /* emerald-800 */
+  --status-success-solid: #10B981;   /* emerald-500 */
+
+  --warning: #F59E0B;
+  --status-warning-bg: #FFFBEB;      /* amber-50 */
+  --status-warning-border: #FDE68A;  /* amber-200 */
+  --status-warning-text: #92400E;    /* amber-800 */
+  --status-warning-solid: #F59E0B;   /* amber-500 */
+
+  --danger: #EF4444;
+  --status-danger-bg: #FEF2F2;       /* red-50 */
+  --status-danger-border: #FECACA;   /* red-200 */
+  --status-danger-text: #991B1B;     /* red-800 */
+  --status-danger-solid: #EF4444;    /* red-500 */
+
+  --info: #3B82F6;
+  --status-info-bg: #EFF6FF;         /* blue-50 */
+  --status-info-border: #BFDBFE;     /* blue-200 */
+  --status-info-text: #1E40AF;       /* blue-800 */
+  --status-info-solid: #3B82F6;      /* blue-500 */
+
+  --status-neutral-bg: #F1F5F9;      /* slate-100 */
+  --status-neutral-border: #E2E8F0;  /* slate-200 */
+  --status-neutral-text: #475569;    /* slate-600 */
+  --status-neutral-solid: #64748B;   /* slate-500 */
+
+  /* Layout Metrics & Density */
+  --density-row-compact: 32px;
+  --density-row-default: 42px;
+  --density-row-comfortable: 52px;
+
+  --radius-xs: 4px;
   --radius-sm: 0.5rem;
   --radius-md: 0.875rem;
   --radius-lg: 1.25rem;
@@ -34,10 +82,15 @@
   --radius-2xl: 2rem;
   --radius-3xl: 2.5rem;
 
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+  /* Shadows (Precise, layered, crisp) */
+  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.08);
   --shadow-card: 0 2px 4px rgba(0,0,0,0.05), 0 12px 32px rgba(0,0,0,0.05);
   --shadow-elevated: 0 8px 32px rgba(0,0,0,0.12);
-  --shadow-modal: 0 32px 80px rgba(0,0,0,0.22);
+  --shadow-drawer: -12px 0 32px -4px rgba(15, 23, 42, 0.12), -4px 0 12px -2px rgba(15, 23, 42, 0.08);
+  --shadow-modal: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
 
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);

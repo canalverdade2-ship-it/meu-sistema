@@ -1,0 +1,31 @@
+id,timecode,nucleo,plano,fonte_preferencial,status
+001,00:00-00:02,institucional,pulso dourado atravessando escuridão,Flow/Veo,pendente
+002,00:02-00:04,institucional,cidade brasileira amanhecendo com movimento aéreo,banco licenciado,pendente
+003,00:04-00:07,institucional,redação acendendo e câmera entrando,Flow/Veo,pendente
+004,00:07-00:10,jornalismo,apresentadores no cenário oficial GSA News,Vids/avatar aprovado,pendente
+005,00:10-00:13,jornalismo,câmera broadcast e switcher em operação,banco licenciado,pendente
+006,00:13-00:16,jornalismo,cidade e reportagem em movimento,banco licenciado,pendente
+007,00:16-00:19,jornalismo,mapa meteorológico dinâmico,Flow/Veo,pendente
+008,00:19-00:22,jornalismo,virada noturna de redação e skyline,Flow/Veo,pendente
+009,00:22-00:25,informacao,mercado e gráficos integrados em ambiente real,Flow/Veo,pendente
+010,00:25-00:28,informacao,empreendedor liderando equipe,banco licenciado,pendente
+011,00:28-00:31,informacao,cidadão acessando serviço público,banco licenciado,pendente
+012,00:31-00:34,informacao,jovem apresentador em estúdio tecnológico,avatar aprovado,pendente
+013,00:34-00:38,informacao,mobilidade urbana e automóvel em movimento,banco licenciado,pendente
+014,00:38-00:41,vida,drone sobre produção agrícola brasileira,banco licenciado,pendente
+015,00:41-00:44,vida,globo e conexões internacionais,Flow/Veo,pendente
+016,00:44-00:47,vida,viagem e paisagem com movimento humano,banco licenciado,pendente
+017,00:47-00:50,vida,bem-estar e rotina saudável,banco licenciado,pendente
+018,00:50-00:53,vida,chef apresentador em cozinha fixa do programa,avatar aprovado,pendente
+019,00:53-00:57,fe,luz entrando em templo contemporâneo,Flow/Veo,pendente
+020,00:57-01:01,fe,Bíblia aberta e ensino com apresentador aprovado,avatar aprovado,pendente
+021,01:01-01:05,fe,narrativa bíblica cinematográfica em movimento,Flow/Veo,pendente
+022,01:05-01:07,entretenimento,palco musical e público,banco licenciado,pendente
+023,01:07-01:09,entretenimento,cultura digital e smartphone,banco licenciado,pendente
+024,01:09-01:11,entretenimento,ação esportiva,banco licenciado,pendente
+025,01:11-01:13,entretenimento,câmera de cinema e luzes,banco licenciado,pendente
+026,01:13-01:15,entretenimento,família assistindo entretenimento,banco licenciado,pendente
+027,01:15-01:18,entretenimento,animação natureza e mistério em montagem tripla,Flow/Veo,pendente
+028,01:18-01:21,climax,mosaico de vídeos em movimento,Remotion,pendente
+029,01:21-01:23,climax,25 logos convergindo em profundidade,Remotion,pendente
+030,01:23-01:25,climax,assinatura GSA TV e resolução sonora,Remotion,pendente

@@ -1,0 +1,2263 @@
+{
+  "tablesReferenced": {
+    "produtos": {
+      "files": [
+        "src\\App.tsx",
+        "src\\components\\admin\\OrdensCompraModule.tsx",
+        "src\\components\\admin\\ProdutosModule.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioLoja.tsx",
+        "src\\components\\client\\ClientGSAStore.tsx",
+        "src\\components\\client\\ClientProdutos.tsx",
+        "src\\components\\client\\store\\CheckoutModal.tsx",
+        "src\\components\\client\\store\\CheckoutPage.tsx",
+        "src\\components\\client\\store\\EcommerceHeader.tsx",
+        "src\\components\\client\\store\\EcommerceHome.tsx",
+        "src\\components\\client\\store\\ProductPage.tsx",
+        "src\\components\\client\\store\\WishlistPage.tsx",
+        "src\\components\\client\\StoreHub.tsx",
+        "src\\components\\public\\PublicVIPPresentationPage.tsx",
+        "src\\lib\\adminStoreOperations.ts",
+        "src\\pages\\Afiliado\\AfiliadoDashboard.tsx",
+        "src\\validation\\master_block2.ts"
+      ],
+      "selects": [
+        "id",
+        "*, categorias(nome)",
+        "*",
+        "id, nome, estoque_disponivel, controle_estoque, status",
+        "controle_estoque, estoque_disponivel",
+        "id, status, visivel_na_loja, controle_estoque, estoque_disponivel, tipo_cliente",
+        "nome, codigo_produto, codigo_barras, identificador_preferencial",
+        "id, valor, valor_promocional, desconto_ativo, desconto_fim_em, desconto_prazo_tipo, desconto_limite_quantidade_ativo, desconto_quantidade_limite, desconto_quantidade_utilizada, visivel_na_loja, estoque_disponivel",
+        "id, valor, valor_promocional, desconto_ativo, desconto_fim_em, desconto_prazo_tipo, desconto_limite_quantidade_ativo, desconto_quantidade_limite, desconto_quantidade_utilizada, visivel_na_loja, estoque_disponivel, controle_estoque",
+        "id, nome, valor, valor_promocional, imagem_url, categoria_id, loja_categoria:loja_categorias(id, nome)",
+        "*, loja_categoria:loja_categorias(id, nome)",
+        "id, nome, valor, valor_promocional, desconto_ativo, desconto_percentual, imagem_url, status",
+        "id, nome, valor, imagem_url, categoria",
+        "id, nome, codigo_produto, valor"
+      ],
+      "mutations": []
+    },
+    "servicos": {
+      "files": [
+        "src\\App.tsx",
+        "src\\components\\admin\\ServicosModule.tsx",
+        "src\\components\\client\\ClientGSAStore.tsx",
+        "src\\components\\client\\store\\CheckoutPage.tsx",
+        "src\\components\\client\\store\\WishlistPage.tsx"
+      ],
+      "selects": [
+        "id",
+        "*"
+      ],
+      "mutations": []
+    },
+    "assinaturas": {
+      "files": [
+        "src\\App.tsx",
+        "src\\components\\admin\\AssinaturasModule.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioFinanceiro.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioOperacional.tsx",
+        "src\\components\\client\\ClientGSAStore.tsx",
+        "src\\components\\client\\store\\CheckoutPage.tsx",
+        "src\\components\\client\\store\\WishlistPage.tsx",
+        "src\\validation\\master_block2.ts"
+      ],
+      "selects": [
+        "id",
+        "*",
+        "id, valor",
+        "id, nome, status"
+      ],
+      "mutations": []
+    },
+    "loja_carrinhos": {
+      "files": [
+        "src\\App.tsx",
+        "src\\components\\client\\ClientGSAStore.tsx",
+        "src\\components\\client\\ClientProdutos.tsx",
+        "src\\components\\client\\store\\CheckoutPage.tsx",
+        "src\\components\\client\\store\\EcommerceHeader.tsx",
+        "src\\components\\client\\store\\EcommerceHome.tsx",
+        "src\\components\\client\\store\\ProductPage.tsx",
+        "src\\components\\client\\store\\PurchasesPage.tsx",
+        "src\\lib\\adminStoreOperations.ts"
+      ],
+      "selects": [
+        "id, item_id, tipo, quantidade, produto_variante_id",
+        "*",
+        "id",
+        "id, quantidade",
+        "quantidade"
+      ],
+      "mutations": []
+    },
+    "loja_categorias": {
+      "files": [
+        "src\\components\\admin\\AssinaturasModule.tsx",
+        "src\\components\\admin\\LojaCategoriasModule.tsx",
+        "src\\components\\admin\\ProdutosModule.tsx",
+        "src\\components\\admin\\ScrapingAdminModule.tsx",
+        "src\\components\\admin\\ServicosModule.tsx",
+        "src\\components\\client\\ClientGSAStore.tsx"
+      ],
+      "selects": [
+        "*",
+        "id, nome"
+      ],
+      "mutations": []
+    },
+    "classificados_midias": {
+      "files": [
+        "src\\components\\admin\\ClassifiedsModule.tsx"
+      ],
+      "selects": [
+        "url, tipo, ordem"
+      ],
+      "mutations": []
+    },
+    "demanda_comentarios": {
+      "files": [
+        "src\\components\\admin\\demandas\\DemandasComentarios.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "prestador_demandas": {
+      "files": [
+        "src\\components\\admin\\demandas\\DemandasComentarios.tsx",
+        "src\\components\\admin\\demandas\\DemandasDashboard.tsx",
+        "src\\components\\admin\\demandas\\DemandasDetalhesModal.tsx",
+        "src\\components\\admin\\demandas\\NovaDemandaModal.tsx",
+        "src\\components\\admin\\DemandasColaboradorModule.tsx",
+        "src\\components\\admin\\PainelRentabilidade.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioPrestadores.tsx",
+        "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+        "src\\components\\admin\\super-domains\\pessoas\\PrestadorDetailDrawer.tsx",
+        "src\\components\\prestador\\PrestadorAgenda.tsx",
+        "src\\components\\prestador\\PrestadorDemandas.tsx",
+        "src\\validation\\master_block3.ts",
+        "src\\validation\\step2_sales_flow.ts"
+      ],
+      "selects": [
+        "prestador_id, colaborador_id, titulo",
+        "id, status, colaborador_id, prestador_id, prioridade, prazo_limite, created_at, data_conclusao, colaborador:colaboradores(nome), prestador:prestadores(nome_razao)",
+        "status, updated_at",
+        "\r\n          *,\r\n          ordem_servico:ordens_servico(id, codigo_os, cliente_id, cliente:clientes(id, nome)),\r\n          colaborador:colaboradores(id, nome),\r\n          prestador:prestadores(id, nome_razao)\r\n        ",
+        "valor_final, valor_proposto_admin",
+        "id, prestador_id, status, valor_final, created_at",
+        "id",
+        "*",
+        "id,titulo,status",
+        "\r\n          id,prestador_id,os_id,titulo,descricao,detalhes,\r\n          valor_proposto_admin,valor_proposto_prestador,valor_final,status,\r\n          created_at,ajuste_solicitado,prazo_ajuste,link_resultado,\r\n          arquivos_resultado,arquivos_briefing,\r\n          ordem_servico:ordens_servico(\r\n            codigo_os,cliente_id,\r\n            orcamento:orcamentos(servico:servicos(nome))\r\n          )\r\n        "
+      ],
+      "mutations": []
+    },
+    "colaboradores": {
+      "files": [
+        "src\\components\\admin\\demandas\\DemandasDashboard.tsx",
+        "src\\components\\admin\\demandas\\NovaDemandaModal.tsx",
+        "src\\components\\admin\\DemandasColaboradorModule.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioOperacional.tsx",
+        "src\\components\\admin\\super-domains\\governanca\\GovernancaInfraView.tsx",
+        "src\\components\\admin\\SystemMonitorModule.tsx",
+        "src\\pages\\AdminPanel.tsx",
+        "src\\validation\\master_block4.ts"
+      ],
+      "selects": [
+        "id, nome",
+        "id, nome, status, funcao_id, created_at",
+        "id, nome, email, created_at, status",
+        "nome"
+      ],
+      "mutations": []
+    },
+    "os_notas": {
+      "files": [
+        "src\\components\\admin\\demandas\\DemandasDetalhesModal.tsx",
+        "src\\components\\client\\ClientServicos.tsx",
+        "src\\lib\\osService.ts"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "os_suporte_mensagens": {
+      "files": [
+        "src\\components\\admin\\demandas\\DemandasDetalhesModal.tsx",
+        "src\\components\\client\\ClientServicos.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "ordens_servico": {
+      "files": [
+        "src\\components\\admin\\demandas\\NovaDemandaModal.tsx",
+        "src\\components\\admin\\PainelRentabilidade.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioExecutivo.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioOS.tsx",
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+        "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx",
+        "src\\components\\client\\ClientServicos.tsx",
+        "src\\lib\\whatsappNotificationService.ts",
+        "src\\validation\\step2_sales_flow.ts"
+      ],
+      "selects": [
+        "id, codigo_os, cliente:clientes(nome), orcamentos:orcamento_id(anexos)",
+        "orcamento_id, cliente_id",
+        "id",
+        "id, status, data_inicio, data_fim, tipo_entrega",
+        "id, codigo_os, orcamentos(total)",
+        "\r\n          *,\r\n          clientes (\r\n            id,\r\n            nome,\r\n            cpf,\r\n            cnpj,\r\n            telefone,\r\n            email,\r\n            codigo_cliente\r\n          ),\r\n          orcamentos:orcamento_id (\r\n            id,\r\n            servico_id,\r\n            produto_id,\r\n            assinatura_id,\r\n            codigo_orcamento,\r\n            total,\r\n            valor_servico,\r\n            valor_adicional,\r\n            descricao_adicional,\r\n            acrescimo,\r\n            desconto,\r\n            servicos (\r\n              nome,\r\n              descricao\r\n            )\r\n          ),\r\n          prestador_demandas (\r\n            id,\r\n            status,\r\n            link_entrega,\r\n            link_resultado,\r\n            arquivos_resultado,\r\n            arquivos_briefing,\r\n            prestadores (\r\n              id,\r\n              nome_razao,\r\n              telefone,\r\n              documento,\r\n              tipo_cadastro\r\n            )\r\n          )\r\n        ",
+        "*, orcamentos(*, servicos(nome))",
+        "clientes(telefone)"
+      ],
+      "mutations": []
+    },
+    "prestadores": {
+      "files": [
+        "src\\components\\admin\\demandas\\NovaDemandaModal.tsx",
+        "src\\components\\admin\\DemandasColaboradorModule.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioPrestadores.tsx",
+        "src\\components\\admin\\super-domains\\pessoas\\NovoPrestadorDrawer.tsx",
+        "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "src\\components\\admin\\super-domains\\pessoas\\PrestadorDetailDrawer.tsx",
+        "src\\components\\admin\\super-domains\\pessoas\\PrestadoresSection.tsx",
+        "src\\components\\admin\\SystemMonitorModule.tsx",
+        "src\\components\\prestador\\PrestadorFinanceiro.tsx",
+        "src\\hooks\\useProviderNotifications.tsx",
+        "src\\validation\\find_prestador.ts",
+        "src\\validation\\find_records.ts",
+        "src\\validation\\master_block3.ts",
+        "src\\validation\\step2_sales_flow.ts",
+        "src\\validation\\step3_finance_gamification.ts"
+      ],
+      "selects": [
+        "id, nome_razao",
+        "id, nome_razao, status, area_servico, created_at",
+        "id",
+        "*",
+        "id, nome_razao, email, created_at, status",
+        "nome_completo, telefone",
+        "id,nome_razao,documento,email,telefone,cep,numero,area_servico,status,created_at"
+      ],
+      "mutations": []
+    },
+    "prestador_demandas_historico": {
+      "files": [
+        "src\\components\\admin\\DemandasColaboradorModule.tsx",
+        "src\\components\\prestador\\PrestadorDemandas.tsx",
+        "src\\lib\\demandService.ts"
+      ],
+      "selects": [
+        "\r\n          *,\r\n          origem:colaboradores!colaborador_origem_id(id, nome),\r\n          destino:colaboradores!colaborador_destino_id(id, nome),\r\n          destino_prestador:prestadores!prestador_destino_id(id, nome_razao),\r\n          origem_prestador:prestadores!prestador_origem_id(id, nome_razao)\r\n        ",
+        "id,tipo_evento,motivo,created_at"
+      ],
+      "mutations": []
+    },
+    "gsa_tv_channels": {
+      "files": [
+        "src\\components\\admin\\GsaTvModule.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "gsa_tv_media_items": {
+      "files": [
+        "src\\components\\admin\\GsaTvModule.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "gsa_tv_schedule_slots": {
+      "files": [
+        "src\\components\\admin\\GsaTvModule.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "gsa_tv_playlists": {
+      "files": [
+        "src\\components\\admin\\GsaTvModule.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "gsa_tv_incidents": {
+      "files": [
+        "src\\components\\admin\\GsaTvModule.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "gsa_tv_audit_log": {
+      "files": [
+        "src\\components\\admin\\GsaTvModule.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "gsa_tv_jobs": {
+      "files": [
+        "src\\components\\admin\\GsaTvModule.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "system_settings": {
+      "files": [
+        "src\\components\\admin\\infra\\WhatsAppQRCodeManager.tsx",
+        "src\\components\\admin\\ScrapingAdminModule.tsx",
+        "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx",
+        "src\\components\\admin\\super-domains\\governanca\\GovernancaAuditoriaView.tsx",
+        "src\\components\\client\\ClientFinanceiro.tsx",
+        "src\\components\\client\\ClientGSAStore.tsx",
+        "src\\components\\client\\store\\CheckoutModal.tsx",
+        "src\\components\\client\\store\\CheckoutPage.tsx",
+        "src\\components\\client\\store\\ProductPage.tsx",
+        "src\\components\\ui\\GSAChatbotWidget.tsx",
+        "src\\components\\ui\\WhatsAppButton.tsx",
+        "src\\hooks\\usePixDiscount.ts",
+        "src\\hooks\\usePublicRegistrationSettings.ts",
+        "src\\pages\\ClientPortal.tsx",
+        "src\\utils\\emprestimoUtils.ts",
+        "src\\utils\\n8nWhatsApp.ts",
+        "src\\utils\\referralHelpers.ts"
+      ],
+      "selects": [
+        "key, value",
+        "value",
+        "*"
+      ],
+      "mutations": []
+    },
+    "gsa_whatsapp_ramais": {
+      "files": [
+        "src\\components\\admin\\infra\\WhatsAppQRCodeManager.tsx"
+      ],
+      "selects": [],
+      "mutations": []
+    },
+    "ordens_assinatura": {
+      "files": [
+        "src\\components\\admin\\OrdensAssinaturaModule.tsx",
+        "src\\components\\admin\\OrdensCompraModule.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioFinanceiro.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioOperacional.tsx",
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+        "src\\components\\client\\ClientAssinaturas.tsx",
+        "src\\components\\client\\store\\PurchasesPage.tsx",
+        "src\\components\\client\\StoreHub.tsx",
+        "src\\validation\\master_block2.ts"
+      ],
+      "selects": [
+        "*, assinaturas(nome, valor, codigo_assinatura, imagem_url)",
+        "status, assinatura_id, data_cancelamento",
+        "id, status, data_vencimento, data_criacao",
+        "id, codigo_ordem, quantidade, assinaturas(valor)",
+        "*, assinaturas(nome, valor), faturas(*), orcamentos(*)",
+        "*, assinaturas(nome, imagem_url, codigo_assinatura, valor), faturas(*)",
+        "id"
+      ],
+      "mutations": []
+    },
+    "ordens_compra": {
+      "files": [
+        "src\\components\\admin\\OrdensCompraModule.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioOperacional.tsx",
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+        "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+        "src\\components\\client\\ClientProdutos.tsx",
+        "src\\components\\client\\store\\PurchasesPage.tsx",
+        "src\\components\\client\\StoreHub.tsx"
+      ],
+      "selects": [
+        "*, produtos(nome, valor, codigo_produto, codigo_barras, identificador_preferencial, tipo_codigo_barras, imagem_url)",
+        "id, status, data_criacao",
+        "id, codigo_ordem, quantidade, produtos(valor)",
+        "id",
+        "*, produtos(nome, valor, imagem_url), faturas(*), orcamentos(*)",
+        "*, produtos(nome, imagem_url, codigo_produto, codigo_barras, identificador_preferencial, valor)",
+        "*, produtos(*)"
+      ],
+      "mutations": []
+    },
+    "faturas": {
+      "files": [
+        "src\\components\\admin\\OrdensCompraModule.tsx",
+        "src\\components\\admin\\PainelRentabilidade.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioClientes.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioExecutivo.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioFinanceiro.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioLoja.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioRentabilidade.tsx",
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+        "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+        "src\\components\\client\\ClientFinanceiro.tsx",
+        "src\\components\\client\\ClientMeuCredito.tsx",
+        "src\\components\\client\\financeiro\\FaturasList.tsx",
+        "src\\components\\client\\StoreHub.tsx",
+        "src\\lib\\pixService.ts",
+        "src\\utils\\promotions.ts",
+        "src\\utils\\referral.ts",
+        "src\\utils\\riskProfile.ts",
+        "src\\validation\\master_block2.ts",
+        "src\\validation\\step2_sales_flow.ts",
+        "src\\validation\\step3_finance_gamification.ts"
+      ],
+      "selects": [
+        "*",
+        "*, ordens_servico(id, orcamento_id)",
+        "cliente_id, valor_pago",
+        "valor_pago",
+        "id",
+        "valor_pago, data_pagamento",
+        "valor_total, valor_pago, status, tipo, data_pagamento",
+        "id, valor_pago, status",
+        "\r\n          id, valor_total, valor_base_original, status, data_pagamento, codigo_fatura, tipo, is_amortizacao_credito,\r\n          clientes (nome),\r\n          ordens_compra (\r\n            orcamentos ( id, codigo_orcamento, total, acrescimo, desconto, status )\r\n          )\r\n        ",
+        "\r\n          *,\r\n          cobrancas(id, status),\r\n          clientes(id, nome, cpf, cnpj, email, telefone, codigo_cliente),\r\n          ordens_servico(id, codigo_os, orcamentos(codigo_orcamento, total, valor_servico, valor_adicional, descricao_adicional, acrescimo, desconto, servicos(nome))),\r\n          ordens_compra(id, codigo_ordem, quantidade, produtos(nome, valor)),\r\n          ordens_assinatura(id, codigo_ordem, quantidade, prazo_meses, assinaturas(nome, valor)),\r\n          pagamentos(id, metodo, valor, data_pagamento),\r\n          ordens_fiscais(id, codigo_fiscal, status_emissao)\r\n        ",
+        "*, clientes(nome, telefone)",
+        "valor_total",
+        "\r\n        *,\r\n        itens_faturados,\r\n        historico_pagamentos,\r\n        pagamentos(*),\r\n        ordens_servico (\r\n          codigo_os,\r\n          orcamentos (\r\n            id,\r\n            codigo_orcamento,\r\n            total,\r\n            valor_servico,\r\n            valor_adicional,\r\n            descricao_adicional,\r\n            acrescimo,\r\n            desconto,\r\n            promocao_id,\r\n            promocoes(titulo, codigo_promocao, descricao),\r\n            servicos (\r\n              nome\r\n            )\r\n          )\r\n        ),\r\n        ordens_compra (\r\n          codigo_ordem,\r\n          quantidade,\r\n          produtos (\r\n            nome,\r\n            valor\r\n          ),\r\n          orcamentos (\r\n            id,\r\n            codigo_orcamento,\r\n            total,\r\n            desconto,\r\n            taxa_entrega,\r\n            cupom_desconto_id,\r\n            cupom_entrega_id\r\n          )\r\n        ),\r\n        ordens_assinatura (\r\n          codigo_ordem,\r\n          quantidade,\r\n          prazo_meses,\r\n          assinaturas (\r\n            nome,\r\n            valor\r\n          ),\r\n          orcamentos (\r\n            id,\r\n            codigo_orcamento,\r\n            total,\r\n            desconto,\r\n            taxa_entrega,\r\n            cupom_desconto_id,\r\n            cupom_entrega_id,\r\n            quantidade_meses,\r\n            prazo_indeterminado\r\n          )\r\n        )\r\n      ",
+        "id, status, forma_pagamento_escolhida, data_pagamento, valor_total",
+        "id, itens_faturados",
+        "status",
+        "\n        id,\n        cliente_id,\n        os_id,\n        ordem_compra_id,\n        ordem_assinatura_id,\n        ordens_servico (orcamento_id, orcamentos(promocao_id)),\n        ordens_compra (orcamento_id, orcamentos(promocao_id)),\n        ordens_assinatura (orcamento_id, orcamentos(promocao_id))\n      ",
+        "\n        *,\n        clientes (id, nome, indicacao_origem_id),\n        ordens_servico (orcamentos (total, desconto)),\n        ordens_compra (orcamentos (total, desconto)),\n        ordens_assinatura (orcamentos (total, desconto))\n      "
+      ],
+      "mutations": []
+    },
+    "cupons_loja": {
+      "files": [
+        "src\\components\\admin\\OrdensCompraModule.tsx",
+        "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+        "src\\components\\client\\ClientGSAStore.tsx",
+        "src\\components\\client\\ClientMeuCredito.tsx",
+        "src\\components\\client\\financeiro\\FaturasList.tsx",
+        "src\\components\\client\\store\\CheckoutModal.tsx",
+        "src\\components\\client\\store\\CheckoutPage.tsx",
+        "src\\components\\client\\store\\CouponsPage.tsx",
+        "src\\components\\client\\store\\StoreHubCoupons.tsx",
+        "src\\components\\client\\StoreHub.tsx"
+      ],
+      "selects": [
+        "codigo_cupom",
+        "*, cliente:clientes(nome, email)",
+        "*",
+        "id, status, data_validade, total_usos, limite_usos"
+      ],
+      "mutations": []
+    },
+    "points_transactions": {
+      "files": [
+        "src\\components\\admin\\OrdensCompraModule.tsx",
+        "src\\components\\client\\ClientPontos.tsx",
+        "src\\components\\client\\financeiro\\FaturasList.tsx",
+        "src\\components\\client\\StoreHub.tsx"
+      ],
+      "selects": [
+        "pontos",
+        "*"
+      ],
+      "mutations": []
+    },
+    "pontos_movimentacoes": {
+      "files": [
+        "src\\components\\admin\\OrdensCompraModule.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioGamificacao.tsx",
+        "src\\components\\client\\ClientPontos.tsx",
+        "src\\components\\client\\financeiro\\FaturasList.tsx",
+        "src\\components\\client\\StoreHub.tsx",
+        "src\\pages\\ClientPortal.tsx",
+        "src\\utils\\gamification.ts"
+      ],
+      "selects": [
+        "pontos",
+        "tipo, pontos, valor_convertido, data_movimentacao",
+        "*",
+        "id"
+      ],
+      "mutations": []
+    },
+    "extrato_financeiro": {
+      "files": [
+        "src\\components\\admin\\OrdensCompraModule.tsx",
+        "src\\components\\client\\ClientVouchers.tsx",
+        "src\\components\\client\\financeiro\\ExtratoList.tsx",
+        "src\\components\\client\\financeiro\\FaturasList.tsx",
+        "src\\components\\client\\StoreHub.tsx",
+        "src\\utils\\referral.ts",
+        "src\\validation\\step5_reports_consolidation.ts"
+      ],
+      "selects": [
+        "valor",
+        "referencia_id",
+        "*"
+      ],
+      "mutations": []
+    },
+    "orcamentos": {
+      "files": [
+        "src\\components\\admin\\PainelRentabilidade.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioOS.tsx",
+        "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+        "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx",
+        "src\\components\\client\\ClientMeuCredito.tsx",
+        "src\\components\\client\\ClientOrcamentos.tsx",
+        "src\\components\\client\\ClientPromocoes.tsx",
+        "src\\components\\client\\financeiro\\FaturasList.tsx",
+        "src\\components\\client\\store\\CheckoutModal.tsx",
+        "src\\components\\client\\store\\CheckoutPage.tsx",
+        "src\\components\\client\\store\\CouponsPage.tsx",
+        "src\\components\\client\\store\\ProductReviews.tsx",
+        "src\\components\\client\\store\\PurchasesPage.tsx",
+        "src\\components\\client\\store\\StoreHubCoupons.tsx",
+        "src\\components\\client\\StoreHub.tsx",
+        "src\\hooks\\useClientNotifications.tsx",
+        "src\\lib\\pixService.ts",
+        "src\\pages\\ClientPortal.tsx",
+        "src\\validation\\step2_sales_flow.ts",
+        "src\\validation\\step5_reports_consolidation.ts"
+      ],
+      "selects": [
+        "*",
+        "cliente_id",
+        "id",
+        "id, status, total, categoria, data_criacao",
+        "id, status",
+        "\r\n          *,\r\n          clientes (\r\n            id,\r\n            nome,\r\n            cpf,\r\n            cnpj,\r\n            email,\r\n            telefone,\r\n            codigo_cliente,\r\n            indicacao_origem_id\r\n          ),\r\n          servicos (\r\n            nome,\r\n            descricao,\r\n            valor\r\n          ),\r\n          produtos (\r\n            nome,\r\n            descricao,\r\n            valor\r\n          ),\r\n          assinaturas (\r\n            nome,\r\n            descricao,\r\n            valor\r\n          )\r\n        ",
+        "status",
+        "\r\n            *,\r\n            ordens_compra (\r\n              *,\r\n              produtos (*)\r\n            ),\r\n            ordens_assinatura (\r\n              *,\r\n              assinaturas (*)\r\n            )\r\n          ",
+        "*, clientes(nome), servicos(nome), produtos(nome), assinaturas(nome), promocoes(titulo, codigo_promocao, descricao)",
+        "promocao_id",
+        "id, codigo_orcamento, total, desconto, promocao_id, data_criacao, status",
+        "\r\n                  *,\r\n                  ordens_compra (\r\n                    *,\r\n                    produtos (*)\r\n                  ),\r\n                  ordens_assinatura (\r\n                    *,\r\n                    assinaturas (*)\r\n                  )\r\n                ",
+        "cupom_desconto_id, cupom_entrega_id",
+        "\n          *,\n          loja_pedido_itens (\n            id, nome, codigo, tipo, valor_unitario, quantidade, subtotal, is_brinde,\n            produtos (id, nome, imagem_url, codigo_produto, codigo_barras, valor)\n          ),\n          ordens_compra (\n            id, codigo_ordem, quantidade,\n            produtos (id, nome, imagem_url, codigo_produto, codigo_barras, valor)\n          )\n        ",
+        "status, fase_negociacao",
+        "total"
+      ],
+      "mutations": []
+    },
+    "clientes": {
+      "files": [
+        "src\\components\\admin\\PainelRentabilidade.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioClientes.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioCredito.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioExecutivo.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioFinanceiro.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioGamificacao.tsx",
+        "src\\components\\admin\\super-domains\\contratos\\AreaVipView.tsx",
+        "src\\components\\admin\\super-domains\\contratos\\AtendimentoTicketsView.tsx",
+        "src\\components\\admin\\super-domains\\contratos\\CrmClientesView.tsx",
+        "src\\components\\admin\\super-domains\\contratos\\HubEmpresasView.tsx",
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+        "src\\components\\admin\\super-domains\\governanca\\GovernancaInfraView.tsx",
+        "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+        "src\\components\\admin\\SystemMonitorModule.tsx",
+        "src\\components\\admin\\SystemStatusIndicator.tsx",
+        "src\\components\\admin\\TravelAdminModule.tsx",
+        "src\\components\\client\\ClientAffiliatePanel.tsx",
+        "src\\components\\client\\ClientEmprestimos.tsx",
+        "src\\components\\client\\ClientFinanceiro.tsx",
+        "src\\components\\client\\ClientGSAStore.tsx",
+        "src\\components\\client\\ClientIndiqueGanhe.tsx",
+        "src\\components\\client\\ClientOrcamentos.tsx",
+        "src\\components\\client\\ClientPontos.tsx",
+        "src\\components\\client\\ClientPromocoes.tsx",
+        "src\\components\\client\\ClientSuporte.tsx",
+        "src\\components\\client\\ClientTransferencias.tsx",
+        "src\\components\\client\\financeiro\\PaymentModal.tsx",
+        "src\\components\\client\\store\\CheckoutModal.tsx",
+        "src\\components\\client\\store\\CheckoutPage.tsx",
+        "src\\components\\client\\store\\EcommerceHeader.tsx",
+        "src\\components\\client\\store\\ProductReviews.tsx",
+        "src\\components\\client\\store\\PurchasesPage.tsx",
+        "src\\features\\partners\\service.ts",
+        "src\\hooks\\useClientNotifications.tsx",
+        "src\\lib\\sessionService.ts",
+        "src\\lib\\whatsappNotificationService.ts",
+        "src\\pages\\Afiliado\\AfiliadoDashboard.tsx",
+        "src\\pages\\ClientPortal.tsx",
+        "src\\utils\\gamification.ts",
+        "src\\utils\\referral.ts",
+        "src\\utils\\riskProfile.ts",
+        "src\\validation\\find_records.ts",
+        "src\\validation\\master_block2.ts",
+        "src\\validation\\step1_referral.ts",
+        "src\\validation\\step3_finance_gamification.ts",
+        "src\\validation\\step4_integrity_audit.ts",
+        "src\\validation\\step5_reports_consolidation.ts"
+      ],
+      "selects": [
+        "indicacao_origem_id",
+        "id, nome, status, tipo_pessoa, data_cadastro, saldo_carteira, saldo_pontos, carteira_bloqueada, pontos_bloqueados, nivel_id, pontos_totais",
+        "id, nome, limite_credito_total, limite_credito_disponivel",
+        "id",
+        "data_cadastro",
+        "saldo_carteira",
+        "saldo_pontos, pontos_totais, nivel_id",
+        "id, nome, email, telefone, nivel_id, pontos_totais, data_cadastro, saldo_pontos",
+        "id, nome, email, telefone",
+        "\n            id, codigo_cliente, nome, tipo_pessoa, cpf, cnpj, email, telefone,\n            status, data_cadastro, cep, endereco, numero, bairro, cidade, estado,\n            observacoes, saldo_carteira, saldo_pontos, nivel_id, carteira_bloqueada,\n            pontos_bloqueados, nivel_manual_id\n          ",
+        "*",
+        "id, nome, cpf, cnpj, email, telefone",
+        "id, nome, email, data_cadastro, status",
+        "id, nome",
+        "id, nome, email, telefone, codigo_cliente",
+        "nome, telefone",
+        "observacoes",
+        "*, client_levels!nivel_id(*)",
+        "tipo_pessoa",
+        "nome",
+        "saldo_carteira, saldo_pontos, carteira_bloqueada, pontos_bloqueados",
+        "id, nome, email, telefone, limite_credito_total, limite_credito_disponivel, opcao_pagamento_parcelado, max_parcelas, cep, endereco, numero, bairro, cidade, estado, saldo_carteira",
+        "saldo_pontos",
+        "limite_credito_disponivel, saldo_carteira, saldo_pontos",
+        "id, nome, email, telefone, limite_credito_total, limite_credito_disponivel, opcao_pagamento_parcelado, max_parcelas, cep, endereco, numero, bairro, cidade, estado, saldo_carteira, saldo_pontos",
+        "cidade, estado, cep",
+        "nome, cidade, estado",
+        "nome, email, telefone",
+        "id, nome, email, telefone, cpf, endereco, cidade, estado, cep",
+        "telefone",
+        "nome, cpf, cnpj, tipo_pessoa, email, telefone",
+        "*, auto_level:client_levels!nivel_id(*), manual_level:client_levels!nivel_manual_id(*)",
+        "status, bonus_boas_vindas_pendente, saldo_pontos, saldo_carteira, indicacao_origem_id",
+        "\n        saldo_pontos,\n        pontos_totais,\n        nivel_id,\n        nivel_manual_id,\n        client_levels!nivel_id (\n          nome_nivel,\n          pontos_por_real\n        )\n      ",
+        "id, nome, cpf",
+        "saldo_pontos, pontos_totais"
+      ],
+      "mutations": []
+    },
+    "indicacoes": {
+      "files": [
+        "src\\components\\admin\\PainelRentabilidade.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioMarketing.tsx",
+        "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+        "src\\components\\client\\ClientIndiqueGanhe.tsx",
+        "src\\pages\\ClientPortal.tsx",
+        "src\\utils\\referral.ts",
+        "src\\validation\\step1_referral.ts",
+        "src\\validation\\step5_reports_consolidation.ts"
+      ],
+      "selects": [
+        "bonus_indicador",
+        "id, status, bonus_indicador, bonus_indicado, data_conclusao, data_criacao",
+        "*",
+        "status",
+        "*, vouchers(codigo_voucher, validade)",
+        "id, status",
+        "*, indicador:indicador_id(id, nome, saldo_carteira)",
+        "indicador_id"
+      ],
+      "mutations": []
+    },
+    "prestador_documentos": {
+      "files": [
+        "src\\components\\admin\\prestadores\\AdminPrestadorDocumentos.tsx",
+        "src\\components\\prestador\\PrestadorDocumentos.tsx"
+      ],
+      "selects": [
+        "*",
+        "id,nome,tipo,urls,status,created_at,updated_at,motivo_rejeicao,enviado_por_admin"
+      ],
+      "mutations": []
+    },
+    "prestador_premios": {
+      "files": [
+        "src\\components\\admin\\prestadores\\AdminPrestadorPremios.tsx",
+        "src\\components\\prestador\\PrestadorPremios.tsx"
+      ],
+      "selects": [
+        "*",
+        "id,titulo,descricao,status,created_at,data_resgate"
+      ],
+      "mutations": []
+    },
+    "prestador_promocoes": {
+      "files": [
+        "src\\components\\admin\\prestadores\\AdminPrestadorPromocoes.tsx",
+        "src\\components\\prestador\\PrestadorPromocoes.tsx"
+      ],
+      "selects": [
+        "id",
+        "*",
+        "id,titulo,descricao,regras,status,data_inicio,data_fim,created_at"
+      ],
+      "mutations": []
+    },
+    "prestador_promocoes_ativacoes": {
+      "files": [
+        "src\\components\\admin\\prestadores\\AdminPrestadorPromocoes.tsx",
+        "src\\components\\prestador\\PrestadorPromocoes.tsx"
+      ],
+      "selects": [
+        "\r\n          id,\r\n          created_at,\r\n          ativa,\r\n          prestadores (\r\n            nome_razao,\r\n            credencial_acesso,\r\n            telefone,\r\n            tipo_cadastro\r\n          )\r\n        ",
+        "promocao_id,ativa"
+      ],
+      "mutations": []
+    },
+    "prestador_vouchers": {
+      "files": [
+        "src\\components\\admin\\prestadores\\AdminPrestadorVouchers.tsx",
+        "src\\components\\prestador\\PrestadorVouchers.tsx"
+      ],
+      "selects": [
+        "*",
+        "id,codigo,valor,descricao,status,created_at,updated_at"
+      ],
+      "mutations": []
+    },
+    "loja_estoque_historico": {
+      "files": [
+        "src\\components\\admin\\ProdutosModule.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "client_levels": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioClientes.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioGamificacao.tsx",
+        "src\\components\\client\\ClientAreaVIP.tsx",
+        "src\\hooks\\useVipLevels.ts"
+      ],
+      "selects": [
+        "id, nome_nivel, cor",
+        "id, nome_nivel, cor, pontos_minimos",
+        "*"
+      ],
+      "mutations": []
+    },
+    "cobrancas": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioCobranca.tsx",
+        "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx",
+        "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+        "src\\utils\\riskProfile.ts"
+      ],
+      "selects": [
+        "\r\n          id, status, valor_original, valor_atualizado, dias_atraso,\r\n          created_at, updated_at\r\n        ",
+        "\n          *,\n          faturas(id, codigo_fatura, data_vencimento, valor_total),\n          clientes(id, nome, cpf, cnpj, telefone, email, codigo_cliente),\n          cobranca_historico(*),\n          cobranca_acordo_parcelas(*)\n        ",
+        "id",
+        "*"
+      ],
+      "mutations": []
+    },
+    "loja_credito_solicitacoes": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioCredito.tsx",
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx",
+        "src\\components\\client\\ClientMeuCredito.tsx",
+        "src\\components\\client\\store\\CheckoutModal.tsx",
+        "src\\components\\client\\store\\CheckoutPage.tsx"
+      ],
+      "selects": [
+        "id, tipo_solicitacao, status, limite_solicitado, limite_aprovado, created_at",
+        "\n          *,\n          clientes(id, nome, cpf, cnpj, email, telefone, codigo_cliente)\n        ",
+        "*",
+        "id"
+      ],
+      "mutations": []
+    },
+    "emprestimos": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioEmprestimos.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioRentabilidade.tsx",
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx",
+        "src\\components\\client\\ClientEmprestimos.tsx",
+        "src\\lib\\privateStorage.ts",
+        "src\\utils\\emprestimoUtils.ts",
+        "src\\utils\\riskProfile.ts"
+      ],
+      "selects": [
+        "id, status, valor_aprovado, valor_total_financiado, taxa_servico, created_at, juros_total_percentual",
+        "\r\n          id, codigo_emprestimo, valor_solicitado, valor_total_financiado, created_at, status, data_ativacao,\r\n          clientes (nome),\r\n          emprestimo_parcelas (valor, status, data_pagamento)\r\n        ",
+        "\n          *,\n          clientes(id, nome, cpf, cnpj, email, telefone, saldo_carteira, codigo_cliente),\n          emprestimo_parcelas(id, numero_parcela, valor, data_vencimento, status),\n          emprestimo_documentos(id, tipo, arquivo_url, status)\n        ",
+        "*, clientes(*), orcamentos(*)",
+        "cliente_id",
+        "*",
+        "status"
+      ],
+      "mutations": []
+    },
+    "emprestimo_parcelas": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioEmprestimos.tsx",
+        "src\\components\\client\\ClientEmprestimos.tsx",
+        "src\\utils\\emprestimoUtils.ts",
+        "src\\utils\\riskProfile.ts"
+      ],
+      "selects": [
+        "id, valor, status, data_vencimento",
+        "*, faturas!emprestimo_parcelas_fatura_id_fkey(cobrancas(id))",
+        "*",
+        "status"
+      ],
+      "mutations": []
+    },
+    "saques": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioExecutivo.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioFinanceiro.tsx",
+        "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx",
+        "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx",
+        "src\\components\\client\\ClientFinanceiro.tsx",
+        "src\\components\\client\\financeiro\\SaquesList.tsx"
+      ],
+      "selects": [
+        "id",
+        "valor, valor_liquido, taxa_aplicada, status, data_solicitacao",
+        "*, clientes(id, nome, codigo_cliente, cpf, saldo_carteira, telefone, email)",
+        "\n          *,\n          cliente:clientes(nome, email, telefone, cpf, cnpj, tipo_pessoa)\n        ",
+        "*"
+      ],
+      "mutations": []
+    },
+    "pagamentos": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioFinanceiro.tsx",
+        "src\\components\\client\\ClientVouchers.tsx",
+        "src\\validation\\step3_finance_gamification.ts"
+      ],
+      "selects": [
+        "metodo, valor, data_pagamento",
+        "voucher_id, faturas!inner(cliente_id)"
+      ],
+      "mutations": []
+    },
+    "transferencias": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioFinanceiro.tsx",
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx",
+        "src\\components\\client\\ClientFinanceiro.tsx",
+        "src\\components\\client\\ClientPontos.tsx",
+        "src\\components\\client\\ClientTransferencias.tsx",
+        "src\\components\\client\\financeiro\\ExtratoList.tsx"
+      ],
+      "selects": [
+        "valor, tipo, status, data_solicitacao",
+        "\n          *,\n          cliente_origem:clientes!cliente_origem_id(id, nome, cpf, data_cadastro, saldo_carteira, saldo_pontos, telefone),\n          cliente_destino:clientes!cliente_destino_id(id, nome, cpf, data_cadastro, saldo_carteira, saldo_pontos, telefone)\n        ",
+        "id",
+        "*, cliente_origem:clientes!cliente_origem_id(nome, cpf, data_cadastro, saldo_carteira, saldo_pontos), cliente_destino:clientes!cliente_destino_id(nome, cpf, data_cadastro, saldo_carteira, saldo_pontos)",
+        "*, cliente_origem:clientes!cliente_origem_id(nome, cpf, cnpj), cliente_destino:clientes!cliente_destino_id(nome, cpf, cnpj)",
+        "*, cliente_origem:clientes!cliente_origem_id(nome), cliente_destino:clientes!cliente_destino_id(nome)"
+      ],
+      "mutations": []
+    },
+    "ordens_fiscais": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioFiscal.tsx",
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+        "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+        "src\\components\\client\\ClientFinanceiro.tsx",
+        "src\\components\\client\\financeiro\\FaturasList.tsx",
+        "src\\components\\client\\financeiro\\NotasFiscaisList.tsx",
+        "src\\lib\\privateStorage.ts",
+        "src\\validation\\master_block3.ts"
+      ],
+      "selects": [
+        "id, codigo_fiscal, cliente_nome, tipo_compra, valor_bruto, valor_desconto, valor_total, forma_pagamento, status_pagamento, status_emissao, numero_nota, data_emissao, data_pagamento, created_at",
+        "id",
+        "id, codigo_fiscal, status_emissao, arquivo_nf_url, arquivo_nf_xml_url",
+        "*",
+        "cliente_id"
+      ],
+      "mutations": []
+    },
+    "cliente_premios": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioGamificacao.tsx",
+        "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+        "src\\components\\client\\ClientPremios.tsx"
+      ],
+      "selects": [
+        "id, status, pontos_custo, data_resgate",
+        "*, cliente:clientes(nome, email, cpf, cnpj)",
+        "status",
+        "id, cliente_id, nome",
+        "*"
+      ],
+      "mutations": []
+    },
+    "loja_solicitacoes": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioLoja.tsx",
+        "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+        "src\\components\\client\\ClientOrcamentos.tsx",
+        "src\\components\\client\\StoreHub.tsx"
+      ],
+      "selects": [
+        "id, tipo, status, created_at",
+        "*, cliente:clientes(nome, email)",
+        "id",
+        "\r\n          *,\r\n          orcamento_origem:orcamento_origem_id(\r\n            codigo_orcamento,\r\n            total,\r\n            origem_gsa_store\r\n          )\r\n        ",
+        "orcamento_origem_id, status"
+      ],
+      "mutations": []
+    },
+    "vouchers": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioMarketing.tsx",
+        "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+        "src\\components\\client\\ClientVouchers.tsx",
+        "src\\components\\client\\financeiro\\PaymentModal.tsx",
+        "src\\validation\\step1_referral.ts"
+      ],
+      "selects": [
+        "id, tipo, valor, status, categoria, data_uso, created_at",
+        "*, cliente:clientes(nome, email, cpf)",
+        "*"
+      ],
+      "mutations": []
+    },
+    "promocoes": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioMarketing.tsx",
+        "src\\components\\client\\ClientPromocoes.tsx",
+        "src\\components\\client\\store\\PromotionsPage.tsx",
+        "src\\hooks\\useClientNotifications.tsx",
+        "src\\validation\\master_block2.ts"
+      ],
+      "selects": [
+        "id, titulo, tipo, status, created_at",
+        "*",
+        "id"
+      ],
+      "mutations": []
+    },
+    "cliente_promocoes": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioMarketing.tsx",
+        "src\\components\\client\\ClientOrcamentos.tsx",
+        "src\\components\\client\\ClientPromocoes.tsx",
+        "src\\components\\client\\store\\PromotionsPage.tsx",
+        "src\\components\\client\\StoreHub.tsx",
+        "src\\hooks\\useClientNotifications.tsx",
+        "src\\utils\\promotions.ts"
+      ],
+      "selects": [
+        "id, status, created_at",
+        "*, promocoes!inner(*)",
+        "*, orcamentos(codigo_orcamento, total, desconto, titulo_solicitacao)",
+        "*, promocoes(*)",
+        "promocao_id",
+        "id"
+      ],
+      "mutations": []
+    },
+    "solicitacoes_exclusao": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioOperacional.tsx",
+        "src\\lib\\deleteRequest.ts",
+        "src\\validation\\master_block4.ts",
+        "src\\validation\\step4_integrity_audit.ts"
+      ],
+      "selects": [
+        "id, tabela, status, created_at",
+        "count"
+      ],
+      "mutations": []
+    },
+    "prestador_faturas": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioPrestadores.tsx"
+      ],
+      "selects": [
+        "id, prestador_id, valor, status, data_pagamento"
+      ],
+      "mutations": []
+    },
+    "prestador_saques": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioPrestadores.tsx",
+        "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx",
+        "src\\components\\prestador\\PrestadorFinanceiro.tsx"
+      ],
+      "selects": [
+        "id, prestador_id, valor, status, created_at",
+        "id",
+        "\n          *,\n          prestador:prestadores(nome_razao, documento, email, telefone)\n        ",
+        "id,valor,valor_liquido,taxa_aplicada,tipo_chave_pix,chave_pix,status,data_vencimento,created_at,motivo_cancelamento,observacao"
+      ],
+      "mutations": []
+    },
+    "tickets": {
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioSuporte.tsx",
+        "src\\components\\admin\\super-domains\\contratos\\AtendimentoTicketsView.tsx",
+        "src\\components\\client\\ClientEmprestimos.tsx",
+        "src\\components\\client\\ClientFinanceiro.tsx",
+        "src\\components\\client\\ClientPremios.tsx",
+        "src\\components\\client\\ClientSuporte.tsx",
+        "src\\components\\prestador\\PrestadorSuporte.tsx",
+        "src\\pages\\Afiliado\\AfiliadoDashboard.tsx",
+        "src\\pages\\ClientPortal.tsx",
+        "src\\validation\\master_block2.ts"
+      ],
+      "selects": [
+        "id, cliente_id, assunto, status, data_abertura, data_fechamento",
+        "*",
+        "id",
+        "id,assunto,descricao,status,data_abertura,updated_at",
+        "id, data_abertura, status"
+      ],
+      "mutations": []
+    },
+    "automacao_scraping_configs": {
+      "files": [
+        "src\\components\\admin\\ScrapingAdminModule.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "viagens_categorias": {
+      "files": [
+        "src\\components\\admin\\ScrapingAdminModule.tsx",
+        "src\\components\\admin\\ViagensCategoriasModule.tsx"
+      ],
+      "selects": [
+        "slug, nome",
+        "*"
+      ],
+      "mutations": []
+    },
+    "automacao_scraping_logs": {
+      "files": [
+        "src\\components\\admin\\ScrapingExecutionMonitorModal.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "ticket_mensagens": {
+      "files": [
+        "src\\components\\admin\\super-domains\\contratos\\AtendimentoTicketsView.tsx",
+        "src\\components\\client\\ClientSuporte.tsx",
+        "src\\components\\prestador\\PrestadorSuporte.tsx",
+        "src\\validation\\master_block2.ts"
+      ],
+      "selects": [
+        "*",
+        "id,ticket_id,autor_id,autor_nome,mensagem,anexo_url,anexo_tipo,data_envio,tipo"
+      ],
+      "mutations": []
+    },
+    "contratos": {
+      "files": [
+        "src\\components\\admin\\super-domains\\contratos\\ContratosDocumentosView.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "saude_contratos": {
+      "files": [
+        "src\\components\\admin\\super-domains\\contratos\\GsaSaudeView.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "seguros_apolices": {
+      "files": [
+        "src\\components\\admin\\super-domains\\contratos\\GsaSegurosView.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "loja_reembolsos": {
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\RentabilidadeReembolsosView.tsx",
+        "src\\components\\client\\StoreHub.tsx"
+      ],
+      "selects": [
+        "*, clientes(id, nome, cpf, email, telefone)",
+        "\r\n          *,\r\n          ordens_compra(\r\n            codigo_ordem,\r\n            orcamento_id,\r\n            produtos(nome),\r\n            orcamentos(codigo_orcamento)\r\n          ),\r\n          ordens_assinatura(\r\n            codigo_ordem,\r\n            orcamento_id,\r\n            assinaturas(nome),\r\n            orcamentos(codigo_orcamento)\r\n          )\r\n        "
+      ],
+      "mutations": []
+    },
+    "carteira_lancamentos": {
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\RentabilidadeReembolsosView.tsx",
+        "src\\utils\\referral.ts",
+        "src\\validation\\step5_reports_consolidation.ts"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "sistema_logs": {
+      "files": [
+        "src\\components\\admin\\super-domains\\governanca\\GovernancaAuditoriaView.tsx",
+        "src\\validation\\master_block3.ts",
+        "src\\validation\\master_block4.ts",
+        "src\\validation\\step4_integrity_audit.ts"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "prestador_historico": {
+      "files": [
+        "src\\components\\admin\\super-domains\\pessoas\\NovoPrestadorDrawer.tsx",
+        "src\\components\\admin\\super-domains\\pessoas\\PrestadorDetailDrawer.tsx"
+      ],
+      "selects": [],
+      "mutations": []
+    },
+    "fornecedores": {
+      "files": [
+        "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "src\\components\\admin\\SystemMonitorModule.tsx",
+        "src\\pages\\Fornecedor\\FornecedorDashboard.tsx"
+      ],
+      "selects": [
+        "id",
+        "id, razao_social, email, created_at, status",
+        "nome_fantasia, razao_social, telefone"
+      ],
+      "mutations": []
+    },
+    "gsa_afiliados": {
+      "files": [
+        "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "src\\components\\admin\\SystemMonitorModule.tsx"
+      ],
+      "selects": [
+        "id",
+        "id, nome_divulgacao, created_at, status"
+      ],
+      "mutations": []
+    },
+    "viagens_pacotes": {
+      "files": [
+        "src\\components\\admin\\TravelAdminModule.tsx",
+        "src\\components\\client\\marketplace\\travel\\TravelCategoryPage.tsx",
+        "src\\components\\client\\marketplace\\travel\\TravelPackageDetailPage.tsx",
+        "src\\components\\client\\marketplace\\travel\\TravelQuoteRequestPage.tsx"
+      ],
+      "selects": [
+        "\r\n            id, titulo, slug, dias, noites, origem, destino, preco_venda,\r\n            viagens_pacote_imagens(url, is_capa)\r\n          ",
+        "\r\n            *,\r\n            viagens_pacote_imagens(url, is_capa, ordem)\r\n          ",
+        "id, titulo, origem, destino, data_ida, data_volta, preco_venda, status"
+      ],
+      "mutations": []
+    },
+    "viagens_pacote_imagens": {
+      "files": [
+        "src\\components\\admin\\TravelAdminModule.tsx"
+      ],
+      "selects": [],
+      "mutations": []
+    },
+    "viagens_propostas": {
+      "files": [
+        "src\\components\\admin\\TravelAdminModule.tsx",
+        "src\\components\\client\\marketplace\\travel\\TravelProposalsPage.tsx"
+      ],
+      "selects": [
+        "\r\n          *,\r\n          viagens_solicitacoes_reserva (protocolo)\r\n        "
+      ],
+      "mutations": []
+    },
+    "level_history": {
+      "files": [
+        "src\\components\\client\\ClientAreaVIP.tsx",
+        "src\\components\\client\\ClientPontos.tsx"
+      ],
+      "selects": [
+        "*, nivel_anterior:client_levels!nivel_anterior_id(nome_nivel), nivel_novo:client_levels!nivel_novo_id(nome_nivel)",
+        "\r\n          *,\r\n          nivel_anterior:client_levels!nivel_anterior_id(nome_nivel, cor),\r\n          nivel_novo:client_levels!nivel_novo_id(nome_nivel, cor)\r\n        "
+      ],
+      "mutations": []
+    },
+    "emprestimo_historico": {
+      "files": [
+        "src\\components\\client\\ClientEmprestimos.tsx",
+        "src\\utils\\emprestimoUtils.ts"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "emprestimo_comentarios": {
+      "files": [
+        "src\\components\\client\\ClientEmprestimos.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "emprestimo_documentos": {
+      "files": [
+        "src\\components\\client\\ClientEmprestimos.tsx"
+      ],
+      "selects": [
+        "*",
+        "status"
+      ],
+      "mutations": []
+    },
+    "cupons_ativados": {
+      "files": [
+        "src\\components\\client\\ClientGSAStore.tsx",
+        "src\\components\\client\\store\\CheckoutModal.tsx",
+        "src\\components\\client\\store\\CheckoutPage.tsx",
+        "src\\components\\client\\store\\CouponsPage.tsx",
+        "src\\components\\client\\store\\StoreHubCoupons.tsx"
+      ],
+      "selects": [
+        "cupom_id",
+        "id"
+      ],
+      "mutations": []
+    },
+    "promocoes_quantidade_ativadas": {
+      "files": [
+        "src\\components\\client\\ClientGSAStore.tsx",
+        "src\\components\\client\\store\\CheckoutPage.tsx",
+        "src\\components\\client\\store\\PromotionsPage.tsx",
+        "src\\components\\client\\StoreHub.tsx"
+      ],
+      "selects": [
+        "promocao_quantidade_id"
+      ],
+      "mutations": []
+    },
+    "promocoes_quantidade": {
+      "files": [
+        "src\\components\\client\\ClientGSAStore.tsx",
+        "src\\components\\client\\store\\CheckoutPage.tsx",
+        "src\\components\\client\\store\\PromotionsPage.tsx",
+        "src\\components\\client\\StoreHub.tsx"
+      ],
+      "selects": [
+        "*, produto_brinde:produtos!produto_brinde_id(*), produto_gatilho:produtos!produto_gatilho_id(nome)",
+        "*",
+        "id, nome, tipo_promocao, desconto_tipo, desconto_valor"
+      ],
+      "mutations": []
+    },
+    "loja_credito_documentos": {
+      "files": [
+        "src\\components\\client\\ClientMeuCredito.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "loja_credito_movimentacoes": {
+      "files": [
+        "src\\components\\client\\ClientMeuCredito.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "loja_avaliacoes": {
+      "files": [
+        "src\\components\\client\\ClientOrcamentos.tsx",
+        "src\\components\\client\\store\\OrderReviewModal.tsx",
+        "src\\lib\\storeReviews.ts"
+      ],
+      "selects": [
+        "id",
+        "*"
+      ],
+      "mutations": []
+    },
+    "empresa": {
+      "files": [
+        "src\\components\\client\\ClientPontos.tsx",
+        "src\\components\\client\\financeiro\\PaymentModal.tsx",
+        "src\\lib\\pdf.ts",
+        "src\\validation\\master_block3.ts"
+      ],
+      "selects": [
+        "taxa_conversao_pontos",
+        "*"
+      ],
+      "mutations": []
+    },
+    "cliente_documentos": {
+      "files": [
+        "src\\components\\client\\ClientProfile.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "fatura_contestacoes": {
+      "files": [
+        "src\\components\\client\\financeiro\\FaturasList.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "classificados_anuncios": {
+      "files": [
+        "src\\components\\client\\marketplace\\classifieds\\ClassifiedDetailPage.tsx",
+        "src\\components\\client\\marketplace\\classifieds\\ClassifiedsClientDashboard.tsx",
+        "src\\components\\client\\marketplace\\classifieds\\EditClassifiedListingPage.tsx",
+        "src\\components\\client\\marketplace\\classifieds\\GeneralClassifiedsPage.tsx",
+        "src\\components\\client\\marketplace\\classifieds\\MyClassifiedsPage.tsx",
+        "src\\components\\client\\marketplace\\classifieds\\RealEstateMarketplacePage.tsx",
+        "src\\components\\client\\marketplace\\classifieds\\VehiclesMarketplacePage.tsx"
+      ],
+      "selects": [
+        "\r\n          *,\r\n          classificados_midias(url, tipo, ordem)\r\n        ",
+        "id, slug, titulo, preco, status, categoria, created_at, classificados_propostas(id)",
+        "\r\n          id, cliente_id, categoria, titulo, descricao, preco, cidade, estado, bairro, detalhes, status,\r\n          classificados_midias(id, url, tipo, ordem),\r\n          classificados_ajustes(id, campos, observacao, status, created_at)\r\n        ",
+        "\r\n          id, slug, titulo, preco, cidade, estado, detalhes,\r\n          classificados_midias(url, tipo, ordem)\r\n        ",
+        "\r\n          id, slug, titulo, preco, status, categoria, created_at,\r\n          classificados_propostas(id),\r\n          classificados_ajustes(id, campos, observacao, status, created_at)\r\n        ",
+        "\r\n          id, slug, titulo, preco, cidade, estado, bairro, detalhes,\r\n          classificados_midias(url, tipo, ordem)\r\n        "
+      ],
+      "mutations": []
+    },
+    "classificados_propostas": {
+      "files": [
+        "src\\components\\client\\marketplace\\classifieds\\ClassifiedsClientDashboard.tsx",
+        "src\\components\\client\\marketplace\\classifieds\\MyNegotiationsPage.tsx"
+      ],
+      "selects": [
+        "id, status, valor_proposta, comprador_id, vendedor_id, updated_at, classificados_anuncios(titulo, categoria)",
+        "\n          *,\n          classificados_anuncios(titulo, preco, slug, categoria),\n          classificados_transacoes(status)\n        "
+      ],
+      "mutations": []
+    },
+    "classificados_transacoes": {
+      "files": [
+        "src\\components\\client\\marketplace\\classifieds\\ClassifiedsClientDashboard.tsx",
+        "src\\components\\client\\marketplace\\classifieds\\MyClassifiedSalesPage.tsx"
+      ],
+      "selects": [
+        "id, status, valor_final, created_at, anuncio_id, classificados_anuncios(titulo, categoria)",
+        "\r\n            id,\r\n            status,\r\n            valor_final,\r\n            created_at,\r\n            updated_at,\r\n            classificados_anuncios(titulo, categoria, slug)\r\n          "
+      ],
+      "mutations": []
+    },
+    "classificados_comissoes": {
+      "files": [
+        "src\\components\\client\\marketplace\\classifieds\\ClassifiedsClientDashboard.tsx",
+        "src\\components\\client\\marketplace\\classifieds\\MyClassifiedCommissionsPage.tsx"
+      ],
+      "selects": [
+        "id, status, valor_comissao, data_vencimento, created_at",
+        "\r\n            id,\r\n            status,\r\n            valor_comissao,\r\n            data_vencimento,\r\n            created_at,\r\n            fatura_id,\r\n            classificados_transacoes(\r\n              valor_final,\r\n              status,\r\n              classificados_anuncios(titulo, categoria)\r\n            )\r\n          "
+      ],
+      "mutations": []
+    },
+    "classificados_comissoes_config": {
+      "files": [
+        "src\\components\\client\\marketplace\\classifieds\\CreateListingWizard.tsx"
+      ],
+      "selects": [
+        "categoria, percentual"
+      ],
+      "mutations": []
+    },
+    "viagens_transacoes": {
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\MyTripsPage.tsx",
+        "src\\components\\client\\marketplace\\travel\\TravelCancellationsPage.tsx",
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx"
+      ],
+      "selects": [
+        "\r\n            id,\r\n            status,\r\n            valor_pago,\r\n            valor_total_contrato,\r\n            valor_faturado,\r\n            valor_efetivamente_pago,\r\n            valor_em_aberto,\r\n            pagamento_status,\r\n            created_at,\r\n            proposta_id,\r\n            viagens_propostas (\r\n              snapshot_completo,\r\n              reserva_id,\r\n              viagens_solicitacoes_reserva (protocolo)\r\n            ),\r\n            viagens_vouchers (\r\n              id,\r\n              storage_path,\r\n              file_name,\r\n              descricao,\r\n              created_at\r\n            )\r\n          ",
+        "\r\n          id,\r\n          status,\r\n          valor_pago,\r\n          valor_total_contrato,\r\n          valor_faturado,\r\n          valor_efetivamente_pago,\r\n          valor_em_aberto,\r\n          valor_elegivel_reembolso,\r\n          pagamento_status,\r\n          created_at,\r\n          viagens_propostas(snapshot_completo),\r\n          viagens_cancelamentos(\r\n            id,\r\n            motivo,\r\n            valor_solicitado,\r\n            valor_pago_no_pedido,\r\n            taxas_aplicaveis,\r\n            valor_reembolsado,\r\n            faturas_suspensas,\r\n            status,\r\n            resposta_gsa,\r\n            decidido_em,\r\n            concluido_em,\r\n            created_at\r\n          )\r\n        ",
+        "\r\n          *,\r\n          viagens_propostas (\r\n            id,\r\n            snapshot_completo,\r\n            quantidade_passageiros,\r\n            parcelamento_permitido,\r\n            viagens_passageiros (\r\n              id,\r\n              nome_completo,\r\n              data_nascimento,\r\n              tipo_documento,\r\n              numero_documento,\r\n              tipo_passageiro,\r\n              viagens_passageiro_documentos (\r\n                id,\r\n                tipo_documento,\r\n                verificado,\r\n                storage_path,\r\n                file_name,\r\n                file_type,\r\n                file_size\r\n              )\r\n            )\r\n          ),\r\n          viagens_vouchers (\r\n            id,\r\n            storage_path,\r\n            file_name,\r\n            descricao,\r\n            created_at\r\n          )\r\n        "
+      ],
+      "mutations": []
+    },
+    "viagens_orcamentos": {
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelQuoteRequestPage.tsx"
+      ],
+      "selects": [],
+      "mutations": []
+    },
+    "viagens_passageiros": {
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx"
+      ],
+      "selects": [],
+      "mutations": []
+    },
+    "viagens_passageiro_documentos": {
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx"
+      ],
+      "selects": [],
+      "mutations": []
+    },
+    "blog_posts": {
+      "files": [
+        "src\\components\\client\\store\\BlogHome.tsx",
+        "src\\components\\client\\store\\BlogPostPage.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "loja_pedido_itens": {
+      "files": [
+        "src\\components\\client\\store\\PurchasesPage.tsx",
+        "src\\components\\client\\StoreHub.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "promocoes_quantidade_uso": {
+      "files": [
+        "src\\components\\client\\StoreHub.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "suporte_mensagens": {
+      "files": [
+        "src\\components\\common\\SupportConversationModal.tsx"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "prestador_suporte_demandas": {
+      "files": [
+        "src\\components\\common\\SupportConversationModal.tsx"
+      ],
+      "selects": [],
+      "mutations": []
+    },
+    "prestador_agendamentos": {
+      "files": [
+        "src\\components\\prestador\\PrestadorAgenda.tsx"
+      ],
+      "selects": [
+        "id,demanda_id,data_inicio,data_fim,observacoes,status,demanda:prestador_demandas(id,titulo,status)"
+      ],
+      "mutations": []
+    },
+    "prestador_transacoes": {
+      "files": [
+        "src\\components\\prestador\\PrestadorFinanceiro.tsx",
+        "src\\validation\\step2_sales_flow.ts"
+      ],
+      "selects": [
+        "id,tipo,valor,descricao,status,created_at"
+      ],
+      "mutations": []
+    },
+    "parceiros": {
+      "files": [
+        "src\\features\\partners\\service.ts"
+      ],
+      "selects": [
+        "*",
+        "redemption_delay_24h, redemption_has_coupon, redemption_has_voucher, redemption_has_link"
+      ],
+      "mutations": []
+    },
+    "parceiros_resgates": {
+      "files": [
+        "src\\features\\partners\\service.ts"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "notificacoes": {
+      "files": [
+        "src\\hooks\\useClientNotifications.tsx",
+        "src\\hooks\\useProviderNotifications.tsx",
+        "src\\lib\\notifications.tsx",
+        "src\\lib\\notificationService.ts",
+        "src\\validation\\master_block3.ts",
+        "src\\validation\\step3_finance_gamification.ts"
+      ],
+      "selects": [
+        "*",
+        "id,tipo,titulo,mensagem,lida,modulo,tab,item_id,data_criacao,prioridade,prestador_id,destinatario_tipo"
+      ],
+      "mutations": []
+    },
+    "notificacao_leituras": {
+      "files": [
+        "src\\hooks\\useProviderNotifications.tsx"
+      ],
+      "selects": [
+        "notificacao_id"
+      ],
+      "mutations": []
+    },
+    "produto_fornecedor_config": {
+      "files": [
+        "src\\lib\\adminStoreOperations.ts"
+      ],
+      "selects": [],
+      "mutations": []
+    },
+    "produto_variantes": {
+      "files": [
+        "src\\lib\\adminStoreOperations.ts",
+        "src\\lib\\productVariations.ts"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "produto_variacao_grupos": {
+      "files": [
+        "src\\lib\\adminStoreOperations.ts",
+        "src\\lib\\productVariations.ts"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "produto_variacao_opcoes": {
+      "files": [
+        "src\\lib\\productVariations.ts"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "produto_variante_opcoes": {
+      "files": [
+        "src\\lib\\productVariations.ts"
+      ],
+      "selects": [
+        "*"
+      ],
+      "mutations": []
+    },
+    "...": {
+      "files": [
+        "src\\lib\\supabaseWrapper.ts"
+      ],
+      "selects": [
+        "..."
+      ],
+      "mutations": []
+    },
+    "loja_vaquinha_contribuicoes": {
+      "files": [
+        "src\\lib\\vaquinhaService.ts"
+      ],
+      "selects": [],
+      "mutations": []
+    },
+    "loja_favoritos": {
+      "files": [
+        "src\\lib\\wishlistStorage.ts"
+      ],
+      "selects": [
+        "produto_id"
+      ],
+      "mutations": []
+    }
+  },
+  "supabaseRpcs": {
+    "gsa_supplier_session_access_state": [
+      "src\\App.tsx"
+    ],
+    "gsa_admin_advertising_overview": [
+      "src\\components\\admin\\AdvertisingAdminModule.tsx"
+    ],
+    "increment_comentarios": [
+      "src\\components\\admin\\demandas\\DemandasComentarios.tsx"
+    ],
+    "gsa_admin_cancel_subscription": [
+      "src\\components\\admin\\OrdensAssinaturaModule.tsx"
+    ],
+    "gsa_admin_extend_subscription": [
+      "src\\components\\admin\\OrdensAssinaturaModule.tsx"
+    ],
+    "gsa_admin_import_products_batch_v2": [
+      "src\\components\\admin\\products\\BulkProductImportModal.tsx"
+    ],
+    "gsa_admin_check_product_barcode": [
+      "src\\components\\admin\\ProdutosModule.tsx"
+    ],
+    "gsa_admin_alterar_status_cliente": [
+      "src\\components\\admin\\super-domains\\contratos\\CrmClientesView.tsx"
+    ],
+    "gsa_admin_ajustar_saldo_cliente": [
+      "src\\components\\admin\\super-domains\\contratos\\CrmClientesView.tsx"
+    ],
+    "gsa_admin_desbloquear_pin_cliente": [
+      "src\\components\\admin\\super-domains\\contratos\\CrmClientesView.tsx"
+    ],
+    "fn_marcar_faturas_vencidas": [
+      "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx"
+    ],
+    "gsa_public_lookup_referral": [
+      "src\\components\\auth\\ClientAccessModal.tsx",
+      "src\\pages\\BusinessRegistrationPage.tsx"
+    ],
+    "gsa_public_register_client": [
+      "src\\components\\auth\\ClientAccessModal.tsx",
+      "src\\pages\\BusinessRegistrationPage.tsx"
+    ],
+    "gsa_public_register_provider": [
+      "src\\components\\auth\\RestrictedAccessModal.tsx",
+      "src\\pages\\ProviderAccessPage.tsx"
+    ],
+    "gsa_solicitar_pin_whatsapp": [
+      "src\\components\\auth\\WhatsAppPinVerification.tsx"
+    ],
+    "gsa_validar_pin_whatsapp": [
+      "src\\components\\auth\\WhatsAppPinVerification.tsx"
+    ],
+    "gsa_verify_own_pin": [
+      "src\\components\\client\\ClientProfile.tsx"
+    ],
+    "rpc_criar_anuncio_classificado": [
+      "src\\components\\client\\marketplace\\classifieds\\CreateListingWizard.tsx"
+    ],
+    "rpc_reenviar_anuncio_classificado": [
+      "src\\components\\client\\marketplace\\classifieds\\EditClassifiedListingPage.tsx"
+    ],
+    "gsa_public_affiliate_programs": [
+      "src\\components\\public\\AffiliatePublicPage.tsx"
+    ],
+    "gsa_public_track_affiliate_click": [
+      "src\\features\\affiliates\\attribution.ts"
+    ],
+    "gsa_public_resgatar_beneficio_parceiro": [
+      "src\\features\\partners\\service.ts"
+    ],
+    "gsa_ping_session": [
+      "src\\hooks\\useAutoLogout.ts",
+      "src\\lib\\sessionService.ts"
+    ],
+    "get_client_pendency_counts": [
+      "src\\hooks\\useClientNotifications.tsx"
+    ],
+    "gsa_public_registration_settings": [
+      "src\\hooks\\usePublicRegistrationSettings.ts"
+    ],
+    "gsa_advertiser_portal_snapshot": [
+      "src\\lib\\advertiserAccess.ts"
+    ],
+    "gsa_client_operational_write": [
+      "src\\lib\\clientOperationalWrite.ts"
+    ],
+    "gsa_validate_session": [
+      "src\\lib\\deleteRequest.ts",
+      "src\\lib\\sessionService.ts"
+    ],
+    "gsa_log_action": [
+      "src\\lib\\logService.ts"
+    ],
+    "gsa_provider_financial_snapshot": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_dashboard_snapshot": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_pendency_snapshot": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_request_withdrawal": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_cancel_withdrawal": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_redeem_voucher": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_redeem_prize": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_activate_promotion": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_update_profile": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_create_schedule": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_complete_schedule": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_delete_schedule": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_submit_document": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_transition_demand": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_create_ticket": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_send_ticket_message": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_request_profile_change": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_request_demand_support": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_mark_notification_read": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_mark_all_notifications_read": [
+      "src\\lib\\providerOperations.ts"
+    ],
+    "gsa_provider_session_access_state": [
+      "src\\lib\\providerSessionAccess.ts"
+    ],
+    "gsa_public_service_catalog": [
+      "src\\lib\\serviceCatalog.ts"
+    ],
+    "gsa_end_session": [
+      "src\\lib\\sessionService.ts"
+    ],
+    "gsa_get_client_session_access_state": [
+      "src\\lib\\sessionService.ts"
+    ],
+    "gsa_get_collaborator_session_access_state": [
+      "src\\lib\\sessionService.ts"
+    ],
+    "gsa_update_client_pin": [
+      "src\\lib\\sessionService.ts"
+    ],
+    "gsa_public_site_campaigns": [
+      "src\\lib\\siteCampaigns.ts"
+    ],
+    "gsa_public_site_campaign_event": [
+      "src\\lib\\siteCampaigns.ts"
+    ],
+    "gsa_supplier_dashboard_snapshot": [
+      "src\\lib\\supplierOperations.ts"
+    ],
+    "gsa_supplier_request_product": [
+      "src\\lib\\supplierOperations.ts"
+    ],
+    "gsa_supplier_update_profile": [
+      "src\\lib\\supplierOperations.ts"
+    ],
+    "gsa_supplier_mark_order_seen": [
+      "src\\lib\\supplierOperations.ts"
+    ],
+    "gsa_supplier_mark_notification_read": [
+      "src\\lib\\supplierOperations.ts"
+    ],
+    "gsa_supplier_mark_notifications_read": [
+      "src\\lib\\supplierOperations.ts"
+    ],
+    "gsa_supplier_submit_delivery": [
+      "src\\lib\\supplierOperations.ts"
+    ],
+    "gsa_criar_vaquinha": [
+      "src\\lib\\vaquinhaService.ts"
+    ],
+    "gsa_obter_vaquinha": [
+      "src\\lib\\vaquinhaService.ts"
+    ],
+    "gsa_confirmar_contribuicao_vaquinha": [
+      "src\\lib\\vaquinhaService.ts"
+    ],
+    "gsa_advertiser_save_creative": [
+      "src\\pages\\AdvertiserPortal.tsx"
+    ],
+    "gsa_advertiser_submit_creative": [
+      "src\\pages\\AdvertiserPortal.tsx"
+    ],
+    "gsa_advertiser_update_profile": [
+      "src\\pages\\AdvertiserPortal.tsx"
+    ],
+    "gsa_public_get_career_application": [
+      "src\\pages\\Careers\\CareersAccessPage.tsx"
+    ],
+    "gsa_public_submit_career_application": [
+      "src\\pages\\Careers\\CareersLandingPage.tsx"
+    ],
+    "gsa_public_confirm_career_resume": [
+      "src\\pages\\Careers\\CareersLandingPage.tsx"
+    ],
+    "processar_bonus_boas_vindas_seguro": [
+      "src\\pages\\ClientPortal.tsx"
+    ],
+    "gsa_public_register_supplier": [
+      "src\\pages\\Fornecedor\\FornecedorAccessPage.tsx"
+    ],
+    "check_file_references": [
+      "src\\validation\\step4_integrity_audit.ts"
+    ],
+    "get_database_details": [
+      "src\\validation\\step4_integrity_audit.ts"
+    ],
+    "gsa_client_extend_subscription": [
+      "src\\validation\\step6_subscriptions.ts"
+    ],
+    "gsa_client_cancel_subscription": [
+      "src\\validation\\step6_subscriptions.ts"
+    ]
+  },
+  "adminRpcs": {
+    "gsa_admin_access_snapshot": [
+      "src\\components\\admin\\AcessosModule.tsx",
+      "src\\components\\admin\\super-domains\\governanca\\GovernancaAcessosView.tsx",
+      "src\\components\\admin\\super-domains\\governanca\\GovernancaAuditoriaView.tsx"
+    ],
+    "gsa_admin_save_function": [
+      "src\\components\\admin\\AcessosModule.tsx",
+      "src\\components\\admin\\super-domains\\governanca\\GovernancaAcessosView.tsx"
+    ],
+    "gsa_admin_save_collaborator": [
+      "src\\components\\admin\\AcessosModule.tsx",
+      "src\\components\\admin\\super-domains\\governanca\\GovernancaAcessosView.tsx",
+      "src\\tests\\super-domains-adversarial-challenger.test.ts"
+    ],
+    "gsa_admin_set_collaborator_status": [
+      "src\\components\\admin\\AcessosModule.tsx",
+      "src\\components\\admin\\super-domains\\governanca\\GovernancaAcessosView.tsx"
+    ],
+    "gsa_admin_rotate_collaborator_credential": [
+      "src\\components\\admin\\AcessosModule.tsx",
+      "src\\components\\admin\\super-domains\\governanca\\GovernancaAcessosView.tsx"
+    ],
+    "gsa_admin_review_deletion_request": [
+      "src\\components\\admin\\AcessosModule.tsx",
+      "src\\components\\admin\\super-domains\\governanca\\GovernancaAcessosView.tsx"
+    ],
+    "gsa_admin_update_affiliate_details": [
+      "src\\components\\admin\\AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_affiliate_snapshot": [
+      "src\\components\\admin\\AffiliateAdminModule.tsx",
+      "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx"
+    ],
+    "gsa_admin_set_affiliate_status": [
+      "src\\components\\admin\\AffiliateAdminModule.tsx",
+      "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx"
+    ],
+    "gsa_admin_decide_affiliate_payout": [
+      "src\\components\\admin\\AffiliateAdminModule.tsx",
+      "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx"
+    ],
+    "gsa_admin_release_affiliate_commissions": [
+      "src\\components\\admin\\AffiliateAdminModule.tsx",
+      "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx"
+    ],
+    "gsa_admin_update_global_saque_minimo": [
+      "src\\components\\admin\\AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_update_affiliate_program": [
+      "src\\components\\admin\\AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_update_affiliate_points_settings": [
+      "src\\components\\admin\\AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_adjust_affiliate_balance": [
+      "src\\components\\admin\\AffiliateAdminModule.tsx",
+      "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx"
+    ],
+    "gsa_admin_ensure_calculator_pro_products": [
+      "src\\components\\admin\\CalculatorProAdminPanel.tsx"
+    ],
+    "gsa_admin_save_calculator_pro_product": [
+      "src\\components\\admin\\CalculatorProAdminPanel.tsx",
+      "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx"
+    ],
+    "gsa_admin_create_calculator_pro_voucher": [
+      "src\\components\\admin\\CalculatorProAdminPanel.tsx",
+      "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx"
+    ],
+    "gsa_admin_set_calculator_pro_voucher_status": [
+      "src\\components\\admin\\CalculatorProAdminPanel.tsx"
+    ],
+    "gsa_admin_calculator_pro_snapshot": [
+      "src\\components\\admin\\CalculatorProPaymentConfiguration.tsx",
+      "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx"
+    ],
+    "gsa_admin_save_calculator_pro_runtime_config": [
+      "src\\components\\admin\\CalculatorProPaymentConfiguration.tsx",
+      "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx"
+    ],
+    "gsa_admin_list_career_applications": [
+      "src\\components\\admin\\CareersAdminModule.tsx",
+      "src\\components\\admin\\super-domains\\pessoas\\TrabalheConoscoSection.tsx"
+    ],
+    "gsa_admin_get_career_application": [
+      "src\\components\\admin\\CareersAdminModule.tsx",
+      "src\\components\\admin\\super-domains\\pessoas\\TrabalheConoscoSection.tsx"
+    ],
+    "gsa_admin_update_career_application": [
+      "src\\components\\admin\\CareersAdminModule.tsx",
+      "src\\components\\admin\\super-domains\\pessoas\\TrabalheConoscoSection.tsx"
+    ],
+    "gsa_admin_get_career_resume_reference": [
+      "src\\components\\admin\\CareersAdminModule.tsx",
+      "src\\components\\admin\\super-domains\\pessoas\\TrabalheConoscoSection.tsx"
+    ],
+    "gsa_admin_list_resource": [
+      "src\\components\\admin\\ClassifiedsModule.tsx",
+      "src\\components\\admin\\FiscalModule.tsx",
+      "src\\components\\admin\\ProtectionAdminModule.tsx",
+      "src\\components\\admin\\super-domains\\financeiro\\FiscalView.tsx"
+    ],
+    "gsa_admin_classified_action": [
+      "src\\components\\admin\\ClassifiedsModule.tsx"
+    ],
+    "gsa_collaborator_dashboard_snapshot": [
+      "src\\components\\admin\\CollaboratorDashboard.tsx",
+      "src\\components\\admin\\super-domains\\governanca\\GovernancaCollaboratorDashboard.tsx"
+    ],
+    "gsa_admin_settings_snapshot": [
+      "src\\components\\admin\\ConfiguracoesModule.tsx",
+      "src\\components\\admin\\super-domains\\governanca\\GovernancaConfiguracoesView.tsx",
+      "src\\utils\\n8nWhatsApp.ts"
+    ],
+    "gsa_admin_update_settings_secure": [
+      "src\\components\\admin\\ConfiguracoesModule.tsx",
+      "src\\components\\admin\\super-domains\\governanca\\GovernancaConfiguracoesView.tsx"
+    ],
+    "gsa_admin_save_company": [
+      "src\\components\\admin\\ConfiguracoesModule.tsx",
+      "src\\components\\admin\\super-domains\\governanca\\GovernancaConfiguracoesView.tsx"
+    ],
+    "gsa_admin_save_payment_method": [
+      "src\\components\\admin\\ConfiguracoesModule.tsx",
+      "src\\components\\admin\\super-domains\\governanca\\GovernancaConfiguracoesView.tsx"
+    ],
+    "gsa_admin_dashboard_snapshot": [
+      "src\\components\\admin\\Dashboard.tsx",
+      "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx"
+    ],
+    "gsa_admin_baixar_fatura": [
+      "src\\components\\admin\\Dashboard.tsx",
+      "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+      "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+      "src\\tests\\super-domains-adversarial-challenger.test.ts"
+    ],
+    "gsa_admin_processar_saque": [
+      "src\\components\\admin\\Dashboard.tsx",
+      "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx",
+      "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+      "src\\components\\admin\\super-domains\\pessoas\\PayoutClearanceDrawer.tsx",
+      "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx",
+      "src\\tests\\super-domains-adversarial-challenger.test.ts"
+    ],
+    "gsa_admin_cancelar_demanda": [
+      "src\\components\\admin\\demandas\\DemandasDetalhesModal.tsx"
+    ],
+    "gsa_collaborator_list_demands": [
+      "src\\components\\admin\\DemandasColaboradorModule.tsx"
+    ],
+    "gsa_collaborator_demand_history": [
+      "src\\components\\admin\\DemandasColaboradorModule.tsx"
+    ],
+    "gsa_admin_fiscal_update": [
+      "src\\components\\admin\\FiscalModule.tsx",
+      "src\\components\\admin\\super-domains\\financeiro\\FiscalView.tsx"
+    ],
+    "gsa_admin_update_resource_status": [
+      "src\\components\\admin\\ProtectionAdminModule.tsx"
+    ],
+    "gsa_admin_save_protection_entity": [
+      "src\\components\\admin\\ProtectionAdminModule.tsx"
+    ],
+    "gsa_admin_create_protection_proposal": [
+      "src\\components\\admin\\ProtectionAdminModule.tsx"
+    ],
+    "gsa_admin_save_scraping_config": [
+      "src\\components\\admin\\ScrapingAdminModule.tsx"
+    ],
+    "gsa_admin_trigger_scraping_now": [
+      "src\\components\\admin\\ScrapingAdminModule.tsx"
+    ],
+    "gsa_admin_site_campaigns_overview": [
+      "src\\components\\admin\\SiteCampaignAdminModule.tsx",
+      "src\\components\\admin\\SiteCampaignDeletionPanel.tsx"
+    ],
+    "gsa_admin_upsert_site_campaign": [
+      "src\\components\\admin\\SiteCampaignAdminModule.tsx"
+    ],
+    "gsa_admin_set_site_campaign_status": [
+      "src\\components\\admin\\SiteCampaignAdminModule.tsx"
+    ],
+    "gsa_admin_duplicate_site_campaign": [
+      "src\\components\\admin\\SiteCampaignAdminModule.tsx"
+    ],
+    "gsa_admin_site_campaign_my_permissions": [
+      "src\\components\\admin\\SiteCampaignDeletionPanel.tsx"
+    ],
+    "gsa_admin_delete_site_campaign": [
+      "src\\components\\admin\\SiteCampaignDeletionPanel.tsx"
+    ],
+    "gsa_admin_site_campaign_permission_overview": [
+      "src\\components\\admin\\SiteCampaignPermissionMatrix.tsx"
+    ],
+    "gsa_admin_set_site_campaign_permissions": [
+      "src\\components\\admin\\SiteCampaignPermissionMatrix.tsx"
+    ],
+    "gsa_admin_reset_actor_pin": [
+      "src\\components\\admin\\super-domains\\contratos\\CrmClientesView.tsx",
+      "src\\components\\admin\\super-domains\\pessoas\\PrestadorDetailDrawer.tsx"
+    ],
+    "gsa_admin_gerar_acordo_cobranca": [
+      "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx"
+    ],
+    "gsa_admin_baixar_parcela_cobranca": [
+      "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx"
+    ],
+    "gsa_admin_baixar_cobranca_manual": [
+      "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx"
+    ],
+    "gsa_admin_protestar_cobranca": [
+      "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx"
+    ],
+    "gsa_admin_registrar_cobranca_historico": [
+      "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx"
+    ],
+    "gsa_admin_cancelar_acordo_cobranca": [
+      "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx"
+    ],
+    "gsa_admin_emprestimo_enviar_proposta": [
+      "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx"
+    ],
+    "gsa_admin_emprestimo_aprovar": [
+      "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx"
+    ],
+    "gsa_admin_emprestimo_enviar_oferta_quitacao": [
+      "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx"
+    ],
+    "gsa_admin_preaprovar_credito": [
+      "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx"
+    ],
+    "gsa_admin_recusar_credito": [
+      "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx"
+    ],
+    "gsa_admin_enviar_fatura_cobranca": [
+      "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx"
+    ],
+    "gsa_admin_cancelar_fatura": [
+      "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx"
+    ],
+    "gsa_admin_criar_fatura_manual": [
+      "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx"
+    ],
+    "gsa_admin_processar_transferencia": [
+      "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx"
+    ],
+    "gsa_admin_system_snapshot": [
+      "src\\components\\admin\\super-domains\\governanca\\GovernancaInfraView.tsx",
+      "src\\components\\admin\\SystemMonitorModule.tsx"
+    ],
+    "gsa_admin_approve_budget": [
+      "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx",
+      "src\\tests\\super-domains-adversarial-challenger.test.ts"
+    ],
+    "gsa_admin_adjust_points": [
+      "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+      "src\\utils\\gamification.ts"
+    ],
+    "gsa_admin_processar_saque_prestador": [
+      "src\\components\\admin\\super-domains\\pessoas\\PayoutClearanceDrawer.tsx",
+      "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx",
+      "src\\tests\\super-domains-adversarial-challenger.test.ts"
+    ],
+    "gsa_admin_travel_list": [
+      "src\\components\\admin\\TravelAdminModule.tsx"
+    ],
+    "gsa_admin_travel_link_lead": [
+      "src\\components\\admin\\TravelAdminModule.tsx"
+    ],
+    "gsa_admin_travel_update_status": [
+      "src\\components\\admin\\TravelAdminModule.tsx"
+    ],
+    "gsa_admin_search_clients": [
+      "src\\components\\admin\\TravelAdminModule.tsx"
+    ],
+    "gsa_admin_travel_create_proposal": [
+      "src\\components\\admin\\TravelAdminModule.tsx"
+    ],
+    "gsa_admin_travel_create_package": [
+      "src\\components\\admin\\TravelAdminModule.tsx"
+    ],
+    "gsa_admin_process_travel_refund": [
+      "src\\components\\admin\\TravelAdminModule.tsx"
+    ],
+    "gsa_admin_save_travel_category": [
+      "src\\components\\admin\\ViagensCategoriasModule.tsx"
+    ],
+    "gsa_admin_partners_snapshot": [
+      "src\\features\\partners\\service.ts"
+    ],
+    "gsa_admin_save_partner": [
+      "src\\features\\partners\\service.ts"
+    ],
+    "gsa_admin_set_partner_status": [
+      "src\\features\\partners\\service.ts"
+    ],
+    "gsa_admin_list_partner_redemptions": [
+      "src\\features\\partners\\service.ts"
+    ],
+    "gsa_admin_list_notifications": [
+      "src\\hooks\\useAdminNotifications.tsx"
+    ],
+    "gsa_admin_set_notification_state": [
+      "src\\hooks\\useAdminNotifications.tsx"
+    ],
+    "gsa_admin_mark_all_notifications": [
+      "src\\hooks\\useAdminNotifications.tsx"
+    ],
+    "gsa_admin_get_product_supplier_config": [
+      "src\\lib\\adminRpc.ts"
+    ],
+    "gsa_admin_upsert_product_supplier_config": [
+      "src\\lib\\adminRpc.ts"
+    ],
+    "gsa_admin_check_existing_supplier_products": [
+      "src\\lib\\adminRpc.ts"
+    ],
+    "gsa_admin_import_products_batch": [
+      "src\\lib\\adminRpc.ts"
+    ],
+    "gsa_admin_set_product_discount": [
+      "src\\lib\\adminRpc.ts"
+    ],
+    "gsa_admin_release_discount_quota": [
+      "src\\lib\\adminRpc.ts"
+    ],
+    "gsa_admin_adjust_product_stock": [
+      "src\\lib\\adminStoreOperations.ts"
+    ],
+    "gsa_admin_transition_store_order": [
+      "src\\lib\\adminStoreOperations.ts"
+    ],
+    "gsa_admin_cancel_store_order": [
+      "src\\lib\\adminStoreOperations.ts"
+    ],
+    "gsa_admin_activate_subscription": [
+      "src\\lib\\adminStoreOperations.ts"
+    ],
+    "gsa_admin_save_product_catalog_v2": [
+      "src\\lib\\adminStoreOperations.ts"
+    ],
+    "gsa_admin_save_subscription_catalog": [
+      "src\\lib\\adminStoreOperations.ts"
+    ],
+    "gsa_admin_archive_catalog_items": [
+      "src\\lib\\adminStoreOperations.ts"
+    ],
+    "gsa_admin_delete_products_bulk": [
+      "src\\lib\\adminStoreOperations.ts"
+    ],
+    "gsa_admin_get_product_variations": [
+      "src\\lib\\productVariations.ts"
+    ],
+    "gsa_admin_sync_product_variations": [
+      "src\\lib\\productVariations.ts"
+    ],
+    "gsa_admin_service_catalog_snapshot": [
+      "src\\lib\\serviceCatalog.ts"
+    ],
+    "gsa_admin_save_service_package": [
+      "src\\lib\\serviceCatalog.ts"
+    ],
+    "gsa_admin_delete_service_package": [
+      "src\\lib\\serviceCatalog.ts"
+    ],
+    "gsa_admin_import_service_catalog": [
+      "src\\lib\\serviceCatalog.ts"
+    ],
+    "gsa_admin_shopee_queue": [
+      "src\\lib\\shopeeFulfillment.ts"
+    ],
+    "gsa_admin_shopee_job": [
+      "src\\lib\\shopeeFulfillment.ts"
+    ],
+    "gsa_admin_shopee_update_job": [
+      "src\\lib\\shopeeFulfillment.ts"
+    ],
+    "gsa_admin_shopee_workers": [
+      "src\\lib\\shopeeFulfillment.ts"
+    ],
+    "gsa_admin_shopee_create_worker": [
+      "src\\lib\\shopeeFulfillment.ts"
+    ],
+    "gsa_admin_supplier_snapshot": [
+      "src\\lib\\supplierOperations.ts"
+    ],
+    "gsa_admin_supplier_set_status": [
+      "src\\lib\\supplierOperations.ts"
+    ],
+    "gsa_admin_review_supplier_product": [
+      "src\\lib\\supplierOperations.ts"
+    ],
+    "gsa_admin_create_supplier_order": [
+      "src\\lib\\supplierOperations.ts"
+    ],
+    "gsa_admin_review_supplier_delivery": [
+      "src\\lib\\supplierOperations.ts"
+    ],
+    "gsa_admin_update_supplier_payable": [
+      "src\\lib\\supplierOperations.ts"
+    ],
+    "gsa_admin_get_context_secure": [
+      "src\\pages\\SecureAdminPanel.tsx"
+    ]
+  }
+}

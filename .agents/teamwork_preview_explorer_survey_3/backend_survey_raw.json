@@ -1,0 +1,1915 @@
+{
+  "totalRpcs": 221,
+  "rpcs": {
+    "gsa_supplier_session_access_state": [
+      "src/App.tsx"
+    ],
+    "gsa_admin_access_snapshot": [
+      "src/components/admin/AcessosModule.tsx"
+    ],
+    "gsa_admin_save_function": [
+      "src/components/admin/AcessosModule.tsx"
+    ],
+    "gsa_admin_save_collaborator": [
+      "src/components/admin/AcessosModule.tsx"
+    ],
+    "gsa_admin_set_collaborator_status": [
+      "src/components/admin/AcessosModule.tsx"
+    ],
+    "gsa_admin_rotate_collaborator_credential": [
+      "src/components/admin/AcessosModule.tsx"
+    ],
+    "gsa_admin_review_deletion_request": [
+      "src/components/admin/AcessosModule.tsx"
+    ],
+    "gsa_admin_advertising_overview": [
+      "src/components/admin/AdvertisingAdminModule.tsx"
+    ],
+    "gsa_admin_update_affiliate_details": [
+      "src/components/admin/AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_affiliate_snapshot": [
+      "src/components/admin/AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_set_affiliate_status": [
+      "src/components/admin/AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_decide_affiliate_payout": [
+      "src/components/admin/AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_release_affiliate_commissions": [
+      "src/components/admin/AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_update_global_saque_minimo": [
+      "src/components/admin/AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_update_affiliate_program": [
+      "src/components/admin/AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_update_affiliate_points_settings": [
+      "src/components/admin/AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_adjust_affiliate_balance": [
+      "src/components/admin/AffiliateAdminModule.tsx"
+    ],
+    "gsa_admin_upsert_settings": [
+      "src/components/admin/AreaVIPModule.tsx",
+      "src/components/admin/CobrancaModule.tsx",
+      "src/components/admin/CreditoModule.tsx"
+    ],
+    "gsa_admin_ensure_calculator_pro_products": [
+      "src/components/admin/CalculatorProAdminPanel.tsx"
+    ],
+    "gsa_admin_save_calculator_pro_product": [
+      "src/components/admin/CalculatorProAdminPanel.tsx"
+    ],
+    "gsa_admin_create_calculator_pro_voucher": [
+      "src/components/admin/CalculatorProAdminPanel.tsx"
+    ],
+    "gsa_admin_set_calculator_pro_voucher_status": [
+      "src/components/admin/CalculatorProAdminPanel.tsx"
+    ],
+    "gsa_admin_calculator_pro_snapshot": [
+      "src/components/admin/CalculatorProPaymentConfiguration.tsx"
+    ],
+    "gsa_admin_save_calculator_pro_runtime_config": [
+      "src/components/admin/CalculatorProPaymentConfiguration.tsx"
+    ],
+    "gsa_admin_list_career_applications": [
+      "src/components/admin/CareersAdminModule.tsx"
+    ],
+    "gsa_admin_get_career_application": [
+      "src/components/admin/CareersAdminModule.tsx"
+    ],
+    "gsa_admin_update_career_application": [
+      "src/components/admin/CareersAdminModule.tsx"
+    ],
+    "gsa_admin_get_career_resume_reference": [
+      "src/components/admin/CareersAdminModule.tsx"
+    ],
+    "gsa_admin_list_resource": [
+      "src/components/admin/ClassifiedsModule.tsx",
+      "src/components/admin/FiscalModule.tsx",
+      "src/components/admin/ProtectionAdminModule.tsx"
+    ],
+    "gsa_admin_classified_action": [
+      "src/components/admin/ClassifiedsModule.tsx"
+    ],
+    "gsa_registrar_pendencia_whatsapp": [
+      "src/components/admin/clientes/AdminClienteDocumentos.tsx"
+    ],
+    "gsa_admin_criar_cliente": [
+      "src/components/admin/ClientesModule.tsx"
+    ],
+    "gsa_admin_alterar_status_cliente": [
+      "src/components/admin/ClientesModule.tsx"
+    ],
+    "delete_client_cascade": [
+      "src/components/admin/ClientesModule.tsx"
+    ],
+    "gsa_admin_baixar_fatura": [
+      "src/components/admin/ClientesModule.tsx",
+      "src/components/admin/Dashboard.tsx",
+      "src/components/admin/FinanceiroModule.tsx"
+    ],
+    "gsa_admin_enviar_fatura_cobranca": [
+      "src/components/admin/ClientesModule.tsx",
+      "src/components/admin/FinanceiroModule.tsx"
+    ],
+    "gsa_admin_ajustar_saldo_cliente": [
+      "src/components/admin/ClientesModule.tsx"
+    ],
+    "gsa_admin_atualizar_status_cliente": [
+      "src/components/admin/ClientesModule.tsx"
+    ],
+    "gsa_admin_atualizar_dados_cliente": [
+      "src/components/admin/ClientesModule.tsx"
+    ],
+    "gsa_admin_reset_actor_pin": [
+      "src/components/admin/ClientesModule.tsx",
+      "src/components/admin/prestadores/PrestadoresCadastro.tsx"
+    ],
+    "gsa_admin_desbloquear_pin_cliente": [
+      "src/components/admin/ClientesModule.tsx"
+    ],
+    "gsa_admin_criar_cobranca_fatura": [
+      "src/components/admin/CobrancaModule.tsx"
+    ],
+    "gsa_admin_registrar_cobranca_historico": [
+      "src/components/admin/CobrancaModule.tsx"
+    ],
+    "gsa_admin_mudar_status_cobranca": [
+      "src/components/admin/CobrancaModule.tsx"
+    ],
+    "gsa_admin_protestar_cobranca": [
+      "src/components/admin/CobrancaModule.tsx"
+    ],
+    "gsa_admin_gerar_acordo_cobranca": [
+      "src/components/admin/CobrancaModule.tsx"
+    ],
+    "gsa_admin_cancelar_acordo_cobranca": [
+      "src/components/admin/CobrancaModule.tsx"
+    ],
+    "gsa_admin_excluir_cobranca": [
+      "src/components/admin/CobrancaModule.tsx"
+    ],
+    "gsa_admin_baixar_parcela_cobranca": [
+      "src/components/admin/CobrancaModule.tsx"
+    ],
+    "gsa_admin_baixar_cobranca_manual": [
+      "src/components/admin/CobrancaModule.tsx"
+    ],
+    "gsa_collaborator_dashboard_snapshot": [
+      "src/components/admin/CollaboratorDashboard.tsx"
+    ],
+    "gsa_admin_settings_snapshot": [
+      "src/components/admin/ConfiguracoesModule.tsx",
+      "src/utils/n8nWhatsApp.ts"
+    ],
+    "gsa_admin_update_settings_secure": [
+      "src/components/admin/ConfiguracoesModule.tsx"
+    ],
+    "gsa_admin_save_company": [
+      "src/components/admin/ConfiguracoesModule.tsx"
+    ],
+    "gsa_admin_save_payment_method": [
+      "src/components/admin/ConfiguracoesModule.tsx"
+    ],
+    "gsa_admin_enviar_oferta_quitacao_credito": [
+      "src/components/admin/CreditoModule.tsx"
+    ],
+    "gsa_admin_preaprovar_credito": [
+      "src/components/admin/CreditoModule.tsx"
+    ],
+    "gsa_admin_aprovar_aumento_credito": [
+      "src/components/admin/CreditoModule.tsx"
+    ],
+    "gsa_admin_recusar_credito": [
+      "src/components/admin/CreditoModule.tsx"
+    ],
+    "gsa_admin_solicitar_documento_credito": [
+      "src/components/admin/CreditoModule.tsx"
+    ],
+    "gsa_admin_atualizar_documento_credito": [
+      "src/components/admin/CreditoModule.tsx"
+    ],
+    "gsa_admin_rejeitar_contrato_credito": [
+      "src/components/admin/CreditoModule.tsx"
+    ],
+    "gsa_admin_liberar_credito_contrato": [
+      "src/components/admin/CreditoModule.tsx"
+    ],
+    "gsa_admin_ajustar_limite_credito_cliente": [
+      "src/components/admin/CreditoModule.tsx"
+    ],
+    "gsa_admin_definir_parcelamento_credito": [
+      "src/components/admin/CreditoModule.tsx"
+    ],
+    "gsa_admin_dashboard_snapshot": [
+      "src/components/admin/Dashboard.tsx"
+    ],
+    "gsa_admin_processar_saque": [
+      "src/components/admin/Dashboard.tsx",
+      "src/components/admin/FinanceiroModule.tsx"
+    ],
+    "increment_comentarios": [
+      "src/components/admin/demandas/DemandasComentarios.tsx"
+    ],
+    "gsa_admin_cancelar_demanda": [
+      "src/components/admin/demandas/DemandasDetalhesModal.tsx",
+      "src/components/admin/prestadores/PrestadoresDemandas.tsx"
+    ],
+    "gsa_collaborator_list_demands": [
+      "src/components/admin/DemandasColaboradorModule.tsx"
+    ],
+    "gsa_collaborator_demand_history": [
+      "src/components/admin/DemandasColaboradorModule.tsx"
+    ],
+    "gsa_admin_emprestimo_salvar_observacao": [
+      "src/components/admin/EmprestimosModule.tsx"
+    ],
+    "gsa_admin_emprestimo_enviar_comentario": [
+      "src/components/admin/EmprestimosModule.tsx"
+    ],
+    "gsa_admin_emprestimo_enviar_proposta": [
+      "src/components/admin/EmprestimosModule.tsx"
+    ],
+    "gsa_admin_emprestimo_enviar_contrato": [
+      "src/components/admin/EmprestimosModule.tsx"
+    ],
+    "gsa_admin_emprestimo_aprovar": [
+      "src/components/admin/EmprestimosModule.tsx"
+    ],
+    "gsa_admin_emprestimo_atualizar_status": [
+      "src/components/admin/EmprestimosModule.tsx"
+    ],
+    "gsa_admin_emprestimo_atualizar_documento": [
+      "src/components/admin/EmprestimosModule.tsx"
+    ],
+    "gsa_admin_emprestimo_enviar_oferta_quitacao": [
+      "src/components/admin/EmprestimosModule.tsx"
+    ],
+    "fn_marcar_faturas_vencidas": [
+      "src/components/admin/FinanceiroModule.tsx"
+    ],
+    "gsa_admin_processar_transferencia": [
+      "src/components/admin/FinanceiroModule.tsx"
+    ],
+    "gsa_admin_cancelar_fatura": [
+      "src/components/admin/FinanceiroModule.tsx"
+    ],
+    "gsa_admin_criar_fatura_manual": [
+      "src/components/admin/FinanceiroModule.tsx"
+    ],
+    "gsa_admin_aplicar_ajuste_fatura": [
+      "src/components/admin/FinanceiroModule.tsx"
+    ],
+    "gsa_admin_fiscal_update": [
+      "src/components/admin/FiscalModule.tsx"
+    ],
+    "gsa_admin_atualizar_solicitacao_loja": [
+      "src/components/admin/LojaTrocasModule.tsx"
+    ],
+    "gsa_admin_approve_budget": [
+      "src/components/admin/OrcamentosModule.tsx"
+    ],
+    "gsa_admin_cancel_subscription": [
+      "src/components/admin/OrdensAssinaturaModule.tsx"
+    ],
+    "gsa_admin_extend_subscription": [
+      "src/components/admin/OrdensAssinaturaModule.tsx"
+    ],
+    "gsa_admin_finalize_service_order": [
+      "src/components/admin/OrdensServicoModule.tsx"
+    ],
+    "gsa_admin_processar_saque_prestador": [
+      "src/components/admin/prestadores/PrestadoresFinanceiro.tsx"
+    ],
+    "gsa_admin_import_products_batch_v3": [
+      "src/components/admin/products/BulkProductImportModal.tsx"
+    ],
+    "gsa_admin_check_product_barcode": [
+      "src/components/admin/ProdutosModule.tsx"
+    ],
+    "gsa_admin_update_resource_status": [
+      "src/components/admin/ProtectionAdminModule.tsx"
+    ],
+    "gsa_admin_save_protection_entity": [
+      "src/components/admin/ProtectionAdminModule.tsx"
+    ],
+    "gsa_admin_create_protection_proposal": [
+      "src/components/admin/ProtectionAdminModule.tsx"
+    ],
+    "gsa_admin_save_scraping_config": [
+      "src/components/admin/ScrapingAdminModule.tsx"
+    ],
+    "gsa_admin_trigger_scraping_now": [
+      "src/components/admin/ScrapingAdminModule.tsx"
+    ],
+    "gsa_admin_site_campaigns_overview": [
+      "src/components/admin/SiteCampaignAdminModule.tsx",
+      "src/components/admin/SiteCampaignDeletionPanel.tsx"
+    ],
+    "gsa_admin_upsert_site_campaign": [
+      "src/components/admin/SiteCampaignAdminModule.tsx"
+    ],
+    "gsa_admin_set_site_campaign_status": [
+      "src/components/admin/SiteCampaignAdminModule.tsx"
+    ],
+    "gsa_admin_duplicate_site_campaign": [
+      "src/components/admin/SiteCampaignAdminModule.tsx"
+    ],
+    "gsa_admin_site_campaign_my_permissions": [
+      "src/components/admin/SiteCampaignDeletionPanel.tsx"
+    ],
+    "gsa_admin_delete_site_campaign": [
+      "src/components/admin/SiteCampaignDeletionPanel.tsx"
+    ],
+    "gsa_admin_site_campaign_permission_overview": [
+      "src/components/admin/SiteCampaignPermissionMatrix.tsx"
+    ],
+    "gsa_admin_set_site_campaign_permissions": [
+      "src/components/admin/SiteCampaignPermissionMatrix.tsx"
+    ],
+    "gsa_admin_system_snapshot": [
+      "src/components/admin/SystemMonitorModule.tsx"
+    ],
+    "gsa_admin_travel_list": [
+      "src/components/admin/TravelAdminModule.tsx"
+    ],
+    "gsa_admin_travel_link_lead": [
+      "src/components/admin/TravelAdminModule.tsx"
+    ],
+    "gsa_admin_travel_update_status": [
+      "src/components/admin/TravelAdminModule.tsx"
+    ],
+    "gsa_admin_search_clients": [
+      "src/components/admin/TravelAdminModule.tsx"
+    ],
+    "gsa_admin_travel_create_proposal": [
+      "src/components/admin/TravelAdminModule.tsx"
+    ],
+    "gsa_admin_travel_create_package": [
+      "src/components/admin/TravelAdminModule.tsx"
+    ],
+    "gsa_admin_process_travel_refund": [
+      "src/components/admin/TravelAdminModule.tsx"
+    ],
+    "gsa_admin_save_travel_category": [
+      "src/components/admin/ViagensCategoriasModule.tsx"
+    ],
+    "gsa_public_lookup_referral": [
+      "src/components/auth/ClientAccessModal.tsx",
+      "src/pages/BusinessRegistrationPage.tsx"
+    ],
+    "gsa_public_register_client": [
+      "src/components/auth/ClientAccessModal.tsx",
+      "src/pages/BusinessRegistrationPage.tsx"
+    ],
+    "gsa_public_register_provider": [
+      "src/components/auth/RestrictedAccessModal.tsx",
+      "src/pages/ProviderAccessPage.tsx"
+    ],
+    "gsa_solicitar_pin_whatsapp": [
+      "src/components/auth/WhatsAppPinVerification.tsx"
+    ],
+    "gsa_validar_pin_whatsapp": [
+      "src/components/auth/WhatsAppPinVerification.tsx"
+    ],
+    "gsa_verify_own_pin": [
+      "src/components/client/ClientProfile.tsx"
+    ],
+    "rpc_criar_anuncio_classificado": [
+      "src/components/client/marketplace/classifieds/CreateListingWizard.tsx"
+    ],
+    "rpc_reenviar_anuncio_classificado": [
+      "src/components/client/marketplace/classifieds/EditClassifiedListingPage.tsx"
+    ],
+    "gsa_public_affiliate_programs": [
+      "src/components/public/AffiliatePublicPage.tsx"
+    ],
+    "gsa_public_track_affiliate_click": [
+      "src/features/affiliates/attribution.ts"
+    ],
+    "gsa_admin_partners_snapshot": [
+      "src/features/partners/service.ts"
+    ],
+    "gsa_admin_save_partner": [
+      "src/features/partners/service.ts"
+    ],
+    "gsa_admin_set_partner_status": [
+      "src/features/partners/service.ts"
+    ],
+    "gsa_admin_list_notifications": [
+      "src/hooks/useAdminNotifications.tsx"
+    ],
+    "gsa_admin_set_notification_state": [
+      "src/hooks/useAdminNotifications.tsx"
+    ],
+    "gsa_admin_mark_all_notifications": [
+      "src/hooks/useAdminNotifications.tsx"
+    ],
+    "gsa_ping_session": [
+      "src/hooks/useAutoLogout.ts",
+      "src/lib/sessionService.ts"
+    ],
+    "get_client_pendency_counts": [
+      "src/hooks/useClientNotifications.tsx"
+    ],
+    "gsa_public_registration_settings": [
+      "src/hooks/usePublicRegistrationSettings.ts"
+    ],
+    "gsa_admin_get_product_supplier_config": [
+      "src/lib/adminRpc.ts"
+    ],
+    "gsa_admin_upsert_product_supplier_config": [
+      "src/lib/adminRpc.ts"
+    ],
+    "gsa_admin_check_existing_supplier_products": [
+      "src/lib/adminRpc.ts"
+    ],
+    "gsa_admin_import_products_batch": [
+      "src/lib/adminRpc.ts"
+    ],
+    "gsa_admin_set_product_discount": [
+      "src/lib/adminRpc.ts"
+    ],
+    "gsa_admin_release_discount_quota": [
+      "src/lib/adminRpc.ts"
+    ],
+    "gsa_admin_adjust_product_stock": [
+      "src/lib/adminStoreOperations.ts"
+    ],
+    "gsa_admin_transition_store_order": [
+      "src/lib/adminStoreOperations.ts"
+    ],
+    "gsa_admin_cancel_store_order": [
+      "src/lib/adminStoreOperations.ts"
+    ],
+    "gsa_admin_activate_subscription": [
+      "src/lib/adminStoreOperations.ts"
+    ],
+    "gsa_admin_save_product_catalog_v2": [
+      "src/lib/adminStoreOperations.ts"
+    ],
+    "gsa_admin_save_subscription_catalog": [
+      "src/lib/adminStoreOperations.ts"
+    ],
+    "gsa_admin_archive_catalog_items": [
+      "src/lib/adminStoreOperations.ts"
+    ],
+    "gsa_admin_delete_products_bulk": [
+      "src/lib/adminStoreOperations.ts"
+    ],
+    "gsa_advertiser_portal_snapshot": [
+      "src/lib/advertiserAccess.ts"
+    ],
+    "gsa_client_operational_write": [
+      "src/lib/clientOperationalWrite.ts"
+    ],
+    "gsa_log_action": [
+      "src/lib/logService.ts"
+    ],
+    "gsa_admin_get_product_variations": [
+      "src/lib/productVariations.ts"
+    ],
+    "gsa_admin_sync_product_variations": [
+      "src/lib/productVariations.ts"
+    ],
+    "gsa_provider_financial_snapshot": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_dashboard_snapshot": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_pendency_snapshot": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_request_withdrawal": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_cancel_withdrawal": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_redeem_voucher": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_redeem_prize": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_activate_promotion": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_update_profile": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_create_schedule": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_complete_schedule": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_delete_schedule": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_submit_document": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_transition_demand": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_create_ticket": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_send_ticket_message": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_request_profile_change": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_request_demand_support": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_mark_notification_read": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_mark_all_notifications_read": [
+      "src/lib/providerOperations.ts"
+    ],
+    "gsa_provider_session_access_state": [
+      "src/lib/providerSessionAccess.ts"
+    ],
+    "gsa_public_service_catalog": [
+      "src/lib/serviceCatalog.ts"
+    ],
+    "gsa_admin_service_catalog_snapshot": [
+      "src/lib/serviceCatalog.ts"
+    ],
+    "gsa_admin_save_service_package": [
+      "src/lib/serviceCatalog.ts"
+    ],
+    "gsa_admin_delete_service_package": [
+      "src/lib/serviceCatalog.ts"
+    ],
+    "gsa_admin_import_service_catalog": [
+      "src/lib/serviceCatalog.ts"
+    ],
+    "gsa_end_session": [
+      "src/lib/sessionService.ts"
+    ],
+    "gsa_validate_session": [
+      "src/lib/sessionService.ts"
+    ],
+    "gsa_get_client_session_access_state": [
+      "src/lib/sessionService.ts"
+    ],
+    "gsa_get_collaborator_session_access_state": [
+      "src/lib/sessionService.ts"
+    ],
+    "gsa_update_client_pin": [
+      "src/lib/sessionService.ts"
+    ],
+    "gsa_admin_shopee_queue": [
+      "src/lib/shopeeFulfillment.ts"
+    ],
+    "gsa_admin_shopee_job": [
+      "src/lib/shopeeFulfillment.ts"
+    ],
+    "gsa_admin_shopee_update_job": [
+      "src/lib/shopeeFulfillment.ts"
+    ],
+    "gsa_admin_shopee_workers": [
+      "src/lib/shopeeFulfillment.ts"
+    ],
+    "gsa_admin_shopee_create_worker": [
+      "src/lib/shopeeFulfillment.ts"
+    ],
+    "gsa_public_site_campaigns": [
+      "src/lib/siteCampaigns.ts"
+    ],
+    "gsa_public_site_campaign_event": [
+      "src/lib/siteCampaigns.ts"
+    ],
+    "gsa_supplier_dashboard_snapshot": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_supplier_request_product": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_supplier_update_profile": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_supplier_mark_order_seen": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_supplier_mark_notification_read": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_supplier_mark_notifications_read": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_supplier_submit_delivery": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_admin_supplier_snapshot": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_admin_supplier_set_status": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_admin_review_supplier_product": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_admin_create_supplier_order": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_admin_review_supplier_delivery": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_admin_update_supplier_payable": [
+      "src/lib/supplierOperations.ts"
+    ],
+    "gsa_criar_vaquinha": [
+      "src/lib/vaquinhaService.ts"
+    ],
+    "gsa_obter_vaquinha": [
+      "src/lib/vaquinhaService.ts"
+    ],
+    "gsa_confirmar_contribuicao_vaquinha": [
+      "src/lib/vaquinhaService.ts"
+    ],
+    "gsa_advertiser_save_creative": [
+      "src/pages/AdvertiserPortal.tsx"
+    ],
+    "gsa_advertiser_submit_creative": [
+      "src/pages/AdvertiserPortal.tsx"
+    ],
+    "gsa_advertiser_update_profile": [
+      "src/pages/AdvertiserPortal.tsx"
+    ],
+    "gsa_public_get_career_application": [
+      "src/pages/Careers/CareersAccessPage.tsx"
+    ],
+    "gsa_public_submit_career_application": [
+      "src/pages/Careers/CareersLandingPage.tsx"
+    ],
+    "gsa_public_confirm_career_resume": [
+      "src/pages/Careers/CareersLandingPage.tsx"
+    ],
+    "processar_bonus_boas_vindas_seguro": [
+      "src/pages/ClientPortal.tsx"
+    ],
+    "gsa_public_register_supplier": [
+      "src/pages/Fornecedor/FornecedorAccessPage.tsx"
+    ],
+    "gsa_admin_get_context_secure": [
+      "src/pages/SecureAdminPanel.tsx"
+    ],
+    "gsa_admin_adjust_points": [
+      "src/utils/gamification.ts"
+    ],
+    "check_file_references": [
+      "src/validation/step4_integrity_audit.ts"
+    ],
+    "get_database_details": [
+      "src/validation/step4_integrity_audit.ts"
+    ],
+    "gsa_client_extend_subscription": [
+      "src/validation/step6_subscriptions.ts"
+    ],
+    "gsa_client_cancel_subscription": [
+      "src/validation/step6_subscriptions.ts"
+    ]
+  },
+  "totalTables": 117,
+  "tables": [
+    "...",
+    "assinaturas",
+    "automacao_scraping_configs",
+    "automacao_scraping_logs",
+    "blog_posts",
+    "carteira_lancamentos",
+    "classificados_anuncios",
+    "classificados_comissoes",
+    "classificados_comissoes_config",
+    "classificados_midias",
+    "classificados_propostas",
+    "classificados_transacoes",
+    "client_levels",
+    "cliente_cupons",
+    "cliente_documentos",
+    "cliente_notas_admin",
+    "cliente_premios",
+    "cliente_promocoes",
+    "clientes",
+    "cobrancas",
+    "colaboradores",
+    "contestacoes_fatura",
+    "cupons_ativados",
+    "cupons_loja",
+    "demanda_comentarios",
+    "empresa",
+    "emprestimo_comentarios",
+    "emprestimo_documentos",
+    "emprestimo_historico",
+    "emprestimo_parcelas",
+    "emprestimos",
+    "extrato_financeiro",
+    "fatura_contestacoes",
+    "faturas",
+    "fornecedores",
+    "gsa_afiliados",
+    "gsa_site_campaigns",
+    "gsa_tv_audit_log",
+    "gsa_tv_channels",
+    "gsa_tv_incidents",
+    "gsa_tv_jobs",
+    "gsa_tv_media_items",
+    "gsa_tv_playlists",
+    "gsa_tv_schedule_slots",
+    "gsa_whatsapp_ramais",
+    "indicacoes",
+    "level_history",
+    "loja_avaliacoes",
+    "loja_carrinhos",
+    "loja_categorias",
+    "loja_credito_documentos",
+    "loja_credito_movimentacoes",
+    "loja_credito_solicitacoes",
+    "loja_estoque_historico",
+    "loja_favoritos",
+    "loja_pedido_itens",
+    "loja_pedidos",
+    "loja_reembolsos",
+    "loja_solicitacoes",
+    "loja_vaquinha_contribuicoes",
+    "notificacao_leituras",
+    "notificacoes",
+    "orcamento_timeline",
+    "orcamentos",
+    "ordens_assinatura",
+    "ordens_compra",
+    "ordens_fiscais",
+    "ordens_servico",
+    "os_notas",
+    "os_suporte_mensagens",
+    "pagamentos",
+    "parceiros",
+    "points_transactions",
+    "pontos_movimentacoes",
+    "prestador_agendamentos",
+    "prestador_demandas",
+    "prestador_demandas_historico",
+    "prestador_documentos",
+    "prestador_faturas",
+    "prestador_historico",
+    "prestador_premios",
+    "prestador_promocoes",
+    "prestador_promocoes_ativacoes",
+    "prestador_saques",
+    "prestador_suporte_demandas",
+    "prestador_transacoes",
+    "prestador_vouchers",
+    "prestadores",
+    "pricing_configs",
+    "produto_fornecedor_config",
+    "produto_variacao_grupos",
+    "produto_variacao_opcoes",
+    "produto_variante_opcoes",
+    "produto_variantes",
+    "produtos",
+    "promocoes",
+    "promocoes_quantidade",
+    "promocoes_quantidade_ativadas",
+    "promocoes_quantidade_uso",
+    "saques",
+    "servicos",
+    "sistema_logs",
+    "solicitacoes_exclusao",
+    "suporte_mensagens",
+    "system_settings",
+    "ticket_mensagens",
+    "tickets",
+    "transferencias",
+    "viagens_categorias",
+    "viagens_orcamentos",
+    "viagens_pacote_imagens",
+    "viagens_pacotes",
+    "viagens_passageiro_documentos",
+    "viagens_passageiros",
+    "viagens_propostas",
+    "viagens_transacoes",
+    "vouchers"
+  ],
+  "adminModulesCount": 109,
+  "moduleAnalysis": {
+    "src/components/admin/AcessosModule.tsx": {
+      "rpcs": [
+        "gsa_admin_access_snapshot",
+        "gsa_admin_save_function",
+        "gsa_admin_save_collaborator",
+        "gsa_admin_set_collaborator_status",
+        "gsa_admin_rotate_collaborator_credential",
+        "gsa_admin_review_deletion_request"
+      ],
+      "tables": [],
+      "size": 25349,
+      "lines": 426
+    },
+    "src/components/admin/AdvertisingAdminModule.tsx": {
+      "rpcs": [
+        "gsa_admin_advertising_overview"
+      ],
+      "tables": [],
+      "size": 30632,
+      "lines": 365
+    },
+    "src/components/admin/AffiliateAdminModule.tsx": {
+      "rpcs": [
+        "gsa_admin_update_affiliate_details",
+        "gsa_admin_affiliate_snapshot",
+        "gsa_admin_set_affiliate_status",
+        "gsa_admin_decide_affiliate_payout",
+        "gsa_admin_release_affiliate_commissions",
+        "gsa_admin_update_global_saque_minimo",
+        "gsa_admin_update_affiliate_program",
+        "gsa_admin_update_affiliate_points_settings",
+        "gsa_admin_adjust_affiliate_balance"
+      ],
+      "tables": [],
+      "size": 86563,
+      "lines": 1648
+    },
+    "src/components/admin/AreaVIPModule.tsx": {
+      "rpcs": [
+        "gsa_admin_upsert_settings"
+      ],
+      "tables": [
+        "system_settings",
+        "client_levels",
+        "clientes",
+        "level_history"
+      ],
+      "size": 62693,
+      "lines": 1332
+    },
+    "src/components/admin/AssinaturasModule.tsx": {
+      "rpcs": [],
+      "tables": [
+        "loja_categorias",
+        "assinaturas"
+      ],
+      "size": 47148,
+      "lines": 903
+    },
+    "src/components/admin/CadastroModule.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 18150,
+      "lines": 402
+    },
+    "src/components/admin/CalculatorProAdminPanel.tsx": {
+      "rpcs": [
+        "gsa_admin_ensure_calculator_pro_products",
+        "gsa_admin_save_calculator_pro_product",
+        "gsa_admin_create_calculator_pro_voucher",
+        "gsa_admin_set_calculator_pro_voucher_status"
+      ],
+      "tables": [],
+      "size": 54565,
+      "lines": 1024
+    },
+    "src/components/admin/CalculatorProPaymentConfiguration.tsx": {
+      "rpcs": [
+        "gsa_admin_calculator_pro_snapshot",
+        "gsa_admin_save_calculator_pro_runtime_config"
+      ],
+      "tables": [],
+      "size": 7149,
+      "lines": 134
+    },
+    "src/components/admin/CareersAdminModule.tsx": {
+      "rpcs": [
+        "gsa_admin_list_career_applications",
+        "gsa_admin_get_career_application",
+        "gsa_admin_update_career_application",
+        "gsa_admin_get_career_resume_reference"
+      ],
+      "tables": [],
+      "size": 25144,
+      "lines": 442
+    },
+    "src/components/admin/ClassifiedsModule.tsx": {
+      "rpcs": [
+        "gsa_admin_list_resource",
+        "gsa_admin_classified_action"
+      ],
+      "tables": [
+        "classificados_midias"
+      ],
+      "size": 18604,
+      "lines": 224
+    },
+    "src/components/admin/clientes/AdminClienteDocumentos.tsx": {
+      "rpcs": [
+        "gsa_registrar_pendencia_whatsapp"
+      ],
+      "tables": [
+        "cliente_documentos"
+      ],
+      "size": 24606,
+      "lines": 587
+    },
+    "src/components/admin/ClientesModule.tsx": {
+      "rpcs": [
+        "gsa_admin_criar_cliente",
+        "gsa_admin_alterar_status_cliente",
+        "delete_client_cascade",
+        "gsa_admin_baixar_fatura",
+        "gsa_admin_enviar_fatura_cobranca",
+        "gsa_admin_ajustar_saldo_cliente",
+        "gsa_admin_atualizar_status_cliente",
+        "gsa_admin_atualizar_dados_cliente",
+        "gsa_admin_reset_actor_pin",
+        "gsa_admin_desbloquear_pin_cliente"
+      ],
+      "tables": [
+        "clientes",
+        "faturas",
+        "orcamentos",
+        "saques",
+        "emprestimos",
+        "tickets",
+        "classificados_anuncios",
+        "loja_credito_solicitacoes",
+        "ticket_mensagens",
+        "orcamento_timeline",
+        "emprestimo_parcelas",
+        "ordens_servico",
+        "cliente_documentos",
+        "ordens_fiscais",
+        "prestador_demandas",
+        "notificacoes",
+        "indicacoes",
+        "ordens_compra",
+        "ordens_assinatura",
+        "extrato_financeiro",
+        "pontos_movimentacoes",
+        "points_transactions",
+        "cliente_notas_admin"
+      ],
+      "size": 158796,
+      "lines": 3165
+    },
+    "src/components/admin/CobrancaModule.tsx": {
+      "rpcs": [
+        "gsa_admin_criar_cobranca_fatura",
+        "gsa_admin_registrar_cobranca_historico",
+        "gsa_admin_mudar_status_cobranca",
+        "gsa_admin_protestar_cobranca",
+        "gsa_admin_gerar_acordo_cobranca",
+        "gsa_admin_cancelar_acordo_cobranca",
+        "gsa_admin_excluir_cobranca",
+        "gsa_admin_baixar_parcela_cobranca",
+        "gsa_admin_baixar_cobranca_manual",
+        "gsa_admin_upsert_settings"
+      ],
+      "tables": [
+        "system_settings",
+        "cobrancas",
+        "faturas"
+      ],
+      "size": 108081,
+      "lines": 1980
+    },
+    "src/components/admin/CollaboratorDashboard.tsx": {
+      "rpcs": [
+        "gsa_collaborator_dashboard_snapshot"
+      ],
+      "tables": [],
+      "size": 9995,
+      "lines": 167
+    },
+    "src/components/admin/ConfiguracoesModule.tsx": {
+      "rpcs": [
+        "gsa_admin_settings_snapshot",
+        "gsa_admin_update_settings_secure",
+        "gsa_admin_save_company",
+        "gsa_admin_save_payment_method"
+      ],
+      "tables": [],
+      "size": 28788,
+      "lines": 293
+    },
+    "src/components/admin/CreditoModule.tsx": {
+      "rpcs": [
+        "gsa_admin_enviar_oferta_quitacao_credito",
+        "gsa_admin_upsert_settings",
+        "gsa_admin_preaprovar_credito",
+        "gsa_admin_aprovar_aumento_credito",
+        "gsa_admin_recusar_credito",
+        "gsa_admin_solicitar_documento_credito",
+        "gsa_admin_atualizar_documento_credito",
+        "gsa_admin_rejeitar_contrato_credito",
+        "gsa_admin_liberar_credito_contrato",
+        "gsa_admin_ajustar_limite_credito_cliente",
+        "gsa_admin_definir_parcelamento_credito"
+      ],
+      "tables": [
+        "loja_credito_solicitacoes",
+        "system_settings",
+        "clientes",
+        "loja_credito_movimentacoes",
+        "loja_credito_documentos",
+        "faturas"
+      ],
+      "size": 111406,
+      "lines": 2203
+    },
+    "src/components/admin/CuponsLojaModule.tsx": {
+      "rpcs": [],
+      "tables": [
+        "clientes",
+        "produtos",
+        "cupons_loja"
+      ],
+      "size": 38565,
+      "lines": 742
+    },
+    "src/components/admin/Dashboard.tsx": {
+      "rpcs": [
+        "gsa_admin_dashboard_snapshot",
+        "gsa_admin_baixar_fatura",
+        "gsa_admin_processar_saque"
+      ],
+      "tables": [],
+      "size": 19084,
+      "lines": 493
+    },
+    "src/components/admin/demandas/DemandasComentarios.tsx": {
+      "rpcs": [
+        "increment_comentarios"
+      ],
+      "tables": [
+        "demanda_comentarios",
+        "prestador_demandas"
+      ],
+      "size": 11656,
+      "lines": 271
+    },
+    "src/components/admin/demandas/DemandasDashboard.tsx": {
+      "rpcs": [],
+      "tables": [
+        "prestador_demandas",
+        "colaboradores"
+      ],
+      "size": 10359,
+      "lines": 185
+    },
+    "src/components/admin/demandas/DemandasDetalhesModal.tsx": {
+      "rpcs": [
+        "gsa_admin_cancelar_demanda"
+      ],
+      "tables": [
+        "prestador_demandas",
+        "os_notas",
+        "os_suporte_mensagens"
+      ],
+      "size": 87378,
+      "lines": 1642
+    },
+    "src/components/admin/demandas/DemandasKanban.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 8311,
+      "lines": 146
+    },
+    "src/components/admin/demandas/DemandasTabela.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 18794,
+      "lines": 332
+    },
+    "src/components/admin/demandas/NovaDemandaModal.tsx": {
+      "rpcs": [],
+      "tables": [
+        "ordens_servico",
+        "colaboradores",
+        "prestadores",
+        "prestador_demandas"
+      ],
+      "size": 25062,
+      "lines": 494
+    },
+    "src/components/admin/DemandasColaboradorModule.tsx": {
+      "rpcs": [
+        "gsa_collaborator_list_demands",
+        "gsa_collaborator_demand_history"
+      ],
+      "tables": [
+        "prestador_demandas",
+        "colaboradores",
+        "prestadores",
+        "prestador_demandas_historico"
+      ],
+      "size": 14260,
+      "lines": 306
+    },
+    "src/components/admin/ecommerce/EcommerceAnalytics.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 6910,
+      "lines": 123
+    },
+    "src/components/admin/ecommerce/PricingPanel.tsx": {
+      "rpcs": [],
+      "tables": [
+        "pricing_configs"
+      ],
+      "size": 11750,
+      "lines": 237
+    },
+    "src/components/admin/EmpresaModule.tsx": {
+      "rpcs": [],
+      "tables": [
+        "empresa"
+      ],
+      "size": 7339,
+      "lines": 196
+    },
+    "src/components/admin/EmprestimosModule.tsx": {
+      "rpcs": [
+        "gsa_admin_emprestimo_salvar_observacao",
+        "gsa_admin_emprestimo_enviar_comentario",
+        "gsa_admin_emprestimo_enviar_proposta",
+        "gsa_admin_emprestimo_enviar_contrato",
+        "gsa_admin_emprestimo_aprovar",
+        "gsa_admin_emprestimo_atualizar_status",
+        "gsa_admin_emprestimo_atualizar_documento",
+        "gsa_admin_emprestimo_enviar_oferta_quitacao"
+      ],
+      "tables": [
+        "emprestimos",
+        "emprestimo_historico",
+        "emprestimo_comentarios",
+        "emprestimo_parcelas",
+        "emprestimo_documentos"
+      ],
+      "size": 70201,
+      "lines": 1173
+    },
+    "src/components/admin/FinanceiroModule.tsx": {
+      "rpcs": [
+        "fn_marcar_faturas_vencidas",
+        "gsa_admin_processar_saque",
+        "gsa_admin_processar_transferencia",
+        "gsa_admin_baixar_fatura",
+        "gsa_admin_enviar_fatura_cobranca",
+        "gsa_admin_cancelar_fatura",
+        "gsa_admin_criar_fatura_manual",
+        "gsa_admin_aplicar_ajuste_fatura"
+      ],
+      "tables": [
+        "faturas",
+        "saques",
+        "transferencias",
+        "clientes",
+        "ordens_servico",
+        "ordens_compra",
+        "ordens_assinatura",
+        "ordens_fiscais",
+        "fatura_contestacoes"
+      ],
+      "size": 161801,
+      "lines": 3287
+    },
+    "src/components/admin/FiscalModule.tsx": {
+      "rpcs": [
+        "gsa_admin_list_resource",
+        "gsa_admin_fiscal_update"
+      ],
+      "tables": [],
+      "size": 18160,
+      "lines": 200
+    },
+    "src/components/admin/FornecedoresModule.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 50242,
+      "lines": 792
+    },
+    "src/components/admin/GsaTvModule.tsx": {
+      "rpcs": [],
+      "tables": [
+        "gsa_tv_channels",
+        "gsa_tv_media_items",
+        "gsa_tv_schedule_slots",
+        "gsa_tv_playlists",
+        "gsa_tv_incidents",
+        "gsa_tv_audit_log",
+        "gsa_tv_jobs"
+      ],
+      "size": 93252,
+      "lines": 1980
+    },
+    "src/components/admin/IndicacoesModule.tsx": {
+      "rpcs": [],
+      "tables": [
+        "clientes",
+        "indicacoes",
+        "vouchers"
+      ],
+      "size": 28719,
+      "lines": 640
+    },
+    "src/components/admin/infra/CloudflareManager.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 39654,
+      "lines": 691
+    },
+    "src/components/admin/infra/OracleMetricsPanel.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 7635,
+      "lines": 123
+    },
+    "src/components/admin/infra/VPSTerminal.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 4903,
+      "lines": 133
+    },
+    "src/components/admin/infra/WhatsAppQRCodeManager.tsx": {
+      "rpcs": [],
+      "tables": [
+        "system_settings",
+        "gsa_whatsapp_ramais"
+      ],
+      "size": 47593,
+      "lines": 1025
+    },
+    "src/components/admin/LojaCategoriasModule.tsx": {
+      "rpcs": [],
+      "tables": [
+        "loja_categorias"
+      ],
+      "size": 12308,
+      "lines": 312
+    },
+    "src/components/admin/LojaTrocasModule.tsx": {
+      "rpcs": [
+        "gsa_admin_atualizar_solicitacao_loja"
+      ],
+      "tables": [
+        "loja_solicitacoes"
+      ],
+      "size": 44220,
+      "lines": 777
+    },
+    "src/components/admin/OrcamentosModule.tsx": {
+      "rpcs": [
+        "gsa_admin_approve_budget"
+      ],
+      "tables": [
+        "orcamentos",
+        "clientes",
+        "indicacoes",
+        "system_settings",
+        "cliente_promocoes",
+        "servicos",
+        "emprestimos",
+        "promocoes",
+        "produtos",
+        "assinaturas"
+      ],
+      "size": 139384,
+      "lines": 2729
+    },
+    "src/components/admin/OrdensAssinaturaModule.tsx": {
+      "rpcs": [
+        "gsa_admin_cancel_subscription",
+        "gsa_admin_extend_subscription"
+      ],
+      "tables": [
+        "ordens_assinatura"
+      ],
+      "size": 30960,
+      "lines": 679
+    },
+    "src/components/admin/OrdensCompraModule.tsx": {
+      "rpcs": [],
+      "tables": [
+        "ordens_compra",
+        "produtos",
+        "faturas",
+        "cupons_loja",
+        "ordens_assinatura",
+        "points_transactions",
+        "pontos_movimentacoes",
+        "extrato_financeiro"
+      ],
+      "size": 61137,
+      "lines": 1147
+    },
+    "src/components/admin/OrdensServicoModule.tsx": {
+      "rpcs": [
+        "gsa_admin_finalize_service_order"
+      ],
+      "tables": [
+        "ordens_servico",
+        "prestador_demandas",
+        "clientes",
+        "os_notas"
+      ],
+      "size": 51753,
+      "lines": 1052
+    },
+    "src/components/admin/PainelRentabilidade.tsx": {
+      "rpcs": [],
+      "tables": [
+        "faturas",
+        "ordens_servico",
+        "prestador_demandas",
+        "orcamentos",
+        "clientes",
+        "indicacoes"
+      ],
+      "size": 17660,
+      "lines": 405
+    },
+    "src/components/admin/PartnersAdminModule.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 21308,
+      "lines": 322
+    },
+    "src/components/admin/PremiosModule.tsx": {
+      "rpcs": [],
+      "tables": [
+        "cliente_premios",
+        "clientes"
+      ],
+      "size": 39546,
+      "lines": 864
+    },
+    "src/components/admin/prestadores/AdminPrestadorDocumentos.tsx": {
+      "rpcs": [],
+      "tables": [
+        "prestador_documentos"
+      ],
+      "size": 22080,
+      "lines": 463
+    },
+    "src/components/admin/prestadores/AdminPrestadorPremios.tsx": {
+      "rpcs": [],
+      "tables": [
+        "prestador_premios"
+      ],
+      "size": 10786,
+      "lines": 248
+    },
+    "src/components/admin/prestadores/AdminPrestadorPromocoes.tsx": {
+      "rpcs": [],
+      "tables": [
+        "prestador_promocoes",
+        "prestador_promocoes_ativacoes"
+      ],
+      "size": 18523,
+      "lines": 387
+    },
+    "src/components/admin/prestadores/AdminPrestadorVouchers.tsx": {
+      "rpcs": [],
+      "tables": [
+        "prestador_vouchers"
+      ],
+      "size": 10213,
+      "lines": 240
+    },
+    "src/components/admin/prestadores/PrestadoresCadastro.tsx": {
+      "rpcs": [
+        "gsa_admin_reset_actor_pin"
+      ],
+      "tables": [
+        "prestadores",
+        "prestador_historico",
+        "prestador_demandas",
+        "prestador_transacoes"
+      ],
+      "size": 86125,
+      "lines": 1621
+    },
+    "src/components/admin/prestadores/PrestadoresDemandas.tsx": {
+      "rpcs": [
+        "gsa_admin_cancelar_demanda"
+      ],
+      "tables": [
+        "clientes",
+        "ordens_fiscais",
+        "ordens_servico",
+        "prestador_suporte_demandas",
+        "prestador_demandas",
+        "prestadores",
+        "colaboradores",
+        "prestador_demandas_historico",
+        "os_notas",
+        "faturas",
+        "prestador_transacoes",
+        "os_suporte_mensagens"
+      ],
+      "size": 159159,
+      "lines": 3012
+    },
+    "src/components/admin/prestadores/PrestadoresFinanceiro.tsx": {
+      "rpcs": [
+        "gsa_admin_processar_saque_prestador"
+      ],
+      "tables": [
+        "prestador_saques"
+      ],
+      "size": 33140,
+      "lines": 691
+    },
+    "src/components/admin/PrestadoresModule.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 7135,
+      "lines": 142
+    },
+    "src/components/admin/products/BarcodeScannerModal.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 22540,
+      "lines": 561
+    },
+    "src/components/admin/products/BulkProductImportModal.tsx": {
+      "rpcs": [
+        "gsa_admin_import_products_batch_v3"
+      ],
+      "tables": [],
+      "size": 30021,
+      "lines": 615
+    },
+    "src/components/admin/products/import/ExcelImportSource.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 8281,
+      "lines": 234
+    },
+    "src/components/admin/products/import/ImportSourceSelector.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 4156,
+      "lines": 87
+    },
+    "src/components/admin/products/import/ImportSupplierMode.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 6299,
+      "lines": 147
+    },
+    "src/components/admin/products/import/MediaImportSource.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 10176,
+      "lines": 271
+    },
+    "src/components/admin/products/import/TextImportSource.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 3144,
+      "lines": 89
+    },
+    "src/components/admin/products/import/UrlImportSource.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 3401,
+      "lines": 106
+    },
+    "src/components/admin/products/ProductVariationsEditor.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 11194,
+      "lines": 200
+    },
+    "src/components/admin/ProdutosModule.tsx": {
+      "rpcs": [
+        "gsa_admin_check_product_barcode"
+      ],
+      "tables": [
+        "loja_categorias",
+        "produtos",
+        "loja_estoque_historico"
+      ],
+      "size": 164880,
+      "lines": 3002
+    },
+    "src/components/admin/PromoAnalytics.tsx": {
+      "rpcs": [],
+      "tables": [
+        "promocoes_quantidade_uso"
+      ],
+      "size": 6504,
+      "lines": 157
+    },
+    "src/components/admin/PromocaoQuantidadeForm.tsx": {
+      "rpcs": [],
+      "tables": [
+        "produtos",
+        "loja_categorias",
+        "promocoes_quantidade"
+      ],
+      "size": 23534,
+      "lines": 466
+    },
+    "src/components/admin/PromocaoQuantidadeModule.tsx": {
+      "rpcs": [],
+      "tables": [
+        "promocoes_quantidade"
+      ],
+      "size": 9600,
+      "lines": 191
+    },
+    "src/components/admin/PromocoesModule.tsx": {
+      "rpcs": [],
+      "tables": [
+        "promocoes"
+      ],
+      "size": 24050,
+      "lines": 561
+    },
+    "src/components/admin/PromoDetalhesModal.tsx": {
+      "rpcs": [],
+      "tables": [
+        "cliente_promocoes",
+        "orcamentos"
+      ],
+      "size": 17643,
+      "lines": 316
+    },
+    "src/components/admin/ProtectionAdminModule.tsx": {
+      "rpcs": [
+        "gsa_admin_list_resource",
+        "gsa_admin_update_resource_status",
+        "gsa_admin_save_protection_entity",
+        "gsa_admin_create_protection_proposal"
+      ],
+      "tables": [],
+      "size": 22460,
+      "lines": 347
+    },
+    "src/components/admin/ReembolsosModule.tsx": {
+      "rpcs": [],
+      "tables": [
+        "faturas",
+        "loja_reembolsos"
+      ],
+      "size": 41026,
+      "lines": 830
+    },
+    "src/components/admin/relatorios/RelatorioClientes.tsx": {
+      "rpcs": [],
+      "tables": [
+        "clientes",
+        "client_levels",
+        "faturas"
+      ],
+      "size": 9064,
+      "lines": 166
+    },
+    "src/components/admin/relatorios/RelatorioCobranca.tsx": {
+      "rpcs": [],
+      "tables": [
+        "cobrancas"
+      ],
+      "size": 8083,
+      "lines": 148
+    },
+    "src/components/admin/relatorios/RelatorioCredito.tsx": {
+      "rpcs": [],
+      "tables": [
+        "clientes",
+        "loja_credito_solicitacoes"
+      ],
+      "size": 9978,
+      "lines": 175
+    },
+    "src/components/admin/relatorios/RelatorioEmprestimos.tsx": {
+      "rpcs": [],
+      "tables": [
+        "emprestimos",
+        "emprestimo_parcelas"
+      ],
+      "size": 9733,
+      "lines": 174
+    },
+    "src/components/admin/relatorios/RelatorioExecutivo.tsx": {
+      "rpcs": [],
+      "tables": [
+        "faturas",
+        "clientes",
+        "ordens_servico",
+        "saques"
+      ],
+      "size": 10311,
+      "lines": 193
+    },
+    "src/components/admin/relatorios/RelatorioFinanceiro.tsx": {
+      "rpcs": [],
+      "tables": [
+        "faturas",
+        "pagamentos",
+        "saques",
+        "transferencias",
+        "clientes",
+        "ordens_assinatura",
+        "assinaturas"
+      ],
+      "size": 13426,
+      "lines": 211
+    },
+    "src/components/admin/relatorios/RelatorioFiscal.tsx": {
+      "rpcs": [],
+      "tables": [
+        "ordens_fiscais"
+      ],
+      "size": 10151,
+      "lines": 169
+    },
+    "src/components/admin/relatorios/RelatorioGamificacao.tsx": {
+      "rpcs": [],
+      "tables": [
+        "pontos_movimentacoes",
+        "clientes",
+        "client_levels",
+        "cliente_premios"
+      ],
+      "size": 9219,
+      "lines": 154
+    },
+    "src/components/admin/relatorios/RelatorioLoja.tsx": {
+      "rpcs": [],
+      "tables": [
+        "faturas",
+        "produtos",
+        "loja_solicitacoes"
+      ],
+      "size": 9377,
+      "lines": 164
+    },
+    "src/components/admin/relatorios/RelatorioMarketing.tsx": {
+      "rpcs": [],
+      "tables": [
+        "vouchers",
+        "indicacoes",
+        "promocoes",
+        "cliente_promocoes"
+      ],
+      "size": 8806,
+      "lines": 139
+    },
+    "src/components/admin/relatorios/RelatorioOperacional.tsx": {
+      "rpcs": [],
+      "tables": [
+        "colaboradores",
+        "solicitacoes_exclusao",
+        "ordens_assinatura",
+        "ordens_compra",
+        "assinaturas"
+      ],
+      "size": 8840,
+      "lines": 149
+    },
+    "src/components/admin/relatorios/RelatorioOS.tsx": {
+      "rpcs": [],
+      "tables": [
+        "ordens_servico",
+        "orcamentos"
+      ],
+      "size": 8839,
+      "lines": 152
+    },
+    "src/components/admin/relatorios/RelatorioPrestadores.tsx": {
+      "rpcs": [],
+      "tables": [
+        "prestadores",
+        "prestador_demandas",
+        "prestador_faturas",
+        "prestador_saques"
+      ],
+      "size": 9366,
+      "lines": 154
+    },
+    "src/components/admin/relatorios/RelatorioRentabilidade.tsx": {
+      "rpcs": [],
+      "tables": [
+        "emprestimos",
+        "faturas"
+      ],
+      "size": 15943,
+      "lines": 328
+    },
+    "src/components/admin/relatorios/RelatorioSuporte.tsx": {
+      "rpcs": [],
+      "tables": [
+        "tickets"
+      ],
+      "size": 7192,
+      "lines": 135
+    },
+    "src/components/admin/relatorios/utils/relatorioExport.ts": {
+      "rpcs": [],
+      "tables": [],
+      "size": 2870,
+      "lines": 92
+    },
+    "src/components/admin/RelatoriosModule.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 9358,
+      "lines": 141
+    },
+    "src/components/admin/ScrapingAdminModule.tsx": {
+      "rpcs": [
+        "gsa_admin_save_scraping_config",
+        "gsa_admin_trigger_scraping_now"
+      ],
+      "tables": [
+        "system_settings",
+        "automacao_scraping_configs",
+        "loja_categorias",
+        "viagens_categorias"
+      ],
+      "size": 48892,
+      "lines": 973
+    },
+    "src/components/admin/ScrapingExecutionMonitorModal.tsx": {
+      "rpcs": [],
+      "tables": [
+        "automacao_scraping_logs"
+      ],
+      "size": 16409,
+      "lines": 352
+    },
+    "src/components/admin/ServicePackagesModule.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 14225,
+      "lines": 252
+    },
+    "src/components/admin/ServicosModule.tsx": {
+      "rpcs": [],
+      "tables": [
+        "loja_categorias",
+        "servicos"
+      ],
+      "size": 44375,
+      "lines": 891
+    },
+    "src/components/admin/ShopeeOperationsModule.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 19888,
+      "lines": 301
+    },
+    "src/components/admin/SiteCampaignAdminModule.tsx": {
+      "rpcs": [
+        "gsa_admin_site_campaigns_overview",
+        "gsa_admin_upsert_site_campaign",
+        "gsa_admin_set_site_campaign_status",
+        "gsa_admin_duplicate_site_campaign"
+      ],
+      "tables": [],
+      "size": 32150,
+      "lines": 204
+    },
+    "src/components/admin/SiteCampaignAdminPage.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 599,
+      "lines": 17
+    },
+    "src/components/admin/SiteCampaignDeletionPanel.tsx": {
+      "rpcs": [
+        "gsa_admin_site_campaign_my_permissions",
+        "gsa_admin_site_campaigns_overview",
+        "gsa_admin_delete_site_campaign"
+      ],
+      "tables": [],
+      "size": 5091,
+      "lines": 111
+    },
+    "src/components/admin/SiteCampaignPermissionMatrix.tsx": {
+      "rpcs": [
+        "gsa_admin_site_campaign_permission_overview",
+        "gsa_admin_set_site_campaign_permissions"
+      ],
+      "tables": [],
+      "size": 7241,
+      "lines": 154
+    },
+    "src/components/admin/SystemMonitorModule.tsx": {
+      "rpcs": [
+        "gsa_admin_system_snapshot"
+      ],
+      "tables": [
+        "colaboradores",
+        "clientes",
+        "fornecedores",
+        "prestadores",
+        "gsa_afiliados"
+      ],
+      "size": 35062,
+      "lines": 671
+    },
+    "src/components/admin/SystemStatusIndicator.tsx": {
+      "rpcs": [],
+      "tables": [
+        "clientes"
+      ],
+      "size": 6718,
+      "lines": 170
+    },
+    "src/components/admin/TicketsModule.tsx": {
+      "rpcs": [],
+      "tables": [
+        "clientes",
+        "prestadores",
+        "ticket_mensagens",
+        "tickets"
+      ],
+      "size": 37688,
+      "lines": 793
+    },
+    "src/components/admin/TravelAdminModule.tsx": {
+      "rpcs": [
+        "gsa_admin_travel_list",
+        "gsa_admin_travel_link_lead",
+        "gsa_admin_travel_update_status",
+        "gsa_admin_search_clients",
+        "gsa_admin_travel_create_proposal",
+        "gsa_admin_travel_create_package",
+        "gsa_admin_process_travel_refund"
+      ],
+      "tables": [
+        "clientes",
+        "viagens_pacotes",
+        "viagens_pacote_imagens",
+        "viagens_propostas"
+      ],
+      "size": 129906,
+      "lines": 2393
+    },
+    "src/components/admin/ui/AdminActivityFeed.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 3929,
+      "lines": 90
+    },
+    "src/components/admin/ui/AdminCommandPalette.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 9618,
+      "lines": 168
+    },
+    "src/components/admin/ui/AdminDomainCard.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 2124,
+      "lines": 54
+    },
+    "src/components/admin/ui/AdminWhatsAppButton.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 12919,
+      "lines": 270
+    },
+    "src/components/admin/VendasModule.tsx": {
+      "rpcs": [],
+      "tables": [],
+      "size": 17386,
+      "lines": 354
+    },
+    "src/components/admin/ViagensCategoriasModule.tsx": {
+      "rpcs": [
+        "gsa_admin_save_travel_category"
+      ],
+      "tables": [
+        "viagens_categorias"
+      ],
+      "size": 12329,
+      "lines": 281
+    },
+    "src/components/admin/VouchersModule.tsx": {
+      "rpcs": [],
+      "tables": [
+        "pagamentos",
+        "extrato_financeiro",
+        "vouchers",
+        "clientes"
+      ],
+      "size": 35450,
+      "lines": 803
+    }
+  }
+}

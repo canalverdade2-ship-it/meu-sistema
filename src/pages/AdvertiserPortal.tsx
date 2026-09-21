@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
+import { useRealtimeSubscription } from '../hooks/useRealtime';
 import { compressImageBeforeUpload } from '../lib/imageCompression';
 import { advertiserAccess } from '../lib/advertiserAccess';
 import { copyToClipboard } from '../lib/utils';
@@ -503,13 +504,21 @@ export function AdvertiserPortal() {
 
   useEffect(() => {
     void load();
-    const interval = window.setInterval(() => void load(true), 30_000);
     const { data } = supabase.auth.onAuthStateChange(() => void load(true));
     return () => {
-      window.clearInterval(interval);
       data.subscription.unsubscribe();
     };
   }, [load]);
+
+  useRealtimeSubscription([
+    { table: 'gsa_advertisers', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'gsa_ad_requests', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'gsa_ad_proposals', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'gsa_ad_campaigns', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'gsa_ad_creatives', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'gsa_ad_payments', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'gsa_ad_negotiations', onChange: () => void load(true), debounceMs: 500 },
+  ]);
 
   useEffect(() => navigationService.subscribe(({ pathname }) => setTab(tabFromPath(pathname))), []);
 
@@ -1104,7 +1113,7 @@ export function AdvertiserPortal() {
               <p className="mt-1 text-2xl font-black text-[#192630]">{money(counterProposal.total_amount)}</p>
             </div>
             <Field label="Valor proposto" required>
-              <input type="number" min="0.01" step="0.01" value={counterAmount} onChange={(event) => setCounterAmount(event.target.value)} className="adv-field-input" />
+              <input type="number" min="0.01" step="0.01" inputMode="decimal" value={counterAmount} onChange={(event) => setCounterAmount(event.target.value)} className="adv-field-input" />
             </Field>
             <Field label="Justificativa do ajuste" required>
               <textarea value={counterMessage} onChange={(event) => setCounterMessage(event.target.value)} rows={5} className="adv-field-input resize-y" placeholder="Explique a condição que sua empresa precisa avaliar." />
@@ -2014,6 +2023,21 @@ function CreativesSection({
 }
 
 function FinanceSection({ campaigns }: { campaigns: AdvertisingCampaign[] }) {
+  const [creatingCheckoutId, setCreatingCheckoutId] = useState<string | null>(null);
+  const createCheckout = async (paymentId: string) => {
+    setCreatingCheckoutId(paymentId);
+    try {
+      const { data, error } = await supabase.functions.invoke<{ success?: boolean; checkout_url?: string }>('gsa-ads-public', { body: { action: 'create_checkout', payment_id: paymentId } });
+      if (error || !data?.success || !data.checkout_url) throw error || new Error('Checkout indisponível.');
+      const checkout = new URL(data.checkout_url);
+      if (checkout.protocol !== 'https:') throw new Error('URL de pagamento inválida.');
+      window.location.assign(checkout.href);
+    } catch (error) {
+      toast.error(message(error, 'Não foi possível gerar o pagamento agora.'));
+    } finally {
+      setCreatingCheckoutId(null);
+    }
+  };
   const payable = campaigns.filter((campaign) => campaign.payment);
   if (!payable.length) {
     return <EmptyState icon={WalletCards} title="Nenhuma cobrança disponível" description="As cobranças serão criadas após o aceite da proposta, conforme a condição comercial definida." />;
@@ -2044,7 +2068,7 @@ function FinanceSection({ campaigns }: { campaigns: AdvertisingCampaign[] }) {
               <SummaryCell label="Pagamento confirmado" value={payment.paid_at ? dateTime(payment.paid_at) : 'Ainda não confirmado'} />
             </div>
 
-            {(payment.checkout_url || payment.pix_code) && payment.status !== 'paid' && (
+            {!['paid', 'refunded', 'cancelled'].includes(payment.status) && (
               <div className="px-5 py-6 sm:px-6">
                 <div className="grid gap-5 xl:grid-cols-[1fr_auto] xl:items-end">
                   <div>
@@ -2063,10 +2087,14 @@ function FinanceSection({ campaigns }: { campaigns: AdvertisingCampaign[] }) {
                       </Field>
                     )}
                   </div>
-                  {payment.checkout_url && (
+                  {payment.checkout_url ? (
                     <a href={payment.checkout_url} target="_blank" rel="noopener noreferrer" className="adv-btn-primary justify-center">
                       <CreditCard className="h-4 w-4" /> Abrir pagamento
                     </a>
+                  ) : (
+                    <button type="button" disabled={creatingCheckoutId === payment.id} onClick={() => void createCheckout(payment.id)} className="adv-btn-primary justify-center disabled:cursor-not-allowed disabled:opacity-60">
+                      <CreditCard className="h-4 w-4" /> {creatingCheckoutId === payment.id ? 'Gerando...' : 'Gerar pagamento seguro'}
+                    </button>
                   )}
                 </div>
                 <p className="mt-4 text-xs leading-5 text-[#748089]">A confirmação pode levar alguns instantes após o pagamento. Use o botão de atualização no cabeçalho para consultar novamente.</p>

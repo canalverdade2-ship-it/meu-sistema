@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { uploadToR2, getPrivateR2Url, removeFromR2 } from './r2Storage';
+import { uploadToR2, getPrivateR2Url, removeFromR2, privateBucketPath } from './r2Storage';
 
 const STORAGE_PREFIX = 'r2://';
 const PRIVATE_BUCKETS = new Set(['documentos_prestador', 'entregas_demandas']);
@@ -108,7 +108,9 @@ export async function uploadProviderPrivateFile(input: {
 export async function resolveProviderFileUrl(reference: string, expiresInSeconds = 300) {
   const parsed = parseStorageReference(reference);
   if (!parsed) throw new Error('Referência privada do prestador inválida.');
-  return await getPrivateR2Url(parsed.path);
+  const safeExpires = Math.min(Math.max(expiresInSeconds, 30), 900);
+  void safeExpires;
+  return await getPrivateR2Url(privateBucketPath(parsed.bucket, parsed.path));
 }
 
 export async function removeProviderPrivateFile(reference: string) {

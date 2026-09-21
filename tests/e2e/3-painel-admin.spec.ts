@@ -1,62 +1,68 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Painel do Administrador - Cobertura Exaustiva', () => {
+/**
+ * REMEDIADO v2 — Gate M2 (corrigido após execução real)
+ *
+ * Evidências da execução real (2026-09-16):
+ *  - /admin redireciona para /login ou /acesso-restrito — VALIDADO (8 passed no batch anterior)
+ *  - /login/pessoa-fisica mostra campo CPF — VALIDADO
+ *  - Teste "formulário de login renderiza" falhou porque /login NÃO tem campo de input
+ *    → correção: navegar para /login/pessoa-fisica ou verificar o LoginHub corretamente
+ */
 
-  test.beforeEach(async ({ page }) => {
-    // Navigate and login before each test
+test.describe('Painel do Administrador — Controles de Acesso e Segurança', () => {
+
+  test('Rota /admin redireciona ou renderiza tela de acesso restrito', async ({ page }) => {
+    await page.goto('/admin');
+    // ASSERÇÃO: /admin não deve mostrar dados admin sem autenticação
+    // Pode redirecionar para /login OU mostrar tela de "Acesso Negado" inline
+    await expect(page.locator('body')).toBeVisible();
+    await expect(page.getByText('Algo deu errado', { exact: true })).toHaveCount(0);
+    // Deve ou redirecionar para login ou manter em /admin com tela de bloqueio
+    const currentUrl = page.url();
+    const isLoginPage = currentUrl.includes('/login') || currentUrl.includes('/acesso-restrito');
+    const isAdminBlocked = page.getByText(/acesso negado|sem permissão|faça login|unauthorized/i);
+    if (!isLoginPage) {
+      // Se permaneceu em /admin, deve mostrar mensagem de bloqueio
+      await expect(isAdminBlocked).toBeVisible({ timeout: 5000 });
+    }
+  });
+
+  test('Rota /admin/colaboradores está protegida contra acesso não autenticado', async ({ page }) => {
+    await page.goto('/admin/colaboradores');
+    await expect(page.locator('body')).toBeVisible();
+    await expect(page.getByText('Algo deu errado', { exact: true })).toHaveCount(0);
+    // Verificar que dados de colaboradores não são expostos sem autenticação
+    const colaboradoresData = page.getByText(/CPF:|Módulos atribuídos/i);
+    await expect(colaboradoresData).toHaveCount(0);
+  });
+
+  test('LoginHub em /login renderiza opções de portal (PF e PJ)', async ({ page }) => {
     await page.goto('/login');
-    const emailInput = page.getByPlaceholder(/email|e-mail/i);
-    const passwordInput = page.getByPlaceholder(/senha/i);
-    const submitBtn = page.getByRole('button', { name: /entrar|login/i });
-
-    if (await emailInput.count() > 0) {
-      // Usar conta admin mockada para teste
-      await emailInput.fill('admin_teste@exemplo.com');
-      await passwordInput.fill('admin123456');
-      await submitBtn.click();
-      
-      // Wait for navigation or toast
-      await page.waitForTimeout(2000);
-    }
+    await expect(page.locator('body')).toBeVisible();
+    await expect(page.getByText('Algo deu errado', { exact: true })).toHaveCount(0);
+    // LoginHub deve ter botões de seleção de portal (sem campo de input)
+    const pfOption = page.getByText(/Pessoa Física|PF/i).first();
+    await expect(pfOption).toBeVisible({ timeout: 10000 });
+    const pjOption = page.getByText(/Empresa|PJ/i).first();
+    await expect(pjOption).toBeVisible({ timeout: 5000 });
   });
 
-  test('Módulo Vendas: Tentar criar cupom inválido e validar Toast', async ({ page }) => {
-    await page.goto('/admin'); // assuming it defaults to dashboard
-    
-    // Attempt to access Loja / Vendas
-    const lojaMenu = page.getByText(/Loja GSA Store/i);
-    if (await lojaMenu.count() > 0) {
-      await lojaMenu.first().click();
-      
-      const cuponsTab = page.getByText(/Cupons/i);
-      if (await cuponsTab.count() > 0) {
-          await cuponsTab.first().click();
-          
-          const novoCupomBtn = page.getByRole('button', { name: /novo cupom|adicionar/i });
-          if (await novoCupomBtn.count() > 0) {
-              await novoCupomBtn.click();
-              
-              // Tentar salvar vazio para disparar validação e toast de erro
-              const salvarBtn = page.getByRole('button', { name: /salvar/i });
-              await salvarBtn.click();
-              
-              // Toast validations
-              await expect(page.getByText(/erro|obrigatório/i).first()).toBeVisible({ timeout: 5000 }).catch(() => null);
-          }
-      }
-    }
+  test('Rota /login/pessoa-fisica (usada para admin PF) renderiza campo de CPF', async ({ page }) => {
+    await page.goto('/login/pessoa-fisica');
+    await expect(page.locator('body')).toBeVisible();
+    await expect(page.getByText('Algo deu errado', { exact: true })).toHaveCount(0);
+    const docInput = page.locator('input').first();
+    await expect(docInput).toBeVisible({ timeout: 15000 });
   });
 
-  test('Gestão de Acessos: Verificação RBAC Colaborador', async ({ page }) => {
-      // To test RBAC, we would need to mock the login as a restricted Colaborador.
-      // For now, we verify the menus are rendered correctly for an admin.
-      await page.goto('/admin');
-      
-      const configMenu = page.getByText(/Configurações|Acessos/i);
-      if (await configMenu.count() > 0) {
-          await configMenu.first().click();
-          await expect(page.getByText(/Permissões|Módulos/i).first()).toBeVisible().catch(() => null);
-      }
+  // BLOQUEADO: Testes de funcionalidade interna do admin
+  test.skip('BLOQUEADO: Módulo Vendas — criar cupom inválido (sem conta admin seed)', async () => {
+    // Requer: colaborador/admin seed com CPF cadastrado e acesso ao módulo de loja
+  });
+
+  test.skip('BLOQUEADO: Gestão RBAC — verificação de permissões por módulo (sem conta admin seed)', async () => {
+    // Requer: dois usuários seed com perfis de permissão distintos
   });
 
 });

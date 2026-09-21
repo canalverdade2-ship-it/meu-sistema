@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { copyToClipboard } from '../../lib/utils';
 import {
   CheckCircle,
   Copy,
@@ -16,8 +15,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
-import { formatDateTime } from '../../lib/utils';
+import { copyToClipboard, formatDateTime, maskPhone } from '../../lib/utils';
 import { useAdminNotifications } from '../../hooks/useAdminNotifications';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import { useConfirm } from '../../hooks/useConfirm';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 
@@ -145,14 +145,16 @@ export function AcessosModule(_props: AcessosModuleProps) {
   useEffect(() => {
     const isMounted = { current: true };
     void load(false, isMounted);
-    const interval = window.setInterval(() => {
-      if (document.visibilityState === 'visible' && isMounted.current) void load(true, isMounted);
-    }, 60_000);
     return () => {
       isMounted.current = false;
-      window.clearInterval(interval);
     };
   }, [load]);
+
+  useRealtimeSubscription([
+    { table: 'colaboradores', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'solicitacoes_exclusao', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'sistema_logs', onChange: () => void load(true), debounceMs: 500 },
+  ]);
 
   const pendingRequests = useMemo(
     () => snapshot.deletion_requests.filter((request) => request.status === 'pendente'),
@@ -258,6 +260,38 @@ export function AcessosModule(_props: AcessosModuleProps) {
       await Promise.all([load(true), refreshCounts()]);
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível processar a solicitação.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const deleteSession = async (session: any) => {
+    if (isSubmitting) return;
+    if (!await confirm({ title: 'Confirmação', message: 'Tem certeza que deseja excluir esta sessão?' })) return;
+    setIsSubmitting(true);
+    try {
+      await callAdminRpc('gsa_admin_delete_session', {
+        p_target_sessao_id: session.id,
+      });
+      toast.success('Sessão excluída.');
+      await load(true);
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível excluir a sessão.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const deleteAllSessions = async () => {
+    if (isSubmitting) return;
+    if (!await confirm({ title: 'Confirmação', message: 'Tem certeza que deseja excluir TODAS as sessões do banco de dados? Isso desconectará todos os usuários.' })) return;
+    setIsSubmitting(true);
+    try {
+      await callAdminRpc('gsa_admin_delete_all_sessions', {});
+      toast.success('Todas as sessões foram excluídas.');
+      await load(true);
+    } catch (error: any) {
+      toast.error(error?.message || 'Não foi possível excluir as sessões.');
     } finally {
       setIsSubmitting(false);
     }
@@ -382,12 +416,19 @@ export function AcessosModule(_props: AcessosModuleProps) {
       )}
 
       {activeTab === 'sessoes' && (
-        <section className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-neutral-50 text-[10px] font-black uppercase tracking-wider text-neutral-500"><tr><th className="px-4 py-3">Ator</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Criada em</th></tr></thead>
-              <tbody className="divide-y divide-neutral-100">{snapshot.sessions.map((session) => <tr key={session.id}><td className="px-4 py-3 font-bold">{session.ator_nome || session.usuario_nome || session.ator_id || session.usuario_id || '—'}</td><td className="px-4 py-3">{session.ator_tipo || session.usuario_tipo || '—'}</td><td className="px-4 py-3">{session.status || '—'}</td><td className="px-4 py-3">{session.criado_em ? formatDateTime(session.criado_em) : '—'}</td></tr>)}</tbody>
-            </table>
+        <section className="space-y-4">
+          <div className="flex justify-end">
+            <button type="button" onClick={() => void deleteAllSessions()} disabled={isSubmitting || snapshot.sessions.length === 0} className="flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-sm font-black text-white disabled:opacity-50">
+              <Trash2 className="h-4 w-4" /> Excluir Todas
+            </button>
+          </div>
+          <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-neutral-50 text-[10px] font-black uppercase tracking-wider text-neutral-500"><tr><th className="px-4 py-3">Ator</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Criada em</th><th className="px-4 py-3 text-right">Ações</th></tr></thead>
+                <tbody className="divide-y divide-neutral-100">{snapshot.sessions.map((session) => <tr key={session.id}><td className="px-4 py-3 font-bold">{session.ator_nome || session.usuario_nome || session.ator_id || session.usuario_id || '—'}</td><td className="px-4 py-3">{session.ator_tipo || session.usuario_tipo || '—'}</td><td className="px-4 py-3">{session.status || '—'}</td><td className="px-4 py-3">{session.criado_em ? formatDateTime(session.criado_em) : '—'}</td><td className="px-4 py-3 text-right"><button type="button" onClick={() => void deleteSession(session)} disabled={isSubmitting} className="text-red-500 hover:text-red-700 disabled:opacity-50"><Trash2 className="h-4 w-4 inline" /></button></td></tr>)}</tbody>
+              </table>
+            </div>
           </div>
         </section>
       )}
@@ -399,7 +440,7 @@ export function AcessosModule(_props: AcessosModuleProps) {
             <label className="text-sm font-bold">Nome<input value={collaboratorForm.nome} onChange={(event) => setCollaboratorForm({ ...collaboratorForm, nome: event.target.value })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label>
             <label className="text-sm font-bold">Função<select value={collaboratorForm.funcao_id} onChange={(event) => setCollaboratorForm({ ...collaboratorForm, funcao_id: event.target.value })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3"><option value="">Sem função</option>{snapshot.functions.map((funcao) => <option key={funcao.id} value={funcao.id}>{funcao.nome}</option>)}</select></label>
             <label className="text-sm font-bold">E-mail<input type="email" value={collaboratorForm.email} onChange={(event) => setCollaboratorForm({ ...collaboratorForm, email: event.target.value })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label>
-            <label className="text-sm font-bold">Telefone<input value={collaboratorForm.telefone} onChange={(event) => setCollaboratorForm({ ...collaboratorForm, telefone: event.target.value })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label>
+            <label className="text-sm font-bold">Telefone<input value={collaboratorForm.telefone} onChange={(event) => setCollaboratorForm({ ...collaboratorForm, telefone: maskPhone(event.target.value) })} placeholder="(00) 00000-0000" maxLength={15} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label>
           </div>
           <div className="mt-6"><h3 className="text-sm font-black uppercase tracking-wider text-neutral-500">Permissões específicas</h3><div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{AVAILABLE_MODULES.map(([id, label]) => { const checked = collaboratorForm.modules.includes(id); return <label key={id} className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm font-bold ${checked ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-neutral-200'}`}><input type="checkbox" checked={checked} onChange={() => setCollaboratorForm({ ...collaboratorForm, modules: checked ? collaboratorForm.modules.filter((module) => module !== id) : [...collaboratorForm.modules, id] })} />{label}</label>; })}</div></div>
           <div className="mt-8 flex justify-end gap-3"><button type="button" onClick={() => setShowCollaboratorModal(false)} className="rounded-xl border border-neutral-200 px-5 py-3 font-bold">Cancelar</button><button type="button" disabled={saving} onClick={() => void saveCollaborator()} className="rounded-xl bg-indigo-600 px-6 py-3 font-black text-white disabled:opacity-50">{saving ? 'Salvando...' : 'Salvar'}</button></div>

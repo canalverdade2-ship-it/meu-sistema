@@ -1,0 +1,65 @@
+# GSA TV — Prometheus configuration
+# Versão fixada: usar digest na imagem Docker (não 'latest')
+
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+  scrape_timeout:      10s
+  external_labels:
+    environment: 'production'
+    project:     'gsa-tv'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # Alertmanager será configurado quando n8n assumir os alertas
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+scrape_configs:
+  # VPS metrics via node_exporter
+  - job_name: 'node'
+    static_configs:
+      - targets: ['host.docker.internal:9100']
+    relabel_configs:
+      - target_label: instance
+        replacement: 'gsa-tv-vps'
+
+  # Container metrics via cAdvisor
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['gsa-tv-cadvisor:8080']
+
+  # ffplayout (expor métricas via endpoint se disponível)
+  - job_name: 'ffplayout'
+    static_configs:
+      - targets: ['gsa-tv-ffplayout:8787']
+    metrics_path: /metrics
+    # ffplayout 2.1.0 pode não ter /metrics nativo — placeholder para versões futuras
+    honor_labels: true
+
+  # Media Worker
+  - job_name: 'media-worker'
+    static_configs:
+      - targets: ['gsa-tv-media-worker:9200']
+    metrics_path: /metrics
+
+  # Cache Manager
+  - job_name: 'cache-manager'
+    static_configs:
+      - targets: ['gsa-tv-cache-manager:9201']
+    metrics_path: /metrics
+
+  # Playout API
+  - job_name: 'playout-api'
+    static_configs:
+      - targets: ['gsa-tv-playout-api:9202']
+    metrics_path: /metrics
+
+  # Playlist Compiler
+  - job_name: 'playlist-compiler'
+    static_configs:
+      - targets: ['gsa-tv-playlist-compiler:9203']
+    metrics_path: /metrics

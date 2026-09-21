@@ -1,0 +1,3 @@
+set -eu
+dburl=$(sudo docker inspect gsa-tv-control-plane --format '{{range .Config.Env}}{{println .}}{{end}}' | awk -F= '$1=="DATABASE_URL"{sub(/^DATABASE_URL=/,"");print;exit}')
+sudo docker run --pull=never --rm --network host postgres:15-alpine psql "$dburl" -X -qAt -v ON_ERROR_STOP=1 -c "WITH cases(t,expected) AS (VALUES ('2026-09-09 23:59'::timestamp,'2026-09-10'::date),('2026-09-10 00:00'::timestamp,'2026-09-10'::date),('2026-09-10 05:59'::timestamp,'2026-09-10'::date),('2026-09-10 06:00'::timestamp,'2026-09-11'::date)) SELECT t,(t::date+CASE WHEN t::time<time '06:00' THEN 0 ELSE 1 END)=expected AS passed FROM cases;"

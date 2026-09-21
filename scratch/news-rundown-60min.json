@@ -1,0 +1,337 @@
+{
+  "program": "GSA Manhã News",
+  "edition": "08/09/2026",
+  "master_target_s": 3600,
+  "rundown": [
+    {
+      "order": 1,
+      "kind": "opening",
+      "title": "Abertura oficial GSA Manhã News",
+      "presenter": null,
+      "duration_s": 40,
+      "start_s": 0,
+      "end_s": 40,
+      "story_id": null
+    },
+    {
+      "order": 2,
+      "kind": "bumper",
+      "title": "Estamos apresentando — GSA Manhã News",
+      "presenter": "Impacto Comercial",
+      "duration_s": 10,
+      "start_s": 40,
+      "end_s": 50,
+      "story_id": null
+    },
+    {
+      "order": 3,
+      "kind": "studio",
+      "title": "Marcelo e Lívia em cena — bom dia, contexto da edição de 08/09/2026",
+      "presenter": "Marcelo + Lívia",
+      "duration_s": 60,
+      "start_s": 50,
+      "end_s": 110,
+      "story_id": null
+    },
+    {
+      "order": 4,
+      "kind": "headlines",
+      "title": "Escalada com principais manchetes",
+      "presenter": "Marcelo + Lívia",
+      "duration_s": 70,
+      "start_s": 110,
+      "end_s": 180,
+      "story_id": null
+    },
+    {
+      "order": 5,
+      "kind": "story",
+      "title": "Crise entre STF e Polícia Federal tem afastamento de Andrei Rodrigues e reação interna",
+      "presenter": "Marcelo",
+      "duration_s": 270,
+      "start_s": 180,
+      "end_s": 450,
+      "story_id": "pf_stf_crise"
+    },
+    {
+      "order": 6,
+      "kind": "story",
+      "title": "Presidenciáveis cumprem agenda de entrevistas, reuniões e visitas técnicas",
+      "presenter": "Lívia",
+      "duration_s": 105,
+      "start_s": 450,
+      "end_s": 555,
+      "story_id": "eleicoes_agenda"
+    },
+    {
+      "order": 7,
+      "kind": "story",
+      "title": "Focus reduz previsão de inflação de 2026 para 5%",
+      "presenter": "Marcelo",
+      "duration_s": 150,
+      "start_s": 555,
+      "end_s": 705,
+      "story_id": "focus"
+    },
+    {
+      "order": 8,
+      "kind": "story",
+      "title": "Dinheiro esquecido em bancos sobe para R$ 5,65 bilhões",
+      "presenter": "Lívia",
+      "duration_s": 165,
+      "start_s": 705,
+      "end_s": 870,
+      "story_id": "valores_receber"
+    },
+    {
+      "order": 9,
+      "kind": "story",
+      "title": "Petróleo perto de US$ 100 pressiona mercados globais",
+      "presenter": "Marcelo",
+      "duration_s": 150,
+      "start_s": 870,
+      "end_s": 1020,
+      "story_id": "mercados_petroleo"
+    },
+    {
+      "order": 10,
+      "kind": "story",
+      "title": "Novo complexo de saúde inteligente no RS terá investimento de R$ 1,9 bilhão",
+      "presenter": "Lívia",
+      "duration_s": 150,
+      "start_s": 1020,
+      "end_s": 1170,
+      "story_id": "saude_complexo_rs"
+    },
+    {
+      "order": 11,
+      "kind": "story",
+      "title": "Governo cobra remoção de vídeos com falsos médicos criados por IA",
+      "presenter": "Marcelo",
+      "duration_s": 165,
+      "start_s": 1170,
+      "end_s": 1335,
+      "story_id": "saude_falsos_medicos_ia"
+    },
+    {
+      "order": 12,
+      "kind": "story",
+      "title": "SUS reforça prevenção, testagem e tratamento de hepatites virais",
+      "presenter": "Lívia",
+      "duration_s": 105,
+      "start_s": 1335,
+      "end_s": 1440,
+      "story_id": "hepatites_sus"
+    },
+    {
+      "order": 13,
+      "kind": "story",
+      "title": "Brasil registra taxa de analfabetismo abaixo de 5%",
+      "presenter": "Marcelo",
+      "duration_s": 135,
+      "start_s": 1440,
+      "end_s": 1575,
+      "story_id": "alfabetizacao"
+    },
+    {
+      "order": 14,
+      "kind": "story",
+      "title": "Prêmio Mulheres e Ciência segue com inscrições abertas",
+      "presenter": "Lívia",
+      "duration_s": 90,
+      "start_s": 1575,
+      "end_s": 1665,
+      "story_id": "mulheres_ciencia"
+    },
+    {
+      "order": 15,
+      "kind": "story",
+      "title": "Temperaturas sobem após frente fria; chuva se redistribui pelo país",
+      "presenter": "Marcelo",
+      "duration_s": 180,
+      "start_s": 1665,
+      "end_s": 1845,
+      "story_id": "clima_brasil"
+    },
+    {
+      "order": 16,
+      "kind": "studio",
+      "title": "Chamada para o intervalo",
+      "presenter": "Marcelo + Lívia",
+      "duration_s": 20,
+      "start_s": 1845,
+      "end_s": 1865,
+      "story_id": null
+    },
+    {
+      "order": 17,
+      "kind": "commercial",
+      "title": "Intervalo comercial cadastrado",
+      "presenter": null,
+      "duration_s": 90,
+      "start_s": 1865,
+      "end_s": 1955,
+      "story_id": null
+    },
+    {
+      "order": 18,
+      "kind": "bumper",
+      "title": "Voltamos a apresentar — GSA Manhã News",
+      "presenter": "Impacto Comercial",
+      "duration_s": 10,
+      "start_s": 1955,
+      "end_s": 1965,
+      "story_id": null
+    },
+    {
+      "order": 19,
+      "kind": "studio",
+      "title": "Retorno dos âncoras e próximos destaques",
+      "presenter": "Lívia + Marcelo",
+      "duration_s": 20,
+      "start_s": 1965,
+      "end_s": 1985,
+      "story_id": null
+    },
+    {
+      "order": 20,
+      "kind": "story",
+      "title": "Brasil vence Canadá por 3 a 0 e avança no Mundial Feminino Sub-20",
+      "presenter": "Lívia",
+      "duration_s": 125,
+      "start_s": 1985,
+      "end_s": 2110,
+      "story_id": "fut_fem_sub20"
+    },
+    {
+      "order": 21,
+      "kind": "story",
+      "title": "Seleção Sub-15 estreia com vitória sobre a Colômbia",
+      "presenter": "Marcelo",
+      "duration_s": 90,
+      "start_s": 2110,
+      "end_s": 2200,
+      "story_id": "fut_sub15"
+    },
+    {
+      "order": 22,
+      "kind": "story",
+      "title": "Vitória bate Grêmio; Flamengo fecha rodada na liderança",
+      "presenter": "Lívia",
+      "duration_s": 110,
+      "start_s": 2200,
+      "end_s": 2310,
+      "story_id": "serie_a"
+    },
+    {
+      "order": 23,
+      "kind": "story",
+      "title": "Série B abre 27ª rodada com confronto direto pela liderança",
+      "presenter": "Marcelo",
+      "duration_s": 95,
+      "start_s": 2310,
+      "end_s": 2405,
+      "story_id": "serie_b"
+    },
+    {
+      "order": 24,
+      "kind": "story",
+      "title": "Tensão entre Estados Unidos e Irã se intensifica",
+      "presenter": "Lívia",
+      "duration_s": 200,
+      "start_s": 2405,
+      "end_s": 2605,
+      "story_id": "eua_ira"
+    },
+    {
+      "order": 25,
+      "kind": "story",
+      "title": "Ataques houthis atingem instalações no sul da Arábia Saudita",
+      "presenter": "Marcelo",
+      "duration_s": 140,
+      "start_s": 2605,
+      "end_s": 2745,
+      "story_id": "houthis_arabia"
+    },
+    {
+      "order": 26,
+      "kind": "story",
+      "title": "Ataques russos voltam a atingir Kyiv após visita de enviados americanos",
+      "presenter": "Lívia",
+      "duration_s": 160,
+      "start_s": 2745,
+      "end_s": 2905,
+      "story_id": "ucrania_kiev"
+    },
+    {
+      "order": 27,
+      "kind": "story",
+      "title": "Kremlin diz que Putin assegurou a Trump não ter planos agressivos contra Europa",
+      "presenter": "Marcelo",
+      "duration_s": 130,
+      "start_s": 2905,
+      "end_s": 3035,
+      "story_id": "putin_trump"
+    },
+    {
+      "order": 28,
+      "kind": "story",
+      "title": "Vitória da AfD pressiona agenda de reformas do governo alemão",
+      "presenter": "Lívia",
+      "duration_s": 145,
+      "start_s": 3035,
+      "end_s": 3180,
+      "story_id": "alemanha_afd"
+    },
+    {
+      "order": 29,
+      "kind": "story",
+      "title": "Alemanha defende nova dívida para defesa e infraestrutura",
+      "presenter": "Marcelo",
+      "duration_s": 120,
+      "start_s": 3180,
+      "end_s": 3300,
+      "story_id": "alemanha_orcamento"
+    },
+    {
+      "order": 30,
+      "kind": "story",
+      "title": "Reino Unido publica legislação para endurecer sanções ao Irã",
+      "presenter": "Lívia",
+      "duration_s": 120,
+      "start_s": 3300,
+      "end_s": 3420,
+      "story_id": "uk_ira_sancoes"
+    },
+    {
+      "order": 31,
+      "kind": "story",
+      "title": "Giro de informações úteis do dia",
+      "presenter": "Marcelo",
+      "duration_s": 120,
+      "start_s": 3420,
+      "end_s": 3540,
+      "story_id": "giro_servico"
+    },
+    {
+      "order": 32,
+      "kind": "studio",
+      "title": "Giro final e despedida dos dois âncoras",
+      "presenter": "Marcelo + Lívia",
+      "duration_s": 30,
+      "start_s": 3540,
+      "end_s": 3570,
+      "story_id": null
+    },
+    {
+      "order": 33,
+      "kind": "closing",
+      "title": "Encerramento oficial GSA Manhã News",
+      "presenter": null,
+      "duration_s": 30,
+      "start_s": 3570,
+      "end_s": 3600,
+      "story_id": null
+    }
+  ]
+}

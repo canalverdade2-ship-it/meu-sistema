@@ -466,7 +466,8 @@ export function BulkProductImportModal({ isOpen, onClose, categorias, onSuccess 
              </div>
              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Margem de Lucro Padrão (%) *</label>
-                <input type="number" value={commonMargin} onChange={e => setCommonMargin(e.target.value)} className="w-full px-3 py-2 border rounded-lg" placeholder="Ex: 30" />
+                <input  type="number" value={commonMargin} inputMode="numeric"
+onChange={(e) => setCommonMargin(e.target.value)} className="w-full px-3 py-2 border rounded-lg" placeholder="Ex: 30" />
              </div>
              <div className="flex items-center gap-2 mt-6">
                 <input type="checkbox" id="cvisivel" checked={commonVisivel} onChange={e => setCommonVisivel(e.target.checked)} className="w-4 h-4 text-blue-600 rounded" />
@@ -481,7 +482,8 @@ export function BulkProductImportModal({ isOpen, onClose, categorias, onSuccess 
              {commonEstoqueAtivo && (
                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Qtd. Inicial</label>
-                  <input type="number" value={commonEstoqueQtd} onChange={e => setCommonEstoqueQtd(e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
+                  <input  type="number" value={commonEstoqueQtd} inputMode="numeric"
+onChange={(e) => setCommonEstoqueQtd(e.target.value)} className="w-full px-3 py-2 border rounded-lg" />
                </div>
              )}
           </div>
@@ -515,11 +517,13 @@ export function BulkProductImportModal({ isOpen, onClose, categorias, onSuccess 
                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <div>
                         <label className="block text-xs font-medium text-gray-500">Custo Base ({c.moeda})</label>
-                        <input type="number" value={c.valor_custo || ''} onChange={e => handleUpdateCandidate(c.client_id, 'valor_custo', parseFloat(e.target.value))} className="w-full px-2 py-1.5 text-sm border rounded" />
+                        <input  type="number" value={c.valor_custo || ''} inputMode="numeric"
+onChange={(e) => handleUpdateCandidate(c.client_id, 'valor_custo', parseFloat(e.target.value))} className="w-full px-2 py-1.5 text-sm border rounded" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-500">Margem (%)</label>
-                        <input type="number" value={c.porcentagem_lucro || ''} onChange={e => handleUpdateCandidate(c.client_id, 'porcentagem_lucro', parseFloat(e.target.value))} className="w-full px-2 py-1.5 text-sm border rounded" />
+                        <input  type="number" value={c.porcentagem_lucro || ''} inputMode="numeric"
+onChange={(e) => handleUpdateCandidate(c.client_id, 'porcentagem_lucro', parseFloat(e.target.value))} className="w-full px-2 py-1.5 text-sm border rounded" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-500">Valor Final</label>

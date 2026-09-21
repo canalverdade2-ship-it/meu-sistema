@@ -4,10 +4,11 @@ import { OrdensCompraModule } from './OrdensCompraModule';
 import { OrdensAssinaturaModule } from './OrdensAssinaturaModule';
 import { OrcamentosModule } from './OrcamentosModule';
 import { PrestadoresDemandas } from './prestadores/PrestadoresDemandas';
-import { useAdminNotifications } from '../../hooks/useAdminNotifications';
-import { ClipboardList, ClipboardCheck, Package, Zap, TrendingUp, Briefcase, Landmark, ChevronLeft } from 'lucide-react';
 import { EmprestimosModule } from './EmprestimosModule';
 import { CreditoModule } from './CreditoModule';
+import { useAdminNotifications } from '../../hooks/useAdminNotifications';
+import { ClipboardList, ClipboardCheck, Package, Zap, TrendingUp, Briefcase, Landmark, ChevronLeft } from 'lucide-react';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 type MainTab = 'orcamentos' | 'demandas' | 'os' | 'produtos' | 'assinaturas' | 'emprestimos' | 'credito';
 
@@ -119,6 +120,14 @@ export function VendasModule({
   const [activeTab, setActiveTab] = useState<MainTab>(initialState.main);
   const [activeSubTab, setActiveSubTab] = useState<string>(initialState.sub);
   const [showSubTabs, setShowSubTabs] = useState(false);
+  const [, setRtRefreshKey] = useState(0);
+  useRealtimeSubscription([
+    { table: 'orcamentos', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },
+    { table: 'ordens_servico', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },
+    { table: 'ordens_compra', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },
+    { table: 'ordens_assinatura', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },
+    { table: 'prestador_demandas', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },
+  ]);
   const [isSubmoduleOpen, setIsSubmoduleOpen] = useState(Boolean(initialTab || initialItemId));
 
   useEffect(() => {

@@ -1,0 +1,313 @@
+{
+  "checked_at": "2026-09-09T09:17:19.522Z",
+  "note": "HTTP availability is not factual validation. No rights to video inferred from an article.",
+  "stories": [
+    {
+      "id": "pf_stf_crise",
+      "title": "Crise entre STF e Polícia Federal tem afastamento de Andrei Rodrigues e reação interna",
+      "sources": [
+        {
+          "url": "https://agenciabrasil.ebc.com.br/justica/noticia/2026-09/mendonca-afasta-andrei-rodrigues-da-direcao-geral-da-policia-federal",
+          "status": 200,
+          "page_title": "Mendonça afasta Andrei Rodrigues da direção-geral da Polícia Federal | Agência Brasil",
+          "review": "human_editorial_check_required"
+        },
+        {
+          "url": "https://agenciabrasil.ebc.com.br/justica/noticia/2026-09/segunda-turma-do-stf-forma-maioria-para-afastar-diretor-geral-da-pf",
+          "status": 200,
+          "page_title": "STF: Segunda Turma tem maioria para afastar Andrei; Gilmar pede vista | Agência Brasil",
+          "review": "human_editorial_check_required"
+        },
+        {
+          "url": "https://agenciabrasil.ebc.com.br/justica/noticia/2026-09/diretores-da-pf-apoiam-andrei-rodrigues-e-colocam-cargos-disposicao",
+          "status": 200,
+          "page_title": "Diretores da PF apoiam Andrei Rodrigues e colocam cargos à disposição | Agência Brasil",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "eleicoes_agenda",
+      "title": "Presidenciáveis cumprem agenda de entrevistas, reuniões e visitas técnicas",
+      "sources": [
+        {
+          "url": "https://agenciabrasil.ebc.com.br/politica/noticia/2026-09/confira-agenda-dos-presidenciaveis-nesta-terca-feira-8",
+          "status": 200,
+          "page_title": "Confira a agenda dos presidenciáveis nesta terça-feira (8) | Agência Brasil",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "focus",
+      "title": "Focus reduz previsão de inflação de 2026 para 5%",
+      "sources": [
+        {
+          "url": "https://agenciabrasil.ebc.com.br/economia/noticia/2026-09/mercado-financeiro-reduz-previsao-da-inflacao-para-5-este-ano",
+          "status": 200,
+          "page_title": "Mercado financeiro reduz previsão da inflação para 5% este ano | Agência Brasil",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "valores_receber",
+      "title": "Dinheiro esquecido em bancos sobe para R$ 5,65 bilhões",
+      "sources": [
+        {
+          "url": "https://agenciabrasil.ebc.com.br/economia/noticia/2026-09/dinheiro-esquecido-nos-bancos-sobe-para-r-565-bilhoes",
+          "status": 200,
+          "page_title": "Dinheiro esquecido nos bancos sobe para R$ 5,65 bilhões | Agência Brasil",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "mercados_petroleo",
+      "title": "Petróleo perto de US$ 100 pressiona mercados globais",
+      "sources": [
+        {
+          "url": "https://apnews.com/article/cadd309d4fd4933397cd38fe436edb71",
+          "status": 200,
+          "page_title": "How major US stock indexes fared Tuesday 9/8/2026 | AP News",
+          "review": "human_editorial_check_required"
+        },
+        {
+          "url": "https://apnews.com/article/461f9e97f78983653c59408c0b55757a",
+          "status": 200,
+          "page_title": "The Latest: US destroys 5 Iranian crude oil tankers following attacks on US warship | AP News",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "saude_complexo_rs",
+      "title": "Novo complexo de saúde inteligente no RS terá investimento de R$ 1,9 bilhão",
+      "sources": [
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/noticias-ms/2026/setembro/complexo-de-saude-inteligente-no-rio-grande-do-sul-incorpora-evolucao-tecnologica-ao-sus",
+          "status": 200,
+          "page_title": "Complexo de Saúde Inteligente no Rio Grande do Sul incorpora evolução tecnológica ao SUS — Ministério da Saúde",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "saude_falsos_medicos_ia",
+      "title": "Governo cobra remoção de vídeos com falsos médicos criados por IA",
+      "sources": [
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/noticias-ms/2026/setembro/governo-notifica-google-e-cobra-remocao-de-videos-com-falsos-medicos-criados-por-ia",
+          "status": 200,
+          "page_title": "Governo notifica Google e cobra remoção de vídeos com falsos médicos criados por IA — Ministério da Saúde",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "hepatites_sus",
+      "title": "SUS reforça prevenção, testagem e tratamento de hepatites virais",
+      "sources": [
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/noticias-ms",
+          "status": 200,
+          "page_title": "Notícias da Saúde — Ministério da Saúde",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "alfabetizacao",
+      "title": "Brasil registra taxa de analfabetismo abaixo de 5%",
+      "sources": [
+        {
+          "url": "https://agenciadenoticias.ibge.gov.br/minuto-ibge/agencia-detalhe-de-midia.html?id=8913&view=mediaibge",
+          "status": 403,
+          "page_title": "Just a moment...",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "mulheres_ciencia",
+      "title": "Prêmio Mulheres e Ciência segue com inscrições abertas",
+      "sources": [
+        {
+          "url": "https://agenciabrasil.ebc.com.br/",
+          "status": 200,
+          "page_title": "Agência Brasil | Últimas notícias do Brasil e do mundo",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "clima_brasil",
+      "title": "Temperaturas sobem após frente fria; chuva se redistribui pelo país",
+      "sources": [
+        {
+          "url": "https://agenciabrasil.ebc.com.br/meio-ambiente/noticia/2026-09/apos-frente-fria-temperaturas-voltam-subir-nesta-terca-feira-8",
+          "status": 200,
+          "page_title": "Após frente fria, temperaturas voltam a subir nesta terça-feira (8) | Agência Brasil",
+          "review": "human_editorial_check_required"
+        },
+        {
+          "url": "https://portal.inmet.gov.br/noticias/inmet-divulga-previs%C3%A3o-para-semana-de-08-a-15-de-setembro-de-2026",
+          "error": "fetch failed",
+          "review": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "fut_fem_sub20",
+      "title": "Brasil vence Canadá por 3 a 0 e avança no Mundial Feminino Sub-20",
+      "sources": [
+        {
+          "url": "https://agenciabrasil.ebc.com.br/esportes/noticia/2026-09/selecao-feminina-derrota-canada-e-avanca-oitavas-do-mundial-sub-20",
+          "status": 200,
+          "page_title": "Seleção feminina derrota Canadá e avança às oitavas do Mundial Sub-20 | Agência Brasil",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "fut_sub15",
+      "title": "Seleção Sub-15 estreia com vitória sobre a Colômbia",
+      "sources": [
+        {
+          "url": "https://www.cbf.com.br/selecao-brasileira/noticias/selecao-base-masculina/selecao-sub-15/selecao-masculina-sub-15-estreia-com-vitoria-sobre-a-colombia-na-conmebol-liga-evolucao-2026",
+          "error": "fetch failed",
+          "review": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "serie_a",
+      "title": "Vitória bate Grêmio; Flamengo fecha rodada na liderança",
+      "sources": [
+        {
+          "url": "https://www.cbf.com.br/futebol-brasileiro/noticias/campeonato-brasileiro/campeonato-brasileiro-serie-a/vitoria-bate-gremio-e-se-distancia-do-z-4-do-brasileirao-da-serie-a",
+          "error": "fetch failed",
+          "review": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "serie_b",
+      "title": "Série B abre 27ª rodada com confronto direto pela liderança",
+      "sources": [
+        {
+          "url": "https://www.cbf.com.br/futebol-brasileiro/noticias/campeonato-brasileiro-serie-b/a/serie-b-27-rodada-comeca-com-confronto-direto-pela-lideranca",
+          "error": "fetch failed",
+          "review": "unverified"
+        }
+      ]
+    },
+    {
+      "id": "eua_ira",
+      "title": "Tensão entre Estados Unidos e Irã se intensifica",
+      "sources": [
+        {
+          "url": "https://apnews.com/article/461f9e97f78983653c59408c0b55757a",
+          "status": 200,
+          "page_title": "The Latest: US destroys 5 Iranian crude oil tankers following attacks on US warship | AP News",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "houthis_arabia",
+      "title": "Ataques houthis atingem instalações no sul da Arábia Saudita",
+      "sources": [
+        {
+          "url": "https://apnews.com/article/4ad9446f0bb8c096750c84b6e1ba86b8",
+          "status": 200,
+          "page_title": "Houthi attacks on Saudi Arabia set fires at oil facilities and wound 73 people | AP News",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "ucrania_kiev",
+      "title": "Ataques russos voltam a atingir Kyiv após visita de enviados americanos",
+      "sources": [
+        {
+          "url": "https://www.reuters.com/world/europe/russian-ballistic-missiles-hit-kyiv-us-envoys-leave-2026-09-08/",
+          "status": 401,
+          "page_title": "reuters.com",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "putin_trump",
+      "title": "Kremlin diz que Putin assegurou a Trump não ter planos agressivos contra Europa",
+      "sources": [
+        {
+          "url": "https://apnews.com/article/fd634a6786462bc95b7dfefc97d2331e",
+          "status": 200,
+          "page_title": "Putin tells Trump that Moscow doesn’t have aggressive plans toward Europe, Kremlin says | AP News",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "alemanha_afd",
+      "title": "Vitória da AfD pressiona agenda de reformas do governo alemão",
+      "sources": [
+        {
+          "url": "https://www.reuters.com/world/afd-victory-clouds-merzs-reform-agenda-ally-seeks-changes-2026-09-08/",
+          "status": 401,
+          "page_title": "reuters.com",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "alemanha_orcamento",
+      "title": "Alemanha defende nova dívida para defesa e infraestrutura",
+      "sources": [
+        {
+          "url": "https://www.reuters.com/world/europe/germany-cannot-defend-itself-without-new-debt-says-finance-minister-2026-09-08/",
+          "status": 401,
+          "page_title": "reuters.com",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "uk_ira_sancoes",
+      "title": "Reino Unido publica legislação para endurecer sanções ao Irã",
+      "sources": [
+        {
+          "url": "https://www.reuters.com/business/aerospace-defense/uk-publishes-legislation-tougher-sanctions-iran-2026-09-08/",
+          "status": 401,
+          "page_title": "reuters.com",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    },
+    {
+      "id": "giro_servico",
+      "title": "Giro de informações úteis do dia",
+      "sources": [
+        {
+          "url": "https://agenciabrasil.ebc.com.br/economia/noticia/2026-09/dinheiro-esquecido-nos-bancos-sobe-para-r-565-bilhoes",
+          "status": 200,
+          "page_title": "Dinheiro esquecido nos bancos sobe para R$ 5,65 bilhões | Agência Brasil",
+          "review": "human_editorial_check_required"
+        },
+        {
+          "url": "https://portal.inmet.gov.br/noticias/inmet-divulga-previs%C3%A3o-para-semana-de-08-a-15-de-setembro-de-2026",
+          "error": "fetch failed",
+          "review": "unverified"
+        },
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/noticias-ms/2026/setembro/governo-notifica-google-e-cobra-remocao-de-videos-com-falsos-medicos-criados-por-ia",
+          "status": 200,
+          "page_title": "Governo notifica Google e cobra remoção de vídeos com falsos médicos criados por IA — Ministério da Saúde",
+          "review": "human_editorial_check_required"
+        }
+      ]
+    }
+  ]
+}

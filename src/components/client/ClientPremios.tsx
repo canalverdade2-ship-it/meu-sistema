@@ -419,7 +419,7 @@ export default function ClientPremios({
                   </div>
                   <div>
                     <p className="font-bold text-[#1a1a1a]">Solicitação Enviada</p>
-                    <p className="text-sm text-neutral-500 mt-0.5">Nossa equipe administrativa receberá seu pedido de resgate imediatamente.</p>
+                    <p className="text-sm text-neutral-500 mt-0.5">O sistema receberá seu pedido de resgate imediatamente.</p>
                   </div>
                 </div>
 
@@ -512,7 +512,7 @@ export default function ClientPremios({
                   <div>
                     <h4 className="font-black text-amber-900 text-lg uppercase tracking-tight">Aguardando Instruções</h4>
                     <p className="text-sm text-amber-800/80 mt-2 leading-relaxed">
-                      Nossa equipe administrativa está processando seu resgate. <br/>As instruções de como utilizar seu prêmio serão liberadas em breve.
+                      O sistema está processando seu resgate. <br/>As instruções de como utilizar seu prêmio serão liberadas em breve.
                     </p>
                   </div>
                   <p className="text-[10px] font-black uppercase text-amber-600/50 pt-4 border-t border-amber-200/50 w-full">Prazo para liberação: Até 72 horas úteis</p>

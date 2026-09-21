@@ -1,0 +1,26 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ShoppingBag, Package, MapPin, Tag, Check, AlertCircle, Loader2, 
+  ArrowRight, ArrowLeft, Coins, CreditCard, 
+  Wallet, Gift, ShieldCheck, QrCode, FileText, 
+  CheckCircle2, Truck, Edit3, ChevronDown, ChevronUp
+} from 'lucide-react';
+import { fetchPublicVariantsByIds, applyVariantToProduct } from '../../../lib/productVariations';
+import { supabase } from '../../../lib/supabase';
+import { useRealtimeSubscription } from '../../../hooks/useRealtime';
+import { getProductDisplayCode } from '../../../lib/productIdentification';
+import { formatCurrency, generateUUID } from '../../../lib/utils';
+import { toast } from 'react-hot-toast';
+import AvailableCouponsModal from './AvailableCouponsModal';
+import { notifyWhatsAppModal } from '../../ui/WhatsAppButton';
+import type { CupomLoja, Produto, Servico, Assinatura } from '../../../types';
+import { PromoResult, avaliarPromocoes } from '../../../lib/promocaoQuantidadeEngine';
+import { callClientRpc } from '../../../lib/clientRpc';
+import { getProductEffectivePrice, hasActiveProductDiscount, getProductQuantityPriceBreakdown } from '../../../lib/productPricing';
+import { checkPixDiscountApplies } from '../../../hooks/usePixDiscount';
+import { routes } from '../../../routing/routeCatalog';
+import { navigate } from '../../../routing/navigationService';
+import { useSEO } from '../../../hooks/useSEO';
+import { CheckoutPixModal } from './CheckoutPixModal';
+import { createInfinitePayOrderCheckout } from '../../../lib/pixService';

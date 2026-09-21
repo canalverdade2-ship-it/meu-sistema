@@ -5,12 +5,21 @@ import { clientOperationalWrite } from './clientOperationalWrite';
 /**
  * Gerenciador de Lista de Desejos (Favoritos) da Loja GSA.
  * Persiste no banco de dados (tabela `loja_favoritos`) para clientes logados
- * e mantém sincronização com o cache local (localStorage) para resposta instantânea.
+ * e mantém sincronização robusta com o cache local (localStorage) para resposta instantânea.
  */
 const KEY_PREFIX = 'gsa_wishlist';
 
-function resolveClientId(clientId?: string | null): string | null {
-  if (clientId) return clientId;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isUuid(value?: string | null): boolean {
+  if (!value || typeof value !== 'string') return false;
+  return UUID_REGEX.test(value.trim());
+}
+
+export function resolveClientId(clientId?: string | null): string | null {
+  if (clientId && typeof clientId === 'string' && clientId.trim().length > 0) {
+    return clientId.trim();
+  }
   const session = sessionService.getCurrentSession();
   if (session?.atorTipo === 'cliente' && session.atorId) {
     return session.atorId;
@@ -18,19 +27,21 @@ function resolveClientId(clientId?: string | null): string | null {
   return null;
 }
 
-const storageKey = (clientId?: string | null) => {
+export const storageKey = (clientId?: string | null) => {
   const effectiveId = resolveClientId(clientId);
   return effectiveId ? `${KEY_PREFIX}_${effectiveId}` : `${KEY_PREFIX}_guest`;
 };
 
 /**
- * Retorna os IDs favoritados do cache local (rápido e síncrono).
+ * Retorna os IDs favoritados do cache local (rápido, síncrono e resiliente).
  */
 export function getWishlist(clientId?: string | null): string[] {
   try {
-    const raw = localStorage.getItem(storageKey(clientId));
+    const effectiveId = resolveClientId(clientId);
+    const primaryKey = storageKey(effectiveId);
+    const raw = typeof window !== 'undefined' ? window.localStorage.getItem(primaryKey) : null;
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter((id) => typeof id === 'string') : [];
+    return Array.isArray(parsed) ? parsed.filter((id) => typeof id === 'string' && id.length > 0) : [];
   } catch {
     return [];
   }
@@ -41,19 +52,45 @@ export function getWishlist(clientId?: string | null): string[] {
  */
 export function isInWishlist(productId: string, clientId?: string | null): boolean {
   if (!productId) return false;
-  return getWishlist(clientId).includes(productId);
+  const effectiveId = resolveClientId(clientId);
+  const current = getWishlist(effectiveId);
+  return current.includes(productId);
 }
 
 /**
  * Busca os favoritos diretamente do banco de dados (tabela loja_favoritos),
- * sincroniza com o cache local e migra favoritos anônimos (se houver).
+ * mescla com quaisquer favoritos locais (para NUNCA perder dados) e sincroniza.
  */
 export async function fetchWishlistFromDb(clientId?: string | null): Promise<string[]> {
   const effectiveId = resolveClientId(clientId);
 
+  // Lê os itens salvos localmente antes de qualquer requisição
+  const localUserIds = getWishlist(effectiveId);
+  const guestRaw = typeof window !== 'undefined' ? window.localStorage.getItem(`${KEY_PREFIX}_guest`) : null;
+  let guestIds: string[] = [];
+  if (guestRaw) {
+    try {
+      const parsed = JSON.parse(guestRaw);
+      if (Array.isArray(parsed)) guestIds = parsed.filter((id) => typeof id === 'string');
+    } catch {
+      /* ignore */
+    }
+  }
+
   if (!effectiveId) {
-    // Visitante: retorna o localStorage guest
-    return getWishlist(null);
+    // Visitante: retorna o localStorage guest combinado
+    const guestCombined = Array.from(new Set([...localUserIds, ...guestIds]));
+    return guestCombined;
+  }
+
+  // Se o effectiveId não for um UUID válido (ex: mock ou id não-uuid), mantém dados locais
+  if (!isUuid(effectiveId)) {
+    const fallbackCombined = Array.from(new Set([...localUserIds, ...guestIds]));
+    try {
+      localStorage.setItem(storageKey(effectiveId), JSON.stringify(fallbackCombined));
+      if (guestIds.length > 0) localStorage.removeItem(`${KEY_PREFIX}_guest`);
+    } catch { /* ignore */ }
+    return fallbackCombined;
   }
 
   try {
@@ -65,41 +102,54 @@ export async function fetchWishlistFromDb(clientId?: string | null): Promise<str
 
     if (error) {
       console.warn('[wishlistStorage] Aviso ao consultar loja_favoritos:', error.message);
-      return getWishlist(effectiveId);
+      // Em caso de erro na consulta, preserva e consolida integralmente os favoritos locais
+      const fallbackCombined = Array.from(new Set([...localUserIds, ...guestIds]));
+      localStorage.setItem(storageKey(effectiveId), JSON.stringify(fallbackCombined));
+      if (guestIds.length > 0) {
+        localStorage.removeItem(`${KEY_PREFIX}_guest`);
+      }
+      return fallbackCombined;
     }
 
-    let dbIds = (data || []).map((row: any) => row.produto_id).filter(Boolean);
+    const dbIds = (data || []).map((row: any) => row.produto_id).filter(Boolean);
 
-    // 2. Se houver itens de visitante salvos antes do login, migra para o banco
-    const guestRaw = localStorage.getItem(`${KEY_PREFIX}_guest`);
-    if (guestRaw) {
-      try {
-        const guestIds: string[] = JSON.parse(guestRaw);
-        if (Array.isArray(guestIds) && guestIds.length > 0) {
-          const pendingIds = guestIds.filter((gid) => !dbIds.includes(gid));
-          for (const pid of pendingIds) {
-            try {
-              await clientOperationalWrite(effectiveId, 'loja_favoritos', 'insert', { produto_id: pid });
-              dbIds.push(pid);
-            } catch (syncErr) {
-              console.warn('[wishlistStorage] Erro ao sincronizar item de convidado:', syncErr);
-            }
+    // 2. Mescla os itens do banco com os itens locais para garantir que nada seja apagado
+    const mergedIds = Array.from(new Set([...dbIds, ...localUserIds, ...guestIds]));
+
+    // 3. Atualiza o cache local com a lista mesclada completa
+    localStorage.setItem(storageKey(effectiveId), JSON.stringify(mergedIds));
+    if (guestIds.length > 0) {
+      localStorage.removeItem(`${KEY_PREFIX}_guest`);
+    }
+
+    // 4. Se houver itens locais que ainda não estão no banco e são UUIDs válidos, salva em segundo plano
+    const missingInDb = mergedIds.filter((id) => !dbIds.includes(id) && isUuid(id));
+    if (missingInDb.length > 0) {
+      for (const pid of missingInDb) {
+        try {
+          await clientOperationalWrite(effectiveId, 'loja_favoritos', 'insert', { produto_id: pid });
+        } catch {
+          try {
+            await supabase.from('loja_favoritos').insert({ cliente_id: effectiveId, produto_id: pid });
+          } catch {
+            /* ignore */
           }
-          localStorage.removeItem(`${KEY_PREFIX}_guest`);
         }
-      } catch (err) {
-        console.warn('[wishlistStorage] Erro ao ler guest wishlist:', err);
       }
     }
 
-    // 3. Atualiza o cache local do cliente autenticado
-    localStorage.setItem(storageKey(effectiveId), JSON.stringify(dbIds));
     window.dispatchEvent(new CustomEvent('gsa-wishlist-updated'));
-
-    return dbIds;
+    return mergedIds;
   } catch (err) {
     console.error('[wishlistStorage] Erro ao buscar lista de favoritos do banco:', err);
-    return getWishlist(effectiveId);
+    const fallback = Array.from(new Set([...localUserIds, ...guestIds]));
+    try {
+      localStorage.setItem(storageKey(effectiveId), JSON.stringify(fallback));
+      if (guestIds.length > 0) {
+        localStorage.removeItem(`${KEY_PREFIX}_guest`);
+      }
+    } catch { /* ignore */ }
+    return fallback;
   }
 }
 
@@ -114,7 +164,7 @@ export async function toggleWishlist(productId: string, clientId?: string | null
   const exists = current.includes(productId);
   const next = exists ? current.filter((id) => id !== productId) : [...current, productId];
 
-  // Atualização otimista no cache local e emissão de evento imediato para UI responsiva
+  // Atualização otimista imediata no cache local
   try {
     localStorage.setItem(storageKey(effectiveId), JSON.stringify(next));
     window.dispatchEvent(new CustomEvent('gsa-wishlist-updated'));
@@ -122,16 +172,24 @@ export async function toggleWishlist(productId: string, clientId?: string | null
     /* storage indisponível */
   }
 
-  // Persistência no banco de dados quando logado
-  if (effectiveId) {
+  // Persistência no banco de dados quando logado com UUID válido
+  if (effectiveId && isUuid(effectiveId) && isUuid(productId)) {
     try {
       if (exists) {
-        await clientOperationalWrite(effectiveId, 'loja_favoritos', 'delete', {}, { produto_id: productId });
+        try {
+          await clientOperationalWrite(effectiveId, 'loja_favoritos', 'delete', {}, { produto_id: productId });
+        } catch {
+          await supabase.from('loja_favoritos').delete().eq('cliente_id', effectiveId).eq('produto_id', productId);
+        }
       } else {
-        await clientOperationalWrite(effectiveId, 'loja_favoritos', 'insert', { produto_id: productId });
+        try {
+          await clientOperationalWrite(effectiveId, 'loja_favoritos', 'insert', { produto_id: productId });
+        } catch {
+          await supabase.from('loja_favoritos').insert({ cliente_id: effectiveId, produto_id: productId });
+        }
       }
     } catch (err) {
-      console.error('[wishlistStorage] Erro ao persistir favorito no banco:', err);
+      console.warn('[wishlistStorage] Aviso ao persistir favorito no banco:', err);
     }
   }
 
@@ -144,7 +202,8 @@ export async function toggleWishlist(productId: string, clientId?: string | null
 export async function removeFromWishlist(productId: string, clientId?: string | null): Promise<string[]> {
   if (!productId) return [];
   const effectiveId = resolveClientId(clientId);
-  const next = getWishlist(effectiveId).filter((id) => id !== productId);
+  const current = getWishlist(effectiveId);
+  const next = current.filter((id) => id !== productId);
 
   try {
     localStorage.setItem(storageKey(effectiveId), JSON.stringify(next));
@@ -153,13 +212,34 @@ export async function removeFromWishlist(productId: string, clientId?: string | 
     /* storage indisponível */
   }
 
-  if (effectiveId) {
+  if (effectiveId && isUuid(effectiveId) && isUuid(productId)) {
     try {
-      await clientOperationalWrite(effectiveId, 'loja_favoritos', 'delete', {}, { produto_id: productId });
+      try {
+        await clientOperationalWrite(effectiveId, 'loja_favoritos', 'delete', {}, { produto_id: productId });
+      } catch {
+        await supabase.from('loja_favoritos').delete().eq('cliente_id', effectiveId).eq('produto_id', productId);
+      }
     } catch (err) {
-      console.error('[wishlistStorage] Erro ao remover favorito do banco:', err);
+      console.warn('[wishlistStorage] Aviso ao remover favorito no banco:', err);
     }
   }
 
   return next;
 }
+
+/**
+ * Limpa IDs que não existem mais no catálogo para manter localStorage e contadores sincronizados
+ */
+export function pruneWishlist(validProductIds: string[], clientId?: string | null) {
+  const effectiveId = resolveClientId(clientId);
+  const current = getWishlist(effectiveId);
+  const pruned = current.filter((id) => validProductIds.includes(id));
+  if (pruned.length !== current.length) {
+    try {
+      localStorage.setItem(storageKey(effectiveId), JSON.stringify(pruned));
+      window.dispatchEvent(new CustomEvent('gsa-wishlist-updated'));
+    } catch { /* ignore */ }
+  }
+}
+
+

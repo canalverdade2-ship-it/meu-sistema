@@ -1,0 +1,1 @@
+sudo docker exec n8n node -e "const https = require('https'); https.get('https://api.147-15-43-141.nip.io/rest/v1/automacao_scraping_logs', (resp) => { console.log(resp.statusCode); }).on('error', (err) => { console.log('Error: ' + err.message); });"

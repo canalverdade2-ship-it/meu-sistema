@@ -1,0 +1,2474 @@
+[
+  {
+    "file": "src\\components\\admin\\ConfiguracoesModule.tsx",
+    "line": 27,
+    "table": "'system_settings'",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "useRealtimeTable('system_settings', () => setRtRefreshKey(k => k + 1));"
+  },
+  {
+    "file": "src\\components\\admin\\Dashboard.tsx",
+    "line": 212,
+    "table": "faturas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    };\r\n  }, [load]);\r\n\r\n  useRealtimeSubscription([\r\n    { table: 'faturas', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'cobrancas', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'saques', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'emprestimos', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'orcamentos', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_servico', onChange: () => void load(true), debounceMs: 500 },\r"
+  },
+  {
+    "file": "src\\components\\admin\\Dashboard.tsx",
+    "line": 214,
+    "table": "saques",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "\r\n  useRealtimeSubscription([\r\n    { table: 'faturas', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'cobrancas', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'saques', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'emprestimos', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'orcamentos', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_servico', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_fiscais', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'tickets', onChange: () => void load(true), debounceMs: 500 },\r"
+  },
+  {
+    "file": "src\\components\\admin\\Dashboard.tsx",
+    "line": 216,
+    "table": "orcamentos",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    { table: 'faturas', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'cobrancas', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'saques', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'emprestimos', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'orcamentos', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_servico', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_fiscais', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'tickets', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'clientes', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_compra', onChange: () => void load(true), debounceMs: 500 },\r"
+  },
+  {
+    "file": "src\\components\\admin\\Dashboard.tsx",
+    "line": 217,
+    "table": "ordens_servico",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    { table: 'cobrancas', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'saques', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'emprestimos', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'orcamentos', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_servico', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_fiscais', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'tickets', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'clientes', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_compra', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'vouchers', onChange: () => void load(true), debounceMs: 500 },\r"
+  },
+  {
+    "file": "src\\components\\admin\\Dashboard.tsx",
+    "line": 219,
+    "table": "tickets",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    { table: 'emprestimos', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'orcamentos', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_servico', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_fiscais', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'tickets', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'clientes', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_compra', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'vouchers', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'prestador_demandas', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'promocoes', onChange: () => void load(true), debounceMs: 500 },\r"
+  },
+  {
+    "file": "src\\components\\admin\\Dashboard.tsx",
+    "line": 220,
+    "table": "clientes",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    { table: 'orcamentos', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_servico', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_fiscais', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'tickets', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'clientes', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_compra', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'vouchers', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'prestador_demandas', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'promocoes', onChange: () => void load(true), debounceMs: 500 },\r\n  ]);\r"
+  },
+  {
+    "file": "src\\components\\admin\\Dashboard.tsx",
+    "line": 222,
+    "table": "vouchers",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    { table: 'ordens_fiscais', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'tickets', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'clientes', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_compra', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'vouchers', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'prestador_demandas', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'promocoes', onChange: () => void load(true), debounceMs: 500 },\r\n  ]);\r\n\r\n  const trend = useMemo(() => {\r"
+  },
+  {
+    "file": "src\\components\\admin\\Dashboard.tsx",
+    "line": 223,
+    "table": "prestador_demandas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    { table: 'tickets', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'clientes', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'ordens_compra', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'vouchers', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'prestador_demandas', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'promocoes', onChange: () => void load(true), debounceMs: 500 },\r\n  ]);\r\n\r\n  const trend = useMemo(() => {\r\n    const current = Number(snapshot.stats.faturamento_mes_atual || 0);\r"
+  },
+  {
+    "file": "src\\components\\admin\\demandas\\DemandasDashboard.tsx",
+    "line": 85,
+    "table": "prestador_demandas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "\n  useEffect(() => { carregar(); }, [periodo]);\n\n  useRealtimeSubscription([\n    { table: 'prestador_demandas', onChange: carregar, debounceMs: 300 },\n    { table: 'colaboradores', onChange: carregar, debounceMs: 300 },\n    { table: 'prestadores', onChange: carregar, debounceMs: 300 },\n  ], [periodo]);\n  return (\n    <div className=\"space-y-6\">"
+  },
+  {
+    "file": "src\\components\\admin\\demandas\\DemandasDetalhesModal.tsx",
+    "line": 132,
+    "table": "prestador_demandas",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "  const isInNegociation = isEmNegociacao || isContrapropPrestador || isContrapropAdminFinal;\r\n\r\n  useRealtimeSubscription([\r\n    {\r\n      table: 'prestador_demandas',\r\n      filter: `id=eq.${demanda.id}`,\r\n      onChange: () => {\r\n        onRefresh();\r\n      },\r\n      debounceMs: 300,\r"
+  },
+  {
+    "file": "src\\components\\admin\\demandas\\NovaDemandaModal.tsx",
+    "line": 69,
+    "table": "ordens_servico",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    void fetchData();\r\n  }, []);\r\n\r\n  useRealtimeSubscription([\r\n    { table: 'ordens_servico', onChange: fetchData, debounceMs: 300 },\r\n    { table: 'colaboradores', onChange: fetchData, debounceMs: 300 },\r\n    { table: 'prestadores', onChange: fetchData, debounceMs: 300 },\r\n  ]);\r\n\r\n  const handleSubmit = async (e: React.FormEvent) => {\r"
+  },
+  {
+    "file": "src\\components\\admin\\DemandasColaboradorModule.tsx",
+    "line": 150,
+    "table": "prestador_demandas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    }\r\n  }, [initialItemId, demandas.length]);\r\n\r\n  useRealtimeSubscription([\r\n    { table: 'prestador_demandas', onChange: fetchDemandas, debounceMs: 300 },\r\n    {\r\n      table: 'prestador_demandas_historico',\r\n      onChange: fetchDemandas,\r\n      onPayload: (payload) => {\r\n        if (selectedDemanda && payload.new && (payload.new as any).demanda_id === selectedDemanda.id) {\r"
+  },
+  {
+    "file": "src\\components\\admin\\FiscalModule.tsx",
+    "line": 84,
+    "table": "faturas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "  useEffect(() => { void load(); }, [load]);\n\n  useRealtimeSubscription([\n    { table: 'ordens_fiscais', onChange: load, debounceMs: 300 },\n    { table: 'faturas', onChange: load, debounceMs: 300 },\n  ], [load]);\n\n  useEffect(() => {\n    if (!initialItemId || result.items.length === 0) return;\n    const item = result.items.find((entry) => entry.id === initialItemId);"
+  },
+  {
+    "file": "src\\components\\admin\\FornecedoresModule.tsx",
+    "line": 113,
+    "table": "fornecedores",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    void load();\r\n  }, [load]);\r\n\r\n  useRealtimeSubscription([\r\n    { table: 'fornecedores', onChange: load, debounceMs: 300 },\r\n    { table: 'ordens_compra', onChange: load, debounceMs: 300 },\r\n    { table: 'produto_fornecedor_config', onChange: load, debounceMs: 300 },\r\n    { table: 'produtos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_produtos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_pedidos', onChange: load, debounceMs: 300 },\r"
+  },
+  {
+    "file": "src\\components\\admin\\FornecedoresModule.tsx",
+    "line": 114,
+    "table": "ordens_compra",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "  }, [load]);\r\n\r\n  useRealtimeSubscription([\r\n    { table: 'fornecedores', onChange: load, debounceMs: 300 },\r\n    { table: 'ordens_compra', onChange: load, debounceMs: 300 },\r\n    { table: 'produto_fornecedor_config', onChange: load, debounceMs: 300 },\r\n    { table: 'produtos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_produtos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_pedidos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_entregas', onChange: load, debounceMs: 300 },\r"
+  },
+  {
+    "file": "src\\components\\admin\\FornecedoresModule.tsx",
+    "line": 115,
+    "table": "produto_fornecedor_config",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription([\r\n    { table: 'fornecedores', onChange: load, debounceMs: 300 },\r\n    { table: 'ordens_compra', onChange: load, debounceMs: 300 },\r\n    { table: 'produto_fornecedor_config', onChange: load, debounceMs: 300 },\r\n    { table: 'produtos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_produtos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_pedidos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_entregas', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_documentos', onChange: load, debounceMs: 300 },\r"
+  },
+  {
+    "file": "src\\components\\admin\\FornecedoresModule.tsx",
+    "line": 116,
+    "table": "produtos",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "  useRealtimeSubscription([\r\n    { table: 'fornecedores', onChange: load, debounceMs: 300 },\r\n    { table: 'ordens_compra', onChange: load, debounceMs: 300 },\r\n    { table: 'produto_fornecedor_config', onChange: load, debounceMs: 300 },\r\n    { table: 'produtos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_produtos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_pedidos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_entregas', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_documentos', onChange: load, debounceMs: 300 },\r\n  ]);\r"
+  },
+  {
+    "file": "src\\components\\admin\\FornecedoresModule.tsx",
+    "line": 117,
+    "table": "fornecedor_produtos",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    { table: 'fornecedores', onChange: load, debounceMs: 300 },\r\n    { table: 'ordens_compra', onChange: load, debounceMs: 300 },\r\n    { table: 'produto_fornecedor_config', onChange: load, debounceMs: 300 },\r\n    { table: 'produtos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_produtos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_pedidos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_entregas', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_documentos', onChange: load, debounceMs: 300 },\r\n  ]);\r\n\r"
+  },
+  {
+    "file": "src\\components\\admin\\FornecedoresModule.tsx",
+    "line": 118,
+    "table": "fornecedor_pedidos",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    { table: 'ordens_compra', onChange: load, debounceMs: 300 },\r\n    { table: 'produto_fornecedor_config', onChange: load, debounceMs: 300 },\r\n    { table: 'produtos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_produtos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_pedidos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_entregas', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_documentos', onChange: load, debounceMs: 300 },\r\n  ]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\admin\\FornecedoresModule.tsx",
+    "line": 119,
+    "table": "fornecedor_entregas",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    { table: 'produto_fornecedor_config', onChange: load, debounceMs: 300 },\r\n    { table: 'produtos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_produtos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_pedidos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_entregas', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_documentos', onChange: load, debounceMs: 300 },\r\n  ]);\r\n\r\n  useEffect(() => {\r\n    if (route.module !== 'fornecedores' || route.submodule !== 'cadastros' || !route.itemId || loading) return;\r"
+  },
+  {
+    "file": "src\\components\\admin\\FornecedoresModule.tsx",
+    "line": 120,
+    "table": "fornecedor_documentos",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    { table: 'produtos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_produtos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_pedidos', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_entregas', onChange: load, debounceMs: 300 },\r\n    { table: 'fornecedor_documentos', onChange: load, debounceMs: 300 },\r\n  ]);\r\n\r\n  useEffect(() => {\r\n    if (route.module !== 'fornecedores' || route.submodule !== 'cadastros' || !route.itemId || loading) return;\r\n    const supplier = snapshot.suppliers.find((item) => item.id === route.itemId);\r"
+  },
+  {
+    "file": "src\\components\\admin\\LojaCategoriasModule.tsx",
+    "line": 31,
+    "table": "loja_categorias",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    \r\n    const channel = supabase.channel('categorias-changes')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'loja_categorias' }, () => {\r\n        fetchCategorias();\r\n      }).subscribe();\r\n      \r\n    return () => {\r\n      supabase.removeChannel(channel);\r"
+  },
+  {
+    "file": "src\\components\\admin\\OrdensAssinaturaModule.tsx",
+    "line": 111,
+    "table": "faturas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "\n  useRealtimeSubscription([\n    { table: 'ordens_assinatura', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'assinaturas', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'faturas', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'orcamentos', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'clientes', onChange: fetchOrdens, debounceMs: 300 },\n  ], [activeTab, search, filters]);\n\n      const year = filters.ano || new Date().getFullYear();"
+  },
+  {
+    "file": "src\\components\\admin\\OrdensAssinaturaModule.tsx",
+    "line": 112,
+    "table": "orcamentos",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "  useRealtimeSubscription([\n    { table: 'ordens_assinatura', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'assinaturas', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'faturas', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'orcamentos', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'clientes', onChange: fetchOrdens, debounceMs: 300 },\n  ], [activeTab, search, filters]);\n\n      const year = filters.ano || new Date().getFullYear();\n      const startDate = `${year}-${filters.mes}-01`;"
+  },
+  {
+    "file": "src\\components\\admin\\OrdensAssinaturaModule.tsx",
+    "line": 113,
+    "table": "clientes",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    { table: 'ordens_assinatura', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'assinaturas', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'faturas', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'orcamentos', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'clientes', onChange: fetchOrdens, debounceMs: 300 },\n  ], [activeTab, search, filters]);\n\n      const year = filters.ano || new Date().getFullYear();\n      const startDate = `${year}-${filters.mes}-01`;\n      const endDate = `${year}-${filters.mes}-${String(new Date(Number(year), Number(filters.mes), 0).getDate()).padStart(2, '0')}`;"
+  },
+  {
+    "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+    "line": 107,
+    "table": "faturas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "\n  useRealtimeSubscription([\n    { table: 'ordens_compra', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'produtos', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'faturas', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'cupons_loja', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'orcamentos', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'clientes', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'pagamentos', onChange: fetchOrdens, debounceMs: 300 },\n  ], [activeTab, search, filters]);"
+  },
+  {
+    "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+    "line": 109,
+    "table": "orcamentos",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    { table: 'ordens_compra', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'produtos', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'faturas', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'cupons_loja', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'orcamentos', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'clientes', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'pagamentos', onChange: fetchOrdens, debounceMs: 300 },\n  ], [activeTab, search, filters]);\n\n      const year = filters.ano || new Date().getFullYear();"
+  },
+  {
+    "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+    "line": 110,
+    "table": "clientes",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    { table: 'produtos', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'faturas', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'cupons_loja', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'orcamentos', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'clientes', onChange: fetchOrdens, debounceMs: 300 },\n    { table: 'pagamentos', onChange: fetchOrdens, debounceMs: 300 },\n  ], [activeTab, search, filters]);\n\n      const year = filters.ano || new Date().getFullYear();\n      const startDate = `${year}-${filters.mes}-01`;"
+  },
+  {
+    "file": "src\\components\\admin\\PainelRentabilidade.tsx",
+    "line": 58,
+    "table": "faturas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "\n    const channelId = `admin-rentabilidade-rt-${Date.now()}`;\n    const channel = supabase\n      .channel(channelId)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'faturas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ordens_servico' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'orcamentos' }, debouncedFetch)\n      .subscribe();\n"
+  },
+  {
+    "file": "src\\components\\admin\\PainelRentabilidade.tsx",
+    "line": 58,
+    "table": "faturas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    const channel = supabase\n      .channel(channelId)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'faturas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ordens_servico' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'orcamentos' }, debouncedFetch)\n      .subscribe();\n"
+  },
+  {
+    "file": "src\\components\\admin\\PainelRentabilidade.tsx",
+    "line": 59,
+    "table": "ordens_servico",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    const channelId = `admin-rentabilidade-rt-${Date.now()}`;\n    const channel = supabase\n      .channel(channelId)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'faturas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ordens_servico' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'orcamentos' }, debouncedFetch)\n      .subscribe();\n\n    return () => {"
+  },
+  {
+    "file": "src\\components\\admin\\PainelRentabilidade.tsx",
+    "line": 59,
+    "table": "faturas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "      .channel(channelId)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'faturas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ordens_servico' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'orcamentos' }, debouncedFetch)\n      .subscribe();\n\n    return () => {"
+  },
+  {
+    "file": "src\\components\\admin\\PainelRentabilidade.tsx",
+    "line": 60,
+    "table": "prestador_demandas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    const channel = supabase\n      .channel(channelId)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'faturas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ordens_servico' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'orcamentos' }, debouncedFetch)\n      .subscribe();\n\n    return () => {\n      clearTimeout(timeoutId);"
+  },
+  {
+    "file": "src\\components\\admin\\PainelRentabilidade.tsx",
+    "line": 60,
+    "table": "faturas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "      .on('postgres_changes', { event: '*', schema: 'public', table: 'faturas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ordens_servico' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'orcamentos' }, debouncedFetch)\n      .subscribe();\n\n    return () => {\n      clearTimeout(timeoutId);"
+  },
+  {
+    "file": "src\\components\\admin\\PainelRentabilidade.tsx",
+    "line": 61,
+    "table": "orcamentos",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "      .channel(channelId)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'faturas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ordens_servico' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'orcamentos' }, debouncedFetch)\n      .subscribe();\n\n    return () => {\n      clearTimeout(timeoutId);\n      supabase.removeChannel(channel);"
+  },
+  {
+    "file": "src\\components\\admin\\PainelRentabilidade.tsx",
+    "line": 61,
+    "table": "ordens_servico",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "      .on('postgres_changes', { event: '*', schema: 'public', table: 'ordens_servico' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas' }, debouncedFetch)\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'orcamentos' }, debouncedFetch)\n      .subscribe();\n\n    return () => {\n      clearTimeout(timeoutId);\n      supabase.removeChannel(channel);"
+  },
+  {
+    "file": "src\\components\\admin\\prestadores\\AdminPrestadorDocumentos.tsx",
+    "line": 76,
+    "table": "prestador_documentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  }, [fetchDocumentosLocal]);\r\n\r\n  useRealtimeSubscription([\r\n    {\r\n      table: 'prestador_documentos',\r\n      filter: `prestador_id=eq.${prestadorId}`,\r\n      onChange: fetchDocumentosLocal,\r\n      debounceMs: 300,\r\n    },\r\n    {\r"
+  },
+  {
+    "file": "src\\components\\admin\\prestadores\\AdminPrestadorDocumentos.tsx",
+    "line": 82,
+    "table": "documentos_prestador",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "      onChange: fetchDocumentosLocal,\r\n      debounceMs: 300,\r\n    },\r\n    {\r\n      table: 'documentos_prestador',\r\n      onChange: fetchDocumentosLocal,\r\n      debounceMs: 300,\r\n    },\r\n  ], [prestadorId, fetchDocumentosLocal]);\r\n\r"
+  },
+  {
+    "file": "src\\components\\admin\\prestadores\\AdminPrestadorPremios.tsx",
+    "line": 47,
+    "table": "prestador_premios",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    };\r\n    \r\n    fetchPremiosLocal();\r\n    const sub = supabase.channel(`admin-premios-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_premios', filter: `prestador_id=eq.${prestadorId}` }, fetchPremiosLocal)\r\n      .subscribe();\r\n    return () => { \r\n      isMounted = false;\r\n      supabase.removeChannel(sub); \r\n    };\r"
+  },
+  {
+    "file": "src\\components\\admin\\prestadores\\AdminPrestadorPremios.tsx",
+    "line": 47,
+    "table": "prestador_premios",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    fetchPremiosLocal();\r\n    const sub = supabase.channel(`admin-premios-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_premios', filter: `prestador_id=eq.${prestadorId}` }, fetchPremiosLocal)\r\n      .subscribe();\r\n    return () => { \r\n      isMounted = false;\r\n      supabase.removeChannel(sub); \r\n    };\r"
+  },
+  {
+    "file": "src\\components\\admin\\prestadores\\AdminPrestadorPromocoes.tsx",
+    "line": 68,
+    "table": "prestador_promocoes",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    };\r\n    \r\n    fetchPromocoesLocal();\r\n    const sub = supabase.channel('admin-promocoes-global')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, fetchPromocoesLocal)\r\n      .subscribe();\r\n    return () => { \r\n      isMounted = false;\r\n      supabase.removeChannel(sub); \r\n    };\r"
+  },
+  {
+    "file": "src\\components\\admin\\prestadores\\AdminPrestadorPromocoes.tsx",
+    "line": 68,
+    "table": "prestador_promocoes",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    fetchPromocoesLocal();\r\n    const sub = supabase.channel('admin-promocoes-global')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, fetchPromocoesLocal)\r\n      .subscribe();\r\n    return () => { \r\n      isMounted = false;\r\n      supabase.removeChannel(sub); \r\n    };\r"
+  },
+  {
+    "file": "src\\components\\admin\\prestadores\\AdminPrestadorVouchers.tsx",
+    "line": 47,
+    "table": "prestador_vouchers",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    };\r\n    \r\n    fetchVouchersLocal();\r\n    const sub = supabase.channel(`admin-vouchers-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers' }, fetchVouchersLocal)\r\n      .subscribe();\r\n    return () => { \r\n      isMounted = false;\r\n      supabase.removeChannel(sub); \r\n    };\r"
+  },
+  {
+    "file": "src\\components\\admin\\prestadores\\AdminPrestadorVouchers.tsx",
+    "line": 47,
+    "table": "prestador_vouchers",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    fetchVouchersLocal();\r\n    const sub = supabase.channel(`admin-vouchers-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers' }, fetchVouchersLocal)\r\n      .subscribe();\r\n    return () => { \r\n      isMounted = false;\r\n      supabase.removeChannel(sub); \r\n    };\r"
+  },
+  {
+    "file": "src\\components\\admin\\ScrapingExecutionMonitorModal.tsx",
+    "line": 75,
+    "table": "automacao_scraping_logs",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "      .channel(`realtime_scraping_logs_${automacao.id}`)\r\n      .on(\r\n        'postgres_changes',\r\n        {\r\n          event: '*',\r\n          schema: 'public',\r\n          table: 'automacao_scraping_logs',\r\n          filter: `automacao_id=eq.${automacao.id}`,\r"
+  },
+  {
+    "file": "src\\components\\admin\\ShopeeOperationsModule.tsx",
+    "line": 120,
+    "table": "orcamentos",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "  useRealtimeSubscription([\n    { table: 'shopee_fulfillment_jobs', onChange: () => void load(true), debounceMs: 500 },\n    { table: 'shopee_automation_workers', onChange: () => void load(true), debounceMs: 500 },\n    { table: 'ordens_compra', onChange: () => void load(true), debounceMs: 500 },\n    { table: 'orcamentos', onChange: () => void load(true), debounceMs: 500 },\n  ]);\n\n  const onlineWorkers = useMemo(\n    () => workers.filter((worker) => worker.status === 'ativo' && isWorkerOnline(worker.last_seen_at)).length,\n    [workers],"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\contratos\\AreaVipView.tsx",
+    "line": 151,
+    "table": "clientes",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "  useEffect(() => {\n    fetchMembers();\n  }, []);\n\n  useRealtimeSubscription({ table: 'clientes', onChange: fetchMembers });\n\n  const selectedMember = useMemo(() => {\n    return members.find(m => m.id === selectedMemberId) || null;\n  }, [members, selectedMemberId]);\n"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\contratos\\AtendimentoTicketsView.tsx",
+    "line": 154,
+    "table": "tickets",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    fetchTickets();\r\n  }, []);\r\n\r\n  useRealtimeSubscription([\r\n    { table: 'tickets', onChange: fetchTickets },\r\n    { table: 'ticket_mensagens', onChange: fetchTickets }\r\n  ]);\r\n\r\n  const selectedTicket = useMemo(() => {\r\n    return tickets.find(t => t.id === selectedTicketId) || null;\r"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\contratos\\CrmClientesView.tsx",
+    "line": 149,
+    "table": "clientes",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "  useEffect(() => {\n    fetchClientes();\n  }, []);\n\n  useRealtimeSubscription({ table: 'clientes', onChange: fetchClientes });\n\n  // Handle Initial Client Deep Linking\n  useEffect(() => {\n    if (initialClientId && clientes.length > 0) {\n      setSelectedClientId(initialClientId);"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\contratos\\HubEmpresasView.tsx",
+    "line": 97,
+    "table": "clientes",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "  useEffect(() => {\n    fetchEmpresas();\n  }, []);\n\n  useRealtimeSubscription({ table: 'clientes', onChange: fetchEmpresas });\n\n  const selectedEmpresa = useMemo(() => {\n    return empresas.find(e => e.id === selectedEmpresaId) || null;\n  }, [empresas, selectedEmpresaId]);\n"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx",
+    "line": 92,
+    "table": "vouchers",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    loadSnapshot();\n  }, [loadSnapshot]);\n\n  useRealtimeSubscription([\n    { table: 'vouchers', onChange: loadSnapshot },\n    { table: 'system_settings', onChange: loadSnapshot }\n  ], [loadSnapshot]);\n\n  // Save Product Changes\n  const handleSaveProduct = async () => {"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+    "line": 170,
+    "table": "faturas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    fetchFaturas();\r\n  }, [filterMes, filterAno]);\r\n\r\n  useRealtimeSubscription([\r\n    { table: 'faturas', onChange: fetchFaturas },\r\n    { table: 'cobrancas', onChange: fetchFaturas },\r\n    { table: 'ordens_fiscais', onChange: fetchFaturas }\r\n  ], [filterMes, filterAno]);\r\n\r\n  // Filtered by Active Tab & Category\r"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+    "line": 116,
+    "table": "faturas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    fetchTelemetry();\n  }, []);\n\n  useRealtimeSubscription([\n    { table: 'faturas', onChange: fetchTelemetry },\n    { table: 'saques', onChange: fetchTelemetry },\n    { table: 'cobrancas', onChange: fetchTelemetry },\n    { table: 'ordens_fiscais', onChange: fetchTelemetry }\n  ]);\n"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+    "line": 117,
+    "table": "saques",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "  }, []);\n\n  useRealtimeSubscription([\n    { table: 'faturas', onChange: fetchTelemetry },\n    { table: 'saques', onChange: fetchTelemetry },\n    { table: 'cobrancas', onChange: fetchTelemetry },\n    { table: 'ordens_fiscais', onChange: fetchTelemetry }\n  ]);\n\n  const domainTabs = ["
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx",
+    "line": 118,
+    "table": "saques",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    reloadAll();\n  }, []);\n\n  useRealtimeSubscription([\n    { table: 'saques', onChange: fetchSaques },\n    { table: 'transferencias', onChange: fetchTransferencias }\n  ]);\n\n  // ── Saque Actions ────────────────────────────────────────────────────────\n  const openApproveSaqueModal = (saque: any, e?: React.MouseEvent) => {"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+    "line": 107,
+    "table": "clientes",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "  }, [load]);\n\n  // Supabase Realtime — refresh on key table changes\n  useRealtimeSubscription([\n    { table: 'clientes', onChange: () => void load(true) },\n    { table: 'faturas', onChange: () => void load(true) },\n    { table: 'saques', onChange: () => void load(true) },\n    { table: 'prestador_demandas', onChange: () => void load(true) },\n    { table: 'ordens_servico', onChange: () => void load(true) },\n    { table: 'colaboradores', onChange: () => void load(true) },"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+    "line": 108,
+    "table": "faturas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "\n  // Supabase Realtime — refresh on key table changes\n  useRealtimeSubscription([\n    { table: 'clientes', onChange: () => void load(true) },\n    { table: 'faturas', onChange: () => void load(true) },\n    { table: 'saques', onChange: () => void load(true) },\n    { table: 'prestador_demandas', onChange: () => void load(true) },\n    { table: 'ordens_servico', onChange: () => void load(true) },\n    { table: 'colaboradores', onChange: () => void load(true) },\n    { table: 'sistema_logs', onChange: () => void load(true) }"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+    "line": 109,
+    "table": "saques",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "  // Supabase Realtime — refresh on key table changes\n  useRealtimeSubscription([\n    { table: 'clientes', onChange: () => void load(true) },\n    { table: 'faturas', onChange: () => void load(true) },\n    { table: 'saques', onChange: () => void load(true) },\n    { table: 'prestador_demandas', onChange: () => void load(true) },\n    { table: 'ordens_servico', onChange: () => void load(true) },\n    { table: 'colaboradores', onChange: () => void load(true) },\n    { table: 'sistema_logs', onChange: () => void load(true) }\n  ]);"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+    "line": 110,
+    "table": "prestador_demandas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "  useRealtimeSubscription([\n    { table: 'clientes', onChange: () => void load(true) },\n    { table: 'faturas', onChange: () => void load(true) },\n    { table: 'saques', onChange: () => void load(true) },\n    { table: 'prestador_demandas', onChange: () => void load(true) },\n    { table: 'ordens_servico', onChange: () => void load(true) },\n    { table: 'colaboradores', onChange: () => void load(true) },\n    { table: 'sistema_logs', onChange: () => void load(true) }\n  ]);\n"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+    "line": 111,
+    "table": "ordens_servico",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    { table: 'clientes', onChange: () => void load(true) },\n    { table: 'faturas', onChange: () => void load(true) },\n    { table: 'saques', onChange: () => void load(true) },\n    { table: 'prestador_demandas', onChange: () => void load(true) },\n    { table: 'ordens_servico', onChange: () => void load(true) },\n    { table: 'colaboradores', onChange: () => void load(true) },\n    { table: 'sistema_logs', onChange: () => void load(true) }\n  ]);\n\n  const trend = useMemo(() => {"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaInfraView.tsx",
+    "line": 151,
+    "table": "clientes",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "  }, [load]);\n\n  useRealtimeSubscription([\n    { table: 'colaboradores', onChange: () => void load(true) },\n    { table: 'clientes', onChange: () => void load(true) },\n    { table: 'system_settings', onChange: () => void load(true) },\n    { table: 'gsa_whatsapp_ramais', onChange: () => void load(true) }\n  ]);\n\n  const handleSendTestAlert = async () => {"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+    "line": 118,
+    "table": "orcamentos",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    void fetchLiveMetrics();\n  }, []);\n\n  useRealtimeSubscription([\n    { table: 'orcamentos', onChange: fetchLiveMetrics, debounceMs: 400 },\n    { table: 'ordens_servico', onChange: fetchLiveMetrics, debounceMs: 400 },\n    { table: 'prestador_demandas', onChange: fetchLiveMetrics, debounceMs: 400 },\n    { table: 'ordens_compra', onChange: fetchLiveMetrics, debounceMs: 400 },\n  ]);\n"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+    "line": 119,
+    "table": "ordens_servico",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "  }, []);\n\n  useRealtimeSubscription([\n    { table: 'orcamentos', onChange: fetchLiveMetrics, debounceMs: 400 },\n    { table: 'ordens_servico', onChange: fetchLiveMetrics, debounceMs: 400 },\n    { table: 'prestador_demandas', onChange: fetchLiveMetrics, debounceMs: 400 },\n    { table: 'ordens_compra', onChange: fetchLiveMetrics, debounceMs: 400 },\n  ]);\n\n  return ("
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+    "line": 120,
+    "table": "prestador_demandas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "\n  useRealtimeSubscription([\n    { table: 'orcamentos', onChange: fetchLiveMetrics, debounceMs: 400 },\n    { table: 'ordens_servico', onChange: fetchLiveMetrics, debounceMs: 400 },\n    { table: 'prestador_demandas', onChange: fetchLiveMetrics, debounceMs: 400 },\n    { table: 'ordens_compra', onChange: fetchLiveMetrics, debounceMs: 400 },\n  ]);\n\n  return (\n    <div className=\"w-full space-y-6 animate-fade-in\">"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx",
+    "line": 48,
+    "table": "['orcamentos', 'ordens_servico']",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "useRealtimeTable(['orcamentos', 'ordens_servico'], () => setRtRefreshKey(k => k + 1));"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx",
+    "line": 163,
+    "table": "orcamentos",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    };\r\n\r\n    const channel = supabase\r\n      .channel(`admin-orcamentos-sd1-${Date.now()}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'orcamentos' }, () => {\r\n        debouncedFetch();\r\n      })\r\n      .subscribe();\r\n\r\n    return () => {\r"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx",
+    "line": 163,
+    "table": "orcamentos",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    const channel = supabase\r\n      .channel(`admin-orcamentos-sd1-${Date.now()}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'orcamentos' }, () => {\r\n        debouncedFetch();\r\n      })\r\n      .subscribe();\r\n\r\n    return () => {\r"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx",
+    "line": 152,
+    "table": "ordens_servico",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    };\r\n\r\n    const channel = supabase\r\n      .channel(`admin-os-sd1-${Date.now()}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ordens_servico' }, () => {\r\n        debouncedFetch();\r\n      })\r\n      .subscribe();\r\n\r\n    return () => {\r"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx",
+    "line": 152,
+    "table": "ordens_servico",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    const channel = supabase\r\n      .channel(`admin-os-sd1-${Date.now()}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ordens_servico' }, () => {\r\n        debouncedFetch();\r\n      })\r\n      .subscribe();\r\n\r\n    return () => {\r"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx",
+    "line": 136,
+    "table": "saques",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "\n  useRealtimeSubscription([\n    { table: 'gsa_afiliados', onChange: fetchAffiliateSnapshot },\n    { table: 'indicacoes', onChange: fetchAffiliateSnapshot },\n    { table: 'saques', onChange: fetchAffiliateSnapshot }\n  ]);\n\n  // Affiliate Actions\n  const handleToggleAffiliateStatus = async (affiliateId: string, currentStatus: string) => {\n    const nextStatus = currentStatus === 'ativo' ? 'suspenso' : 'ativo';"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+    "line": 174,
+    "table": "vouchers",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    fetchIndicacoes();\n  }, [fetchPremios, fetchVouchers, fetchCupons, fetchTrocas, fetchIndicacoes]);\n\n  useRealtimeSubscription([\n    { table: 'vouchers', onChange: () => { fetchVouchers(); fetchPremios(); } },\n    { table: 'cliente_premios', onChange: () => fetchPremios() },\n    { table: 'pontos_movimentacoes', onChange: () => { fetchPremios(); fetchIndicacoes(); } },\n    { table: 'cupons_loja', onChange: () => fetchCupons() },\n    { table: 'loja_solicitacoes', onChange: () => fetchTrocas() },\n    { table: 'indicacoes', onChange: () => fetchIndicacoes() }"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\pessoas\\FornecedoresSection.tsx",
+    "line": 301,
+    "table": "parceiros",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    loadPartnerData();\n  }, [loadSupplierData, loadPartnerData]);\n\n  useRealtimeSubscription([\n    { table: 'parceiros', onChange: loadPartnerData, debounceMs: 300 },\n    {\n      table: 'parceiros_resgates',\n      onChange: () => {\n        if (selectedPartner?.id) void loadRedemptions(selectedPartner.id);\n      },"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\pessoas\\FornecedoresSection.tsx",
+    "line": 303,
+    "table": "parceiros_resgates",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "\n  useRealtimeSubscription([\n    { table: 'parceiros', onChange: loadPartnerData, debounceMs: 300 },\n    {\n      table: 'parceiros_resgates',\n      onChange: () => {\n        if (selectedPartner?.id) void loadRedemptions(selectedPartner.id);\n      },\n      debounceMs: 300,\n    },"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\pessoas\\FornecedoresSection.tsx",
+    "line": 309,
+    "table": "fornecedores",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        if (selectedPartner?.id) void loadRedemptions(selectedPartner.id);\n      },\n      debounceMs: 300,\n    },\n    { table: 'fornecedores', onChange: loadSupplierData, debounceMs: 300 },\n  ]);\n\n  // Supplier Actions\n  const handleOpenSupplier = (supplier: any) => {\n    setSelectedSupplier(supplier);"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\pessoas\\PayoutClearanceDrawer.tsx",
+    "line": 63,
+    "table": "saques",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "  const [rejectReason, setRejectReason] = useState<string>('');\n  const [copiedKey, setCopiedKey] = useState(false);\n  useRealtimeSubscription([\n    { table: 'prestador_saques', enabled: isOpen },\n    { table: 'saques', enabled: isOpen }\n  ]);\n  const [isProcessing, setIsProcessing] = useState(false);\n\n  useEffect(() => {\n    if (saque) {"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+    "line": 124,
+    "table": "saques",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "\n  useRealtimeSubscription([\n    { table: 'prestadores', onChange: fetchDomainMetrics },\n    { table: 'prestador_saques', onChange: fetchDomainMetrics },\n    { table: 'saques', onChange: fetchDomainMetrics },\n    { table: 'fornecedores', onChange: fetchDomainMetrics },\n    { table: 'gsa_afiliados', onChange: fetchDomainMetrics },\n    { table: 'career_applications', onChange: fetchDomainMetrics }\n  ]);\n"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\pessoas\\PrestadorDetailDrawer.tsx",
+    "line": 66,
+    "table": "prestador_demandas",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "  );\n  const [isEditing, setIsEditing] = useState(false);\n  useRealtimeSubscription([\n    { table: 'prestadores', enabled: isOpen },\n    { table: 'prestador_demandas', enabled: isOpen, onChange: () => { if (prestador?.id) fetchDemandas(prestador.id); } }\n  ]);\n  const [editForm, setEditForm] = useState<any>({});\n  const [isSaving, setIsSaving] = useState(false);\n  const [isResettingPin, setIsResettingPin] = useState(false);\n  const [copiedPin, setCopiedPin] = useState(false);"
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx",
+    "line": 135,
+    "table": "saques",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "  }, [fetchAllSaques]);\n\n  useRealtimeSubscription([\n    { table: 'prestador_saques', onChange: fetchAllSaques },\n    { table: 'saques', onChange: fetchAllSaques }\n  ]);\n\n  // Deep linking\n  useEffect(() => {\n    if (initialItemId && saques.length > 0) {"
+  },
+  {
+    "file": "src\\components\\admin\\SystemMonitorModule.tsx",
+    "line": 260,
+    "table": "clientes",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "  }, [load]);\n\n  useRealtimeSubscription([\n    { table: 'colaboradores', onChange: () => { void load(true); void fetchFallbackUsers(); }, debounceMs: 500 },\n    { table: 'clientes', onChange: () => { void load(true); void fetchFallbackUsers(); }, debounceMs: 500 },\n    { table: 'fornecedores', onChange: () => { void load(true); void fetchFallbackUsers(); }, debounceMs: 500 },\n    { table: 'prestadores', onChange: () => { void load(true); void fetchFallbackUsers(); }, debounceMs: 500 },\n    { table: 'gsa_afiliados', onChange: () => { void load(true); void fetchFallbackUsers(); }, debounceMs: 500 },\n    { table: 'sistema_logs', onChange: () => void load(true), debounceMs: 500 },\n    { table: 'system_settings', onChange: () => void load(true), debounceMs: 500 },"
+  },
+  {
+    "file": "src\\components\\admin\\TravelAdminModule.tsx",
+    "line": 263,
+    "table": "clientes",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    { table: 'viagens_orcamentos', onChange: load, debounceMs: 300 },\r\n    { table: 'viagens_categorias', onChange: load, debounceMs: 300 },\r\n    { table: 'viagens_passageiros', onChange: load, debounceMs: 300 },\r\n    { table: 'viagens_pacote_imagens', onChange: load, debounceMs: 300 },\r\n    { table: 'clientes', onChange: load, debounceMs: 300 },\r\n  ], [load]);\r\n\r\n  const applySearch = () => {\r\n    setPage(1);\r\n    setAppliedSearch(search.trim());\r"
+  },
+  {
+    "file": "src\\components\\admin\\VendasModule.tsx",
+    "line": 120,
+    "table": "orcamentos",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "  const [activeSubTab, setActiveSubTab] = useState<string>(initialState.sub);\n  const [showSubTabs, setShowSubTabs] = useState(false);\n  const [, setRtRefreshKey] = useState(0);\n  useRealtimeSubscription([\n    { table: 'orcamentos', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },\n    { table: 'ordens_servico', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },\n    { table: 'ordens_compra', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },\n    { table: 'ordens_assinatura', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },\n    { table: 'prestador_demandas', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },\n  ]);"
+  },
+  {
+    "file": "src\\components\\admin\\VendasModule.tsx",
+    "line": 121,
+    "table": "ordens_servico",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "  const [showSubTabs, setShowSubTabs] = useState(false);\n  const [, setRtRefreshKey] = useState(0);\n  useRealtimeSubscription([\n    { table: 'orcamentos', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },\n    { table: 'ordens_servico', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },\n    { table: 'ordens_compra', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },\n    { table: 'ordens_assinatura', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },\n    { table: 'prestador_demandas', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },\n  ]);\n  const [isSubmoduleOpen, setIsSubmoduleOpen] = useState(Boolean(initialTab || initialItemId));"
+  },
+  {
+    "file": "src\\components\\admin\\VendasModule.tsx",
+    "line": 124,
+    "table": "prestador_demandas",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    { table: 'orcamentos', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },\n    { table: 'ordens_servico', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },\n    { table: 'ordens_compra', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },\n    { table: 'ordens_assinatura', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },\n    { table: 'prestador_demandas', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },\n  ]);\n  const [isSubmoduleOpen, setIsSubmoduleOpen] = useState(Boolean(initialTab || initialItemId));\n\n  useEffect(() => {\n    if (initialTab || initialItemId) {"
+  },
+  {
+    "file": "src\\components\\client\\ClientAffiliatePanel.tsx",
+    "line": 146,
+    "table": "gsa_afiliados",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  }, []);\r\n\r\n  useRealtimeSubscription(\r\n    [\r\n      { table: 'gsa_afiliados', onChange: () => void load(true) },\r\n      { table: 'saques', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'carteira_lancamentos', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'indicacoes', filter: _clientId ? `indicador_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'points_transactions', filter: _clientId ? `client_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'pontos_movimentacoes', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientAffiliatePanel.tsx",
+    "line": 147,
+    "table": "saques",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      { table: 'gsa_afiliados', onChange: () => void load(true) },\r\n      { table: 'saques', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'carteira_lancamentos', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'indicacoes', filter: _clientId ? `indicador_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'points_transactions', filter: _clientId ? `client_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'pontos_movimentacoes', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n    ],\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientAffiliatePanel.tsx",
+    "line": 148,
+    "table": "carteira_lancamentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  useRealtimeSubscription(\r\n    [\r\n      { table: 'gsa_afiliados', onChange: () => void load(true) },\r\n      { table: 'saques', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'carteira_lancamentos', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'indicacoes', filter: _clientId ? `indicador_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'points_transactions', filter: _clientId ? `client_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'pontos_movimentacoes', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n    ],\r\n    [_clientId]\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientAffiliatePanel.tsx",
+    "line": 149,
+    "table": "indicacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    [\r\n      { table: 'gsa_afiliados', onChange: () => void load(true) },\r\n      { table: 'saques', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'carteira_lancamentos', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'indicacoes', filter: _clientId ? `indicador_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'points_transactions', filter: _clientId ? `client_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'pontos_movimentacoes', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n    ],\r\n    [_clientId]\r\n  );\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientAffiliatePanel.tsx",
+    "line": 150,
+    "table": "points_transactions",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      { table: 'gsa_afiliados', onChange: () => void load(true) },\r\n      { table: 'saques', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'carteira_lancamentos', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'indicacoes', filter: _clientId ? `indicador_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'points_transactions', filter: _clientId ? `client_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'pontos_movimentacoes', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n    ],\r\n    [_clientId]\r\n  );\r\n\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientAffiliatePanel.tsx",
+    "line": 151,
+    "table": "pontos_movimentacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      { table: 'saques', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'carteira_lancamentos', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'indicacoes', filter: _clientId ? `indicador_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'points_transactions', filter: _clientId ? `client_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n      { table: 'pontos_movimentacoes', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },\r\n    ],\r\n    [_clientId]\r\n  );\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientAreaVIP.tsx",
+    "line": 83,
+    "table": "client_levels",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    fetchLevels();\r\n\r\n    const channel = supabase\r\n      .channel('client-vip-changes')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'client_levels' }, () => {\r\n        fetchLevels();\r\n      })\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'level_history', filter: `cliente_id=eq.${cliente.id}` }, () => {\r\n        fetchLevels();\r\n        fetchHistory();\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientAreaVIP.tsx",
+    "line": 83,
+    "table": "client_levels",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const channel = supabase\r\n      .channel('client-vip-changes')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'client_levels' }, () => {\r\n        fetchLevels();\r\n      })\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'level_history', filter: `cliente_id=eq.${cliente.id}` }, () => {\r\n        fetchLevels();\r\n        fetchHistory();\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientAreaVIP.tsx",
+    "line": 86,
+    "table": "level_history",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      .channel('client-vip-changes')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'client_levels' }, () => {\r\n        fetchLevels();\r\n      })\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'level_history', filter: `cliente_id=eq.${cliente.id}` }, () => {\r\n        fetchLevels();\r\n        fetchHistory();\r\n      })\r\n      .subscribe();\r\n\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientAreaVIP.tsx",
+    "line": 86,
+    "table": "level_history",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        fetchLevels();\r\n      })\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'level_history', filter: `cliente_id=eq.${cliente.id}` }, () => {\r\n        fetchLevels();\r\n        fetchHistory();\r\n      })\r\n      .subscribe();\r\n\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientAreaVIP.tsx",
+    "line": 179,
+    "table": "client_levels",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    }\r\n  };\r\n\r\n  useRealtimeSubscription([\r\n    { table: 'client_levels', onChange: fetchLevels },\r\n    { table: 'assinaturas', onChange: fetchLevels },\r\n  ]);\r\n\r\n  const formatDate = (dateString: string) => {\r\n    return new Intl.DateTimeFormat('pt-BR', {\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientAreaVIP.tsx",
+    "line": 180,
+    "table": "assinaturas",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "  };\r\n\r\n  useRealtimeSubscription([\r\n    { table: 'client_levels', onChange: fetchLevels },\r\n    { table: 'assinaturas', onChange: fetchLevels },\r\n  ]);\r\n\r\n  const formatDate = (dateString: string) => {\r\n    return new Intl.DateTimeFormat('pt-BR', {\r\n      day: '2-digit',\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientAssinaturas.tsx",
+    "line": 105,
+    "table": "ordens_assinatura",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  }, [clientId, minhasTab]);\r\n\r\n  useRealtimeSubscription(\r\n    [\r\n      { table: 'ordens_assinatura', filter: `cliente_id=eq.${clientId}`, onChange: fetchMinhasAssinaturas },\r\n      { table: 'faturas', filter: `cliente_id=eq.${clientId}`, onChange: fetchMinhasAssinaturas },\r\n      { table: 'assinaturas', onChange: fetchMinhasAssinaturas },\r\n    ],\r\n    [clientId]\r\n  );\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientAssinaturas.tsx",
+    "line": 106,
+    "table": "faturas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      { table: 'ordens_assinatura', filter: `cliente_id=eq.${clientId}`, onChange: fetchMinhasAssinaturas },\r\n      { table: 'faturas', filter: `cliente_id=eq.${clientId}`, onChange: fetchMinhasAssinaturas },\r\n      { table: 'assinaturas', onChange: fetchMinhasAssinaturas },\r\n    ],\r\n    [clientId]\r\n  );\r\n\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientAssinaturas.tsx",
+    "line": 107,
+    "table": "assinaturas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  useRealtimeSubscription(\r\n    [\r\n      { table: 'ordens_assinatura', filter: `cliente_id=eq.${clientId}`, onChange: fetchMinhasAssinaturas },\r\n      { table: 'faturas', filter: `cliente_id=eq.${clientId}`, onChange: fetchMinhasAssinaturas },\r\n      { table: 'assinaturas', onChange: fetchMinhasAssinaturas },\r\n    ],\r\n    [clientId]\r\n  );\r\n\r\n  async function fetchMinhasAssinaturas() {\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientEmprestimos.tsx",
+    "line": 97,
+    "table": "emprestimos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  // Real-time listener para atualizar a tela automaticamente\r\n  useEffect(() => {\r\n    if (!clientId) return;\r\n    const channel = supabase.channel(`client-emprestimos-${clientId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimos', filter: `cliente_id=eq.${clientId}` }, () => {\r\n        fetchData();\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_parcelas', filter: `cliente_id=eq.${clientId}` }, () => {\r\n        fetchData();\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientEmprestimos.tsx",
+    "line": 97,
+    "table": "emprestimos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    if (!clientId) return;\r\n    const channel = supabase.channel(`client-emprestimos-${clientId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimos', filter: `cliente_id=eq.${clientId}` }, () => {\r\n        fetchData();\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_parcelas', filter: `cliente_id=eq.${clientId}` }, () => {\r\n        fetchData();\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientEmprestimos.tsx",
+    "line": 101,
+    "table": "emprestimo_parcelas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimos', filter: `cliente_id=eq.${clientId}` }, () => {\r\n        fetchData();\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_parcelas', filter: `cliente_id=eq.${clientId}` }, () => {\r\n        fetchData();\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_comentarios' }, () => {\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientEmprestimos.tsx",
+    "line": 101,
+    "table": "emprestimo_parcelas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_parcelas', filter: `cliente_id=eq.${clientId}` }, () => {\r\n        fetchData();\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_comentarios' }, () => {\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientEmprestimos.tsx",
+    "line": 104,
+    "table": "emprestimo_comentarios",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_parcelas', filter: `cliente_id=eq.${clientId}` }, () => {\r\n        fetchData();\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_comentarios' }, () => {\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_historico' }, () => {\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientEmprestimos.tsx",
+    "line": 104,
+    "table": "emprestimo_comentarios",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        fetchData();\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_comentarios' }, () => {\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_historico' }, () => {\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientEmprestimos.tsx",
+    "line": 107,
+    "table": "emprestimo_historico",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_comentarios' }, () => {\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_historico' }, () => {\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_documentos' }, () => {\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientEmprestimos.tsx",
+    "line": 107,
+    "table": "emprestimo_historico",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_historico' }, () => {\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_documentos' }, () => {\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientEmprestimos.tsx",
+    "line": 110,
+    "table": "emprestimo_documentos",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_historico' }, () => {\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_documentos' }, () => {\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .subscribe();\r\n\r\n    return () => { supabase.removeChannel(channel); };\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientEmprestimos.tsx",
+    "line": 110,
+    "table": "emprestimo_documentos",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_documentos' }, () => {\r\n        if (selected) reFetchDetail(selected.id);\r\n      })\r\n      .subscribe();\r\n\r\n    return () => { supabase.removeChannel(channel); };\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientFidelidade.tsx",
+    "line": 55,
+    "table": "clientes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  }, [initialTab]);\r\n\r\n  useRealtimeSubscription(\r\n    [\r\n      { table: 'clientes', filter: clientId ? `id=eq.${clientId}` : undefined },\r\n      { table: 'vouchers', filter: clientId ? `cliente_id=eq.${clientId}` : undefined },\r\n      { table: 'indicacoes', filter: clientId ? `indicador_id=eq.${clientId}` : undefined },\r\n      { table: 'pontos_movimentacoes', filter: clientId ? `cliente_id=eq.${clientId}` : undefined },\r\n      { table: 'system_settings' },\r\n    ],\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientFidelidade.tsx",
+    "line": 56,
+    "table": "vouchers",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      { table: 'clientes', filter: clientId ? `id=eq.${clientId}` : undefined },\r\n      { table: 'vouchers', filter: clientId ? `cliente_id=eq.${clientId}` : undefined },\r\n      { table: 'indicacoes', filter: clientId ? `indicador_id=eq.${clientId}` : undefined },\r\n      { table: 'pontos_movimentacoes', filter: clientId ? `cliente_id=eq.${clientId}` : undefined },\r\n      { table: 'system_settings' },\r\n    ],\r\n    [clientId]\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientFidelidade.tsx",
+    "line": 57,
+    "table": "indicacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  useRealtimeSubscription(\r\n    [\r\n      { table: 'clientes', filter: clientId ? `id=eq.${clientId}` : undefined },\r\n      { table: 'vouchers', filter: clientId ? `cliente_id=eq.${clientId}` : undefined },\r\n      { table: 'indicacoes', filter: clientId ? `indicador_id=eq.${clientId}` : undefined },\r\n      { table: 'pontos_movimentacoes', filter: clientId ? `cliente_id=eq.${clientId}` : undefined },\r\n      { table: 'system_settings' },\r\n    ],\r\n    [clientId]\r\n  );\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientFidelidade.tsx",
+    "line": 58,
+    "table": "pontos_movimentacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    [\r\n      { table: 'clientes', filter: clientId ? `id=eq.${clientId}` : undefined },\r\n      { table: 'vouchers', filter: clientId ? `cliente_id=eq.${clientId}` : undefined },\r\n      { table: 'indicacoes', filter: clientId ? `indicador_id=eq.${clientId}` : undefined },\r\n      { table: 'pontos_movimentacoes', filter: clientId ? `cliente_id=eq.${clientId}` : undefined },\r\n      { table: 'system_settings' },\r\n    ],\r\n    [clientId]\r\n  );\r\n\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientFidelidade.tsx",
+    "line": 59,
+    "table": "system_settings",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      { table: 'clientes', filter: clientId ? `id=eq.${clientId}` : undefined },\r\n      { table: 'vouchers', filter: clientId ? `cliente_id=eq.${clientId}` : undefined },\r\n      { table: 'indicacoes', filter: clientId ? `indicador_id=eq.${clientId}` : undefined },\r\n      { table: 'pontos_movimentacoes', filter: clientId ? `cliente_id=eq.${clientId}` : undefined },\r\n      { table: 'system_settings' },\r\n    ],\r\n    [clientId]\r\n  );\r\n\r\n  const fidelidadeTabsBase: Array<{ id: FidelidadeTab; label: string; icon: any; badge?: number; locked?: boolean }> = [\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientFinanceiro.tsx",
+    "line": 199,
+    "table": "clientes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'clientes',\r\n        filter: clientId ? `id=eq.${clientId}` : undefined,\r\n        onChange: fetchSaldo,\r\n      },\r\n      {\r\n        table: 'faturas',\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientFinanceiro.tsx",
+    "line": 204,
+    "table": "faturas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        filter: clientId ? `id=eq.${clientId}` : undefined,\r\n        onChange: fetchSaldo,\r\n      },\r\n      {\r\n        table: 'faturas',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: () => {\r\n          fetchSaldo();\r\n          checkFaturas();\r\n        },\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientFinanceiro.tsx",
+    "line": 212,
+    "table": "saques",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "          checkFaturas();\r\n        },\r\n      },\r\n      {\r\n        table: 'saques',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: fetchSaldo,\r\n      },\r\n      {\r\n        table: 'transferencias',\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientFinanceiro.tsx",
+    "line": 217,
+    "table": "transferencias",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: fetchSaldo,\r\n      },\r\n      {\r\n        table: 'transferencias',\r\n        onChange: fetchSaldo,\r\n      },\r\n      {\r\n        table: 'carteira_lancamentos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientFinanceiro.tsx",
+    "line": 221,
+    "table": "carteira_lancamentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        table: 'transferencias',\r\n        onChange: fetchSaldo,\r\n      },\r\n      {\r\n        table: 'carteira_lancamentos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: fetchSaldo,\r\n      },\r\n      {\r\n        table: 'ordens_fiscais',\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientFinanceiro.tsx",
+    "line": 226,
+    "table": "ordens_fiscais",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: fetchSaldo,\r\n      },\r\n      {\r\n        table: 'ordens_fiscais',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: fetchSaldo,\r\n      },\r\n      {\r\n        table: 'tickets',\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientFinanceiro.tsx",
+    "line": 231,
+    "table": "tickets",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: fetchSaldo,\r\n      },\r\n      {\r\n        table: 'tickets',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: () => {\r\n          checkActiveRequest();\r\n          checkActiveMinRequest();\r\n        },\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientFinanceiro.tsx",
+    "line": 239,
+    "table": "system_settings",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "          checkActiveMinRequest();\r\n        },\r\n      },\r\n      {\r\n        table: 'system_settings',\r\n        filter: 'key=eq.valor_minimo_saque',\r\n        onChange: fetchMinSaque,\r\n      },\r\n    ],\r\n    [clientId]\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 622,
+    "table": "produtos",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    window.addEventListener('gsa-cart-migrated', onCartMigrated);\r\n\r\n    // Canais da Loja (Produtos, Serviços, Assinaturas)\r\n    const storeChannel = supabase.channel('gsa-store-items')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'servicos' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'assinaturas' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .subscribe();\r\n\r\n\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 622,
+    "table": "produtos",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    // Canais da Loja (Produtos, Serviços, Assinaturas)\r\n    const storeChannel = supabase.channel('gsa-store-items')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'servicos' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'assinaturas' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .subscribe();\r\n\r\n\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 623,
+    "table": "servicos",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "\r\n    // Canais da Loja (Produtos, Serviços, Assinaturas)\r\n    const storeChannel = supabase.channel('gsa-store-items')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'servicos' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'assinaturas' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .subscribe();\r\n\r\n\r\n    // Canais de Cupons\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 623,
+    "table": "produtos",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    const storeChannel = supabase.channel('gsa-store-items')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'servicos' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'assinaturas' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .subscribe();\r\n\r\n\r\n    // Canais de Cupons\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 624,
+    "table": "assinaturas",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    // Canais da Loja (Produtos, Serviços, Assinaturas)\r\n    const storeChannel = supabase.channel('gsa-store-items')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'servicos' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'assinaturas' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .subscribe();\r\n\r\n\r\n    // Canais de Cupons\r\n    const couponChannel = supabase.channel('gsa-store-coupons')\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 624,
+    "table": "produtos",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "      .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'servicos' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'assinaturas' }, () => { fetchStoreData(true); fetchCart(); })\r\n      .subscribe();\r\n\r\n\r\n    // Canais de Cupons\r\n    const couponChannel = supabase.channel('gsa-store-coupons')\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 630,
+    "table": "cupons_loja",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "\r\n\r\n    // Canais de Cupons\r\n    const couponChannel = supabase.channel('gsa-store-coupons')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cupons_loja' }, () => {\r\n        // Se houver checkout aberto, ele vai re-renderizar e podemos validar cupons se necessário\r\n        // Por ora, apenas garantimos que os dados estão frescos se houvesse uma lista de cupons\r\n      })\r\n      .subscribe();\r\n\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 630,
+    "table": "cupons_loja",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    // Canais de Cupons\r\n    const couponChannel = supabase.channel('gsa-store-coupons')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cupons_loja' }, () => {\r\n        // Se houver checkout aberto, ele vai re-renderizar e podemos validar cupons se necessário\r\n        // Por ora, apenas garantimos que os dados estão frescos se houvesse uma lista de cupons\r\n      })\r\n      .subscribe();\r\n\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 638,
+    "table": "promocoes_quantidade",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "      .subscribe();\r\n\r\n    // Canal de Promoções Inteligentes (VIP)\r\n    const promoChannel = supabase.channel('gsa-store-promos')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'promocoes_quantidade' }, async () => {\r\n        // Re-busca as promoções ativas DIRETAMENTE no canal para evitar problemas de HMR/Closure\r\n        const { data: promos } = await supabase.from('promocoes_quantidade')\r\n          .select('*, produto_brinde:produtos!produto_brinde_id(*), produto_gatilho:produtos!produto_gatilho_id(nome)')\r\n          .eq('status', 'ativa');\r\n        if (promos) setPromocoesAtivas(promos);\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 638,
+    "table": "promocoes_quantidade",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    // Canal de Promoções Inteligentes (VIP)\r\n    const promoChannel = supabase.channel('gsa-store-promos')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'promocoes_quantidade' }, async () => {\r\n        // Re-busca as promoções ativas DIRETAMENTE no canal para evitar problemas de HMR/Closure\r\n        const { data: promos } = await supabase.from('promocoes_quantidade')\r\n          .select('*, produto_brinde:produtos!produto_brinde_id(*), produto_gatilho:produtos!produto_gatilho_id(nome)')\r\n          .eq('status', 'ativa');\r\n        if (promos) setPromocoesAtivas(promos);\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 648,
+    "table": "loja_carrinhos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      })\r\n      .subscribe();\r\n\r\n    const cartChannel = supabase.channel(`cart-${clientId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'loja_carrinhos', filter: `cliente_id=eq.${clientId}` }, () => {\r\n        fetchCart();\r\n      }).subscribe();\r\n      \r\n    const waChannel = supabase.channel('wa-sync-store')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, () => {\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 648,
+    "table": "loja_carrinhos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n    const cartChannel = supabase.channel(`cart-${clientId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'loja_carrinhos', filter: `cliente_id=eq.${clientId}` }, () => {\r\n        fetchCart();\r\n      }).subscribe();\r\n      \r\n    const waChannel = supabase.channel('wa-sync-store')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, () => {\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 653,
+    "table": "system_settings",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        fetchCart();\r\n      }).subscribe();\r\n      \r\n    const waChannel = supabase.channel('wa-sync-store')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, () => {\r\n        fetchWASettings();\r\n      }).subscribe();\r\n\r\n    fetchWASettings();\r\n\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientGSAStore.tsx",
+    "line": 653,
+    "table": "system_settings",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "      \r\n    const waChannel = supabase.channel('wa-sync-store')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, () => {\r\n        fetchWASettings();\r\n      }).subscribe();\r\n\r\n    fetchWASettings();\r\n\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientIndiqueGanhe.tsx",
+    "line": 105,
+    "table": "indicacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'indicacoes',\r\n        filter: clientId ? `indicador_id=eq.${clientId}` : undefined,\r\n        debounceMs: 150,\r\n        onChange: fetchIndicacoes,\r\n        onPayload: (payload) => {\r\n          fetchIndicacoes();\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientIndiqueGanhe.tsx",
+    "line": 117,
+    "table": "vouchers",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "          }\r\n        },\r\n      },\r\n      {\r\n        table: 'vouchers',\r\n        debounceMs: 150,\r\n        onChange: fetchIndicacoes,\r\n      },\r\n      {\r\n        table: 'clientes',\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientIndiqueGanhe.tsx",
+    "line": 122,
+    "table": "clientes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        debounceMs: 150,\r\n        onChange: fetchIndicacoes,\r\n      },\r\n      {\r\n        table: 'clientes',\r\n        filter: clientId ? `id=eq.${clientId}` : undefined,\r\n        debounceMs: 150,\r\n        onChange: () => {\r\n          fetchCliente();\r\n          fetchIndicacoes();\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientMeuCredito.tsx",
+    "line": 373,
+    "table": "loja_credito_solicitacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'loja_credito_solicitacoes',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: () => {\r\n          loadData();\r\n          onRefreshCliente();\r\n        },\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientMeuCredito.tsx",
+    "line": 381,
+    "table": "loja_credito_movimentacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "          onRefreshCliente();\r\n        },\r\n      },\r\n      {\r\n        table: 'loja_credito_movimentacoes',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: () => {\r\n          loadData();\r\n          onRefreshCliente();\r\n        },\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientMeuCredito.tsx",
+    "line": 389,
+    "table": "faturas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "          onRefreshCliente();\r\n        },\r\n      },\r\n      {\r\n        table: 'faturas',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: () => {\r\n          loadData();\r\n          onRefreshCliente();\r\n        },\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientMeuCredito.tsx",
+    "line": 397,
+    "table": "clientes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "          onRefreshCliente();\r\n        },\r\n      },\r\n      {\r\n        table: 'clientes',\r\n        filter: clientId ? `id=eq.${clientId}` : undefined,\r\n        onChange: onRefreshCliente,\r\n      },\r\n      {\r\n        table: 'loja_credito_documentos',\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientMeuCredito.tsx",
+    "line": 402,
+    "table": "loja_credito_documentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        filter: clientId ? `id=eq.${clientId}` : undefined,\r\n        onChange: onRefreshCliente,\r\n      },\r\n      {\r\n        table: 'loja_credito_documentos',\r\n        onChange: loadData,\r\n      },\r\n    ],\r\n    [clientId]\r\n  );\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientOrcamentos.tsx",
+    "line": 201,
+    "table": "orcamentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'orcamentos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        debounceMs: 300,\r\n        onChange: () => {\r\n          fetchOrcamentosRef.current();\r\n        },\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientOrcamentos.tsx",
+    "line": 223,
+    "table": "loja_avaliacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "          }\r\n        },\r\n      },\r\n      {\r\n        table: 'loja_avaliacoes',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: () => fetchOrcamentosRef.current(),\r\n      },\r\n      {\r\n        table: 'loja_solicitacoes',\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientOrcamentos.tsx",
+    "line": 228,
+    "table": "loja_solicitacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: () => fetchOrcamentosRef.current(),\r\n      },\r\n      {\r\n        table: 'loja_solicitacoes',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: () => fetchOrcamentosRef.current(),\r\n      },\r\n    ],\r\n    [clientId]\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientPontos.tsx",
+    "line": 90,
+    "table": "clientes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'clientes',\r\n        filter: clienteId ? `id=eq.${clienteId}` : undefined,\r\n        debounceMs: 150,\r\n        onChange: fetchData,\r\n      },\r\n      {\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientPontos.tsx",
+    "line": 96,
+    "table": "pontos_movimentacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        debounceMs: 150,\r\n        onChange: fetchData,\r\n      },\r\n      {\r\n        table: 'pontos_movimentacoes',\r\n        filter: clienteId ? `cliente_id=eq.${clienteId}` : undefined,\r\n        debounceMs: 150,\r\n        onChange: fetchData,\r\n      },\r\n    ],\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientPremios.tsx",
+    "line": 103,
+    "table": "cliente_premios",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const channel = supabase\r\n      .channel('premios-updates')\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'cliente_premios',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientPremios.tsx",
+    "line": 106,
+    "table": "cliente_premios",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      .channel('premios-updates')\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'cliente_premios',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r\n        fetchPremios();\r\n      })\r\n      .subscribe();\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientProdutos.tsx",
+    "line": 91,
+    "table": "ordens_compra",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'ordens_compra',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: fetchMeusProdutos,\r\n      },\r\n      {\r\n        table: 'produtos',\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientProdutos.tsx",
+    "line": 96,
+    "table": "produtos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: fetchMeusProdutos,\r\n      },\r\n      {\r\n        table: 'produtos',\r\n        onChange: fetchMeusProdutos,\r\n      },\r\n      {\r\n        table: 'faturas',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientProdutos.tsx",
+    "line": 100,
+    "table": "faturas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        table: 'produtos',\r\n        onChange: fetchMeusProdutos,\r\n      },\r\n      {\r\n        table: 'faturas',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: fetchMeusProdutos,\r\n      },\r\n    ],\r\n    [clientId]\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientProfile.tsx",
+    "line": 153,
+    "table": "cliente_documentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'cliente_documentos',\r\n        filter: cliente?.id ? `cliente_id=eq.${cliente.id}` : undefined,\r\n        onChange: fetchDocumentos,\r\n      },\r\n      {\r\n        table: 'documentos_cliente',\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientProfile.tsx",
+    "line": 158,
+    "table": "documentos_cliente",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        filter: cliente?.id ? `cliente_id=eq.${cliente.id}` : undefined,\r\n        onChange: fetchDocumentos,\r\n      },\r\n      {\r\n        table: 'documentos_cliente',\r\n        filter: cliente?.id ? `cliente_id=eq.${cliente.id}` : undefined,\r\n        onChange: fetchDocumentos,\r\n      },\r\n      {\r\n        table: 'clientes',\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientProfile.tsx",
+    "line": 163,
+    "table": "clientes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        filter: cliente?.id ? `cliente_id=eq.${cliente.id}` : undefined,\r\n        onChange: fetchDocumentos,\r\n      },\r\n      {\r\n        table: 'clientes',\r\n        filter: cliente?.id ? `id=eq.${cliente.id}` : undefined,\r\n        onChange: fetchDocumentos,\r\n      },\r\n    ],\r\n    [cliente?.id]\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientPromocoes.tsx",
+    "line": 89,
+    "table": "promocoes",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    const channelPromos = supabase\n      .channel('client-promocoes-updates')\n      .on('postgres_changes', {\n        event: '*',\n        schema: 'public',\n        table: 'promocoes'\n      }, () => {\n        fetchData();"
+  },
+  {
+    "file": "src\\components\\client\\ClientPromocoes.tsx",
+    "line": 92,
+    "table": "promocoes",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "      .channel('client-promocoes-updates')\n      .on('postgres_changes', {\n        event: '*',\n        schema: 'public',\n        table: 'promocoes'\n      }, () => {\n        fetchData();\n      })\n      .subscribe();\n"
+  },
+  {
+    "file": "src\\components\\client\\ClientPromocoes.tsx",
+    "line": 100,
+    "table": "cliente_promocoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const channelMinhasPromos = supabase\n      .channel('client-minhas-promocoes-updates')\n      .on('postgres_changes', {\n        event: '*',\n        schema: 'public',\n        table: 'cliente_promocoes',\n        filter: `cliente_id=eq.${clientId}`\n      }, () => {"
+  },
+  {
+    "file": "src\\components\\client\\ClientPromocoes.tsx",
+    "line": 103,
+    "table": "cliente_promocoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      .channel('client-minhas-promocoes-updates')\n      .on('postgres_changes', {\n        event: '*',\n        schema: 'public',\n        table: 'cliente_promocoes',\n        filter: `cliente_id=eq.${clientId}`\n      }, () => {\n        fetchData();\n      })\n      .subscribe();"
+  },
+  {
+    "file": "src\\components\\client\\ClientServicos.tsx",
+    "line": 99,
+    "table": "ordens_servico",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'ordens_servico',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        debounceMs: 300,\r\n        onChange: fetchServicos,\r\n        onPayload: (payload) => {\r\n          if (payload.new && selectedOSRef.current && (payload.new as any).id === selectedOSRef.current.id) {\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientServicos.tsx",
+    "line": 110,
+    "table": "orcamentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "          }\r\n        },\r\n      },\r\n      {\r\n        table: 'orcamentos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        debounceMs: 300,\r\n        onChange: fetchServicos,\r\n      },\r\n      {\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientServicos.tsx",
+    "line": 116,
+    "table": "os_notas",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        debounceMs: 300,\r\n        onChange: fetchServicos,\r\n      },\r\n      {\r\n        table: 'os_notas',\r\n        onChange: fetchServicos,\r\n      },\r\n      {\r\n        table: 'os_suporte_mensagens',\r\n        onChange: fetchServicos,\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientServicos.tsx",
+    "line": 120,
+    "table": "os_suporte_mensagens",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        table: 'os_notas',\r\n        onChange: fetchServicos,\r\n      },\r\n      {\r\n        table: 'os_suporte_mensagens',\r\n        onChange: fetchServicos,\r\n      },\r\n    ],\r\n    [clientId, activeTab, isMobile]\r\n  );\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientServicos.tsx",
+    "line": 638,
+    "table": "os_notas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const channel = supabase\r\n      .channel('notas-updates')\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'os_notas',\r\n        filter: `os_id=eq.${osId}`\r\n      }, () => {\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientServicos.tsx",
+    "line": 641,
+    "table": "os_notas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      .channel('notas-updates')\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'os_notas',\r\n        filter: `os_id=eq.${osId}`\r\n      }, () => {\r\n        fetchNotas();\r\n      })\r\n      .subscribe();\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientServicos.tsx",
+    "line": 693,
+    "table": "os_suporte_mensagens",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const channel = supabase\r\n      .channel('os-suporte-chat')\r\n      .on('postgres_changes', {\r\n        event: 'INSERT',\r\n        schema: 'public',\r\n        table: 'os_suporte_mensagens',\r\n        filter: `os_id=eq.${osId}`\r\n      }, (payload) => {\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientServicos.tsx",
+    "line": 696,
+    "table": "os_suporte_mensagens",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      .channel('os-suporte-chat')\r\n      .on('postgres_changes', {\r\n        event: 'INSERT',\r\n        schema: 'public',\r\n        table: 'os_suporte_mensagens',\r\n        filter: `os_id=eq.${osId}`\r\n      }, (payload) => {\r\n        setMensagens((prev) => {\r\n          if (prev.find(m => m.id === payload.new.id)) return prev;\r\n          return [...prev, payload.new];\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientSuporte.tsx",
+    "line": 85,
+    "table": "tickets",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'tickets',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: fetchTickets,\r\n      },\r\n    ],\r\n    [clientId, activeTab, modulo]\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientSuporte.tsx",
+    "line": 102,
+    "table": "ticket_mensagens",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'ticket_mensagens',\r\n        filter: selectedTicket?.id ? `ticket_id=eq.${selectedTicket.id}` : undefined,\r\n        enabled: Boolean(selectedTicket?.id && isChatOpen),\r\n        onPayload: (payload) => {\r\n          if (payload.eventType === 'INSERT' && payload.new) {\r\n            setMessages((prev) => {\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientSuporte.tsx",
+    "line": 115,
+    "table": "tickets",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "          }\r\n        },\r\n      },\r\n      {\r\n        table: 'tickets',\r\n        filter: selectedTicket?.id ? `id=eq.${selectedTicket.id}` : undefined,\r\n        enabled: Boolean(selectedTicket?.id && isChatOpen),\r\n        onPayload: (payload) => {\r\n          if (payload.new) {\r\n            setSelectedTicket((prev) => (prev ? ({ ...prev, ...payload.new } as Ticket) : null));\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientTransferencias.tsx",
+    "line": 70,
+    "table": "transferencias",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'transferencias',\r\n        onChange: () => {\r\n          fetchClienteData();\r\n          fetchTransferencias();\r\n        },\r\n      },\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientTransferencias.tsx",
+    "line": 77,
+    "table": "clientes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "          fetchTransferencias();\r\n        },\r\n      },\r\n      {\r\n        table: 'clientes',\r\n        filter: clientId ? `id=eq.${clientId}` : undefined,\r\n        onChange: fetchClienteData,\r\n      },\r\n      {\r\n        table: 'pontos_movimentacoes',\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientTransferencias.tsx",
+    "line": 82,
+    "table": "pontos_movimentacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        filter: clientId ? `id=eq.${clientId}` : undefined,\r\n        onChange: fetchClienteData,\r\n      },\r\n      {\r\n        table: 'pontos_movimentacoes',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: fetchClienteData,\r\n      },\r\n      {\r\n        table: 'saques',\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientTransferencias.tsx",
+    "line": 87,
+    "table": "saques",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: fetchClienteData,\r\n      },\r\n      {\r\n        table: 'saques',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: fetchClienteData,\r\n      },\r\n    ],\r\n    [clientId]\r"
+  },
+  {
+    "file": "src\\components\\client\\ClientVouchers.tsx",
+    "line": 53,
+    "table": "vouchers",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "\n  useRealtimeSubscription(\n    [\n      {\n        table: 'vouchers',\n        onChange: fetchVouchers,\n        onPayload: (payload) => {\n          fetchVouchers();\n          if (payload.new && selectedVoucher && (payload.new as any).id === selectedVoucher.id) {\n            setSelectedVoucher((prev) => (prev ? ({ ...prev, ...payload.new } as Voucher) : null));"
+  },
+  {
+    "file": "src\\components\\client\\ClientVouchers.tsx",
+    "line": 63,
+    "table": "cupons_loja",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "          }\n        },\n      },\n      {\n        table: 'cupons_loja',\n        onChange: fetchVouchers,\n      },\n      {\n        table: 'cupons_ativados',\n        onChange: fetchVouchers,"
+  },
+  {
+    "file": "src\\components\\client\\ClientVouchers.tsx",
+    "line": 67,
+    "table": "cupons_ativados",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        table: 'cupons_loja',\n        onChange: fetchVouchers,\n      },\n      {\n        table: 'cupons_ativados',\n        onChange: fetchVouchers,\n      },\n      {\n        table: 'clientes',\n        filter: clientId ? `id=eq.${clientId}` : undefined,"
+  },
+  {
+    "file": "src\\components\\client\\ClientVouchers.tsx",
+    "line": 71,
+    "table": "clientes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        table: 'cupons_ativados',\n        onChange: fetchVouchers,\n      },\n      {\n        table: 'clientes',\n        filter: clientId ? `id=eq.${clientId}` : undefined,\n        onChange: fetchVouchers,\n      },\n    ],\n    [activeTab, clientId, selectedVoucher?.id]"
+  },
+  {
+    "file": "src\\components\\client\\financeiro\\ExtratoList.tsx",
+    "line": 43,
+    "table": "extrato_financeiro",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  const [isEstornoModalOpen, setIsEstornoModalOpen] = useState(false);\r\n\r\n  useEffect(() => {\r\n    fetchExtrato();\r\n    const channel = supabase.channel('extrato-upd').on('postgres_changes', { event: '*', schema: 'public', table: 'extrato_financeiro', filter: `cliente_id=eq.${clientId}` }, () => fetchExtrato()).subscribe();\r\n    return () => { supabase.removeChannel(channel); };\r\n  }, [clientId, monthFilter]);\r\n\r\n  const fetchExtrato = async () => {\r\n    let { data } = await supabase.from('extrato_financeiro').select('*').eq('cliente_id', clientId).order('data', { ascending: false });\r"
+  },
+  {
+    "file": "src\\components\\client\\financeiro\\ExtratoList.tsx",
+    "line": 43,
+    "table": "extrato_financeiro",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  useEffect(() => {\r\n    fetchExtrato();\r\n    const channel = supabase.channel('extrato-upd').on('postgres_changes', { event: '*', schema: 'public', table: 'extrato_financeiro', filter: `cliente_id=eq.${clientId}` }, () => fetchExtrato()).subscribe();\r\n    return () => { supabase.removeChannel(channel); };\r\n  }, [clientId, monthFilter]);\r\n\r\n  const fetchExtrato = async () => {\r\n    let { data } = await supabase.from('extrato_financeiro').select('*').eq('cliente_id', clientId).order('data', { ascending: false });\r"
+  },
+  {
+    "file": "src\\components\\client\\financeiro\\FaturasList.tsx",
+    "line": 197,
+    "table": "faturas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const channel = supabase\r\n      .channel('client-faturas-updates')\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'faturas',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r"
+  },
+  {
+    "file": "src\\components\\client\\financeiro\\FaturasList.tsx",
+    "line": 200,
+    "table": "faturas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      .channel('client-faturas-updates')\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'faturas',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r\n        fetchFaturas();\r\n        onRefresh();\r\n      })\r"
+  },
+  {
+    "file": "src\\components\\client\\financeiro\\NotasFiscaisList.tsx",
+    "line": 170,
+    "table": "ordens_fiscais",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const channel = supabase\r\n      .channel('client-nf-updates')\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'ordens_fiscais',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r"
+  },
+  {
+    "file": "src\\components\\client\\financeiro\\NotasFiscaisList.tsx",
+    "line": 173,
+    "table": "ordens_fiscais",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      .channel('client-nf-updates')\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'ordens_fiscais',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r\n        fetchOrdens();\r\n      })\r\n      .subscribe();\r"
+  },
+  {
+    "file": "src\\components\\client\\financeiro\\PaymentModal.tsx",
+    "line": 88,
+    "table": "clientes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'clientes',\r\n        filter: fatura?.cliente_id ? `id=eq.${fatura.cliente_id}` : undefined,\r\n        enabled: isOpen && Boolean(fatura?.cliente_id),\r\n        onChange: fetchClientData,\r\n      },\r\n      {\r"
+  },
+  {
+    "file": "src\\components\\client\\financeiro\\PaymentModal.tsx",
+    "line": 94,
+    "table": "vouchers",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        enabled: isOpen && Boolean(fatura?.cliente_id),\r\n        onChange: fetchClientData,\r\n      },\r\n      {\r\n        table: 'vouchers',\r\n        enabled: isOpen && Boolean(fatura?.cliente_id),\r\n        onChange: () => {\r\n          if (showVouchersList) {\r\n            fetchAvailableVouchers();\r\n          }\r"
+  },
+  {
+    "file": "src\\components\\client\\financeiro\\SaquesList.tsx",
+    "line": 97,
+    "table": "saques",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'saques',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        debounceMs: 300,\r\n        onChange: () => {\r\n          fetchSaques();\r\n          onRefresh();\r"
+  },
+  {
+    "file": "src\\components\\client\\marketplace\\classifieds\\CreateListingWizard.tsx",
+    "line": 80,
+    "table": "classificados_comissoes_config",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'classificados_comissoes_config',\r\n        debounceMs: 300,\r\n        onChange: () => { void fetchCommissions(); },\r\n      },\r\n    ],\r\n    []\r"
+  },
+  {
+    "file": "src\\components\\client\\marketplace\\classifieds\\EditClassifiedListingPage.tsx",
+    "line": 87,
+    "table": "classificados_anuncios",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'classificados_anuncios',\r\n        filter: anuncioId ? `id=eq.${anuncioId}` : undefined,\r\n        debounceMs: 300,\r\n        onChange: () => { void load(); },\r\n      },\r\n      {\r"
+  },
+  {
+    "file": "src\\components\\client\\marketplace\\classifieds\\EditClassifiedListingPage.tsx",
+    "line": 93,
+    "table": "classificados_midias",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        debounceMs: 300,\r\n        onChange: () => { void load(); },\r\n      },\r\n      {\r\n        table: 'classificados_midias',\r\n        filter: anuncioId ? `anuncio_id=eq.${anuncioId}` : undefined,\r\n        debounceMs: 300,\r\n        onChange: () => { void load(); },\r\n      },\r\n    ],\r"
+  },
+  {
+    "file": "src\\components\\client\\marketplace\\travel\\TravelCancellationsPage.tsx",
+    "line": 112,
+    "table": "viagens_transacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'viagens_transacoes',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        debounceMs: 300,\r\n        onChange: () => { void fetchTrips(); },\r\n      },\r\n      {\r"
+  },
+  {
+    "file": "src\\components\\client\\marketplace\\travel\\TravelCancellationsPage.tsx",
+    "line": 118,
+    "table": "viagens_cancelamentos",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        debounceMs: 300,\r\n        onChange: () => { void fetchTrips(); },\r\n      },\r\n      {\r\n        table: 'viagens_cancelamentos',\r\n        debounceMs: 300,\r\n        onChange: () => { void fetchTrips(); },\r\n      },\r\n    ],\r\n    [clientId]\r"
+  },
+  {
+    "file": "src\\components\\client\\marketplace\\travel\\TravelProposalsPage.tsx",
+    "line": 44,
+    "table": "viagens_propostas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'viagens_propostas',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        debounceMs: 300,\r\n        onChange: fetchPropostas,\r\n      },\r\n    ],\r"
+  },
+  {
+    "file": "src\\components\\client\\marketplace\\travel\\TravelQuoteRequestPage.tsx",
+    "line": 177,
+    "table": "viagens_pacotes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'viagens_pacotes',\r\n        filter: packageId ? `id=eq.${packageId}` : undefined,\r\n        enabled: Boolean(packageId),\r\n        debounceMs: 300,\r\n        onChange: () => { void loadPackage(); },\r\n      },\r"
+  },
+  {
+    "file": "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx",
+    "line": 155,
+    "table": "viagens_transacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'viagens_transacoes',\r\n        filter: transacaoId ? `id=eq.${transacaoId}` : undefined,\r\n        debounceMs: 300,\r\n        onChange: fetchTripDetails,\r\n      },\r\n      {\r"
+  },
+  {
+    "file": "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx",
+    "line": 161,
+    "table": "viagens_passageiros",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        debounceMs: 300,\r\n        onChange: fetchTripDetails,\r\n      },\r\n      {\r\n        table: 'viagens_passageiros',\r\n        debounceMs: 300,\r\n        onChange: fetchTripDetails,\r\n      },\r\n      {\r\n        table: 'viagens_passageiro_documentos',\r"
+  },
+  {
+    "file": "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx",
+    "line": 166,
+    "table": "viagens_passageiro_documentos",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        debounceMs: 300,\r\n        onChange: fetchTripDetails,\r\n      },\r\n      {\r\n        table: 'viagens_passageiro_documentos',\r\n        debounceMs: 300,\r\n        onChange: fetchTripDetails,\r\n      },\r\n      {\r\n        table: 'viagens_vouchers',\r"
+  },
+  {
+    "file": "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx",
+    "line": 171,
+    "table": "viagens_vouchers",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        debounceMs: 300,\r\n        onChange: fetchTripDetails,\r\n      },\r\n      {\r\n        table: 'viagens_vouchers',\r\n        debounceMs: 300,\r\n        onChange: fetchTripDetails,\r\n      },\r\n    ],\r\n    [transacaoId, clientId]\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\CheckoutModal.tsx",
+    "line": 326,
+    "table": "clientes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'clientes',\r\n        filter: clientId ? `id=eq.${clientId}` : undefined,\r\n        enabled: isOpen && !!clientId,\r\n        debounceMs: 150,\r\n        onChange: () => {\r\n          fetchSaldoPontos();\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\CheckoutModal.tsx",
+    "line": 336,
+    "table": "cupons_ativados",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "          fetchDadosCredito();\r\n        },\r\n      },\r\n      {\r\n        table: 'cupons_ativados',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        enabled: isOpen && !!clientId,\r\n        debounceMs: 150,\r\n        onChange: () => {\r\n          if (isSelectorOpen) {\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\CheckoutModal.tsx",
+    "line": 347,
+    "table": "cupons_loja",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "          }\r\n        },\r\n      },\r\n      {\r\n        table: 'cupons_loja',\r\n        enabled: isOpen,\r\n        debounceMs: 150,\r\n        onChange: () => {\r\n          if (isSelectorOpen) {\r\n            fetchCoupons(selectorCategory);\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\CheckoutPage.tsx",
+    "line": 456,
+    "table": "loja_carrinhos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'loja_carrinhos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: fetchCartItems,\r\n      },\r\n      {\r\n        table: 'clientes',\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\CheckoutPage.tsx",
+    "line": 461,
+    "table": "clientes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: fetchCartItems,\r\n      },\r\n      {\r\n        table: 'clientes',\r\n        filter: clientId ? `id=eq.${clientId}` : undefined,\r\n        onChange: fetchDadosCredito,\r\n      },\r\n      {\r\n        table: 'produtos',\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\CheckoutPage.tsx",
+    "line": 466,
+    "table": "produtos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        filter: clientId ? `id=eq.${clientId}` : undefined,\r\n        onChange: fetchDadosCredito,\r\n      },\r\n      {\r\n        table: 'produtos',\r\n        onChange: fetchCartItems,\r\n      },\r\n      {\r\n        table: 'cupons_loja',\r\n        onChange: () => {\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\CheckoutPage.tsx",
+    "line": 470,
+    "table": "cupons_loja",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        table: 'produtos',\r\n        onChange: fetchCartItems,\r\n      },\r\n      {\r\n        table: 'cupons_loja',\r\n        onChange: () => {\r\n          if (isSelectorOpen && selectorCategory) {\r\n            fetchCoupons(selectorCategory);\r\n          }\r\n        },\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\CheckoutPixModal.tsx",
+    "line": 172,
+    "table": "orcamentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const channelOrc = supabase\n      .channel(`pix-orc-${orderId}`)\n      .on('postgres_changes', {\n        event: 'UPDATE', schema: 'public', table: 'orcamentos', filter: `id=eq.${orderId}`,\n      }, (payload) => {\n        const newStatus = String(payload?.new?.status || '').toLowerCase();\n        if (['pago', 'aprovado', 'em_expedicao', 'em_transporte', 'concluido'].includes(newStatus)) {\n          handlePaymentApproved();"
+  },
+  {
+    "file": "src\\components\\client\\store\\CheckoutPixModal.tsx",
+    "line": 173,
+    "table": "orcamentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\n    const channelOrc = supabase\n      .channel(`pix-orc-${orderId}`)\n      .on('postgres_changes', {\n        event: 'UPDATE', schema: 'public', table: 'orcamentos', filter: `id=eq.${orderId}`,\n      }, (payload) => {\n        const newStatus = String(payload?.new?.status || '').toLowerCase();\n        if (['pago', 'aprovado', 'em_expedicao', 'em_transporte', 'concluido'].includes(newStatus)) {\n          handlePaymentApproved();\n        }"
+  },
+  {
+    "file": "src\\components\\client\\store\\CheckoutPixModal.tsx",
+    "line": 183,
+    "table": "faturas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const channelFat = supabase\n      .channel(`pix-fat-${orderId}`)\n      .on('postgres_changes', {\n        event: 'UPDATE', schema: 'public', table: 'faturas', filter: `orcamento_id=eq.${orderId}`,\n      }, (payload) => {\n        const newStatus = String(payload?.new?.status || '').toLowerCase();\n        if (newStatus === 'pago') handlePaymentApproved();\n      }).subscribe();"
+  },
+  {
+    "file": "src\\components\\client\\store\\CheckoutPixModal.tsx",
+    "line": 184,
+    "table": "faturas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\n    const channelFat = supabase\n      .channel(`pix-fat-${orderId}`)\n      .on('postgres_changes', {\n        event: 'UPDATE', schema: 'public', table: 'faturas', filter: `orcamento_id=eq.${orderId}`,\n      }, (payload) => {\n        const newStatus = String(payload?.new?.status || '').toLowerCase();\n        if (newStatus === 'pago') handlePaymentApproved();\n      }).subscribe();\n"
+  },
+  {
+    "file": "src\\components\\client\\store\\CouponsPage.tsx",
+    "line": 171,
+    "table": "cupons_loja",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "\n    // Sincronização em tempo real via Supabase Channel\n    const channel = supabase\n      .channel('realtime-coupons-page')\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cupons_loja' }, () => {\n        fetchCupons();\n      })\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cupons_ativados' }, () => {\n        fetchCupons();\n      })"
+  },
+  {
+    "file": "src\\components\\client\\store\\CouponsPage.tsx",
+    "line": 171,
+    "table": "cupons_loja",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    const channel = supabase\n      .channel('realtime-coupons-page')\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cupons_loja' }, () => {\n        fetchCupons();\n      })\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cupons_ativados' }, () => {\n        fetchCupons();\n      })"
+  },
+  {
+    "file": "src\\components\\client\\store\\CouponsPage.tsx",
+    "line": 174,
+    "table": "cupons_ativados",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "      .channel('realtime-coupons-page')\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cupons_loja' }, () => {\n        fetchCupons();\n      })\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cupons_ativados' }, () => {\n        fetchCupons();\n      })\n      .subscribe();\n\n    return () => {"
+  },
+  {
+    "file": "src\\components\\client\\store\\CouponsPage.tsx",
+    "line": 174,
+    "table": "cupons_ativados",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        fetchCupons();\n      })\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cupons_ativados' }, () => {\n        fetchCupons();\n      })\n      .subscribe();\n\n    return () => {"
+  },
+  {
+    "file": "src\\components\\client\\store\\EcommerceHeader.tsx",
+    "line": 237,
+    "table": "loja_carrinhos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'loja_carrinhos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        debounceMs: 100,\r\n        onChange: () => {\r\n          if (clientId) {\r\n            supabase\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\EcommerceHeader.tsx",
+    "line": 253,
+    "table": "clientes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "          }\r\n        },\r\n      },\r\n      {\r\n        table: 'clientes',\r\n        filter: clientId ? `id=eq.${clientId}` : undefined,\r\n        debounceMs: 100,\r\n        onChange: () => {\r\n          if (clientId) {\r\n            supabase\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\EcommerceHome.tsx",
+    "line": 419,
+    "table": "produtos",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'produtos',\r\n        debounceMs: 300,\r\n        onChange: fetchHomeData,\r\n      },\r\n      {\r\n        table: 'loja_carrinhos',\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\EcommerceHome.tsx",
+    "line": 424,
+    "table": "loja_carrinhos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        debounceMs: 300,\r\n        onChange: fetchHomeData,\r\n      },\r\n      {\r\n        table: 'loja_carrinhos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        onChange: () => {\r\n          if (clientId) {\r\n            supabase.from('loja_carrinhos').select('quantidade').eq('cliente_id', clientId)\r\n              .then(({ data }) => {\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\PromotionsPage.tsx",
+    "line": 207,
+    "table": "promocoes_quantidade",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    fetchPromotions();\n\n    const channel = supabase\n      .channel('realtime-promotions-page')\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'promocoes_quantidade' }, () => {\n        fetchPromotions();\n      })\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cliente_promocoes' }, () => {\n        fetchPromotions();\n      })"
+  },
+  {
+    "file": "src\\components\\client\\store\\PromotionsPage.tsx",
+    "line": 207,
+    "table": "promocoes_quantidade",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    const channel = supabase\n      .channel('realtime-promotions-page')\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'promocoes_quantidade' }, () => {\n        fetchPromotions();\n      })\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cliente_promocoes' }, () => {\n        fetchPromotions();\n      })"
+  },
+  {
+    "file": "src\\components\\client\\store\\PromotionsPage.tsx",
+    "line": 210,
+    "table": "cliente_promocoes",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "      .channel('realtime-promotions-page')\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'promocoes_quantidade' }, () => {\n        fetchPromotions();\n      })\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cliente_promocoes' }, () => {\n        fetchPromotions();\n      })\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'promocoes_quantidade_ativadas' }, () => {\n        fetchPromotions();\n      })"
+  },
+  {
+    "file": "src\\components\\client\\store\\PromotionsPage.tsx",
+    "line": 210,
+    "table": "cliente_promocoes",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        fetchPromotions();\n      })\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cliente_promocoes' }, () => {\n        fetchPromotions();\n      })\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'promocoes_quantidade_ativadas' }, () => {\n        fetchPromotions();\n      })"
+  },
+  {
+    "file": "src\\components\\client\\store\\PromotionsPage.tsx",
+    "line": 213,
+    "table": "promocoes_quantidade_ativadas",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "      })\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'cliente_promocoes' }, () => {\n        fetchPromotions();\n      })\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'promocoes_quantidade_ativadas' }, () => {\n        fetchPromotions();\n      })\n      .subscribe();\n\n    return () => {"
+  },
+  {
+    "file": "src\\components\\client\\store\\PromotionsPage.tsx",
+    "line": 213,
+    "table": "promocoes_quantidade_ativadas",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        fetchPromotions();\n      })\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'promocoes_quantidade_ativadas' }, () => {\n        fetchPromotions();\n      })\n      .subscribe();\n\n    return () => {"
+  },
+  {
+    "file": "src\\components\\client\\store\\PurchasesPage.tsx",
+    "line": 311,
+    "table": "orcamentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useRealtimeSubscription(\r\n    [\r\n      {\r\n        table: 'orcamentos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        debounceMs: 300,\r\n        onChange: fetchPurchases,\r\n      },\r\n      {\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\PurchasesPage.tsx",
+    "line": 317,
+    "table": "ordens_compra",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        debounceMs: 300,\r\n        onChange: fetchPurchases,\r\n      },\r\n      {\r\n        table: 'ordens_compra',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        debounceMs: 300,\r\n        onChange: fetchPurchases,\r\n      },\r\n      {\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\PurchasesPage.tsx",
+    "line": 323,
+    "table": "ordens_assinatura",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        debounceMs: 300,\r\n        onChange: fetchPurchases,\r\n      },\r\n      {\r\n        table: 'ordens_assinatura',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        debounceMs: 300,\r\n        onChange: fetchPurchases,\r\n      },\r\n      {\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\PurchasesPage.tsx",
+    "line": 329,
+    "table": "loja_pedido_itens",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "        debounceMs: 300,\r\n        onChange: fetchPurchases,\r\n      },\r\n      {\r\n        table: 'loja_pedido_itens',\r\n        debounceMs: 300,\r\n        onChange: fetchPurchases,\r\n      },\r\n      {\r\n        table: 'loja_pedidos',\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\PurchasesPage.tsx",
+    "line": 334,
+    "table": "loja_pedidos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        debounceMs: 300,\r\n        onChange: fetchPurchases,\r\n      },\r\n      {\r\n        table: 'loja_pedidos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,\r\n        debounceMs: 300,\r\n        onChange: fetchPurchases,\r\n      },\r\n    ],\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\VaquinhaPublicPage.tsx",
+    "line": 85,
+    "table": "loja_vaquinha_contribuicoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      .channel(`vaquinha-${vaquinha.id}`)\r\n      .on(\r\n        'postgres_changes',\r\n        { event: '*', schema: 'public', table: 'loja_vaquinha_contribuicoes', filter: `vaquinha_id=eq.${vaquinha.id}` },\r\n        () => {\r\n          fetchVaquinhaData(true);\r\n        }\r\n      )\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\VaquinhaPublicPage.tsx",
+    "line": 86,
+    "table": "loja_vaquinha_contribuicoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const channel = supabase\r\n      .channel(`vaquinha-${vaquinha.id}`)\r\n      .on(\r\n        'postgres_changes',\r\n        { event: '*', schema: 'public', table: 'loja_vaquinha_contribuicoes', filter: `vaquinha_id=eq.${vaquinha.id}` },\r\n        () => {\r\n          fetchVaquinhaData(true);\r\n        }\r\n      )\r\n      .on(\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\VaquinhaPublicPage.tsx",
+    "line": 92,
+    "table": "loja_vaquinhas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      )\r\n      .on(\r\n        'postgres_changes',\r\n        { event: '*', schema: 'public', table: 'loja_vaquinhas', filter: `id=eq.${vaquinha.id}` },\r\n        () => {\r\n          fetchVaquinhaData(true);\r\n        }\r\n      )\r"
+  },
+  {
+    "file": "src\\components\\client\\store\\VaquinhaPublicPage.tsx",
+    "line": 93,
+    "table": "loja_vaquinhas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "        }\r\n      )\r\n      .on(\r\n        'postgres_changes',\r\n        { event: '*', schema: 'public', table: 'loja_vaquinhas', filter: `id=eq.${vaquinha.id}` },\r\n        () => {\r\n          fetchVaquinhaData(true);\r\n        }\r\n      )\r\n      .subscribe();\r"
+  },
+  {
+    "file": "src\\components\\client\\StoreHub.tsx",
+    "line": 153,
+    "table": "produtos",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "  \r\n  const [isCuponsModalOpen, setIsCuponsModalOpen] = useState(false);\r\n  const [, setRtRefreshKey] = useState(0);\n  useRealtimeSubscription([\n    { table: 'produtos', onChange: () => setRtRefreshKey(k => k + 1) },\n    { table: 'loja_carrinhos', onChange: () => setRtRefreshKey(k => k + 1) },\n  ]);\n  const [isTrocaModalOpen, setIsTrocaModalOpen] = useState(false);\r\n  const [isPurchasesModalOpen, setIsPurchasesModalOpen] = useState(false);\r\n  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);\r"
+  },
+  {
+    "file": "src\\components\\client\\StoreHub.tsx",
+    "line": 154,
+    "table": "loja_carrinhos",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "  const [isCuponsModalOpen, setIsCuponsModalOpen] = useState(false);\r\n  const [, setRtRefreshKey] = useState(0);\n  useRealtimeSubscription([\n    { table: 'produtos', onChange: () => setRtRefreshKey(k => k + 1) },\n    { table: 'loja_carrinhos', onChange: () => setRtRefreshKey(k => k + 1) },\n  ]);\n  const [isTrocaModalOpen, setIsTrocaModalOpen] = useState(false);\r\n  const [isPurchasesModalOpen, setIsPurchasesModalOpen] = useState(false);\r\n  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);\r\n  const [selectedOrderDetail, setSelectedOrderDetail] = useState<any>(null);\r"
+  },
+  {
+    "file": "src\\components\\client\\StoreHub.tsx",
+    "line": 637,
+    "table": "orcamentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const channel = supabase\r\n      .channel(`purchases-${clientId}`)\r\n      .on('postgres_changes', { \r\n        event: '*', \r\n        schema: 'public', \r\n        table: 'orcamentos',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r"
+  },
+  {
+    "file": "src\\components\\client\\StoreHub.tsx",
+    "line": 640,
+    "table": "orcamentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      .channel(`purchases-${clientId}`)\r\n      .on('postgres_changes', { \r\n        event: '*', \r\n        schema: 'public', \r\n        table: 'orcamentos',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r\n        fetchAllPurchases();\r\n        fetchRecentOrders();\r\n      })\r"
+  },
+  {
+    "file": "src\\components\\client\\StoreHub.tsx",
+    "line": 651,
+    "table": "loja_reembolsos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const refundsChannel = supabase\r\n      .channel(`refunds-${clientId}`)\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'loja_reembolsos',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r"
+  },
+  {
+    "file": "src\\components\\client\\StoreHub.tsx",
+    "line": 654,
+    "table": "loja_reembolsos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      .channel(`refunds-${clientId}`)\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'loja_reembolsos',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r\n        fetchMyRefunds();\r\n      })\r\n      .subscribe();\r"
+  },
+  {
+    "file": "src\\components\\client\\StoreHub.tsx",
+    "line": 664,
+    "table": "cliente_promocoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const promosChannel = supabase\r\n      .channel(`promos-${clientId}`)\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'cliente_promocoes',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r"
+  },
+  {
+    "file": "src\\components\\client\\StoreHub.tsx",
+    "line": 667,
+    "table": "cliente_promocoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      .channel(`promos-${clientId}`)\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'cliente_promocoes',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r\n        fetchVipPromos();\r\n      })\r\n      .subscribe();\r"
+  },
+  {
+    "file": "src\\components\\client\\StoreHub.tsx",
+    "line": 677,
+    "table": "loja_solicitacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const exchangesChannel = supabase\r\n      .channel(`exchanges-${clientId}`)\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'loja_solicitacoes',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r"
+  },
+  {
+    "file": "src\\components\\client\\StoreHub.tsx",
+    "line": 680,
+    "table": "loja_solicitacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      .channel(`exchanges-${clientId}`)\r\n      .on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'loja_solicitacoes',\r\n        filter: `cliente_id=eq.${clientId}`\r\n      }, () => {\r\n        fetchMyExchanges();\r\n      })\r\n      .subscribe();\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorAgenda.tsx",
+    "line": 68,
+    "table": "prestador_agendamentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useEffect(() => {\r\n    void load();\r\n    const channel = supabase.channel(`provider-agenda-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, () => void load())\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void load())\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorAgenda.tsx",
+    "line": 68,
+    "table": "prestador_agendamentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    void load();\r\n    const channel = supabase.channel(`provider-agenda-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, () => void load())\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void load())\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorAgenda.tsx",
+    "line": 69,
+    "table": "prestador_demandas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  useEffect(() => {\r\n    void load();\r\n    const channel = supabase.channel(`provider-agenda-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, () => void load())\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void load())\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorAgenda.tsx",
+    "line": 69,
+    "table": "prestador_agendamentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const channel = supabase.channel(`provider-agenda-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, () => void load())\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void load())\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorDemandas.tsx",
+    "line": 147,
+    "table": "prestador_demandas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useEffect(() => {\r\n    void loadDemands();\r\n    const channel = supabase.channel(`provider-demands-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void loadDemands())\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_suporte_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void refreshCounts())\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId, refreshCounts]);\r\n\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorDemandas.tsx",
+    "line": 147,
+    "table": "prestador_demandas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    void loadDemands();\r\n    const channel = supabase.channel(`provider-demands-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void loadDemands())\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_suporte_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void refreshCounts())\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId, refreshCounts]);\r\n\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorDemandas.tsx",
+    "line": 148,
+    "table": "prestador_suporte_demandas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  useEffect(() => {\r\n    void loadDemands();\r\n    const channel = supabase.channel(`provider-demands-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void loadDemands())\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_suporte_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void refreshCounts())\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId, refreshCounts]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorDemandas.tsx",
+    "line": 148,
+    "table": "prestador_demandas",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const channel = supabase.channel(`provider-demands-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void loadDemands())\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_suporte_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void refreshCounts())\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId, refreshCounts]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorDemandas.tsx",
+    "line": 160,
+    "table": "prestador_demandas_historico",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      return;\r\n    }\r\n    void loadHistory(selected.id);\r\n    const channel = supabase.channel(`provider-demand-history-${selected.id}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas_historico', filter: `demanda_id=eq.${selected.id}` }, () => void loadHistory(selected.id))\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [selected?.id]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorDemandas.tsx",
+    "line": 160,
+    "table": "prestador_demandas_historico",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    void loadHistory(selected.id);\r\n    const channel = supabase.channel(`provider-demand-history-${selected.id}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas_historico', filter: `demanda_id=eq.${selected.id}` }, () => void loadHistory(selected.id))\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [selected?.id]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorDocumentos.tsx",
+    "line": 58,
+    "table": "prestador_documentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  useEffect(() => {\r\n    let isMounted = true;\r\n    void load(() => isMounted);\r\n    const channel = supabase.channel(`provider-documents-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorDocumentos.tsx",
+    "line": 58,
+    "table": "prestador_documentos",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    void load(() => isMounted);\r\n    const channel = supabase.channel(`provider-documents-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorFinanceiro.tsx",
+    "line": 90,
+    "table": "prestador_transacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "\r\n  useEffect(() => {\r\n    void loadData();\r\n    const channel = supabase.channel(`provider-finance-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void loadData())\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, () => void loadData())\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorFinanceiro.tsx",
+    "line": 90,
+    "table": "prestador_transacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    void loadData();\r\n    const channel = supabase.channel(`provider-finance-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void loadData())\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, () => void loadData())\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorFinanceiro.tsx",
+    "line": 91,
+    "table": "prestador_saques",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  useEffect(() => {\r\n    void loadData();\r\n    const channel = supabase.channel(`provider-finance-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void loadData())\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, () => void loadData())\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorFinanceiro.tsx",
+    "line": 91,
+    "table": "prestador_transacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const channel = supabase.channel(`provider-finance-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void loadData())\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, () => void loadData())\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorPremios.tsx",
+    "line": 49,
+    "table": "prestador_premios",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  useEffect(() => {\r\n    let isMounted = true;\r\n    void load(() => isMounted);\r\n    const channel = supabase.channel(`provider-prizes-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_premios', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorPremios.tsx",
+    "line": 49,
+    "table": "prestador_premios",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    void load(() => isMounted);\r\n    const channel = supabase.channel(`provider-prizes-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_premios', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorPromocoes.tsx",
+    "line": 54,
+    "table": "prestador_promocoes_ativacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  useEffect(() => {\r\n    let isMounted = true;\r\n    void load(() => isMounted);\r\n    const channel = supabase.channel(`provider-promotions-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes_ativacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, () => void load(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorPromocoes.tsx",
+    "line": 54,
+    "table": "prestador_promocoes_ativacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    void load(() => isMounted);\r\n    const channel = supabase.channel(`provider-promotions-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes_ativacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, () => void load(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorPromocoes.tsx",
+    "line": 55,
+    "table": "prestador_promocoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    let isMounted = true;\r\n    void load(() => isMounted);\r\n    const channel = supabase.channel(`provider-promotions-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes_ativacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, () => void load(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorPromocoes.tsx",
+    "line": 55,
+    "table": "prestador_promocoes_ativacoes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const channel = supabase.channel(`provider-promotions-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes_ativacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, () => void load(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+    "line": 98,
+    "table": "tickets",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  useEffect(() => {\r\n    let isMounted = true;\r\n    void loadTickets(() => isMounted);\r\n    const channel = supabase.channel(`provider-tickets-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, () => void loadTickets(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [activeTab, prestadorId, initialItemId]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+    "line": 98,
+    "table": "tickets",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    void loadTickets(() => isMounted);\r\n    const channel = supabase.channel(`provider-tickets-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, () => void loadTickets(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [activeTab, prestadorId, initialItemId]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+    "line": 110,
+    "table": "ticket_mensagens",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      return;\r\n    }\r\n    void loadMessages(selectedTicket.id);\r\n    const channel = supabase.channel(`provider-ticket-messages-${selectedTicket.id}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_mensagens', filter: `ticket_id=eq.${selectedTicket.id}` }, () => void loadMessages(selectedTicket.id))\r\n      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tickets', filter: `id=eq.${selectedTicket.id}` }, (payload) => {\r\n        setSelectedTicket((current) => current ? { ...current, ...(payload.new as ProviderTicket) } : current);\r\n      })\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+    "line": 110,
+    "table": "ticket_mensagens",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    void loadMessages(selectedTicket.id);\r\n    const channel = supabase.channel(`provider-ticket-messages-${selectedTicket.id}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_mensagens', filter: `ticket_id=eq.${selectedTicket.id}` }, () => void loadMessages(selectedTicket.id))\r\n      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tickets', filter: `id=eq.${selectedTicket.id}` }, (payload) => {\r\n        setSelectedTicket((current) => current ? { ...current, ...(payload.new as ProviderTicket) } : current);\r\n      })\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+    "line": 111,
+    "table": "tickets",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    }\r\n    void loadMessages(selectedTicket.id);\r\n    const channel = supabase.channel(`provider-ticket-messages-${selectedTicket.id}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_mensagens', filter: `ticket_id=eq.${selectedTicket.id}` }, () => void loadMessages(selectedTicket.id))\r\n      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tickets', filter: `id=eq.${selectedTicket.id}` }, (payload) => {\r\n        setSelectedTicket((current) => current ? { ...current, ...(payload.new as ProviderTicket) } : current);\r\n      })\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [selectedTicket?.id]);\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+    "line": 111,
+    "table": "ticket_mensagens",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const channel = supabase.channel(`provider-ticket-messages-${selectedTicket.id}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_mensagens', filter: `ticket_id=eq.${selectedTicket.id}` }, () => void loadMessages(selectedTicket.id))\r\n      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tickets', filter: `id=eq.${selectedTicket.id}` }, (payload) => {\r\n        setSelectedTicket((current) => current ? { ...current, ...(payload.new as ProviderTicket) } : current);\r\n      })\r\n      .subscribe();\r\n    return () => { supabase.removeChannel(channel).catch(console.error); };\r\n  }, [selectedTicket?.id]);\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorVouchers.tsx",
+    "line": 50,
+    "table": "prestador_vouchers",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "  useEffect(() => {\r\n    let isMounted = true;\r\n    void load(() => isMounted);\r\n    const channel = supabase.channel(`provider-vouchers-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\prestador\\PrestadorVouchers.tsx",
+    "line": 50,
+    "table": "prestador_vouchers",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    void load(() => isMounted);\r\n    const channel = supabase.channel(`provider-vouchers-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))\r\n      .subscribe();\r\n    return () => { isMounted = false; supabase.removeChannel(channel).catch(console.error); };\r\n  }, [prestadorId]);\r\n\r\n  useEffect(() => {\r"
+  },
+  {
+    "file": "src\\components\\ui\\WhatsAppButton.tsx",
+    "line": 50,
+    "table": "system_settings",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    const channel = supabase\r\n      .channel('whatsapp-float-sync')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, () => {\r\n        fetchSettings();\r\n      })\r\n      .subscribe();\r\n\r\n    const handleModalState = (e: Event) => {\r"
+  },
+  {
+    "file": "src\\hooks\\useAdminNotifications.tsx",
+    "line": 351,
+    "table": "admin_notificacoes",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    let channel = supabase\r\n      .channel('admin-notifications-secure')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_notificacoes' }, () => scheduleRefresh(true))\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'notificacoes' }, () => scheduleRefresh(true));\r\n\r\n    for (const tbl of operationalTables) {\r\n      channel = channel.on('postgres_changes', { event: '*', schema: 'public', table: tbl }, () => scheduleRefresh(false));\r\n    }\r"
+  },
+  {
+    "file": "src\\hooks\\useAdminNotifications.tsx",
+    "line": 352,
+    "table": "notificacoes",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "\r\n    let channel = supabase\r\n      .channel('admin-notifications-secure')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_notificacoes' }, () => scheduleRefresh(true))\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'notificacoes' }, () => scheduleRefresh(true));\r\n\r\n    for (const tbl of operationalTables) {\r\n      channel = channel.on('postgres_changes', { event: '*', schema: 'public', table: tbl }, () => scheduleRefresh(false));\r\n    }\r\n\r"
+  },
+  {
+    "file": "src\\hooks\\useAdminNotifications.tsx",
+    "line": 352,
+    "table": "admin_notificacoes",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "      .channel('admin-notifications-secure')\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_notificacoes' }, () => scheduleRefresh(true))\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'notificacoes' }, () => scheduleRefresh(true));\r\n\r\n    for (const tbl of operationalTables) {\r\n      channel = channel.on('postgres_changes', { event: '*', schema: 'public', table: tbl }, () => scheduleRefresh(false));\r\n    }\r\n\r"
+  },
+  {
+    "file": "src\\hooks\\useAutoLogout.ts",
+    "line": 49,
+    "table": "sistema_sessoes",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "        .channel(`sessao-live-${sessaoId}`)\r\n        .on(\r\n          'postgres_changes',\r\n          {\r\n            event: 'UPDATE',\r\n            schema: 'public',\r\n            table: 'sistema_sessoes',\r\n            filter: `id=eq.${sessaoId}`,\r"
+  },
+  {
+    "file": "src\\hooks\\useClientNotifications.tsx",
+    "line": 283,
+    "table": "promocoes",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    });\r\n\r\n    channel.on('postgres_changes', {\r\n      event: '*',\r\n      schema: 'public',\r\n      table: 'promocoes',\r\n    }, () => debouncedFetch());\r\n\r"
+  },
+  {
+    "file": "src\\hooks\\useClientNotifications.tsx",
+    "line": 319,
+    "table": "notificacoes",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    });\r\n\r\n    // Canal dedicado APENAS para notificações (evita limite de bindings do Supabase)\r\n    const notifChannel = supabase.channel(`notif-direct-${clientId}`)\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes' }, (payload) => {\r\n        const n = payload.new as any;\r\n        const isForMe = n.cliente_id && String(n.cliente_id) === String(clientId);\r\n        const isBroadcast = ['broadcast_clientes', 'broadcast_todos'].includes(n.destinatario_tipo);\r\n        \r\n        if (isForMe || isBroadcast) {\r"
+  },
+  {
+    "file": "src\\hooks\\useClientNotifications.tsx",
+    "line": 319,
+    "table": "notificacoes",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    // Canal dedicado APENAS para notificações (evita limite de bindings do Supabase)\r\n    const notifChannel = supabase.channel(`notif-direct-${clientId}`)\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes' }, (payload) => {\r\n        const n = payload.new as any;\r\n        const isForMe = n.cliente_id && String(n.cliente_id) === String(clientId);\r\n        const isBroadcast = ['broadcast_clientes', 'broadcast_todos'].includes(n.destinatario_tipo);\r\n        \r\n        if (isForMe || isBroadcast) {\r"
+  },
+  {
+    "file": "src\\hooks\\useClientNotifications.tsx",
+    "line": 336,
+    "table": "clientes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const securityChannel = supabase.channel(`client-security-${clientId}`);\r\n    \r\n    securityChannel.on('postgres_changes', { \r\n      event: '*', \r\n      schema: 'public', \r\n      table: 'clientes',\r\n      filter: `id=eq.${clientId}`\r\n    }, (payload) => {\r"
+  },
+  {
+    "file": "src\\hooks\\useClientNotifications.tsx",
+    "line": 339,
+    "table": "clientes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    \r\n    securityChannel.on('postgres_changes', { \r\n      event: '*', \r\n      schema: 'public', \r\n      table: 'clientes',\r\n      filter: `id=eq.${clientId}`\r\n    }, (payload) => {\r\n      const next = payload.new as any;\r\n      const revoked = payload.eventType === 'DELETE'\r\n        || (\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 219,
+    "table": "prestador_demandas",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "      debounceTimer = setTimeout(() => void refreshCounts(), 350);\r\n    };\r\n\r\n    const channel = supabase.channel(`provider-scoped-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 219,
+    "table": "prestador_demandas",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "\r\n    const channel = supabase.channel(`provider-scoped-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 220,
+    "table": "prestador_transacoes",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "    };\r\n\r\n    const channel = supabase.channel(`provider-scoped-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 220,
+    "table": "prestador_demandas",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "    const channel = supabase.channel(`provider-scoped-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 221,
+    "table": "prestador_demandas",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `prestador_id=eq.${prestadorId}` }, (payload) => {\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 222,
+    "table": "prestador_vouchers",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "    const channel = supabase.channel(`provider-scoped-${prestadorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `prestador_id=eq.${prestadorId}` }, (payload) => {\r\n        const row = payload.new as any;\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 222,
+    "table": "prestador_transacoes",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `prestador_id=eq.${prestadorId}` }, (payload) => {\r\n        const row = payload.new as any;\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 223,
+    "table": "prestador_saques",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `prestador_id=eq.${prestadorId}` }, (payload) => {\r\n        const row = payload.new as any;\r\n        playPremiumBeep();\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 224,
+    "table": "prestador_documentos",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `prestador_id=eq.${prestadorId}` }, (payload) => {\r\n        const row = payload.new as any;\r\n        playPremiumBeep();\r\n        showAnimatedToast(row.titulo || 'Nova notificação', row.mensagem || '', row.modulo || 'bell');\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 224,
+    "table": "prestador_vouchers",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `prestador_id=eq.${prestadorId}` }, (payload) => {\r\n        const row = payload.new as any;\r\n        playPremiumBeep();\r\n        showAnimatedToast(row.titulo || 'Nova notificação', row.mensagem || '', row.modulo || 'bell');\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 225,
+    "table": "tickets",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `prestador_id=eq.${prestadorId}` }, (payload) => {\r\n        const row = payload.new as any;\r\n        playPremiumBeep();\r\n        showAnimatedToast(row.titulo || 'Nova notificação', row.mensagem || '', row.modulo || 'bell');\r\n        scheduleRefresh();\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 225,
+    "table": "prestador_agendamentos",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `prestador_id=eq.${prestadorId}` }, (payload) => {\r\n        const row = payload.new as any;\r\n        playPremiumBeep();\r\n        showAnimatedToast(row.titulo || 'Nova notificação', row.mensagem || '', row.modulo || 'bell');\r\n        scheduleRefresh();\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 226,
+    "table": "notificacoes",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `prestador_id=eq.${prestadorId}` }, (payload) => {\r\n        const row = payload.new as any;\r\n        playPremiumBeep();\r\n        showAnimatedToast(row.titulo || 'Nova notificação', row.mensagem || '', row.modulo || 'bell');\r\n        scheduleRefresh();\r\n      })\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 226,
+    "table": "prestador_documentos",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `prestador_id=eq.${prestadorId}` }, (payload) => {\r\n        const row = payload.new as any;\r\n        playPremiumBeep();\r\n        showAnimatedToast(row.titulo || 'Nova notificação', row.mensagem || '', row.modulo || 'bell');\r\n        scheduleRefresh();\r\n      })\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 232,
+    "table": "notificacoes",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "        playPremiumBeep();\r\n        showAnimatedToast(row.titulo || 'Nova notificação', row.mensagem || '', row.modulo || 'bell');\r\n        scheduleRefresh();\r\n      })\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: 'destinatario_tipo=in.(broadcast_prestadores,broadcast_todos)' }, (payload) => {\r\n        const row = payload.new as any;\r\n        playPremiumBeep();\r\n        showAnimatedToast(row.titulo || 'Nova notificação', row.mensagem || '', row.modulo || 'bell');\r\n        scheduleRefresh();\r\n      })\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 232,
+    "table": "notificacoes",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "        scheduleRefresh();\r\n      })\r\n      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: 'destinatario_tipo=in.(broadcast_prestadores,broadcast_todos)' }, (payload) => {\r\n        const row = payload.new as any;\r\n        playPremiumBeep();\r\n        showAnimatedToast(row.titulo || 'Nova notificação', row.mensagem || '', row.modulo || 'bell');\r\n        scheduleRefresh();\r\n      })\r"
+  },
+  {
+    "file": "src\\hooks\\useProviderNotifications.tsx",
+    "line": 238,
+    "table": "prestadores",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "        scheduleRefresh();\r\n      })\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestadores', filter: `id=eq.${prestadorId}` }, (payload) => {\r\n        if (payload.eventType === 'DELETE' || isProviderRevoked((payload.new as any)?.status)) {\r\n          window.sessionStorage.clear();\r\n          window.localStorage.removeItem('sessaoId');\r\n          window.location.assign('/?msg=revoked');\r\n          return;\r"
+  },
+  {
+    "file": "src\\hooks\\useVipLevels.ts",
+    "line": 50,
+    "table": "client_levels",
+    "hasFilter": false,
+    "isClientOrProvider": false,
+    "snippet": "    const channel = supabase\r\n      .channel(`vip-changes-${Math.random().toString(36).slice(2)}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'client_levels' }, () => {\r\n        fetchLevels();\r\n      })\r\n      .subscribe();\r\n\r\n    return () => {\r"
+  },
+  {
+    "file": "src\\pages\\Afiliado\\AfiliadoDashboard.tsx",
+    "line": 397,
+    "table": "saques",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    { table: 'gsa_afiliado_links', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'gsa_afiliado_comissoes', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'gsa_afiliado_saques', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'gsa_afiliado_programas', onChange: () => void load(true), debounceMs: 500 },\r\n    { table: 'saques', onChange: () => void load(true), debounceMs: 500 },\r\n  ]);\r\n\r\n  const navigateToTab = (tab: TabType) => navigate(resolvePathFromTab(tab));\r\n\r\n  const runAction = async (action: () => Promise<AffiliateSnapshot>, success: string) => {\r"
+  },
+  {
+    "file": "src\\pages\\ClientPortal.tsx",
+    "line": 509,
+    "table": "clientes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const clientChannel = supabase\n      .channel(`cliente-updates-${clientId}`)\n      .on('postgres_changes', {\n        event: 'UPDATE',\n        schema: 'public',\n        table: 'clientes',\n        filter: `id=eq.${clientId}`\n      }, (payload) => {"
+  },
+  {
+    "file": "src\\pages\\ClientPortal.tsx",
+    "line": 512,
+    "table": "clientes",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "      .channel(`cliente-updates-${clientId}`)\n      .on('postgres_changes', {\n        event: 'UPDATE',\n        schema: 'public',\n        table: 'clientes',\n        filter: `id=eq.${clientId}`\n      }, (payload) => {\n        const newData = payload.new as any;\n        \n        // Merge flat columns from payload (no joins in realtime payload)"
+  },
+  {
+    "file": "src\\pages\\ClientPortal.tsx",
+    "line": 550,
+    "table": "level_history",
+    "hasFilter": true,
+    "isClientOrProvider": true,
+    "snippet": "    const levelHistoryChannel = supabase\n      .channel(`level-history-${clientId}`)\n      .on('postgres_changes', {\n        event: 'INSERT',\n        schema: 'public',\n        table: 'level_history',\n        filter: `cliente_id=eq.${clientId}`\n      }, () => {"
+  },
+  {
+    "file": "src\\pages\\ClientPortal.tsx",
+    "line": 657,
+    "table": "system_settings",
+    "hasFilter": false,
+    "isClientOrProvider": true,
+    "snippet": "    const vipConfigChannel = supabase\n      .channel(`vip-module-config-${clientId}`)\n      .on('postgres_changes', {\n        event: '*',\n        schema: 'public',\n        table: 'system_settings',\n      }, () => {\n        fetchVipModuleConfig();"
+  },
+  {
+    "file": "src\\pages\\SecureAdminPanel.tsx",
+    "line": 116,
+    "table": "colaboradores",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "    const channel = supabase\r\n      .channel(`collaborator-access-${props.colaboradorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'colaboradores', filter: `id=eq.${props.colaboradorId}` }, refresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'colaborador_modulos', filter: `colaborador_id=eq.${props.colaboradorId}` }, refresh)\r\n      .subscribe();\r\n\r\n    const interval = window.setInterval(refresh, 30_000);\r\n    const onVisibility = () => { if (document.visibilityState === 'visible') refresh(); };\r"
+  },
+  {
+    "file": "src\\pages\\SecureAdminPanel.tsx",
+    "line": 117,
+    "table": "colaboradores",
+    "hasFilter": true,
+    "isClientOrProvider": false,
+    "snippet": "      .channel(`collaborator-access-${props.colaboradorId}`)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'colaboradores', filter: `id=eq.${props.colaboradorId}` }, refresh)\r\n      .on('postgres_changes', { event: '*', schema: 'public', table: 'colaborador_modulos', filter: `colaborador_id=eq.${props.colaboradorId}` }, refresh)\r\n      .subscribe();\r\n\r\n    const interval = window.setInterval(refresh, 30_000);\r\n    const onVisibility = () => { if (document.visibilityState === 'visible') refresh(); };\r\n    document.addEventListener('visibilitychange', onVisibility);\r"
+  }
+]

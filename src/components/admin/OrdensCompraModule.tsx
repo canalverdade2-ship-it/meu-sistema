@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import { Search, MoreHorizontal, ShoppingBag, CheckCircle, XCircle, ChevronRight, Truck, Package, Clock, CreditCard, Store, User, Building2, Save } from 'lucide-react';
+import { getStoreOrderPayment } from '../../lib/storeOrderPayment';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import './PurchaseDetails.css';
+import { Search, MoreHorizontal, ShoppingBag, CheckCircle, XCircle, ChevronRight, Truck, Package, Clock, CreditCard, Store, User, Building2, Save, Trash2, ShieldAlert } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Modal } from '../ui/Modal';
 import { formatCurrency, formatDate, generateCode, handleError, maskPhone, generateUUID } from '../../lib/utils';
@@ -11,9 +13,10 @@ import { notificationService } from '../../lib/notificationService';
 import { logService } from '../../lib/logService';
 import { AdminWhatsAppButton } from './ui/AdminWhatsAppButton';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
-import { getAdminProductSupplierConfig } from '../../lib/adminRpc';
+import { callAdminRpc, getAdminProductSupplierConfig, deleteAdminEntityCascade } from '../../lib/adminRpc';
 import { ProdutoFornecedorConfig } from '../../types';
 import { cancelAdminStoreOrder, transitionAdminStoreOrder } from '../../lib/adminStoreOperations';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 export function OrdensCompraModule({ 
   activeSubTab, 
@@ -46,6 +49,9 @@ export function OrdensCompraModule({
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [isCanceling, setIsCanceling] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
   const transitionRequestId = useRef(generateUUID());
   const cancellationRequestId = useRef(generateUUID());
 
@@ -54,13 +60,14 @@ export function OrdensCompraModule({
   useEffect(() => {
     if (initialItemId && ordens.length > 0 && hasAutoOpened.current !== initialItemId) {
       const timer = setTimeout(() => {
-        const element = document.getElementById(`oc-${initialItemId}`);
+        const targetOrder = ordens.find(o => o.id === initialItemId || o.orcamento_id === initialItemId);
+        const element = targetOrder && document.getElementById(`oc-${targetOrder.id}`);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          setHighlightedId(initialItemId);
+          setHighlightedId(targetOrder.id);
           
           // Abrir modal automaticamente
-          const ordem = ordens.find(o => o.id === initialItemId);
+          const ordem = targetOrder;
           if (ordem) {
             setSelectedOrdem(ordem);
             setIsDetailOpen(true);
@@ -74,29 +81,11 @@ export function OrdensCompraModule({
     }
   }, [initialItemId, ordens]);
 
-  useEffect(() => {
-    fetchOrdens();
 
-    const channel = supabase
-      .channel('admin-ordens-compra-updates')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'ordens_compra'
-      }, () => {
-        fetchOrdens();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeTab, search, filters]);
-
-  const fetchOrdens = async () => {
-    let selectStr = '*, produtos(nome, valor, codigo_produto, codigo_barras, identificador_preferencial, tipo_codigo_barras, imagem_url), clientes(nome, email, telefone), orcamentos(id, codigo_orcamento, desconto, taxa_entrega, cupom_desconto_id, cupom_entrega_id, endereco_entrega, total, quantidade), faturas(id, status, codigo_fatura, desconto_voucher_aplicado, desconto_pontos_aplicado, abatimento_carteira_aplicado, valor_total, pagamentos(metodo, valor, data_pagamento))';
+  const fetchOrdens = useCallback(async () => {
+    let selectStr = '*, produtos(nome, valor, codigo_produto, codigo_barras, identificador_preferencial, tipo_codigo_barras, imagem_url), clientes(nome, email, telefone), orcamentos(id, codigo_orcamento, forma_pagamento_loja, parcelas_credito, status, desconto, taxa_entrega, cupom_desconto_id, cupom_entrega_id, endereco_entrega, total, quantidade), faturas(id, status, is_amortizacao_credito, codigo_fatura, desconto_voucher_aplicado, desconto_pontos_aplicado, abatimento_carteira_aplicado, valor_total, pagamentos(metodo, valor, data_pagamento))';
     if (search) {
-      selectStr = '*, produtos!inner(nome, valor, codigo_produto, codigo_barras, identificador_preferencial, tipo_codigo_barras, imagem_url), clientes(nome, email, telefone), orcamentos(id, codigo_orcamento, desconto, taxa_entrega, cupom_desconto_id, cupom_entrega_id, endereco_entrega, total, quantidade), faturas(id, status, codigo_fatura, desconto_voucher_aplicado, desconto_pontos_aplicado, abatimento_carteira_aplicado, valor_total, pagamentos(metodo, valor, data_pagamento))';
+      selectStr = '*, produtos!inner(nome, valor, codigo_produto, codigo_barras, identificador_preferencial, tipo_codigo_barras, imagem_url), clientes(nome, email, telefone), orcamentos(id, codigo_orcamento, forma_pagamento_loja, parcelas_credito, status, desconto, taxa_entrega, cupom_desconto_id, cupom_entrega_id, endereco_entrega, total, quantidade), faturas(id, status, is_amortizacao_credito, codigo_fatura, desconto_voucher_aplicado, desconto_pontos_aplicado, abatimento_carteira_aplicado, valor_total, pagamentos(metodo, valor, data_pagamento))';
     }
 
     let query = supabase.from('ordens_compra').select(selectStr);
@@ -126,19 +115,23 @@ export function OrdensCompraModule({
       toast.error('Erro ao carregar ordens de compra.');
     }
     if (data) {
-      // Enriquecer ordens do mesmo orçamento com a mesma fatura
+      // Enriquecer ordens do mesmo orçamento com a mesma fatura em O(N)
+      const faturasByOrcamento = new Map<string, any>();
+      for (const ordem of data) {
+        if (ordem.orcamento_id && ordem.faturas && ordem.faturas.length > 0 && !faturasByOrcamento.has(ordem.orcamento_id)) {
+          faturasByOrcamento.set(ordem.orcamento_id, ordem.faturas);
+        }
+      }
+
       const enriched = data.map((ordem: any) => {
         if (ordem.faturas && ordem.faturas.length > 0) {
           return ordem;
         }
-        if (ordem.orcamento_id) {
-          const outraOrdemComFatura = data.find((o: any) => o.orcamento_id === ordem.orcamento_id && o.faturas && o.faturas.length > 0);
-          if (outraOrdemComFatura) {
-            return {
-              ...ordem,
-              faturas: outraOrdemComFatura.faturas
-            };
-          }
+        if (ordem.orcamento_id && faturasByOrcamento.has(ordem.orcamento_id)) {
+          return {
+            ...ordem,
+            faturas: faturasByOrcamento.get(ordem.orcamento_id)
+          };
         }
         return ordem;
       });
@@ -151,9 +144,23 @@ export function OrdensCompraModule({
         if (updated) setSelectedOrdem(updated);
       }
     }
-  };
+  }, [activeTab, search, filters, selectedOrdem?.id]);
 
-const handleUpdateStatus = async (id: string, status: 'pago' | 'em_expedicao' | 'em_transporte' | 'concluido' | 'cancelado', motivo?: string) => {
+  useEffect(() => {
+    void fetchOrdens();
+  }, [fetchOrdens]);
+
+  useRealtimeSubscription([
+    { table: 'ordens_compra', onChange: fetchOrdens, debounceMs: 300 },
+    { table: 'produtos', onChange: fetchOrdens, debounceMs: 300 },
+    { table: 'faturas', onChange: fetchOrdens, debounceMs: 300 },
+    { table: 'cupons_loja', onChange: fetchOrdens, debounceMs: 300 },
+    { table: 'orcamentos', onChange: fetchOrdens, debounceMs: 300 },
+    { table: 'clientes', onChange: fetchOrdens, debounceMs: 300 },
+    { table: 'pagamentos', onChange: fetchOrdens, debounceMs: 300 },
+  ]);
+
+const handleUpdateStatus = async (id: string, status: 'pago' | 'em_expedicao' | 'em_transporte' | 'concluido' | 'cancelado', motivo?: string, tracking?: { rastreavel: boolean; codigo: string }) => {
   if (status === 'cancelado') {
     setCancelReason(motivo || 'Cancelamento solicitado pelo sistema');
     setIsCancelModalOpen(true);
@@ -164,6 +171,7 @@ const handleUpdateStatus = async (id: string, status: 'pago' | 'em_expedicao' | 
       requestId: transitionRequestId.current,
       ordemId: id,
       status,
+      tracking,
     });
     transitionRequestId.current = generateUUID();
     toast.success(result?.already_processed ? 'Esta transição já havia sido processada.' : 'Status atualizado com segurança.');
@@ -171,7 +179,9 @@ const handleUpdateStatus = async (id: string, status: 'pago' | 'em_expedicao' | 
     await fetchOrdens();
   } catch (error) {
     toast.error(handleError(error, 'atualizar status do pedido'));
+    return false;
   }
+  return true;
 };
 
 const handleCancelAndRefundConfirm = async () => {
@@ -369,7 +379,7 @@ return (
       </div>
 
       {/* Modal Principal de Detalhes */}
-      <Modal isOpen={isDetailOpen} onClose={() => setIsDetailOpen(false)} title="Detalhes da Ordem de Compra" size="wide">
+      <Modal isOpen={isDetailOpen} onClose={() => setIsDetailOpen(false)} title="Detalhes da compra" size="wide">
         {selectedOrdem && (
           <CompraDetails 
             ordem={selectedOrdem} 
@@ -377,6 +387,10 @@ return (
             onUpdateStatus={handleUpdateStatus}
             onCancelClick={() => {
               setIsCancelModalOpen(true);
+            }}
+            onDeleteClick={() => {
+              setDeleteReason('');
+              setIsDeleteModalOpen(true);
             }}
           />
         )}
@@ -449,12 +463,14 @@ export function CompraDetails({
   ordem, 
   showActions = false, 
   onUpdateStatus,
-  onCancelClick
+  onCancelClick,
+  onDeleteClick
 }: { 
   ordem: any, 
   showActions?: boolean, 
-  onUpdateStatus?: (id: string, status: 'pago' | 'em_expedicao' | 'em_transporte' | 'concluido' | 'cancelado', motivo?: string) => void,
-  onCancelClick?: () => void
+  onUpdateStatus?: (id: string, status: 'pago' | 'em_expedicao' | 'em_transporte' | 'concluido' | 'cancelado', motivo?: string, tracking?: { rastreavel: boolean; codigo: string }) => void | boolean | Promise<void | boolean>,
+  onCancelClick?: () => void;
+  onDeleteClick?: () => void
 }) {
   const [couponCode, setCouponCode] = useState<string>('');
   const [relatedItems, setRelatedItems] = useState<any[]>([]);
@@ -467,12 +483,36 @@ export function CompraDetails({
   const [savingObs, setSavingObs] = useState(false);
   const [selectedProdutoDetalhe, setSelectedProdutoDetalhe] = useState<any>(null);
   const [isProdutoModalOpen, setIsProdutoModalOpen] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<'pago' | 'em_expedicao' | 'em_transporte' | 'concluido' | null>(null);
+  const [confirmingStatus, setConfirmingStatus] = useState(false);
+  const statusLock = useRef(false);
+  const [trackable, setTrackable] = useState(false);
+  const [trackingCode, setTrackingCode] = useState('');
+  const statusLabels = { pago: 'Pedido aprovado', em_expedicao: 'Em expedição', em_transporte: 'Em transporte', concluido: 'Pedido entregue' };
+
+  const confirmStatus = async () => {
+    if (!pendingStatus || !onUpdateStatus || statusLock.current) return;
+    if (pendingStatus === 'em_transporte' && trackable && !trackingCode.trim()) { toast.error('Informe o código de rastreamento.'); return; }
+    statusLock.current = true;
+    setConfirmingStatus(true);
+    try {
+      const result = await onUpdateStatus(ordem.id, pendingStatus, undefined, pendingStatus === 'em_transporte' ? { rastreavel: trackable, codigo: trackable ? trackingCode.trim() : '' } : undefined);
+      if (result !== false) setPendingStatus(null);
+    } catch (error) {
+      toast.error(handleError(error, 'atualizar status do pedido'));
+    } finally {
+      statusLock.current = false;
+      setConfirmingStatus(false);
+    }
+  };
 
   const handleSaveObservacoes = async () => {
     setSavingObs(true);
     try {
-      const { error } = await supabase.from('ordens_compra').update({ observacoes_internas: observacoesInternas }).eq('id', ordem.id);
-      if (error) throw error;
+      await callAdminRpc('gsa_admin_update_store_order_notes', {
+        p_ordem_compra_id: ordem.id,
+        p_observacoes: observacoesInternas,
+      });
       toast.success('Observações salvas com sucesso');
     } catch (err) {
       toast.error(handleError(err, 'Erro ao salvar observações'));
@@ -495,7 +535,7 @@ export function CompraDetails({
 
   const fatura = ordem.faturas?.[0];
   const orcamento = ordem.orcamentos;
-  const isPaid = fatura?.status === 'pago' || orcamento?.descricao_adicional?.includes('Crédito GSA') || faturasCredito.length > 0 || ordem.status === 'pago';
+  const { isGsaCredit, logisticsAllowed: isPaid } = getStoreOrderPayment(ordem);
 
   useEffect(() => {
     const fetchFaturasCredito = async () => {
@@ -509,11 +549,12 @@ export function CompraDetails({
           .eq('is_amortizacao_credito', true);
         
         const filtered = (data || []).filter((f: any) => {
-          if (!codOrc) return true;
+          if (f.orcamento_id === orcamento?.id) return true;
+          if (!codOrc) return false;
           const jsonStr = JSON.stringify(f.itens_faturados || []);
           return f.codigo_fatura?.includes(codOrc) || (f.observacoes && f.observacoes.includes(codOrc)) || jsonStr.includes(codOrc);
         });
-        setFaturasCredito(filtered.length > 0 ? filtered : (data || []));
+        setFaturasCredito(filtered);
       } catch (err) {
         console.error('Erro ao buscar faturas de crédito:', err);
       }
@@ -635,7 +676,38 @@ export function CompraDetails({
   }, [orcamento?.codigo_orcamento, ordem.cliente_id, fatura]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 text-left">
+    <div className="purchase-details grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-8 text-left">
+      <Modal
+        isOpen={pendingStatus !== null}
+        onClose={() => { if (!statusLock.current) setPendingStatus(null); }}
+        title={pendingStatus === 'concluido' ? 'Confirmar entrega do pedido?' : 'Confirmar mudança de status?'}
+        size="sm"
+      >
+        <div className="space-y-5">
+          <p className="text-sm leading-relaxed text-neutral-600">
+            {pendingStatus === 'concluido'
+              ? 'Confirme somente se o cliente já recebeu o pedido. Ao confirmar, ele será marcado como entregue e concluído.'
+              : <>O pedido será alterado para <strong className="text-neutral-900">{pendingStatus ? statusLabels[pendingStatus] : ''}</strong>. Deseja continuar?</>}
+          </p>
+          {pendingStatus === 'em_transporte' && (
+            <div className="space-y-4 rounded-xl border border-neutral-200 p-4">
+              <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
+                <input type="checkbox" checked={trackable} disabled={confirmingStatus} onChange={e => setTrackable(e.target.checked)} className="h-5 w-5 accent-indigo-600" />
+                Entrega rastreável
+              </label>
+              {trackable ? <label className="block text-sm font-medium">Código de rastreamento
+                <input value={trackingCode} onChange={e => setTrackingCode(e.target.value)} disabled={confirmingStatus} maxLength={100} autoComplete="off" placeholder="Informe o código da transportadora" className="mt-2 w-full rounded-xl border border-neutral-300 px-3 py-3 text-base" />
+              </label> : <p className="text-sm text-neutral-500">Entrega sem código de rastreamento.</p>}
+            </div>
+          )}
+          <div className="flex flex-col-reverse gap-3 sm:flex-row">
+            <button type="button" disabled={confirmingStatus} onClick={() => setPendingStatus(null)} className="min-h-12 flex-1 rounded-xl border border-neutral-200 px-4 py-3 font-semibold disabled:opacity-50">Voltar</button>
+            <button type="button" disabled={confirmingStatus} onClick={() => void confirmStatus()} className="min-h-12 flex-1 rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white disabled:opacity-50">
+              {confirmingStatus ? 'Salvando…' : pendingStatus === 'concluido' ? 'Confirmar entrega' : 'Confirmar alteração'}
+            </button>
+          </div>
+        </div>
+      </Modal>
       {/* Coluna 1: Dados Gerais e Itens */}
       <div className="space-y-6">
         <div className="rounded-3xl bg-neutral-50 p-6 md:p-8 ring-1 ring-neutral-200 relative">
@@ -659,9 +731,10 @@ export function CompraDetails({
           </p>
           
           <div className="mt-6 space-y-4 pt-6 border-t border-neutral-200">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-neutral-500 font-bold">Cliente:</span>
-              <span className="text-neutral-800 font-black">{ordem.clientes?.nome} ({ordem.clientes?.email})</span>
+            <div className="purchase-customer text-sm">
+              <span className="text-neutral-500 font-medium">Cliente</span>
+              <span className="block mt-1 text-neutral-900 font-semibold">{ordem.clientes?.nome}</span>
+              <span className="block mt-1 break-all text-neutral-600">{ordem.clientes?.email}</span>
             </div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-neutral-500 font-bold">Data do Pedido:</span>
@@ -686,8 +759,8 @@ export function CompraDetails({
                     onClick={() => item.produto_id ? handleProductClick(item.produto_id) : undefined}
                     className={`flex flex-col gap-4 p-2 -mx-2 rounded-xl transition-all ${item.produto_id ? 'cursor-pointer hover:bg-white hover:shadow-sm ring-1 ring-transparent hover:ring-neutral-200' : ''} ${index > 0 ? 'pt-4 border-t border-neutral-200/60' : ''}`}
                   >
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
+                    <div className="purchase-item flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-start gap-3">
                         {item.item_detalhes?.imagem_url ? (
                           <img src={item.item_detalhes.imagem_url} alt={item.item_detalhes.nome} className="w-10 h-10 object-cover rounded-lg" />
                         ) : (
@@ -700,7 +773,7 @@ export function CompraDetails({
                           <p className="text-[10px] font-mono text-neutral-400">Código: {getProductDisplayCode(item.item_detalhes as any) || item.item_detalhes?.codigo_assinatura || 'N/A'}</p>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="purchase-item-price shrink-0 whitespace-nowrap text-right">
                         <p className="text-sm font-black text-neutral-800">{formatCurrency(item.item_detalhes?.valor || 0)}</p>
                         <p className="text-[10px] font-bold text-neutral-400">Qtd: {item.quantidade || 1}</p>
                       </div>
@@ -864,9 +937,7 @@ export function CompraDetails({
                   </div>
 
                   {(() => {
-                    const isCreditoLoja = orcamento?.forma_pagamento_loja === 'credito_loja'
-                      || orcamento?.descricao_adicional?.includes('Credito GSA')
-                      || (faturasCredito && faturasCredito.length > 0);
+                    const isCreditoLoja = isGsaCredit;
 
                     if (isCreditoLoja) {
                       return (
@@ -987,7 +1058,7 @@ export function CompraDetails({
               <span className={`rounded-full px-3 py-0.5 text-xs font-black uppercase ${
                 isPaid ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200'
               }`}>
-                {fatura.codigo_fatura} ({isPaid ? 'Pago' : 'Aguardando Pagamento'})
+                {fatura.codigo_fatura} ({fatura.status === 'pago' ? 'Pago' : 'Aguardando Pagamento'})
               </span>
             </div>
           )}
@@ -997,11 +1068,13 @@ export function CompraDetails({
             <div className="space-y-2 pt-2">
               <label className="block text-xs font-black text-[#1a1a1a] uppercase tracking-wider">Mudar Status de Entrega do Cliente</label>
               <select
-                value={ordem.status}
-                disabled={ordem.status === 'concluido'}
+                value={pendingStatus || (ordem.status === 'aprovado' ? 'pago' : ordem.status)}
+                disabled={ordem.status === 'concluido' || confirmingStatus || !onUpdateStatus}
                 onChange={(e) => {
                   if (onUpdateStatus) {
-                    onUpdateStatus(ordem.id, e.target.value as any);
+                    setTrackable(Boolean(ordem.entrega_rastreavel));
+                    setTrackingCode(ordem.codigo_rastreio || '');
+                    setPendingStatus(e.target.value as typeof pendingStatus);
                   }
                 }}
                 className="w-full bg-white rounded-xl border border-indigo-200 px-4 py-3 text-xs font-black text-neutral-800 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all uppercase tracking-wider disabled:bg-neutral-50 disabled:text-neutral-400 disabled:border-neutral-200 disabled:cursor-not-allowed"
@@ -1026,20 +1099,22 @@ export function CompraDetails({
           {/* Botões de Ação Gerais (Cancelar / Concluir) */}
           {showActions && (
             <div className="flex gap-4 pt-4 border-t border-indigo-100/80">
-              {isPaid && onUpdateStatus && ordem.status !== 'concluido' && (
-                <button 
-                  onClick={() => onUpdateStatus(ordem.id, 'concluido')}
-                  className="flex-1 rounded-2xl bg-indigo-600 hover:bg-indigo-700 py-3.5 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-600/20 active:scale-95 transition-all"
-                >
-                  Concluir Entrega
-                </button>
-              )}
               {onCancelClick && (
                 <button 
                   onClick={onCancelClick}
                   className="flex-1 rounded-2xl bg-red-50 hover:bg-red-100 py-3.5 text-red-600 font-black text-xs uppercase tracking-widest active:scale-95 transition-all"
                 >
                   Cancelar Ordem
+                </button>
+              )}
+              {onDeleteClick && (
+                <button 
+                  onClick={onDeleteClick}
+                  title="Excluir Ordem em Cascata (Administrador Master)"
+                  className="flex-1 rounded-2xl bg-red-600 hover:bg-red-700 py-3.5 text-white font-black text-xs uppercase tracking-widest shadow-md shadow-red-600/20 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Excluir Ordem
                 </button>
               )}
               {ordem.clientes?.telefone && (

@@ -1,5 +1,4 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.98.0';
-import { r2PublicUrl, r2Delete } from '../_shared/r2.ts';
 
 type JsonRecord = Record<string, unknown>;
 const MAX_BODY_BYTES = 32_000;
@@ -10,7 +9,7 @@ const ALLOWED_FORMATS = new Set(['responsive_banner', 'sponsored_card', 'rectang
 const ALLOWED_PLACEMENTS = new Set(['ADS_PUBLIC_SHOWCASE', 'HOME_BANNER_TOP', 'HOME_INLINE_01', 'HOME_LIGHTBOX', 'SITE_STICKY_BOTTOM', 'MARKETPLACE_SPONSORED_CARD', 'CLASSIFIEDS_BANNER_TOP']);
 const ALLOWED_DEVICES = new Set(['desktop', 'tablet', 'mobile']);
 const ACCESS_ELIGIBLE_STATUSES = new Set(['proposal_sent', 'negotiation_requested', 'accepted']);
-const DEFAULT_ALLOWED_ORIGINS = ['http://10.0.2.189:3000', 'http://localhost:3000', 'http://127.0.0.1:3000', 'https://grupo-gsa.com.br', 'https://www.grupo-gsa.com.br'];
+const DEFAULT_ALLOWED_ORIGINS = ['http://10.0.2.189:3000', 'http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5173', 'http://127.0.0.1:5173', 'https://gsahub.pages.dev', 'https://gsa-hub.pages.dev', 'https://sistema.grupogsaservicos.com.br', 'https://grupo-gsa.com.br', 'https://www.grupo-gsa.com.br'];
 
 function isLocalOrigin(origin: string) { return /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(origin); }
 
@@ -36,6 +35,7 @@ function json(status: number, body: JsonRecord, origin: string | null, extra: He
 
 // Helpers
 function onlyDigits(value: unknown) { return String(value || '').replace(/\D/g, ''); }
+function text(value: unknown, maxLength: number) { return typeof value === 'string' ? value.trim().slice(0, maxLength) : ''; }
 function clientIp(request: Request) { return request.headers.get('cf-connecting-ip') || request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'; }
 async function digest(value: string) { const bytes = new TextEncoder().encode(value); const hash = await crypto.subtle.digest('SHA-256', bytes); return Array.from(new Uint8Array(hash)).map((byte) => byte.toString(16).padStart(2, '0')).join(''); }
 function cleanIdentifier(value: unknown, max = 160) { const normalized = String(value || '').trim(); if (!normalized || normalized.length > max || !/^[a-zA-Z0-9._:-]+$/.test(normalized)) return null; return normalized; }
@@ -90,26 +90,60 @@ async function handleScheduler(request: Request, admin: any) {
 
   const orphanPaths = Array.isArray(orphanRows) ? orphanRows.map((r: any) => String(r?.storage_path || '').trim()).filter(Boolean) : [];
   if (orphanPaths.length > 0) {
-    try { await r2Delete(orphanPaths.map((p: string) => 'public/ad-creatives/' + p)); } catch (err) { console.error('Orphan cleanup failed', err); return json(500, { error: 'orphan_cleanup_failed' }, null); }
+    const { error: removeError } = await admin.storage.from('gsa-ad-creatives').remove(orphanPaths);
+    if (removeError) { console.error('Orphan cleanup failed', removeError); return json(500, { error: 'orphan_cleanup_failed' }, null); }
   }
   return json(200, { success: true, ...(stateData || {}), orphan_creatives_deleted: orphanPaths.length }, null);
 }
 
-async function handleAdDelivery(body: JsonRecord, origin: string | null, admin: any) {
+async function handleAdDelivery(request: Request, body: JsonRecord, origin: string | null, admin: any) {
   const action = body.action;
+  const ipHash = await digest(clientIp(request));
+  const { data: edgeLimit, error: edgeLimitError } = await admin.rpc('gsa_auth_rate_limit_check', {
+    p_bucket_key: `ads:delivery:${action}:${ipHash}`,
+    p_limit: action === 'serve' ? 240 : 360,
+    p_window_seconds: 60,
+    p_block_seconds: 300,
+  });
+  if (edgeLimitError) return json(503, { error: 'rate_limit_unavailable' }, origin);
+  if (edgeLimit?.allowed === false) return json(429, { error: 'too_many_attempts', retry_after: Number(edgeLimit.retry_after || 60) }, origin);
+
   if (action === 'serve') {
-    const placement = cleanIdentifier(body.placement_code, 80); const viewer = cleanIdentifier(body.viewer_id, 160); const session = cleanIdentifier(body.session_id, 160); const route = String(body.route || '').trim().slice(0, 500); const device = String(body.device || '').trim().slice(0, 20);
-    if (!placement || !viewer || !session || !['desktop', 'tablet', 'mobile'].includes(device)) return json(400, { error: 'invalid_payload' }, origin);
-    
-    const { data, error } = await admin.rpc('gsa_ads_serve', { p_placement: placement, p_viewer_id: viewer, p_session_id: session, p_route: route, p_device: device });
-    if (error || !data?.ad) return json(404, { error: 'no_ad_available' }, origin);
-    
-    return json(200, { success: true, ad: { ...data.ad, creative_url: r2PublicUrl('private/ad-creatives/' + data.ad.storage_path) } }, origin);
+    const placement = cleanIdentifier(body.placement_code, 80);
+    const viewer = cleanIdentifier(body.viewer_id, 160);
+    const session = cleanIdentifier(body.session_id, 160);
+    const route = String(body.route || '').trim().slice(0, 500);
+    const device = String(body.device || '').trim().slice(0, 20);
+    if (!placement || !viewer || !session || !route.startsWith('/') || !['desktop', 'tablet', 'mobile'].includes(device)) {
+      return json(400, { error: 'invalid_payload' }, origin);
+    }
+    const viewerHash = await digest(`viewer:${viewer}`);
+    const sessionHash = await digest(`session:${session}`);
+    const { data, error } = await admin.rpc('gsa_ads_serve', {
+      p_placement_code: placement,
+      p_viewer_hash: viewerHash,
+      p_session_hash: sessionHash,
+      p_route: route,
+      p_device: device,
+    });
+    if (error) { console.error('Ad serving failed', error); return json(503, { error: 'delivery_unavailable' }, origin); }
+    if (!data?.ad) return json(200, { success: true, ad: null }, origin);
+
+    const { storage_path: storagePath, ...publicAd } = data.ad;
+    let assetUrl: string | null = null;
+    if (storagePath) {
+      const { data: signed, error: signedError } = await admin.storage.from('gsa-ad-creatives').createSignedUrl(storagePath, 300);
+      if (signedError || !signed?.signedUrl) { console.error('Creative signing failed', signedError); return json(503, { error: 'creative_unavailable' }, origin); }
+      assetUrl = signed.signedUrl;
+    }
+    return json(200, { success: true, event_token: data.event_token, ad: { ...publicAd, asset_url: assetUrl } }, origin);
   }
 
   if (action === 'event') {
-    const token = cleanIdentifier(body.event_token, 60); const eventType = String(body.event_type || '').trim();
-    if (!token || !['viewable', 'click', 'video_start', 'video_complete'].includes(eventType)) return json(400, { error: 'invalid_event' }, origin);
+    const token = String(body.event_token || '').trim().toLowerCase();
+    const eventType = String(body.event_type || '').trim();
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(token)
+      || !['viewable', 'click', 'video_start', 'video_complete'].includes(eventType)) return json(400, { error: 'invalid_event' }, origin);
     const { data, error } = await admin.rpc('gsa_ads_record_event', { p_event_token: token, p_event_type: eventType });
     if (error) return json(404, { error: 'event_not_found' }, origin);
     return json(200, { success: true, recorded: Boolean(data?.recorded) }, origin);
@@ -131,7 +165,11 @@ async function handleAdvertiserAccess(request: Request, body: JsonRecord, origin
   if (validationError) return json(500, { error: 'validation_failed' }, origin);
   if (!validation?.success || !validation?.request) return json(404, { error: 'protocol_not_found' }, origin);
   if (!ACCESS_ELIGIBLE_STATUSES.has(String(validation.request.status || ''))) return json(403, { error: 'advertiser_access_not_approved' }, origin);
-  if (action === 'validate') return json(200, { success: true, request: validation.request }, origin);
+  if (action === 'validate') return json(200, { success: true, request: {
+    protocol: validation.request.protocol,
+    company_name: validation.request.company_name,
+    status: validation.request.status,
+  } }, origin);
 
   const email = normalizeEmail(body.email); const document = normalizeDocument(body.document); const password = String(body.password || '');
   if (!email || !document || password.length < 8 || password.length > 128) return json(400, { error: 'invalid_registration' }, origin);
@@ -172,6 +210,81 @@ async function handleAdvertiserAccess(request: Request, body: JsonRecord, origin
   if (claimError || !claimed?.success) return json(409, { error: 'protocol_claim_failed' }, origin);
 
   return json(200, { success: true, account_exists: accountExists, verification_required: false, advertiser_status: claimed.advertiser_status }, origin);
+}
+
+async function handleCreateCheckout(request: Request, body: JsonRecord, origin: string | null, admin: any, supabaseUrl: string, anonKey: string) {
+  const paymentId = String(body.payment_id || '').trim().toLowerCase();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(paymentId)) {
+    return json(400, { error: 'invalid_payment' }, origin);
+  }
+  const authorization = request.headers.get('authorization') || '';
+  const accessToken = authorization.toLowerCase().startsWith('bearer ') ? authorization.slice(7).trim() : '';
+  if (!accessToken) return json(401, { error: 'authentication_required' }, origin);
+  const { data: authData, error: authError } = await admin.auth.getUser(accessToken);
+  if (authError || !authData.user) return json(401, { error: 'invalid_session' }, origin);
+
+  const ipHash = await digest(clientIp(request));
+  const { data: limit, error: limitError } = await admin.rpc('gsa_auth_rate_limit_check', {
+    p_bucket_key: `ads:checkout:${authData.user.id}:${ipHash}`,
+    p_limit: 8,
+    p_window_seconds: 600,
+    p_block_seconds: 1800,
+  });
+  if (limitError) return json(503, { error: 'rate_limit_unavailable' }, origin);
+  if (limit?.allowed === false) return json(429, { error: 'too_many_attempts', retry_after: Number(limit.retry_after || 600) }, origin);
+
+  const userClient = createClient(supabaseUrl, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+  }) as any;
+  const { data: context, error: contextError } = await userClient.rpc('gsa_advertiser_payment_checkout_context', { p_payment_id: paymentId });
+  if (contextError || !context?.success || !context.payment) return json(403, { error: 'payment_not_available' }, origin);
+  const payment = context.payment;
+  if (payment.checkout_url && payment.provider === 'infinitepay') {
+    return json(200, { success: true, checkout_url: payment.checkout_url, reused: true }, origin);
+  }
+
+  const amountCents = Math.round(Number(payment.amount || 0) * 100);
+  const handle = text(Deno.env.get('INFINITEPAY_HANDLE'), 100).replace(/^\$/, '');
+  if (!handle || !Number.isFinite(amountCents) || amountCents <= 0) return json(503, { error: 'payment_provider_not_configured' }, origin);
+  const orderNsu = cleanIdentifier(payment.provider_reference, 180) || `ADS-${paymentId}`;
+  const redirectBase = origin && isAllowedOrigin(origin) ? origin : configuredOrigins()[0];
+  const checkoutPayload: Record<string, unknown> = {
+    handle,
+    order_nsu: orderNsu,
+    webhook_url: `${supabaseUrl}/functions/v1/gsa-ads-admin`,
+    redirect_url: `${redirectBase}/anuncios/financeiro?payment=${encodeURIComponent(paymentId)}`,
+    items: [{ quantity: 1, price: amountCents, description: `Publicidade GSA - ${String(payment.campaign_name || 'Campanha').slice(0, 120)}` }],
+  };
+  const customerName = text(payment.customer_name, 120);
+  const customerEmail = normalizeEmail(payment.customer_email);
+  const customerPhone = onlyDigits(payment.customer_phone).slice(0, 13);
+  if (customerName || customerEmail || customerPhone) checkoutPayload.customer = {
+    ...(customerName ? { name: customerName } : {}),
+    ...(customerEmail ? { email: customerEmail } : {}),
+    ...(customerPhone ? { phone_number: customerPhone.startsWith('55') ? `+${customerPhone}` : `+55${customerPhone}` } : {}),
+  };
+
+  const providerResponse = await fetch('https://api.checkout.infinitepay.io/links', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(checkoutPayload),
+  });
+  const providerResult = await providerResponse.json().catch(() => ({}));
+  const checkoutUrl = text(providerResult?.payment_url || providerResult?.url || providerResult?.link || providerResult?.checkout_url, 2000);
+  if (!providerResponse.ok || !checkoutUrl.startsWith('https://')) {
+    console.error('Advertising checkout creation failed', providerResponse.status);
+    return json(502, { error: 'checkout_creation_failed' }, origin);
+  }
+  const currentDue = Date.parse(String(payment.due_at || ''));
+  const dueAt = Number.isFinite(currentDue) && currentDue > Date.now() ? new Date(currentDue).toISOString() : new Date(Date.now() + 3 * 86400000).toISOString();
+  const { data: configured, error: configureError } = await admin.rpc('gsa_ads_configure_payment_checkout', {
+    p_payment_id: paymentId,
+    p_provider: 'infinitepay',
+    p_provider_reference: orderNsu,
+    p_checkout_url: checkoutUrl,
+    p_due_at: dueAt,
+  });
+  if (configureError || !configured?.success) { console.error('Advertising checkout persistence failed', configureError); return json(500, { error: 'checkout_persistence_failed' }, origin); }
+  return json(200, { success: true, checkout_url: checkoutUrl, reused: false }, origin);
 }
 
 async function handlePublicAdvertisingForm(request: Request, body: JsonRecord, origin: string | null, admin: any) {
@@ -247,11 +360,15 @@ export async function handleRequest(request: Request) {
   try { body = JSON.parse(raw); } catch { return json(400, { error: 'invalid_json' }, origin); }
 
   if (body.action === 'serve' || body.action === 'event') {
-    return handleAdDelivery(body, origin, admin);
+    return handleAdDelivery(request, body, origin, admin);
   }
-  
+
   if (body.action === 'validate' || body.action === 'register') {
     return handleAdvertiserAccess(request, body, origin, admin, supabaseUrl, anonKey);
+  }
+
+  if (body.action === 'create_checkout') {
+    return handleCreateCheckout(request, body, origin, admin, supabaseUrl, anonKey);
   }
 
   return handlePublicAdvertisingForm(request, body, origin, admin);

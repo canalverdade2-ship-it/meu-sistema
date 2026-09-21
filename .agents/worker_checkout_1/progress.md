@@ -1,0 +1,24 @@
+# Progress for worker_checkout_1
+
+- **Last visited**: 2026-09-10T22:47:55Z
+- **Current Step**: Running test suites and preparing handoff.
+- **Completed Steps**:
+  - [x] Initialized DISPATCH.md and BRIEFING.md
+  - [x] Inspected `supabase/migrations/20260716183010_update_checkout_function.sql`
+  - [x] Inspected `supabase/migrations/20260817120000_product_variations_marketplace.sql`
+  - [x] Executed base function cart whitelist fix allowing `'variante_id'` and `'produto_variante_id'` in `20260716183010_update_checkout_function.sql`
+  - [x] Executed base function variant price injection with fallback for both `'variante_id'` and `'produto_variante_id'` in `20260716183010_update_checkout_function.sql`
+  - [x] Executed base function variant id persistence into `public.loja_pedido_itens` and `public.ordens_compra`
+  - [x] Executed base function deterministic sorting in cart processing and stock update loops
+  - [x] Verified zero catalog mutation: `v_variant_price` operates strictly on local PL/pgSQL session variable `v_product.valor`
+  - [x] Executed wrapper cart sanitization in `20260817120000_product_variations_marketplace.sql` preserving `'variante_id'` and `'produto_variante_id'`
+  - [x] Executed wrapper client locking first (`clientes ... FOR UPDATE`) to align with admin return RPC and eliminate lock inversion deadlock
+  - [x] Executed wrapper deterministic canonical catalog lock ordering (`ORDER BY item_id, variante_id`)
+  - [x] Executed wrapper accurate stock decrement of `produto_variantes.estoque_disponivel` and snapshot propagation
+  - [x] Ran project build (`npm run build`) - passed cleanly
+  - [x] Ran store contract tests (`npm run test:gsa-store`) - passed cleanly
+- **Next Steps**:
+  - [ ] Await completion of test suite
+  - [ ] Update BRIEFING.md
+  - [ ] Write handoff.md
+  - [ ] Send completion message to parent orchestrator

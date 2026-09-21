@@ -19,18 +19,34 @@ import {
   ShieldCheck,
   Users,
   X,
+  Gift,
+  Sparkles,
+  Zap,
+  Award,
+  CheckCircle2
 } from 'lucide-react';
 import { getPublicPartner, listPublicPartners } from '../../features/partners/service';
 import { PARTNER_MODE_LABELS, type Partner } from '../../features/partners/types';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import { LogoGSA } from '../ui/LogoGSA';
 import { PartnerApplicationModal } from './PartnerApplicationModal';
+import { PartnerBenefitRedeemModal } from './PartnerBenefitRedeemModal';
 import '../../partners.css';
+
+import { motion } from 'framer-motion';
 
 interface PartnersPageProps {
   selectedSlug?: string;
   onSelectPartner: (slug: string | null) => void;
   onBack: () => void;
 }
+
+const reveal = (delay = 0) => ({
+  initial: { opacity: 0, y: 48 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, amount: 0.18 },
+  transition: { duration: 0.85, delay, ease: [0.16, 1, 0.3, 1] as const },
+});
 
 function safeExternalUrl(value?: string | null): string | null {
   const trimmed = value?.trim();
@@ -54,15 +70,21 @@ function locationLabel(partner: Partner): string {
 }
 
 function PartnerVisual({ partner, detail = false }: { partner: Partner; detail?: boolean }) {
-  const source = partner.cover_url || partner.logo_url;
+  // No quadradinho/cards de entrada: exibe o logotipo da empresa (logo_url)
+  // Na página interna detalhada do parceiro: exibe a imagem de capa da parceria (cover_url)
+  const image = detail
+    ? (partner.cover_url || partner.logo_url)
+    : (partner.logo_url || partner.cover_url);
+
+  const isCover = detail && Boolean(partner.cover_url);
 
   return (
     <div className={`partner-visual ${detail ? 'partner-visual--detail' : ''}`}>
-      {source ? (
+      {image ? (
         <img
-          src={source}
-          alt={`Apresentação de ${partner.name}`}
-          className={partner.cover_url ? 'partner-visual__cover' : 'partner-visual__logo-only'}
+          src={image}
+          alt={isCover ? `Imagem da parceria com ${partner.name}` : `Logotipo de ${partner.name}`}
+          className={detail ? 'partner-visual__detail-image' : (isCover ? 'partner-visual__cover' : 'partner-visual__logo-only')}
           loading={detail ? 'eager' : 'lazy'}
           referrerPolicy="no-referrer"
         />
@@ -73,13 +95,7 @@ function PartnerVisual({ partner, detail = false }: { partner: Partner; detail?:
         </div>
       )}
 
-      {partner.logo_url && partner.cover_url && (
-        <div className="partner-visual__logo">
-          <img src={partner.logo_url} alt={`Logotipo de ${partner.name}`} loading="lazy" referrerPolicy="no-referrer" />
-        </div>
-      )}
-
-      {partner.featured && (
+      {partner.featured && !detail && (
         <span className="partner-featured-label">
           <ShieldCheck aria-hidden="true" />
           Seleção GSA
@@ -90,17 +106,17 @@ function PartnerVisual({ partner, detail = false }: { partner: Partner; detail?:
 }
 
 function HeroPartnerCard({ partner, position, onOpen }: { key?: string | number; partner: Partner; position: number; onOpen: () => void }) {
-  const source = partner.cover_url || partner.logo_url;
+  const logo = partner.logo_url || partner.cover_url;
 
   return (
     <button type="button" onClick={onOpen} className="partners-hero-card">
       <span className="partners-hero-card__number">{String(position).padStart(2, '0')}</span>
       <span className="partners-hero-card__visual">
-        {source ? (
+        {logo ? (
           <img
-            src={source}
-            alt=""
-            className={partner.cover_url ? 'is-cover' : 'is-logo'}
+            src={logo}
+            alt={`Logotipo de ${partner.name}`}
+            className="is-logo"
             loading={position === 1 ? 'eager' : 'lazy'}
             referrerPolicy="no-referrer"
           />
@@ -126,7 +142,14 @@ export function PartnersPage({ selectedSlug, onSelectPartner, onBack }: Partners
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('Todas');
   const [applicationOpen, setApplicationOpen] = useState(false);
+  const [redeemPartner, setRedeemPartner] = useState<Partner | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+
+  useRealtimeSubscription({
+    table: 'parceiros',
+    onChange: () => setReloadKey((k) => k + 1),
+    debounceMs: 300,
+  });
 
   useEffect(() => {
     document.body.classList.add('gsa-public-partners');
@@ -237,7 +260,20 @@ export function PartnersPage({ selectedSlug, onSelectPartner, onBack }: Partners
       );
     }
 
-    return <PartnerDetail partner={selectedPartner} onBack={() => onSelectPartner(null)} />;
+    return (
+      <>
+        <PartnerDetail 
+          partner={selectedPartner} 
+          onBack={() => onSelectPartner(null)} 
+          onRedeem={setRedeemPartner} 
+        />
+        <PartnerBenefitRedeemModal 
+          partner={redeemPartner} 
+          open={Boolean(redeemPartner)} 
+          onClose={() => setRedeemPartner(null)} 
+        />
+      </>
+    );
   }
 
   return (
@@ -401,8 +437,8 @@ export function PartnersPage({ selectedSlug, onSelectPartner, onBack }: Partners
                   </div>
                 ) : (
                   <div className="partners-list">
-                    {featuredPartners.map((partner, index) => <PartnerDirectoryItem key={partner.id} partner={partner} index={index + 1} featured onOpen={() => onSelectPartner(partner.slug)} />)}
-                    {regularPartners.map((partner, index) => <PartnerDirectoryItem key={partner.id} partner={partner} index={featuredPartners.length + index + 1} onOpen={() => onSelectPartner(partner.slug)} />)}
+                    {featuredPartners.map((partner, index) => <PartnerDirectoryItem key={partner.id} partner={partner} index={index + 1} featured onOpen={() => onSelectPartner(partner.slug)} onRedeem={setRedeemPartner} />)}
+                    {regularPartners.map((partner, index) => <PartnerDirectoryItem key={partner.id} partner={partner} index={featuredPartners.length + index + 1} onOpen={() => onSelectPartner(partner.slug)} onRedeem={setRedeemPartner} />)}
                   </div>
                 )}
               </div>
@@ -419,7 +455,7 @@ export function PartnersPage({ selectedSlug, onSelectPartner, onBack }: Partners
 
             <div className="partners-application__copy">
               <h2 id="partners-application-title">Sua empresa tem estrutura para complementar esta rede?</h2>
-              <p>Apresente sua atuação, seus canais e sua capacidade de atendimento. A solicitação é enviada diretamente ao sistema para análise e recebe protocolo oficial.</p>
+              <p>Apresente sua atuação, seus canais e sua capacidade de atendimento. A solicitação é enviada diretamente ao painel administrativo para análise e recebe protocolo oficial.</p>
               <button type="button" onClick={() => setApplicationOpen(true)} className="partner-gold-button">
                 Apresentar minha empresa
                 <ArrowRight aria-hidden="true" />
@@ -436,13 +472,17 @@ export function PartnersPage({ selectedSlug, onSelectPartner, onBack }: Partners
       </main>
 
       <PartnerApplicationModal open={applicationOpen} onClose={() => setApplicationOpen(false)} />
+      <PartnerBenefitRedeemModal partner={redeemPartner} open={Boolean(redeemPartner)} onClose={() => setRedeemPartner(null)} />
     </>
   );
 }
 
-function PartnerDirectoryItem({ partner, index, featured = false, onOpen }: { key?: string | number; partner: Partner; index: number; featured?: boolean; onOpen: () => void }) {
+function PartnerDirectoryItem({ partner, index, featured = false, onOpen, onRedeem }: { key?: string | number; partner: Partner; index: number; featured?: boolean; onOpen: () => void; onRedeem: (partner: Partner) => void }) {
   return (
-    <article className={`partner-directory-item ${featured ? 'partner-directory-item--featured' : ''}`}>
+    <motion.article 
+      {...reveal((index - 1) * 0.15)}
+      className={`partner-directory-item ${featured ? 'partner-directory-item--featured' : ''}`}
+    >
       <div className="partner-directory-item__visual">
         <PartnerVisual partner={partner} />
         <span className="partner-directory-item__index">{String(index).padStart(2, '0')}</span>
@@ -457,14 +497,26 @@ function PartnerDirectoryItem({ partner, index, featured = false, onOpen }: { ke
         <div className="partner-directory-item__services">{(partner.services || []).slice(0, 4).map((service) => <span key={service}><Check aria-hidden="true" />{service}</span>)}</div>
         <div className="partner-directory-item__footer">
           <span>{PARTNER_MODE_LABELS[partner.service_mode]}</span>
-          <button type="button" onClick={onOpen}>Conhecer parceiro<ArrowRight aria-hidden="true" /></button>
+          <div className="flex items-center gap-2">
+            {partner.benefits && (
+              <button 
+                type="button" 
+                onClick={(e) => { e.stopPropagation(); onRedeem(partner); }} 
+                className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-amber-900 bg-amber-100/90 hover:bg-amber-200/90 border border-amber-300 px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-sm"
+              >
+                <Gift className="h-3.5 w-3.5 text-amber-700" />
+                <span>Resgatar Benefício</span>
+              </button>
+            )}
+            <button type="button" onClick={onOpen}>Conhecer parceiro<ArrowRight aria-hidden="true" /></button>
+          </div>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
-function PartnerDetail({ partner, onBack }: { partner: Partner; onBack: () => void }) {
+function PartnerDetail({ partner, onBack, onRedeem }: { partner: Partner; onBack: () => void; onRedeem: (partner: Partner) => void }) {
   const address = buildAddress(partner);
   const website = safeExternalUrl(partner.website);
   const instagram = safeExternalUrl(partner.instagram);
@@ -472,11 +524,16 @@ function PartnerDetail({ partner, onBack }: { partner: Partner; onBack: () => vo
   const maps = safeExternalUrl(partner.maps_url);
   const whatsappDigits = partner.whatsapp?.replace(/\D/g, '');
 
+  const hasContactActions = Boolean(whatsappDigits || partner.phone || partner.email || maps);
+  const hasSocial = Boolean(website || instagram || linkedin);
+  const hasFacts = Boolean(address || partner.business_hours);
+  const hasContactInfo = Boolean(hasContactActions || hasSocial || hasFacts);
+
   return (
     <main className="partners-page partners-detail-page">
       <section className="partners-detail-hero">
         <div className="partners-container">
-          <button type="button" onClick={onBack} className="partner-back-link"><ArrowLeft aria-hidden="true" />Todos os parceiros</button>
+          <button type="button" onClick={onBack} className="partner-back-link"><ArrowLeft aria-hidden="true" />Nossos parceiros</button>
           <div className="partners-detail-hero__layout">
             <PartnerVisual partner={partner} detail />
             <div className="partners-detail-hero__copy">
@@ -494,7 +551,7 @@ function PartnerDetail({ partner, onBack }: { partner: Partner; onBack: () => vo
       </section>
 
       <section className="partners-detail-content">
-        <div className="partners-container partners-detail-content__layout">
+        <div className={`partners-container partners-detail-content__layout ${!hasContactInfo ? 'partners-detail-content__layout--full' : ''}`}>
           <div className="partners-detail-main">
             {partner.services.length > 0 && (
               <section className="partner-detail-section">
@@ -515,36 +572,117 @@ function PartnerDetail({ partner, onBack }: { partner: Partner; onBack: () => vo
               </section>
             )}
             {partner.benefits && (
-              <section className="partner-benefit-panel">
-                <p>Condição informada para clientes GSA</p><h2>Benefício da parceria</h2><div>{partner.benefits}</div>
+              <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c131d] via-[#111a26] to-[#080d14] p-6 sm:p-8 text-white shadow-[0_20px_50px_rgba(8,23,38,0.3)] border border-[#e2c98e]/35 my-8">
+                {/* Decorative Ambient Lighting & Watermark */}
+                <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[#e2c98e]/10 blur-3xl pointer-events-none" />
+                <div className="absolute -left-16 -bottom-16 h-64 w-64 rounded-full bg-[#e2c98e]/10 blur-3xl pointer-events-none" />
+                <div className="absolute right-4 bottom-4 opacity-5 pointer-events-none select-none">
+                  <Gift className="h-48 w-48 text-[#e2c98e]" />
+                </div>
+
+                {/* Top Badge & Exclusive Label */}
+                <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-white/10">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#e2c98e]/20 to-[#e2c98e]/5 px-3.5 py-1.5 border border-[#e2c98e]/40 text-[11px] font-black uppercase tracking-wider text-[#f5e7c4] shadow-inner">
+                    <Sparkles className="h-3.5 w-3.5 text-[#e2c98e] animate-pulse" />
+                    <span>Benefício Exclusivo GSA HUB</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-xs text-neutral-300 font-medium">
+                    <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <span>Condição Exclusiva GSA HUB</span>
+                  </div>
+                </div>
+
+                {/* Main Content Area: Title & Luxury Golden Voucher Box */}
+                <div className="relative z-10 my-6 space-y-4">
+                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                    Vantagem Especial da Parceria
+                  </h2>
+
+                  {/* Golden Ticket / Voucher Box */}
+                  <div className="relative rounded-2xl bg-gradient-to-r from-[#e2c98e]/15 via-[#e2c98e]/5 to-transparent p-5 border border-[#e2c98e]/30 backdrop-blur-sm shadow-inner">
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#f5e7c4] via-[#e2c98e] to-[#c99738] text-neutral-950 font-black shadow-lg shadow-[#e2c98e]/20">
+                        <Gift className="h-6 w-6 text-neutral-950" />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#e2c98e]">
+                          Condição Especial Concedida:
+                        </span>
+                        <p className="text-base sm:text-lg font-bold text-neutral-50 leading-relaxed">
+                          {partner.benefits}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Micro-benefits & Trust Badges */}
+                <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 pb-6 border-b border-white/10 text-neutral-300 text-xs">
+                  <div className="flex items-center gap-2 bg-white/5 rounded-xl px-3 py-2.5 border border-white/5">
+                    <Zap className="h-4 w-4 text-amber-400 shrink-0" />
+                    <span className="font-semibold">Resgate 100% Online</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white/5 rounded-xl px-3 py-2.5 border border-white/5">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <span className="font-semibold">Sem Taxas Adicionais</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white/5 rounded-xl px-3 py-2.5 border border-white/5">
+                    <Award className="h-4 w-4 text-[#e2c98e] shrink-0" />
+                    <span className="font-semibold">Validação Instantânea</span>
+                  </div>
+                </div>
+
+                {/* Action Footer & High-Converting CTA */}
+                <div className="relative z-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-6">
+                  <div className="text-xs text-neutral-400 leading-tight">
+                    <p className="font-bold text-neutral-200">Pronto para aproveitar este benefício?</p>
+                    <p className="text-[11px] text-neutral-400 mt-0.5">Clique para gerar seu cupom ou voucher oficial de associado.</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => onRedeem(partner)}
+                    className="group relative inline-flex items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-[#f5e7c4] via-[#e2c98e] to-[#c99738] px-8 py-4 text-xs font-black uppercase tracking-wider text-neutral-950 shadow-xl shadow-[#e2c98e]/25 transition-all duration-300 hover:scale-[1.03] hover:shadow-[#e2c98e]/40 active:scale-95 cursor-pointer"
+                  >
+                    <span className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100" />
+                    <Gift className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" />
+                    <span className="font-black text-neutral-950">Resgatar Benefício Agora</span>
+                    <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                  </button>
+                </div>
               </section>
             )}
           </div>
 
-          <aside className="partner-contact-panel">
-            <p className="partners-kicker">Canais públicos</p>
-            <h2>Informações de contato</h2>
-            <p className="partner-contact-panel__intro">Fale diretamente com o parceiro pelos dados publicados no cadastro aprovado.</p>
-            <div className="partner-contact-panel__facts">
-              {address && <div><MapPin aria-hidden="true" /><span>{address}</span></div>}
-              {partner.business_hours && <div><Clock3 aria-hidden="true" /><span>{partner.business_hours}</span></div>}
-              <div><Users aria-hidden="true" /><span>{PARTNER_MODE_LABELS[partner.service_mode]}</span></div>
-            </div>
-            <div className="partner-contact-panel__actions">
-              {whatsappDigits && <a href={`https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Olá! Encontrei a ${partner.name} pela página de parceiros da GSA HUB e gostaria de mais informações.`)}`} target="_blank" rel="noopener noreferrer" className="is-primary"><MessageCircle aria-hidden="true" />Conversar pelo WhatsApp</a>}
-              {partner.phone && <a href={`tel:${partner.phone.replace(/[^\d+]/g, '')}`}><Phone aria-hidden="true" />Ligar para o parceiro</a>}
-              {partner.email && <a href={`mailto:${partner.email}`}><Mail aria-hidden="true" />Enviar e-mail</a>}
-              {maps && <a href={maps} target="_blank" rel="noopener noreferrer"><MapPin aria-hidden="true" />Abrir localização<ExternalLink aria-hidden="true" /></a>}
-            </div>
-            {(website || instagram || linkedin) && (
-              <div className="partner-contact-panel__social">
-                <p>Presença digital</p>
-                {website && <SocialLink href={website} label="Site oficial"><Globe2 aria-hidden="true" /></SocialLink>}
-                {instagram && <SocialLink href={instagram} label="Instagram"><Instagram aria-hidden="true" /></SocialLink>}
-                {linkedin && <SocialLink href={linkedin} label="LinkedIn"><Linkedin aria-hidden="true" /></SocialLink>}
+          {hasContactInfo && (
+            <aside className="partner-contact-panel">
+              <p className="partners-kicker">Canais públicos</p>
+              <h2>Informações de contato</h2>
+              <p className="partner-contact-panel__intro">Fale diretamente com o parceiro pelos dados publicados no cadastro aprovado.</p>
+              <div className="partner-contact-panel__facts">
+                {address && <div><MapPin aria-hidden="true" /><span>{address}</span></div>}
+                {partner.business_hours && <div><Clock3 aria-hidden="true" /><span>{partner.business_hours}</span></div>}
+                <div><Users aria-hidden="true" /><span>{PARTNER_MODE_LABELS[partner.service_mode]}</span></div>
               </div>
-            )}
-          </aside>
+              {hasContactActions && (
+                <div className="partner-contact-panel__actions">
+                  {whatsappDigits && <a href={`https://wa.me/${whatsappDigits}?text=${encodeURIComponent(`Olá! Encontrei a ${partner.name} pela página de parceiros da GSA HUB e gostaria de mais informações.`)}`} target="_blank" rel="noopener noreferrer" className="is-primary"><MessageCircle aria-hidden="true" />Conversar pelo WhatsApp</a>}
+                  {partner.phone && <a href={`tel:${partner.phone.replace(/[^\d+]/g, '')}`}><Phone aria-hidden="true" />Ligar para o parceiro</a>}
+                  {partner.email && <a href={`mailto:${partner.email}`}><Mail aria-hidden="true" />Enviar e-mail</a>}
+                  {maps && <a href={maps} target="_blank" rel="noopener noreferrer"><MapPin aria-hidden="true" />Abrir localização<ExternalLink aria-hidden="true" /></a>}
+                </div>
+              )}
+              {hasSocial && (
+                <div className="partner-contact-panel__social">
+                  <p>Presença digital</p>
+                  {website && <SocialLink href={website} label="Site oficial"><Globe2 aria-hidden="true" /></SocialLink>}
+                  {instagram && <SocialLink href={instagram} label="Instagram"><Instagram aria-hidden="true" /></SocialLink>}
+                  {linkedin && <SocialLink href={linkedin} label="LinkedIn"><Linkedin aria-hidden="true" /></SocialLink>}
+                </div>
+              )}
+            </aside>
+          )}
         </div>
       </section>
     </main>

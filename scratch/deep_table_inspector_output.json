@@ -1,0 +1,2064 @@
+{
+  "saques": {
+    "tableName": "saques",
+    "definedIn": [
+      "master_supabase_schema.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS saques (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    cliente_id UUID REFERENCES clientes(id) NOT NULL,\n    valor DECIMAL(12,2) NOT NULL,\n    taxa_aplicada DECIMAL(12,2) DEFAULT 0,\n    valor_liquido DECIMAL(12,2) DEFAULT 0,\n    tipo_chave_pix TEXT,\n    chave_pix TEXT NOT NULL,\n    status TEXT CHECK (status IN ('pendente', 'aprovado', 'recusado', 'pago', 'cancelado')) DEFAULT 'pendente',\n    data_solicitacao TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    data_vencimento TIMESTAMP WITH TIME ZONE,\n    data_pagamento TIMESTAMP WITH TIME ZONE\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "details": "PRIMARY KEY DEFAULT uuid_generate_v4()"
+      },
+      {
+        "name": "cliente_id",
+        "type": "UUID",
+        "details": "REFERENCES clientes(id) NOT NULL"
+      },
+      {
+        "name": "valor",
+        "type": "DECIMAL(12,2)",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "taxa_aplicada",
+        "type": "DECIMAL(12,2)",
+        "details": "DEFAULT 0"
+      },
+      {
+        "name": "valor_liquido",
+        "type": "DECIMAL(12,2)",
+        "details": "DEFAULT 0"
+      },
+      {
+        "name": "tipo_chave_pix",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "chave_pix",
+        "type": "TEXT",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "details": "CHECK (status IN ('pendente', 'aprovado', 'recusado', 'pago', 'cancelado')) DEFAULT 'pendente'"
+      },
+      {
+        "name": "data_solicitacao",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE DEFAULT NOW()"
+      },
+      {
+        "name": "data_vencimento",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE"
+      },
+      {
+        "name": "data_pagamento",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "cliente_id",
+        "refTable": "clientes",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      }
+    ],
+    "existingIndexes": [
+      {
+        "name": "uq_saques_request_id",
+        "columns": "request_id",
+        "type": "btree",
+        "unique": true,
+        "where": "request_id IS NOT NULL",
+        "file": "20260714056200_secure_client_wallet_points_transfers.sql"
+      },
+      {
+        "name": "idx_saques_cliente_id",
+        "columns": "cliente_id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260728050000_add_performance_indexes.sql"
+      },
+      {
+        "name": "idx_saques_status",
+        "columns": "status",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260728050000_add_performance_indexes.sql"
+      },
+      {
+        "name": "idx_saques_created_at",
+        "columns": "created_at DESC",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260728050000_add_performance_indexes.sql"
+      }
+    ],
+    "alterations": []
+  },
+  "faturas": {
+    "tableName": "faturas",
+    "definedIn": [
+      "master_supabase_schema.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS faturas (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    codigo_fatura TEXT UNIQUE,\n    os_id UUID REFERENCES ordens_servico(id),\n    ordem_compra_id UUID REFERENCES ordens_compra(id),\n    ordem_assinatura_id UUID REFERENCES ordens_assinatura(id),\n    cliente_id UUID REFERENCES clientes(id) NOT NULL,\n    valor_total DECIMAL(12,2) NOT NULL,\n    valor_pago DECIMAL(12,2) DEFAULT 0.00,\n    valor_final_pendente DECIMAL(12,2) NOT NULL,\n    status TEXT CHECK (status IN ('pendente', 'pago', 'cancelado', 'revisada', 'vencida', 'aguardando_link', 'pendente_pagamento')) DEFAULT 'pendente',\n    tipo TEXT CHECK (tipo IN ('servico', 'produto', 'assinatura', 'pacote_nivel')),\n    data_vencimento DATE NOT NULL,\n    data_pagamento TIMESTAMP WITH TIME ZONE,\n    forma_pagamento_escolhida TEXT,\n    mes_referencia TEXT,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "details": "PRIMARY KEY DEFAULT uuid_generate_v4()"
+      },
+      {
+        "name": "codigo_fatura",
+        "type": "TEXT",
+        "details": "UNIQUE"
+      },
+      {
+        "name": "os_id",
+        "type": "UUID",
+        "details": "REFERENCES ordens_servico(id)"
+      },
+      {
+        "name": "ordem_compra_id",
+        "type": "UUID",
+        "details": "REFERENCES ordens_compra(id)"
+      },
+      {
+        "name": "ordem_assinatura_id",
+        "type": "UUID",
+        "details": "REFERENCES ordens_assinatura(id)"
+      },
+      {
+        "name": "cliente_id",
+        "type": "UUID",
+        "details": "REFERENCES clientes(id) NOT NULL"
+      },
+      {
+        "name": "valor_total",
+        "type": "DECIMAL(12,2)",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "valor_pago",
+        "type": "DECIMAL(12,2)",
+        "details": "DEFAULT 0.00"
+      },
+      {
+        "name": "valor_final_pendente",
+        "type": "DECIMAL(12,2)",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "details": "CHECK (status IN ('pendente', 'pago', 'cancelado', 'revisada', 'vencida', 'aguardando_link', 'pendente_pagamento')) DEFAULT 'pendente'"
+      },
+      {
+        "name": "tipo",
+        "type": "TEXT",
+        "details": "CHECK (tipo IN ('servico', 'produto', 'assinatura', 'pacote_nivel'))"
+      },
+      {
+        "name": "data_vencimento",
+        "type": "DATE",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "data_pagamento",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE"
+      },
+      {
+        "name": "forma_pagamento_escolhida",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "mes_referencia",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE DEFAULT NOW()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "os_id",
+        "refTable": "ordens_servico",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      },
+      {
+        "column": "ordem_compra_id",
+        "refTable": "ordens_compra",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      },
+      {
+        "column": "ordem_assinatura_id",
+        "refTable": "ordens_assinatura",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      },
+      {
+        "column": "cliente_id",
+        "refTable": "clientes",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      }
+    ],
+    "existingIndexes": [
+      {
+        "name": "idx_faturas_orcamento_id",
+        "columns": "orcamento_id",
+        "type": "btree",
+        "unique": false,
+        "where": "orcamento_id IS NOT NULL",
+        "file": "20260714056000_atomic_session_store_checkout.sql"
+      },
+      {
+        "name": "idx_faturas_viagem_transacao_metadata",
+        "columns": "(metadata ->> 'transacao_id'",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260720230000_gsa_viagens_parcelamento_checkout.sql"
+      },
+      {
+        "name": "idx_faturas_cliente_id",
+        "columns": "cliente_id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260723120000_system_db_alignment.sql"
+      },
+      {
+        "name": "idx_faturas_status",
+        "columns": "status",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260728050000_add_performance_indexes.sql"
+      },
+      {
+        "name": "idx_faturas_data_vencimento",
+        "columns": "data_vencimento",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260728050000_add_performance_indexes.sql"
+      },
+      {
+        "name": "idx_faturas_created_at",
+        "columns": "created_at DESC",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260728050000_add_performance_indexes.sql"
+      },
+      {
+        "name": "idx_faturas_cliente_status_venc",
+        "columns": "cliente_id, status, data_vencimento",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260729120000_optimize_performance_indexes_and_sequences.sql"
+      },
+      {
+        "name": "faturas_one_per_service_order_uidx",
+        "columns": "os_id",
+        "type": "btree",
+        "unique": true,
+        "where": "os_id IS NOT NULL",
+        "file": "20260829233000_harden_service_billing_end_to_end.sql"
+      },
+      {
+        "name": "faturas_infinitepay_order_nsu_uidx",
+        "columns": "infinitepay_order_nsu",
+        "type": "btree",
+        "unique": true,
+        "where": "infinitepay_order_nsu IS NOT NULL",
+        "file": "20260829233000_harden_service_billing_end_to_end.sql"
+      }
+    ],
+    "alterations": []
+  },
+  "tickets": {
+    "tableName": "tickets",
+    "definedIn": [
+      "master_supabase_schema.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS tickets (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    cliente_id UUID REFERENCES clientes(id),\n    prestador_id UUID REFERENCES prestadores(id),\n    assunto TEXT NOT NULL,\n    descricao TEXT NOT NULL,\n    status TEXT CHECK (status IN ('aberto', 'em andamento', 'concluido')) DEFAULT 'aberto',\n    data_abertura TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    data_fechamento TIMESTAMP WITH TIME ZONE\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "details": "PRIMARY KEY DEFAULT uuid_generate_v4()"
+      },
+      {
+        "name": "cliente_id",
+        "type": "UUID",
+        "details": "REFERENCES clientes(id)"
+      },
+      {
+        "name": "prestador_id",
+        "type": "UUID",
+        "details": "REFERENCES prestadores(id)"
+      },
+      {
+        "name": "assunto",
+        "type": "TEXT",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "descricao",
+        "type": "TEXT",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "details": "CHECK (status IN ('aberto', 'em andamento', 'concluido')) DEFAULT 'aberto'"
+      },
+      {
+        "name": "data_abertura",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE DEFAULT NOW()"
+      },
+      {
+        "name": "data_fechamento",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "cliente_id",
+        "refTable": "clientes",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      },
+      {
+        "column": "prestador_id",
+        "refTable": "prestadores",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      }
+    ],
+    "existingIndexes": [],
+    "alterations": []
+  },
+  "pontos_movimentacoes": {
+    "tableName": "pontos_movimentacoes",
+    "definedIn": [
+      "master_supabase_schema.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS pontos_movimentacoes (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    cliente_id UUID REFERENCES clientes(id) NOT NULL,\n    fatura_id UUID REFERENCES faturas(id),\n    tipo TEXT CHECK (tipo IN ('geracao_fatura', 'conversao_dinheiro', 'uso_fatura', 'ajuste_manual', 'estorno', 'bonus_boas_vindas', 'indicacao', 'bonus', 'resgate')) NOT NULL,\n    pontos INTEGER NOT NULL,\n    saldo_apos INTEGER NOT NULL,\n    descricao TEXT,\n    valor_convertido DECIMAL(12,2),\n    data_movimentacao TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "details": "PRIMARY KEY DEFAULT uuid_generate_v4()"
+      },
+      {
+        "name": "cliente_id",
+        "type": "UUID",
+        "details": "REFERENCES clientes(id) NOT NULL"
+      },
+      {
+        "name": "fatura_id",
+        "type": "UUID",
+        "details": "REFERENCES faturas(id)"
+      },
+      {
+        "name": "tipo",
+        "type": "TEXT",
+        "details": "CHECK (tipo IN ('geracao_fatura', 'conversao_dinheiro', 'uso_fatura', 'ajuste_manual', 'estorno', 'bonus_boas_vindas', 'indicacao', 'bonus', 'resgate')) NOT NULL"
+      },
+      {
+        "name": "pontos",
+        "type": "INTEGER",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "saldo_apos",
+        "type": "INTEGER",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "descricao",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "valor_convertido",
+        "type": "DECIMAL(12,2)",
+        "details": ""
+      },
+      {
+        "name": "data_movimentacao",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE DEFAULT NOW()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "cliente_id",
+        "refTable": "clientes",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      },
+      {
+        "column": "fatura_id",
+        "refTable": "faturas",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      }
+    ],
+    "existingIndexes": [
+      {
+        "name": "idx_pontos_movimentacoes_cliente_id",
+        "columns": "cliente_id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260723120000_system_db_alignment.sql"
+      }
+    ],
+    "alterations": []
+  },
+  "vouchers": {
+    "tableName": "vouchers",
+    "definedIn": [
+      "master_supabase_schema.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS vouchers (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    codigo_voucher TEXT UNIQUE,\n    nome TEXT,\n    tipo TEXT CHECK (tipo IN ('fixo', 'porcentagem', 'valor')) NOT NULL DEFAULT 'valor',\n    valor DECIMAL(12,2) NOT NULL,\n    cliente_id UUID REFERENCES clientes(id),\n    prestador_id UUID REFERENCES prestadores(id),\n    ordem_servico_id UUID REFERENCES ordens_servico(id),\n    validade DATE,\n    usage_limit INTEGER DEFAULT 1,\n    usage_count INTEGER DEFAULT 0,\n    status TEXT CHECK (status IN ('ativo', 'usado', 'expirado', 'cancelado')) DEFAULT 'ativo',\n    categoria TEXT CHECK (categoria IN ('desconto', 'saque')),\n    data_uso TIMESTAMP WITH TIME ZONE,\n    tipo_uso TEXT,\n    motivo_cancelamento TEXT,\n    data_cancelamento TIMESTAMP WITH TIME ZONE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "details": "PRIMARY KEY DEFAULT uuid_generate_v4()"
+      },
+      {
+        "name": "codigo_voucher",
+        "type": "TEXT",
+        "details": "UNIQUE"
+      },
+      {
+        "name": "nome",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "tipo",
+        "type": "TEXT",
+        "details": "CHECK (tipo IN ('fixo', 'porcentagem', 'valor')) NOT NULL DEFAULT 'valor'"
+      },
+      {
+        "name": "valor",
+        "type": "DECIMAL(12,2)",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "cliente_id",
+        "type": "UUID",
+        "details": "REFERENCES clientes(id)"
+      },
+      {
+        "name": "prestador_id",
+        "type": "UUID",
+        "details": "REFERENCES prestadores(id)"
+      },
+      {
+        "name": "ordem_servico_id",
+        "type": "UUID",
+        "details": "REFERENCES ordens_servico(id)"
+      },
+      {
+        "name": "validade",
+        "type": "DATE",
+        "details": ""
+      },
+      {
+        "name": "usage_limit",
+        "type": "INTEGER",
+        "details": "DEFAULT 1"
+      },
+      {
+        "name": "usage_count",
+        "type": "INTEGER",
+        "details": "DEFAULT 0"
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "details": "CHECK (status IN ('ativo', 'usado', 'expirado', 'cancelado')) DEFAULT 'ativo'"
+      },
+      {
+        "name": "categoria",
+        "type": "TEXT",
+        "details": "CHECK (categoria IN ('desconto', 'saque'))"
+      },
+      {
+        "name": "data_uso",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE"
+      },
+      {
+        "name": "tipo_uso",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "motivo_cancelamento",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "data_cancelamento",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE DEFAULT NOW()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "cliente_id",
+        "refTable": "clientes",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      },
+      {
+        "column": "prestador_id",
+        "refTable": "prestadores",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      },
+      {
+        "column": "ordem_servico_id",
+        "refTable": "ordens_servico",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      }
+    ],
+    "existingIndexes": [
+      {
+        "name": "idx_vouchers_cliente_id",
+        "columns": "cliente_id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260723130000_add_missing_fk_indexes.sql"
+      },
+      {
+        "name": "idx_vouchers_prestador_id",
+        "columns": "prestador_id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260723130000_add_missing_fk_indexes.sql"
+      },
+      {
+        "name": "idx_vouchers_ordem_servico_id",
+        "columns": "ordem_servico_id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260723130000_add_missing_fk_indexes.sql"
+      }
+    ],
+    "alterations": []
+  },
+  "parceiros_resgates": {
+    "tableName": "parceiros_resgates",
+    "definedIn": [
+      "20260721120000_partner_benefit_redemption.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS public.parceiros_resgates (\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  parceiro_id uuid NOT NULL REFERENCES public.parceiros(id) ON DELETE CASCADE,\n  cliente_id uuid,\n  nome_completo text NOT NULL,\n  telefone text NOT NULL,\n  codigo_gerado text,\n  tipo_resgate text NOT NULL DEFAULT 'link',\n  link_destino text,\n  auto_redirecionado boolean NOT NULL DEFAULT false,\n  created_at timestamptz NOT NULL DEFAULT now()\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "details": "PRIMARY KEY DEFAULT gen_random_uuid()"
+      },
+      {
+        "name": "parceiro_id",
+        "type": "uuid",
+        "details": "NOT NULL REFERENCES public.parceiros(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "cliente_id",
+        "type": "uuid",
+        "details": ""
+      },
+      {
+        "name": "nome_completo",
+        "type": "text",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "telefone",
+        "type": "text",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "codigo_gerado",
+        "type": "text",
+        "details": ""
+      },
+      {
+        "name": "tipo_resgate",
+        "type": "text",
+        "details": "NOT NULL DEFAULT 'link'"
+      },
+      {
+        "name": "link_destino",
+        "type": "text",
+        "details": ""
+      },
+      {
+        "name": "auto_redirecionado",
+        "type": "boolean",
+        "details": "NOT NULL DEFAULT false"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamptz",
+        "details": "NOT NULL DEFAULT now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "parceiro_id",
+        "refTable": "parceiros",
+        "refColumn": "id",
+        "source": "20260721120000_partner_benefit_redemption.sql"
+      }
+    ],
+    "existingIndexes": [
+      {
+        "name": "parceiros_resgates_parceiro_idx",
+        "columns": "parceiro_id, created_at DESC",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260721120000_partner_benefit_redemption.sql"
+      },
+      {
+        "name": "parceiros_resgates_cliente_idx",
+        "columns": "cliente_id, created_at DESC",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260721120000_partner_benefit_redemption.sql"
+      }
+    ],
+    "alterations": []
+  },
+  "produto_variantes": {
+    "tableName": "produto_variantes",
+    "definedIn": [
+      "20260817120000_product_variations_marketplace.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS public.produto_variantes (\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  produto_id uuid NOT NULL REFERENCES public.produtos(id) ON DELETE CASCADE,\n  chave text NOT NULL,\n  nome text,\n  sku text,\n  codigo_barras text,\n  valor numeric,\n  valor_custo numeric,\n  controle_estoque boolean NOT NULL DEFAULT false,\n  estoque_disponivel integer NOT NULL DEFAULT 0,\n  imagem_url text,\n  ativo boolean NOT NULL DEFAULT true,\n  combinacao jsonb NOT NULL DEFAULT '{}'::jsonb,\n  combinacao_hash text NOT NULL,\n  origem_externa_id text,\n  created_at timestamptz NOT NULL DEFAULT now(),\n  updated_at timestamptz NOT NULL DEFAULT now(),\n  CONSTRAINT produto_variantes_valor_check CHECK (valor IS NULL OR valor >= 0),\n  CONSTRAINT produto_variantes_valor_custo_check CHECK (valor_custo IS NULL OR valor_custo >= 0),\n  CONSTRAINT produto_variantes_estoque_check CHECK (estoque_disponivel >= 0),\n  CONSTRAINT produto_variantes_produto_hash_key UNIQUE (produto_id, combinacao_hash),\n  CONSTRAINT produto_variantes_produto_chave_key UNIQUE (produto_id, chave)\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "details": "PRIMARY KEY DEFAULT gen_random_uuid()"
+      },
+      {
+        "name": "produto_id",
+        "type": "uuid",
+        "details": "NOT NULL REFERENCES public.produtos(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "chave",
+        "type": "text",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "nome",
+        "type": "text",
+        "details": ""
+      },
+      {
+        "name": "sku",
+        "type": "text",
+        "details": ""
+      },
+      {
+        "name": "codigo_barras",
+        "type": "text",
+        "details": ""
+      },
+      {
+        "name": "valor",
+        "type": "numeric",
+        "details": ""
+      },
+      {
+        "name": "valor_custo",
+        "type": "numeric",
+        "details": ""
+      },
+      {
+        "name": "controle_estoque",
+        "type": "boolean",
+        "details": "NOT NULL DEFAULT false"
+      },
+      {
+        "name": "estoque_disponivel",
+        "type": "integer",
+        "details": "NOT NULL DEFAULT 0"
+      },
+      {
+        "name": "imagem_url",
+        "type": "text",
+        "details": ""
+      },
+      {
+        "name": "ativo",
+        "type": "boolean",
+        "details": "NOT NULL DEFAULT true"
+      },
+      {
+        "name": "combinacao",
+        "type": "jsonb",
+        "details": "NOT NULL DEFAULT '{}'::jsonb"
+      },
+      {
+        "name": "combinacao_hash",
+        "type": "text",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "origem_externa_id",
+        "type": "text",
+        "details": ""
+      },
+      {
+        "name": "created_at",
+        "type": "timestamptz",
+        "details": "NOT NULL DEFAULT now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamptz",
+        "details": "NOT NULL DEFAULT now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "produto_id",
+        "refTable": "produtos",
+        "refColumn": "id",
+        "source": "20260817120000_product_variations_marketplace.sql"
+      }
+    ],
+    "existingIndexes": [
+      {
+        "name": "idx_produto_variantes_produto",
+        "columns": "produto_id, ativo, id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260817120000_product_variations_marketplace.sql"
+      }
+    ],
+    "alterations": []
+  },
+  "produtos": {
+    "tableName": "produtos",
+    "definedIn": [
+      "master_supabase_schema.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS produtos (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    codigo_produto TEXT UNIQUE,\n    nome TEXT NOT NULL,\n    descricao TEXT,\n    valor DECIMAL(12,2) NOT NULL,\n    estoque INTEGER DEFAULT 0,\n    status TEXT CHECK (status IN ('ativo', 'inativo')) DEFAULT 'ativo',\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "details": "PRIMARY KEY DEFAULT uuid_generate_v4()"
+      },
+      {
+        "name": "codigo_produto",
+        "type": "TEXT",
+        "details": "UNIQUE"
+      },
+      {
+        "name": "nome",
+        "type": "TEXT",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "descricao",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "valor",
+        "type": "DECIMAL(12,2)",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "estoque",
+        "type": "INTEGER",
+        "details": "DEFAULT 0"
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "details": "CHECK (status IN ('ativo', 'inativo')) DEFAULT 'ativo'"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE DEFAULT NOW()"
+      }
+    ],
+    "foreignKeys": [],
+    "existingIndexes": [
+      {
+        "name": "produtos_codigo_barras_key",
+        "columns": "codigo_barras",
+        "type": "btree",
+        "unique": true,
+        "where": "codigo_barras IS NOT NULL",
+        "file": "20260716000000_product_barcode_support.sql"
+      }
+    ],
+    "alterations": []
+  },
+  "clientes": {
+    "tableName": "clientes",
+    "definedIn": [
+      "master_supabase_schema.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS clientes (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    codigo_cliente TEXT UNIQUE,\n    nome TEXT NOT NULL,\n    email TEXT UNIQUE,\n    cpf TEXT UNIQUE,\n    cnpj TEXT UNIQUE,\n    tipo_pessoa TEXT CHECK (tipo_pessoa IN ('pf', 'pj')) NOT NULL DEFAULT 'pf',\n    telefone TEXT,\n    data_nascimento DATE,\n    cep TEXT,\n    endereco TEXT,\n    numero TEXT,\n    bairro TEXT,\n    cidade TEXT,\n    estado TEXT,\n    observacoes TEXT,\n    status TEXT CHECK (status IN ('ativo', 'inativo', 'pendente')) DEFAULT 'ativo',\n    saldo_carteira DECIMAL(12,2) DEFAULT 0.00 NOT NULL,\n    saldo_pontos INTEGER DEFAULT 0 NOT NULL,\n    pontos_totais INTEGER DEFAULT 0 NOT NULL,\n    carteira_bloqueada BOOLEAN DEFAULT false,\n    pontos_bloqueados BOOLEAN DEFAULT false,\n    cadastro_aprovado BOOLEAN DEFAULT true,\n    bonus_boas_vindas_pendente BOOLEAN DEFAULT false,\n    saque_liberado_manual BOOLEAN DEFAULT false,\n    indicacao_origem_id UUID,\n    nivel_id UUID REFERENCES client_levels(id),\n    nivel_manual_id UUID REFERENCES client_levels(id),\n    nivel_manual_info TEXT,\n    data_cadastro TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "details": "PRIMARY KEY DEFAULT uuid_generate_v4()"
+      },
+      {
+        "name": "codigo_cliente",
+        "type": "TEXT",
+        "details": "UNIQUE"
+      },
+      {
+        "name": "nome",
+        "type": "TEXT",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "email",
+        "type": "TEXT",
+        "details": "UNIQUE"
+      },
+      {
+        "name": "cpf",
+        "type": "TEXT",
+        "details": "UNIQUE"
+      },
+      {
+        "name": "cnpj",
+        "type": "TEXT",
+        "details": "UNIQUE"
+      },
+      {
+        "name": "tipo_pessoa",
+        "type": "TEXT",
+        "details": "CHECK (tipo_pessoa IN ('pf', 'pj')) NOT NULL DEFAULT 'pf'"
+      },
+      {
+        "name": "telefone",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "data_nascimento",
+        "type": "DATE",
+        "details": ""
+      },
+      {
+        "name": "cep",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "endereco",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "numero",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "bairro",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "cidade",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "estado",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "observacoes",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "details": "CHECK (status IN ('ativo', 'inativo', 'pendente')) DEFAULT 'ativo'"
+      },
+      {
+        "name": "saldo_carteira",
+        "type": "DECIMAL(12,2)",
+        "details": "DEFAULT 0.00 NOT NULL"
+      },
+      {
+        "name": "saldo_pontos",
+        "type": "INTEGER",
+        "details": "DEFAULT 0 NOT NULL"
+      },
+      {
+        "name": "pontos_totais",
+        "type": "INTEGER",
+        "details": "DEFAULT 0 NOT NULL"
+      },
+      {
+        "name": "carteira_bloqueada",
+        "type": "BOOLEAN",
+        "details": "DEFAULT false"
+      },
+      {
+        "name": "pontos_bloqueados",
+        "type": "BOOLEAN",
+        "details": "DEFAULT false"
+      },
+      {
+        "name": "cadastro_aprovado",
+        "type": "BOOLEAN",
+        "details": "DEFAULT true"
+      },
+      {
+        "name": "bonus_boas_vindas_pendente",
+        "type": "BOOLEAN",
+        "details": "DEFAULT false"
+      },
+      {
+        "name": "saque_liberado_manual",
+        "type": "BOOLEAN",
+        "details": "DEFAULT false"
+      },
+      {
+        "name": "indicacao_origem_id",
+        "type": "UUID",
+        "details": ""
+      },
+      {
+        "name": "nivel_id",
+        "type": "UUID",
+        "details": "REFERENCES client_levels(id)"
+      },
+      {
+        "name": "nivel_manual_id",
+        "type": "UUID",
+        "details": "REFERENCES client_levels(id)"
+      },
+      {
+        "name": "nivel_manual_info",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "data_cadastro",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE DEFAULT NOW()"
+      },
+      {
+        "name": "updated_at",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE DEFAULT NOW()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "nivel_id",
+        "refTable": "client_levels",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      },
+      {
+        "column": "nivel_manual_id",
+        "refTable": "client_levels",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      }
+    ],
+    "existingIndexes": [
+      {
+        "name": "idx_clientes_nivel_id",
+        "columns": "nivel_id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260723130000_add_missing_fk_indexes.sql"
+      },
+      {
+        "name": "idx_clientes_nivel_manual_id",
+        "columns": "nivel_manual_id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260723130000_add_missing_fk_indexes.sql"
+      }
+    ],
+    "alterations": []
+  },
+  "carteira_lancamentos": {
+    "tableName": "carteira_lancamentos",
+    "definedIn": [
+      "master_supabase_schema.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS carteira_lancamentos (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    cliente_id UUID REFERENCES clientes(id) NOT NULL,\n    valor DECIMAL(12,2) NOT NULL,\n    tipo TEXT CHECK (tipo IN ('credito', 'debito')) NOT NULL,\n    descricao TEXT,\n    data_lancamento TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "details": "PRIMARY KEY DEFAULT uuid_generate_v4()"
+      },
+      {
+        "name": "cliente_id",
+        "type": "UUID",
+        "details": "REFERENCES clientes(id) NOT NULL"
+      },
+      {
+        "name": "valor",
+        "type": "DECIMAL(12,2)",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "tipo",
+        "type": "TEXT",
+        "details": "CHECK (tipo IN ('credito', 'debito')) NOT NULL"
+      },
+      {
+        "name": "descricao",
+        "type": "TEXT",
+        "details": ""
+      },
+      {
+        "name": "data_lancamento",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE DEFAULT NOW()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "cliente_id",
+        "refTable": "clientes",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      }
+    ],
+    "existingIndexes": [
+      {
+        "name": "idx_carteira_lancamentos_cliente_id",
+        "columns": "cliente_id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260723120000_system_db_alignment.sql"
+      }
+    ],
+    "alterations": []
+  },
+  "pagamentos": {
+    "tableName": "pagamentos",
+    "definedIn": [
+      "master_supabase_schema.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS pagamentos (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    fatura_id UUID REFERENCES faturas(id) ON DELETE CASCADE,\n    voucher_id UUID REFERENCES vouchers(id),\n    metodo TEXT CHECK (metodo IN ('pix', 'credito', 'debito', 'carteira', 'pontos', 'voucher', 'indicacao', 'dinheiro')) NOT NULL,\n    valor DECIMAL(12,2) NOT NULL,\n    data_pagamento TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "details": "PRIMARY KEY DEFAULT uuid_generate_v4()"
+      },
+      {
+        "name": "fatura_id",
+        "type": "UUID",
+        "details": "REFERENCES faturas(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "voucher_id",
+        "type": "UUID",
+        "details": "REFERENCES vouchers(id)"
+      },
+      {
+        "name": "metodo",
+        "type": "TEXT",
+        "details": "CHECK (metodo IN ('pix', 'credito', 'debito', 'carteira', 'pontos', 'voucher', 'indicacao', 'dinheiro')) NOT NULL"
+      },
+      {
+        "name": "valor",
+        "type": "DECIMAL(12,2)",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "data_pagamento",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE DEFAULT NOW()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "fatura_id",
+        "refTable": "faturas",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      },
+      {
+        "column": "voucher_id",
+        "refTable": "vouchers",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      }
+    ],
+    "existingIndexes": [
+      {
+        "name": "idx_pagamentos_fatura_id",
+        "columns": "fatura_id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260723130000_add_missing_fk_indexes.sql"
+      },
+      {
+        "name": "idx_pagamentos_voucher_id",
+        "columns": "voucher_id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260723130000_add_missing_fk_indexes.sql"
+      }
+    ],
+    "alterations": []
+  },
+  "ordens_compra": {
+    "tableName": "ordens_compra",
+    "definedIn": [
+      "master_supabase_schema.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS ordens_compra (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    codigo_ordem TEXT UNIQUE,\n    produto_id UUID REFERENCES produtos(id),\n    cliente_id UUID REFERENCES clientes(id) NOT NULL,\n    status TEXT CHECK (status IN ('em_analise', 'aprovado', 'concluido', 'cancelado')) DEFAULT 'em_analise',\n    quantidade INTEGER DEFAULT 1,\n    data_criacao TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "details": "PRIMARY KEY DEFAULT uuid_generate_v4()"
+      },
+      {
+        "name": "codigo_ordem",
+        "type": "TEXT",
+        "details": "UNIQUE"
+      },
+      {
+        "name": "produto_id",
+        "type": "UUID",
+        "details": "REFERENCES produtos(id)"
+      },
+      {
+        "name": "cliente_id",
+        "type": "UUID",
+        "details": "REFERENCES clientes(id) NOT NULL"
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "details": "CHECK (status IN ('em_analise', 'aprovado', 'concluido', 'cancelado')) DEFAULT 'em_analise'"
+      },
+      {
+        "name": "quantidade",
+        "type": "INTEGER",
+        "details": "DEFAULT 1"
+      },
+      {
+        "name": "data_criacao",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE DEFAULT NOW()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "produto_id",
+        "refTable": "produtos",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      },
+      {
+        "column": "cliente_id",
+        "refTable": "clientes",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      }
+    ],
+    "existingIndexes": [
+      {
+        "name": "idx_ordens_compra_cliente_id",
+        "columns": "cliente_id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260723120000_system_db_alignment.sql"
+      },
+      {
+        "name": "idx_ordens_compra_produto_variante",
+        "columns": "produto_variante_id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260817120000_product_variations_marketplace.sql"
+      }
+    ],
+    "alterations": []
+  },
+  "ordens_assinatura": {
+    "tableName": "ordens_assinatura",
+    "definedIn": [
+      "master_supabase_schema.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS ordens_assinatura (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    codigo_ordem TEXT UNIQUE,\n    assinatura_id UUID REFERENCES assinaturas(id),\n    cliente_id UUID REFERENCES clientes(id) NOT NULL,\n    status TEXT CHECK (status IN ('em_analise', 'aprovado', 'concluido', 'cancelado', 'em_cancelamento')) DEFAULT 'em_analise',\n    quantidade INTEGER DEFAULT 1,\n    prazo_meses INTEGER,\n    renovacao_automatica BOOLEAN DEFAULT true,\n    data_vencimento TIMESTAMP WITH TIME ZONE,\n    data_criacao TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "details": "PRIMARY KEY DEFAULT uuid_generate_v4()"
+      },
+      {
+        "name": "codigo_ordem",
+        "type": "TEXT",
+        "details": "UNIQUE"
+      },
+      {
+        "name": "assinatura_id",
+        "type": "UUID",
+        "details": "REFERENCES assinaturas(id)"
+      },
+      {
+        "name": "cliente_id",
+        "type": "UUID",
+        "details": "REFERENCES clientes(id) NOT NULL"
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "details": "CHECK (status IN ('em_analise', 'aprovado', 'concluido', 'cancelado', 'em_cancelamento')) DEFAULT 'em_analise'"
+      },
+      {
+        "name": "quantidade",
+        "type": "INTEGER",
+        "details": "DEFAULT 1"
+      },
+      {
+        "name": "prazo_meses",
+        "type": "INTEGER",
+        "details": ""
+      },
+      {
+        "name": "renovacao_automatica",
+        "type": "BOOLEAN",
+        "details": "DEFAULT true"
+      },
+      {
+        "name": "data_vencimento",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE"
+      },
+      {
+        "name": "data_criacao",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE DEFAULT NOW()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "assinatura_id",
+        "refTable": "assinaturas",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      },
+      {
+        "column": "cliente_id",
+        "refTable": "clientes",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      }
+    ],
+    "existingIndexes": [],
+    "alterations": []
+  },
+  "prestador_saques": {
+    "tableName": "prestador_saques",
+    "definedIn": [
+      "master_supabase_schema.sql",
+      "20260318000000_update_prestador_demandas.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS prestador_saques (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    prestador_id UUID REFERENCES prestadores(id) ON DELETE CASCADE,\n    valor DECIMAL(12,2) NOT NULL,\n    status TEXT CHECK (status IN ('em_analise', 'aprovado', 'recusado', 'pago')) DEFAULT 'em_analise',\n    dados_bancarios JSONB,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "details": "PRIMARY KEY DEFAULT uuid_generate_v4()"
+      },
+      {
+        "name": "prestador_id",
+        "type": "UUID",
+        "details": "REFERENCES prestadores(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "valor",
+        "type": "DECIMAL(12,2)",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "details": "CHECK (status IN ('em_analise', 'aprovado', 'recusado', 'pago')) DEFAULT 'em_analise'"
+      },
+      {
+        "name": "dados_bancarios",
+        "type": "JSONB",
+        "details": ""
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE DEFAULT NOW()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "prestador_id",
+        "refTable": "prestadores",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      }
+    ],
+    "existingIndexes": [
+      {
+        "name": "idx_prestador_saques_prestador_id",
+        "columns": "prestador_id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260728050000_add_performance_indexes.sql"
+      }
+    ],
+    "alterations": []
+  },
+  "prestador_faturas": {
+    "tableName": "prestador_faturas",
+    "definedIn": [
+      "master_supabase_schema.sql",
+      "20260317000002_create_prestadores_schema.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS prestador_faturas (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    prestador_id UUID REFERENCES prestadores(id) ON DELETE CASCADE,\n    demanda_id UUID REFERENCES prestador_demandas(id),\n    valor DECIMAL(12,2) NOT NULL,\n    status TEXT CHECK (status IN ('pendente', 'aprovado', 'pago', 'cancelado')) DEFAULT 'pendente',\n    data_vencimento DATE,\n    data_pagamento TIMESTAMP WITH TIME ZONE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "details": "PRIMARY KEY DEFAULT uuid_generate_v4()"
+      },
+      {
+        "name": "prestador_id",
+        "type": "UUID",
+        "details": "REFERENCES prestadores(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "demanda_id",
+        "type": "UUID",
+        "details": "REFERENCES prestador_demandas(id)"
+      },
+      {
+        "name": "valor",
+        "type": "DECIMAL(12,2)",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "details": "CHECK (status IN ('pendente', 'aprovado', 'pago', 'cancelado')) DEFAULT 'pendente'"
+      },
+      {
+        "name": "data_vencimento",
+        "type": "DATE",
+        "details": ""
+      },
+      {
+        "name": "data_pagamento",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE DEFAULT NOW()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "prestador_id",
+        "refTable": "prestadores",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      },
+      {
+        "column": "demanda_id",
+        "refTable": "prestador_demandas",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      }
+    ],
+    "existingIndexes": [
+      {
+        "name": "idx_prestador_faturas_prestador_id",
+        "columns": "prestador_id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260728050000_add_performance_indexes.sql"
+      }
+    ],
+    "alterations": []
+  },
+  "gsa_afiliado_saques": {
+    "tableName": "gsa_afiliado_saques",
+    "definedIn": [
+      "20260722040000_affiliate_program.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS public.gsa_afiliado_saques (\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  afiliado_id uuid NOT NULL REFERENCES public.gsa_afiliados(id) ON DELETE RESTRICT,\n  request_id uuid NOT NULL UNIQUE,\n  valor numeric(14,2) NOT NULL,\n  status text NOT NULL DEFAULT 'solicitado',\n  pix_tipo_snapshot text NOT NULL,\n  pix_chave_snapshot text NOT NULL,\n  solicitado_em timestamptz NOT NULL DEFAULT now(),\n  aprovado_em timestamptz,\n  pago_em timestamptz,\n  rejeitado_em timestamptz,\n  cancelado_em timestamptz,\n  notas text,\n  decidido_por uuid,\n  created_at timestamptz NOT NULL DEFAULT now(),\n  updated_at timestamptz NOT NULL DEFAULT now(),\n  CONSTRAINT gsa_afiliado_saques_valor_check CHECK (valor > 0),\n  CONSTRAINT gsa_afiliado_saques_pix_tipo_check\n    CHECK (pix_tipo_snapshot IN ('cpf','cnpj','email','telefone','aleatoria')),\n  CONSTRAINT gsa_afiliado_saques_status_check\n    CHECK (status IN ('solicitado','aprovado','pago','rejeitado','cancelado'))\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "details": "PRIMARY KEY DEFAULT gen_random_uuid()"
+      },
+      {
+        "name": "afiliado_id",
+        "type": "uuid",
+        "details": "NOT NULL REFERENCES public.gsa_afiliados(id) ON DELETE RESTRICT"
+      },
+      {
+        "name": "request_id",
+        "type": "uuid",
+        "details": "NOT NULL UNIQUE"
+      },
+      {
+        "name": "valor",
+        "type": "numeric(14,2)",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "details": "NOT NULL DEFAULT 'solicitado'"
+      },
+      {
+        "name": "pix_tipo_snapshot",
+        "type": "text",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "pix_chave_snapshot",
+        "type": "text",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "solicitado_em",
+        "type": "timestamptz",
+        "details": "NOT NULL DEFAULT now()"
+      },
+      {
+        "name": "aprovado_em",
+        "type": "timestamptz",
+        "details": ""
+      },
+      {
+        "name": "pago_em",
+        "type": "timestamptz",
+        "details": ""
+      },
+      {
+        "name": "rejeitado_em",
+        "type": "timestamptz",
+        "details": ""
+      },
+      {
+        "name": "cancelado_em",
+        "type": "timestamptz",
+        "details": ""
+      },
+      {
+        "name": "notas",
+        "type": "text",
+        "details": ""
+      },
+      {
+        "name": "decidido_por",
+        "type": "uuid",
+        "details": ""
+      },
+      {
+        "name": "created_at",
+        "type": "timestamptz",
+        "details": "NOT NULL DEFAULT now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamptz",
+        "details": "NOT NULL DEFAULT now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "afiliado_id",
+        "refTable": "gsa_afiliados",
+        "refColumn": "id",
+        "source": "20260722040000_affiliate_program.sql"
+      }
+    ],
+    "existingIndexes": [
+      {
+        "name": "ix_gsa_afiliado_saques_fila",
+        "columns": "status, solicitado_em",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260722040000_affiliate_program.sql"
+      }
+    ],
+    "alterations": []
+  },
+  "loja_credito_saques": {
+    "tableName": "loja_credito_saques",
+    "definedIn": [
+      "20260829133000_credit_available_withdrawals.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS public.loja_credito_saques (\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  protocolo text NOT NULL UNIQUE,\n  cliente_id uuid NOT NULL REFERENCES public.clientes(id) ON DELETE CASCADE,\n  valor_solicitado numeric(14,2) NOT NULL CHECK (valor_solicitado > 0),\n  taxa_tipo text NOT NULL CHECK (taxa_tipo IN ('percentual','fixa')),\n  taxa_config_valor numeric(14,4) NOT NULL DEFAULT 0 CHECK (taxa_config_valor >= 0),\n  taxa_calculada numeric(14,2) NOT NULL DEFAULT 0 CHECK (taxa_calculada >= 0),\n  valor_total_fatura numeric(14,2) NOT NULL CHECK (valor_total_fatura > 0),\n  limite_disponivel_snapshot numeric(14,2) NOT NULL DEFAULT 0,\n  valor_bloqueado numeric(14,2) NOT NULL DEFAULT 0 CHECK (valor_bloqueado >= 0),\n  criterio_cadastro_30d_ok boolean NOT NULL DEFAULT false,\n  criterio_credito_100_ok boolean NOT NULL DEFAULT false,\n  analise_reforcada boolean NOT NULL DEFAULT false,\n  pix_tipo text NOT NULL,\n  pix_chave text NOT NULL,\n  documento_foto jsonb,\n  comprovante_endereco jsonb,\n  status text NOT NULL DEFAULT 'aguardando_documentos',\n  prazo_analise timestamptz,\n  motivo_decisao text,\n  analisado_por uuid,\n  analisado_por_tipo text,\n  analisado_por_nome text,\n  analisado_em timestamptz,\n  aprovado_em timestamptz,\n  liberado_em timestamptz,\n  referencia_pagamento text,\n  fatura_id uuid REFERENCES public.faturas(id) ON DELETE SET NULL,\n  movimentacao_id uuid REFERENCES public.loja_credito_movimentacoes(id) ON DELETE SET NULL,\n  created_at timestamptz NOT NULL DEFAULT now(),\n  updated_at timestamptz NOT NULL DEFAULT now()\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "details": "PRIMARY KEY DEFAULT gen_random_uuid()"
+      },
+      {
+        "name": "protocolo",
+        "type": "text",
+        "details": "NOT NULL UNIQUE"
+      },
+      {
+        "name": "cliente_id",
+        "type": "uuid",
+        "details": "NOT NULL REFERENCES public.clientes(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "valor_solicitado",
+        "type": "numeric(14,2)",
+        "details": "NOT NULL CHECK (valor_solicitado > 0)"
+      },
+      {
+        "name": "taxa_tipo",
+        "type": "text",
+        "details": "NOT NULL CHECK (taxa_tipo IN ('percentual','fixa'))"
+      },
+      {
+        "name": "taxa_config_valor",
+        "type": "numeric(14,4)",
+        "details": "NOT NULL DEFAULT 0 CHECK (taxa_config_valor >= 0)"
+      },
+      {
+        "name": "taxa_calculada",
+        "type": "numeric(14,2)",
+        "details": "NOT NULL DEFAULT 0 CHECK (taxa_calculada >= 0)"
+      },
+      {
+        "name": "valor_total_fatura",
+        "type": "numeric(14,2)",
+        "details": "NOT NULL CHECK (valor_total_fatura > 0)"
+      },
+      {
+        "name": "limite_disponivel_snapshot",
+        "type": "numeric(14,2)",
+        "details": "NOT NULL DEFAULT 0"
+      },
+      {
+        "name": "valor_bloqueado",
+        "type": "numeric(14,2)",
+        "details": "NOT NULL DEFAULT 0 CHECK (valor_bloqueado >= 0)"
+      },
+      {
+        "name": "criterio_cadastro_30d_ok",
+        "type": "boolean",
+        "details": "NOT NULL DEFAULT false"
+      },
+      {
+        "name": "criterio_credito_100_ok",
+        "type": "boolean",
+        "details": "NOT NULL DEFAULT false"
+      },
+      {
+        "name": "analise_reforcada",
+        "type": "boolean",
+        "details": "NOT NULL DEFAULT false"
+      },
+      {
+        "name": "pix_tipo",
+        "type": "text",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "pix_chave",
+        "type": "text",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "documento_foto",
+        "type": "jsonb",
+        "details": ""
+      },
+      {
+        "name": "comprovante_endereco",
+        "type": "jsonb",
+        "details": ""
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "details": "NOT NULL DEFAULT 'aguardando_documentos'"
+      },
+      {
+        "name": "prazo_analise",
+        "type": "timestamptz",
+        "details": ""
+      },
+      {
+        "name": "motivo_decisao",
+        "type": "text",
+        "details": ""
+      },
+      {
+        "name": "analisado_por",
+        "type": "uuid",
+        "details": ""
+      },
+      {
+        "name": "analisado_por_tipo",
+        "type": "text",
+        "details": ""
+      },
+      {
+        "name": "analisado_por_nome",
+        "type": "text",
+        "details": ""
+      },
+      {
+        "name": "analisado_em",
+        "type": "timestamptz",
+        "details": ""
+      },
+      {
+        "name": "aprovado_em",
+        "type": "timestamptz",
+        "details": ""
+      },
+      {
+        "name": "liberado_em",
+        "type": "timestamptz",
+        "details": ""
+      },
+      {
+        "name": "referencia_pagamento",
+        "type": "text",
+        "details": ""
+      },
+      {
+        "name": "fatura_id",
+        "type": "uuid",
+        "details": "REFERENCES public.faturas(id) ON DELETE SET NULL"
+      },
+      {
+        "name": "movimentacao_id",
+        "type": "uuid",
+        "details": "REFERENCES public.loja_credito_movimentacoes(id) ON DELETE SET NULL"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamptz",
+        "details": "NOT NULL DEFAULT now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamptz",
+        "details": "NOT NULL DEFAULT now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "cliente_id",
+        "refTable": "clientes",
+        "refColumn": "id",
+        "source": "20260829133000_credit_available_withdrawals.sql"
+      },
+      {
+        "column": "fatura_id",
+        "refTable": "faturas",
+        "refColumn": "id",
+        "source": "20260829133000_credit_available_withdrawals.sql"
+      },
+      {
+        "column": "movimentacao_id",
+        "refTable": "loja_credito_movimentacoes",
+        "refColumn": "id",
+        "source": "20260829133000_credit_available_withdrawals.sql"
+      }
+    ],
+    "existingIndexes": [
+      {
+        "name": "loja_credito_saques_ativo_uidx",
+        "columns": "cliente_id",
+        "type": "btree",
+        "unique": true,
+        "where": "status IN ('aguardando_documentos','em_analise','analise_reforcada','aprovado')",
+        "file": "20260829133000_credit_available_withdrawals.sql"
+      },
+      {
+        "name": "loja_credito_saques_status_data_idx",
+        "columns": "status, created_at DESC",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260829133000_credit_available_withdrawals.sql"
+      }
+    ],
+    "alterations": []
+  },
+  "ticket_mensagens": {
+    "tableName": "ticket_mensagens",
+    "definedIn": [
+      "master_supabase_schema.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS ticket_mensagens (\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    ticket_id UUID REFERENCES tickets(id) ON DELETE CASCADE,\n    autor_id TEXT NOT NULL,\n    autor_nome TEXT NOT NULL,\n    mensagem TEXT NOT NULL,\n    tipo TEXT CHECK (tipo IN ('cliente', 'admin', 'prestador')) NOT NULL,\n    data_envio TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "UUID",
+        "details": "PRIMARY KEY DEFAULT uuid_generate_v4()"
+      },
+      {
+        "name": "ticket_id",
+        "type": "UUID",
+        "details": "REFERENCES tickets(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "autor_id",
+        "type": "TEXT",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "autor_nome",
+        "type": "TEXT",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "mensagem",
+        "type": "TEXT",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "tipo",
+        "type": "TEXT",
+        "details": "CHECK (tipo IN ('cliente', 'admin', 'prestador')) NOT NULL"
+      },
+      {
+        "name": "data_envio",
+        "type": "TIMESTAMP",
+        "details": "WITH TIME ZONE DEFAULT NOW()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "ticket_id",
+        "refTable": "tickets",
+        "refColumn": "id",
+        "source": "master_supabase_schema.sql"
+      }
+    ],
+    "existingIndexes": [],
+    "alterations": []
+  },
+  "gsa_voucher_resgates": {
+    "tableName": "gsa_voucher_resgates",
+    "definedIn": [
+      "20260714056300_secure_remaining_client_financial_actions.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS public.gsa_voucher_resgates (\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  voucher_id uuid NOT NULL REFERENCES public.vouchers(id) ON DELETE CASCADE,\n  cliente_id uuid NOT NULL REFERENCES public.clientes(id) ON DELETE CASCADE,\n  valor numeric NOT NULL CHECK (valor > 0),\n  created_at timestamptz NOT NULL DEFAULT now(),\n  UNIQUE (voucher_id, cliente_id)\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "details": "PRIMARY KEY DEFAULT gen_random_uuid()"
+      },
+      {
+        "name": "voucher_id",
+        "type": "uuid",
+        "details": "NOT NULL REFERENCES public.vouchers(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "cliente_id",
+        "type": "uuid",
+        "details": "NOT NULL REFERENCES public.clientes(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "valor",
+        "type": "numeric",
+        "details": "NOT NULL CHECK (valor > 0)"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamptz",
+        "details": "NOT NULL DEFAULT now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "voucher_id",
+        "refTable": "vouchers",
+        "refColumn": "id",
+        "source": "20260714056300_secure_remaining_client_financial_actions.sql"
+      },
+      {
+        "column": "cliente_id",
+        "refTable": "clientes",
+        "refColumn": "id",
+        "source": "20260714056300_secure_remaining_client_financial_actions.sql"
+      }
+    ],
+    "existingIndexes": [],
+    "alterations": []
+  },
+  "parceiros_resgates_recursos": {
+    "tableName": "parceiros_resgates_recursos",
+    "definedIn": [
+      "20260828170000_partner_redemption_appeals.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS public.parceiros_resgates_recursos (\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  resgate_id uuid NOT NULL REFERENCES public.parceiros_resgates(id) ON DELETE CASCADE,\n  protocolo_recurso text NOT NULL UNIQUE,\n  contestacao_cliente text NOT NULL,\n  status text NOT NULL DEFAULT 'em_analise'\n    CHECK (status IN ('em_analise', 'deferido', 'indeferido')),\n  aberto_em timestamptz NOT NULL DEFAULT now(),\n  prazo_analise_em timestamptz NOT NULL,\n  analisado_em timestamptz,\n  motivo_decisao text,\n  analisado_por uuid,\n  idempotency_key uuid NOT NULL UNIQUE,\n  created_at timestamptz NOT NULL DEFAULT now(),\n  updated_at timestamptz NOT NULL DEFAULT now(),\n  CONSTRAINT parceiros_resgates_recursos_unico_por_resgate UNIQUE (resgate_id),\n  CONSTRAINT parceiros_resgates_recursos_contestacao_check\n    CHECK (char_length(trim(contestacao_cliente)) BETWEEN 20 AND 4000),\n  CONSTRAINT parceiros_resgates_recursos_decisao_check CHECK (\n    (status = 'em_analise' AND analisado_em IS NULL AND motivo_decisao IS NULL)\n    OR\n    (status = 'deferido' AND analisado_em IS NOT NULL)\n    OR\n    (status = 'indeferido' AND analisado_em IS NOT NULL AND char_length(trim(COALESCE(motivo_decisao, ''))) BETWEEN 10 AND 2000)\n  )\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "details": "PRIMARY KEY DEFAULT gen_random_uuid()"
+      },
+      {
+        "name": "resgate_id",
+        "type": "uuid",
+        "details": "NOT NULL REFERENCES public.parceiros_resgates(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "protocolo_recurso",
+        "type": "text",
+        "details": "NOT NULL UNIQUE"
+      },
+      {
+        "name": "contestacao_cliente",
+        "type": "text",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "details": "NOT NULL DEFAULT 'em_analise'"
+      },
+      {
+        "name": "aberto_em",
+        "type": "timestamptz",
+        "details": "NOT NULL DEFAULT now()"
+      },
+      {
+        "name": "prazo_analise_em",
+        "type": "timestamptz",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "analisado_em",
+        "type": "timestamptz",
+        "details": ""
+      },
+      {
+        "name": "motivo_decisao",
+        "type": "text",
+        "details": ""
+      },
+      {
+        "name": "analisado_por",
+        "type": "uuid",
+        "details": ""
+      },
+      {
+        "name": "idempotency_key",
+        "type": "uuid",
+        "details": "NOT NULL UNIQUE"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamptz",
+        "details": "NOT NULL DEFAULT now()"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamptz",
+        "details": "NOT NULL DEFAULT now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "resgate_id",
+        "refTable": "parceiros_resgates",
+        "refColumn": "id",
+        "source": "20260828170000_partner_redemption_appeals.sql"
+      }
+    ],
+    "existingIndexes": [
+      {
+        "name": "idx_parceiros_resgates_recursos_status_prazo",
+        "columns": "status, prazo_analise_em",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260828170000_partner_redemption_appeals.sql"
+      }
+    ],
+    "alterations": []
+  },
+  "parceiros_resgates_eventos": {
+    "tableName": "parceiros_resgates_eventos",
+    "definedIn": [
+      "20260828170000_partner_redemption_appeals.sql"
+    ],
+    "rawCreateSql": "CREATE TABLE IF NOT EXISTS public.parceiros_resgates_eventos (\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  resgate_id uuid NOT NULL REFERENCES public.parceiros_resgates(id) ON DELETE CASCADE,\n  recurso_id uuid REFERENCES public.parceiros_resgates_recursos(id) ON DELETE SET NULL,\n  tipo text NOT NULL,\n  titulo text NOT NULL,\n  descricao_publica text,\n  detalhes_privados jsonb NOT NULL DEFAULT '{}'::jsonb,\n  ator_tipo text NOT NULL DEFAULT 'sistema'\n    CHECK (ator_tipo IN ('cliente', 'admin', 'colaborador', 'sistema')),\n  ator_id uuid,\n  idempotency_key text NOT NULL UNIQUE,\n  ocorrido_em timestamptz NOT NULL DEFAULT now(),\n  created_at timestamptz NOT NULL DEFAULT now()\n);",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "details": "PRIMARY KEY DEFAULT gen_random_uuid()"
+      },
+      {
+        "name": "resgate_id",
+        "type": "uuid",
+        "details": "NOT NULL REFERENCES public.parceiros_resgates(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "recurso_id",
+        "type": "uuid",
+        "details": "REFERENCES public.parceiros_resgates_recursos(id) ON DELETE SET NULL"
+      },
+      {
+        "name": "tipo",
+        "type": "text",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "titulo",
+        "type": "text",
+        "details": "NOT NULL"
+      },
+      {
+        "name": "descricao_publica",
+        "type": "text",
+        "details": ""
+      },
+      {
+        "name": "detalhes_privados",
+        "type": "jsonb",
+        "details": "NOT NULL DEFAULT '{}'::jsonb"
+      },
+      {
+        "name": "ator_tipo",
+        "type": "text",
+        "details": "NOT NULL DEFAULT 'sistema'"
+      },
+      {
+        "name": "ator_id",
+        "type": "uuid",
+        "details": ""
+      },
+      {
+        "name": "idempotency_key",
+        "type": "text",
+        "details": "NOT NULL UNIQUE"
+      },
+      {
+        "name": "ocorrido_em",
+        "type": "timestamptz",
+        "details": "NOT NULL DEFAULT now()"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamptz",
+        "details": "NOT NULL DEFAULT now()"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "column": "resgate_id",
+        "refTable": "parceiros_resgates",
+        "refColumn": "id",
+        "source": "20260828170000_partner_redemption_appeals.sql"
+      },
+      {
+        "column": "recurso_id",
+        "refTable": "parceiros_resgates_recursos",
+        "refColumn": "id",
+        "source": "20260828170000_partner_redemption_appeals.sql"
+      }
+    ],
+    "existingIndexes": [
+      {
+        "name": "idx_parceiros_resgates_eventos_timeline",
+        "columns": "resgate_id, ocorrido_em, id",
+        "type": "btree",
+        "unique": false,
+        "where": null,
+        "file": "20260828170000_partner_redemption_appeals.sql"
+      }
+    ],
+    "alterations": []
+  }
+}

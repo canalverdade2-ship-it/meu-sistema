@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, type ReactNode, useState } from 'react';
+import { ChangeEvent, FormEvent, type ReactNode, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -34,6 +34,20 @@ interface SubmitResult {
   id?: string;
   resume_upload_path?: string | null;
   code?: string;
+}
+
+interface CareerVacancy {
+  id: string;
+  code: string;
+  title: string;
+  area: string;
+  employment_type: 'clt' | 'estagio';
+  work_mode: string;
+  location: string;
+  description: string;
+  requirements?: string[];
+  salary_min?: number | null;
+  salary_max?: number | null;
 }
 
 type FormStep = 1 | 2 | 3;
@@ -126,6 +140,23 @@ export function CareersLandingPage({ onBackToSite, onAccessPortal }: CareersLand
   const [protocol, setProtocol] = useState<string | null>(null);
   const [resumeWarning, setResumeWarning] = useState(false);
   const [alreadyExists, setAlreadyExists] = useState(false);
+  const [vacancies, setVacancies] = useState<CareerVacancy[]>([]);
+  const [selectedVacancyId, setSelectedVacancyId] = useState<string>('');
+
+  useEffect(() => {
+    const loadVacancies = async () => {
+      try {
+        const { data, error } = await supabase.rpc('gsa_public_list_career_vacancies');
+        if (error) throw error;
+        if (Array.isArray(data)) {
+          setVacancies(data as CareerVacancy[]);
+        }
+      } catch (err) {
+        console.warn('Falha ao carregar vagas públicas ativas:', err);
+      }
+    };
+    void loadVacancies();
+  }, []);
 
   const scrollToApplication = () => {
     document.getElementById('formulario-candidatura')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -223,6 +254,7 @@ export function CareersLandingPage({ onBackToSite, onAccessPortal }: CareersLand
         resume_file_name: resumeFile?.name || null,
         resume_mime_type: resumeMimeType,
         resume_size: resumeFile?.size || null,
+        vacancy_id: selectedVacancyId || null,
       };
 
       const { data, error } = await supabase.rpc('gsa_public_submit_career_application', {
@@ -610,6 +642,36 @@ export function CareersLandingPage({ onBackToSite, onAccessPortal }: CareersLand
 
                     {currentStep === 2 && (
                       <div className="grid gap-6 sm:grid-cols-2">
+                        {vacancies.length > 0 && (
+                          <div className="sm:col-span-2">
+                            <Field label="Vaga específica (opcional)">
+                              <select
+                                value={selectedVacancyId}
+                                onChange={(event) => {
+                                  const vId = event.target.value;
+                                  setSelectedVacancyId(vId);
+                                  const found = vacancies.find((v) => v.id === vId);
+                                  if (found) {
+                                    setForm((prev) => ({
+                                      ...prev,
+                                      desired_area: found.area || prev.desired_area,
+                                      employment_type: found.employment_type || prev.employment_type,
+                                    }));
+                                  }
+                                }}
+                                className="career-input"
+                              >
+                                <option value="">Banco de talentos geral (sem vaga específica)</option>
+                                {vacancies.map((v) => (
+                                  <option key={v.id} value={v.id}>
+                                    {v.title} ({v.code}) — {v.area} [{v.work_mode}]
+                                  </option>
+                                ))}
+                              </select>
+                            </Field>
+                          </div>
+                        )}
+
                         <div className="sm:col-span-2">
                           <Field label="Área de interesse" required>
                             <select

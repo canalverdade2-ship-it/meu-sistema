@@ -1,0 +1,112 @@
+{
+  "id": "gsaTvStorageReady03",
+  "name": "GSA TV 03 - VPS Storage Readiness",
+  "active": true,
+  "settings": {
+    "saveManualExecutions": true,
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo"
+  },
+  "tags": [
+    {
+      "name": "gsa-tv"
+    },
+    {
+      "name": "v2-vps"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "s3",
+      "name": "Cron - Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/15 * * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "exec-trigger",
+      "name": "Execute - Test or Reuse",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        440
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "h3",
+      "name": "HTTP - Verify Next 48h",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.30.250.1:19202/automation/jobs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"job_type\":\"cache_warmup\",\"payload\":{\"source\":\"n8n-storage-readiness\"}}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Cron - Every 15 Minutes": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Verify Next 48h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute - Test or Reuse": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Verify Next 48h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

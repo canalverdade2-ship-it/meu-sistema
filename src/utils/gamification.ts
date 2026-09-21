@@ -8,7 +8,7 @@ export async function processGamificationPointsManual(clienteId: string, pontosG
     const result = await callAdminRpc<any>('gsa_admin_adjust_points', {
       p_cliente_id: clienteId,
       p_pontos: Math.trunc(pontosGerados),
-      p_descricao: colaboradorNome ? `${descricao} [POR: ${colaboradorNome}]` : descricao,
+      p_descricao: descricao,
     });
 
     if (result && result.success === false) {

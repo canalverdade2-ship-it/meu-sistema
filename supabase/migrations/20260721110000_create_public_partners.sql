@@ -121,7 +121,8 @@ DECLARE
   v_slug text := lower(trim(COALESCE(p_payload ->> 'slug', '')));
   v_category text := trim(COALESCE(p_payload ->> 'category', ''));
   v_short_description text := trim(COALESCE(p_payload ->> 'short_description', ''));
-  v_status text := lower(trim(COALESCE(p_payload ->> 'status', 'em_analise')));
+  v_description text := trim(COALESCE(p_payload ->> 'description', ''));
+  v_status text := lower(trim(COALESCE(p_payload ->> 'status', 'ativo')));
   v_service_mode text := lower(trim(COALESCE(p_payload ->> 'service_mode', 'hibrido')));
   v_partner jsonb;
 BEGIN
@@ -131,20 +132,25 @@ BEGIN
   IF length(v_name) < 2 THEN
     RAISE EXCEPTION 'Informe um nome válido para o parceiro.' USING ERRCODE = '22023';
   END IF;
-  IF v_slug !~ '^[a-z0-9]+(?:-[a-z0-9]+)*$' THEN
-    RAISE EXCEPTION 'O endereço da página do parceiro é inválido.' USING ERRCODE = '22023';
+
+  IF v_slug = '' THEN
+    v_slug := lower(regexp_replace(v_name, '[^a-zA-Z0-9]+', '-', 'g'));
+    v_slug := trim(both '-' from v_slug);
   END IF;
-  IF length(v_category) < 2 THEN
-    RAISE EXCEPTION 'Informe uma categoria válida.' USING ERRCODE = '22023';
+
+  IF v_category = '' THEN
+    v_category := 'Geral';
   END IF;
-  IF length(v_short_description) < 10 THEN
-    RAISE EXCEPTION 'A descrição curta deve ter pelo menos 10 caracteres.' USING ERRCODE = '22023';
+
+  IF v_short_description = '' THEN
+    v_short_description := COALESCE(nullif(v_description, ''), nullif(trim(COALESCE(p_payload ->> 'benefits', '')), ''), v_name);
   END IF;
+
   IF v_status NOT IN ('em_analise', 'ativo', 'inativo', 'encerrado', 'excluido') THEN
-    RAISE EXCEPTION 'Status do parceiro inválido.' USING ERRCODE = '22023';
+    v_status := 'ativo';
   END IF;
   IF v_service_mode NOT IN ('presencial', 'online', 'hibrido') THEN
-    RAISE EXCEPTION 'Modalidade de atendimento inválida.' USING ERRCODE = '22023';
+    v_service_mode := 'hibrido';
   END IF;
 
   IF v_id IS NULL THEN

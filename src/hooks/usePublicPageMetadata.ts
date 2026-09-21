@@ -41,7 +41,7 @@ export function usePublicPageMetadata(page: PublicPage, selectedPackage: Service
           : page === 'systems'
             ? 'Criação de Sites e Sistemas | GSA HUB'
             : page === 'partners'
-              ? 'Parceiros | GSA HUB'
+              ? 'Nossos Parceiros | GSA HUB'
               : page === 'ads'
                 ? 'Anunciantes | GSA HUB'
                 : page === 'advertise'
@@ -76,7 +76,9 @@ export function usePublicPageMetadata(page: PublicPage, selectedPackage: Service
           : page === 'systems'
             ? '/criacao-de-site-e-sistemas'
             : page === 'partners'
-              ? window.location.pathname.startsWith('/parceiros/') ? window.location.pathname : '/parceiros'
+              ? window.location.pathname.startsWith('/nossos-parceiros/') || window.location.pathname.startsWith('/parceiros/')
+                ? window.location.pathname
+                : '/nossos-parceiros'
               : page === 'ads'
                 ? '/anuncios'
                 : page === 'advertise'

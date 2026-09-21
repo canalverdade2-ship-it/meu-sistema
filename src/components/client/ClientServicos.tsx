@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { createNotification } from '../../lib/notifications';
 import { notificationService } from '../../lib/notificationService';
@@ -9,6 +9,7 @@ import { ClipboardList, Clock, CheckCircle, XCircle, MessageSquare, Download, Fi
 import { Modal } from '../ui/Modal';
 import { toast } from 'react-hot-toast';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
 import { removePrivateDocument, uploadPrivateDocument } from '../../lib/privateStorage';
 import { useWhatsAppDocument } from '../../hooks/useWhatsAppDocument';
@@ -92,39 +93,38 @@ export function ClientServicos({
     fetchServicos();
   }, [activeTab, clientId, isMobile]);
 
-  // Stable Realtime Subscription
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    const debouncedFetch = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        fetchServicos();
-      }, 300);
-    };
-
-    const channel = supabase
-      .channel(`client-os-rt-${clientId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
+  useRealtimeSubscription(
+    [
+      {
         table: 'ordens_servico',
-        filter: `cliente_id=eq.${clientId}`
-      }, (payload) => {
-        debouncedFetch();
-        if (payload.new && selectedOSRef.current && (payload.new as any).id === selectedOSRef.current.id) {
-          setSelectedOS(prev => prev ? { ...prev, ...payload.new } as any : null);
-        }
-      })
-      .subscribe();
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        debounceMs: 300,
+        onChange: fetchServicos,
+        onPayload: (payload) => {
+          if (payload.new && selectedOSRef.current && (payload.new as any).id === selectedOSRef.current.id) {
+            setSelectedOS((prev) => (prev ? ({ ...prev, ...payload.new } as any) : null));
+          }
+        },
+      },
+      {
+        table: 'orcamentos',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        debounceMs: 300,
+        onChange: fetchServicos,
+      },
+      {
+        table: 'os_notas',
+        onChange: fetchServicos,
+      },
+      {
+        table: 'os_suporte_mensagens',
+        onChange: fetchServicos,
+      },
+    ],
+    [clientId, activeTab, isMobile]
+  );
 
-    return () => {
-      clearTimeout(timeoutId);
-      supabase.removeChannel(channel);
-    };
-  }, [clientId]); // Dependency only on clientId
-
-  const fetchServicos = async () => {
+  async function fetchServicos() {
     let query = supabase
       .from('ordens_servico')
       .select('*, orcamentos(*, servicos(nome))')

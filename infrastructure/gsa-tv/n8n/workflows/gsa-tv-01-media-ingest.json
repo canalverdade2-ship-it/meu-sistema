@@ -1,0 +1,170 @@
+{
+  "id": "gsaTvMediaReadiness01",
+  "name": "GSA TV 01 - Media Readiness Reconcile",
+  "active": true,
+  "settings": {
+    "saveManualExecutions": true,
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo"
+  },
+  "tags": [
+    {
+      "name": "gsa-tv"
+    },
+    {
+      "name": "v2-vps"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "s1",
+      "name": "Cron - Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/5 * * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "exec-trigger",
+      "name": "Execute - Test or Reuse",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        440
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "h1",
+      "name": "HTTP - Automation Snapshot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://172.30.250.1:19202/automation/snapshot",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "c1",
+      "name": "Code - Pending Media",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const rows=$json.media_pending||[];return rows.map(x=>({json:{media_item_id:x.id,title:x.title,state:x.state}}));"
+      }
+    },
+    {
+      "id": "h2",
+      "name": "HTTP - Enqueue Probe",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        900,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.30.250.1:19202/automation/jobs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"job_type\":\"probe_media\",\"payload\":{\"media_item_id\":\"{{ $json.media_item_id }}\"}}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Cron - Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Automation Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Automation Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Code - Pending Media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Pending Media": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Enqueue Probe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute - Test or Reuse": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Automation Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

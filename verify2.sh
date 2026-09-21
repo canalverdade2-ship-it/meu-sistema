@@ -1,0 +1,1 @@
+python3 -c "import py_compile; py_compile.compile('/home/opc/worker_shopee_sync.py', doraise=True); print('Syntax OK')"

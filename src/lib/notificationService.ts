@@ -1,4 +1,6 @@
 import { supabase } from './supabase';
+import { callClientRpc } from './clientRpc';
+import { sessionService } from './sessionService';
 import { Module } from '../types';
 
 // Tipos de destinatário para roteamento
@@ -7,6 +9,7 @@ export type Prioridade = 'baixa' | 'normal' | 'alta' | 'urgente';
 
 // Ações de origem padronizadas
 export type AcaoOrigem =
+  | 'checkout_loja'
   // Admin → Cliente
   | 'orcamento_aprovado' | 'orcamento_recusado' | 'orcamento_contraproposta' | 'orcamento_revisado' | 'orcamento_cancelado'
   | 'ticket_respondido' | 'ticket_fechado'
@@ -104,6 +107,34 @@ interface NotificationPayload {
  */
 async function insertNotification(payload: NotificationPayload): Promise<void> {
   try {
+    const session = sessionService.getCurrentSession();
+    if (session?.atorTipo === 'cliente' && payload.destinatarioTipo === 'admin') {
+      await callClientRpc('gsa_client_notify_admin', {
+        p_titulo: payload.titulo,
+        p_mensagem: payload.mensagem,
+        p_modulo: payload.modulo,
+        p_acao_origem: payload.acaoOrigem,
+        p_tab: payload.tab || null,
+        p_item_id: payload.itemId || null,
+        p_prioridade: payload.prioridade || 'normal',
+        p_contexto: payload.contexto || {},
+      });
+      return;
+    }
+    if (session?.atorTipo === 'cliente' && payload.destinatarioTipo === 'cliente' && payload.clienteId === session.atorId) {
+      await callClientRpc('gsa_client_notify_self', {
+        p_titulo: payload.titulo,
+        p_mensagem: payload.mensagem,
+        p_modulo: payload.modulo,
+        p_acao_origem: payload.acaoOrigem,
+        p_tab: payload.tab || null,
+        p_item_id: payload.itemId || null,
+        p_prioridade: payload.prioridade || 'normal',
+        p_contexto: payload.contexto || {},
+        p_tipo: payload.tipo || 'sistema',
+      });
+      return;
+    }
     const { error } = await supabase.from('notificacoes').insert([{
       cliente_id: payload.clienteId || null,
       prestador_id: payload.prestadorId || null,

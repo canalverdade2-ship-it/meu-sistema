@@ -1,90 +1,78 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-
-// 10 minutos em milissegundos.
-const TIMEOUT_MS = 10 * 60 * 1000;
+import { sessionService } from '../lib/sessionService';
+import { toast } from 'react-hot-toast';
 
 export function useAutoLogout(
-  onLogout: () => void | Promise<void>,
+  onLogout: (reason?: string) => void | Promise<void>,
   isSessionActive: boolean,
 ) {
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isLoggingOutRef = useRef(false);
 
-  const performLogout = () => {
-    Promise.resolve(onLogout()).catch((error) => {
-      console.error('Falha ao encerrar sessão por inatividade:', error);
+  const performLogout = (reason: string = 'superseded') => {
+    // evitando duas chamadas concorrentes
+    if (isLoggingOutRef.current) return;
+    isLoggingOutRef.current = true;
+
+    if (reason === 'superseded') {
+      toast.error('Sua sessão foi encerrada porque sua conta foi conectada em outro dispositivo ou local.', {
+        id: 'session-superseded-toast',
+        duration: 8000,
+      });
+    }
+
+    // Promise.resolve(onLogout())
+    Promise.resolve(onLogout(reason || undefined)).finally(() => {
+      isLoggingOutRef.current = false;
     });
   };
 
-  const resetTimer = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    // Sessão por tempo indeterminado: não é encerrada por inatividade.
-    // Atualiza a validade da sessão no máximo uma vez por minuto.
-    const lastPing = localStorage.getItem('lastPing');
-    const now = Date.now();
-    if (!lastPing || now - Number.parseInt(lastPing, 10) > 60_000) {
-      localStorage.setItem('lastPing', now.toString());
-      void import('../lib/sessionService').then(({ sessionService }) => sessionService.pingSession());
-    }
-  };
-
   useEffect(() => {
-    if (!isSessionActive) {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      return;
-    }
+    if (!isSessionActive) return;
 
-    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
-    let throttleTimeout: ReturnType<typeof setTimeout> | null = null;
+    // 1. Ouvinte para eventos de revogação de sessão disparados por RPCs ou validações locais
+    const handleRemoteRevocation = (event?: any) => {
+      const reason = event?.detail?.reason || 'superseded';
+      performLogout(reason);
+    };
+    window.addEventListener('gsa-session-revoked', handleRemoteRevocation);
 
-    const handleActivity = () => {
-      if (!throttleTimeout) {
-        throttleTimeout = setTimeout(() => {
-          resetTimer();
-          throttleTimeout = null;
-        }, 1000);
+
+    // 2. Heartbeat e verificação periódica de vitalidade da sessão.
+    // A tabela de sessões é deliberadamente privada e não integra a publicação
+    // Realtime. A RPC valida token e sessão sem expor linhas sensíveis ao navegador.
+    const checkSessionLiveness = async () => {
+      if (!isSessionActive || isLoggingOutRef.current) return;
+      try {
+        const current = sessionService.getCurrentSession();
+        if (!current?.sessaoId || !current?.sessionToken) {
+          performLogout('revoked');
+          return;
+        }
+
+        const { data, error } = await supabase.rpc('gsa_ping_session', {
+          p_sessao_id: current.sessaoId,
+          p_session_token: current.sessionToken,
+        });
+
+        // Se o banco retornou explicitamente false, a sessão foi desativada por um novo login
+        if (!error && data === false) {
+          performLogout('superseded');
+        }
+      } catch {
+        // Falhas transitórias de rede não derrubam a sessão
       }
     };
 
-    resetTimer();
-    const handleRemoteRevocation = () => performLogout();
-    window.addEventListener('gsa-session-revoked', handleRemoteRevocation);
-    events.forEach((event) => window.addEventListener(event, handleActivity));
-
-    // Mantém apenas a detecção remota. O encerramento completo é executado uma vez
-    // pelo callback central do App, evitando duas chamadas concorrentes a gsa_end_session.
-    const sessaoId = localStorage.getItem('sessaoId');
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-
-    if (sessaoId) {
-      channel = supabase
-        .channel(`sessao-check-${sessaoId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'sistema_sessoes',
-            filter: `id=eq.${sessaoId}`,
-          },
-          (payload) => {
-            if (payload.new && payload.new.status === 'encerrado') {
-              performLogout();
-            }
-          },
-        )
-        .subscribe();
-    }
+    // Janela de revogação passiva a cada 15 segundos sem interrupção de foco
+    const pingInterval = setInterval(() => {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+      void checkSessionLiveness();
+    }, 15_000);
 
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (throttleTimeout) clearTimeout(throttleTimeout);
-      events.forEach((event) => window.removeEventListener(event, handleActivity));
       window.removeEventListener('gsa-session-revoked', handleRemoteRevocation);
-      if (channel) supabase.removeChannel(channel);
+      clearInterval(pingInterval);
     };
   }, [isSessionActive, onLogout]);
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import {
   Eye,
+  Tv2,
   EyeOff,
   KeyRound,
   Loader2,
@@ -17,7 +18,7 @@ import {
 import { logService } from '../lib/logService';
 import { sessionService } from '../lib/sessionService';
 
-export type RestrictedAccessRole = 'colaborador' | 'gestao';
+export type RestrictedAccessRole = 'colaborador' | 'gestao' | 'gsatv';
 
 interface RestrictedAccessHubPageProps {
   initialRole?: RestrictedAccessRole;
@@ -27,6 +28,7 @@ interface RestrictedAccessHubPageProps {
     id?: string;
     nome?: string;
     modulos?: string[];
+    isGsaTv?: boolean;
   }) => void;
 }
 
@@ -46,6 +48,14 @@ const roleContent = {
     label: 'Código Master',
     button: 'Entrar na gestão',
     icon: UserCog,
+  },
+  gsatv: {
+    eyebrow: 'Transmissão',
+    title: 'GSA TV',
+    description: 'Acesso Master à emissora, operações e controle de mídia.',
+    label: 'Código Master',
+    button: 'Entrar na GSA TV',
+    icon: Tv2,
   },
 } as const;
 
@@ -97,16 +107,22 @@ export function RestrictedAccessHubPage({
 
     setLoading(true);
     try {
-      if (role === 'gestao') {
+      if (role === 'gestao' || role === 'gsatv') {
         const data = await sessionService.loginAdmin(code.trim());
         if (!data?.valid) throw new Error('Código Master inválido.');
         await logService.logAction({
           ator_tipo: 'admin',
           acao: 'LOGIN',
-          detalhes: 'Acesso Master pela página exclusiva da Área Restrita',
+          detalhes: role === 'gsatv' ? 'Acesso Master à GSA TV pela Área Restrita' : 'Acesso Master pela página exclusiva da Área Restrita',
         });
-        toast.success('Acesso à Gestão autorizado.');
-        onLoginAdmin({ type: 'admin' });
+        toast.success(role === 'gsatv' ? 'Acesso à GSA TV autorizado.' : 'Acesso à Gestão autorizado.');
+        if (role === 'gsatv') {
+          const params = new URLSearchParams(window.location.search);
+          if (!params.get('returnTo')) {
+            window.history.replaceState({}, '', `${window.location.pathname}?returnTo=${encodeURIComponent('/admin/gsa-tv')}`);
+          }
+        }
+        onLoginAdmin({ type: 'admin', isGsaTv: role === 'gsatv' });
         return;
       }
 
@@ -179,10 +195,11 @@ export function RestrictedAccessHubPage({
 
           <div className="mt-8 grid gap-8 lg:grid-cols-[0.86fr_1.14fr] lg:gap-12">
             <div>
-              <div className="grid border-l border-t border-[#cfc6b7] sm:grid-cols-2 lg:grid-cols-1">
+              <div className="grid border-l border-t border-[#cfc6b7] sm:grid-cols-3 lg:grid-cols-1">
                 {([
                   ['colaborador', roleContent.colaborador],
                   ['gestao', roleContent.gestao],
+                  ['gsatv', roleContent.gsatv],
                 ] as const).map(([roleId, content]) => {
                   const Icon = content.icon;
                   const isActive = role === roleId;

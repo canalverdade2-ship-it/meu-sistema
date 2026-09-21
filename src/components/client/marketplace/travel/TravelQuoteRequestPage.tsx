@@ -19,6 +19,8 @@ import { supabase } from '../../../../lib/supabase';
 import { navigate } from '../../../../routing/navigationService';
 import { routes } from '../../../../routing/routeCatalog';
 import { toast } from 'react-hot-toast';
+import { maskPhone } from '../../../../lib/utils';
+import { useRealtimeSubscription } from '../../../../hooks/useRealtime';
 
 interface TravelQuoteRequestPageProps {
   clientId?: string;
@@ -135,40 +137,53 @@ export function TravelQuoteRequestPage({ clientId, onBack }: TravelQuoteRequestP
     observacoes: '',
   });
 
-  useEffect(() => {
-    const packageId = new URLSearchParams(window.location.search).get('pacote');
+  const packageId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('pacote') : null;
+
+  const loadPackage = async () => {
     if (!packageId) return;
+    try {
+      setPackageLoading(true);
+      const { data, error } = await supabase
+        .from('viagens_pacotes')
+        .select('id, titulo, origem, destino, data_ida, data_volta, preco_venda, status')
+        .eq('id', packageId)
+        .in('status', ['publicado', 'disponibilidade_sob_consulta'])
+        .single();
 
-    async function loadPackage() {
-      try {
-        setPackageLoading(true);
-        const { data, error } = await supabase
-          .from('viagens_pacotes')
-          .select('id, titulo, origem, destino, data_ida, data_volta, preco_venda, status')
-          .eq('id', packageId)
-          .in('status', ['publicado', 'disponibilidade_sob_consulta'])
-          .single();
-
-        if (error) throw error;
-        setSelectedPackage(data as SelectedPackage);
-        setFormData((previous) => ({
-          ...previous,
-          origem: data.origem || previous.origem,
-          destino: data.destino || previous.destino,
-          data_ida: data.data_ida || previous.data_ida,
-          data_volta: data.data_volta || previous.data_volta,
-          observacoes: previous.observacoes || `Tenho interesse no pacote: ${data.titulo}.`,
-        }));
-      } catch (error) {
-        console.error('Erro ao carregar pacote selecionado:', error);
-        toast.error('O pacote selecionado não está mais disponível. Você ainda pode solicitar uma viagem personalizada.');
-      } finally {
-        setPackageLoading(false);
-      }
+      if (error) throw error;
+      setSelectedPackage(data as SelectedPackage);
+      setFormData((previous) => ({
+        ...previous,
+        origem: data.origem || previous.origem,
+        destino: data.destino || previous.destino,
+        data_ida: data.data_ida || previous.data_ida,
+        data_volta: data.data_volta || previous.data_volta,
+        observacoes: previous.observacoes || `Tenho interesse no pacote: ${data.titulo}.`,
+      }));
+    } catch (error) {
+      console.error('Erro ao carregar pacote selecionado:', error);
+      toast.error('O pacote selecionado não está mais disponível. Você ainda pode solicitar uma viagem personalizada.');
+    } finally {
+      setPackageLoading(false);
     }
+  };
 
-    loadPackage();
-  }, []);
+  useEffect(() => {
+    void loadPackage();
+  }, [packageId]);
+
+  useRealtimeSubscription(
+    [
+      {
+        table: 'viagens_pacotes',
+        filter: packageId ? `id=eq.${packageId}` : undefined,
+        enabled: Boolean(packageId),
+        debounceMs: 300,
+        onChange: () => { void loadPackage(); },
+      },
+    ],
+    [packageId]
+  );
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const totalTravelers =
@@ -352,7 +367,8 @@ export function TravelQuoteRequestPage({ clientId, onBack }: TravelQuoteRequestP
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className={`${labelClassName} sm:col-span-2`}>Nome completo<input name="nome" value={formData.nome} onChange={handleChange} autoComplete="name" required className={`${fieldClassName} mt-2`} /></label>
                   <label className={labelClassName}>E-mail<div className="relative mt-2"><Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#128765]" /><input type="email" name="email" value={formData.email} onChange={handleChange} autoComplete="email" required className={iconFieldClassName} /></div></label>
-                  <label className={labelClassName}>Telefone<div className="relative mt-2"><Phone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#128765]" /><input type="tel" name="telefone" value={formData.telefone} onChange={handleChange} autoComplete="tel" placeholder="(00) 00000-0000" required className={iconFieldClassName} /></div></label>
+                  <label className={labelClassName}>Telefone<div className="relative mt-2"><Phone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#128765]" /><input  type="tel" name="telefone" value={formData.telefone} inputMode="numeric"
+onChange={(e) => setFormData(prev => ({ ...prev, telefone: maskPhone(e.target.value) }))} autoComplete="tel" placeholder="(00) 00000-0000" maxLength={15} required className={iconFieldClassName} /></div></label>
                 </div>
               </section>
             )}

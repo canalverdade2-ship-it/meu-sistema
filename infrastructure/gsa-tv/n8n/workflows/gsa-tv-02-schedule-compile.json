@@ -1,0 +1,112 @@
+{
+  "id": "gsaTvScheduleCompile02",
+  "name": "GSA TV 02 - Schedule Compile",
+  "active": true,
+  "settings": {
+    "saveManualExecutions": true,
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo"
+  },
+  "tags": [
+    {
+      "name": "gsa-tv"
+    },
+    {
+      "name": "v2-vps"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "s2",
+      "name": "Cron - Hourly",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "5 * * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "exec-trigger",
+      "name": "Execute - Test or Reuse",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        440
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "h2",
+      "name": "HTTP - Enqueue Compile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.30.250.1:19202/automation/jobs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"job_type\":\"compile_playlist\",\"payload\":{\"source\":\"n8n-hourly\"}}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Cron - Hourly": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Enqueue Compile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute - Test or Reuse": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Enqueue Compile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

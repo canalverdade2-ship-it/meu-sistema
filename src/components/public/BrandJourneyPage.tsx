@@ -19,9 +19,9 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { LogoGSA } from '../ui/LogoGSA';
+import { navigate } from '../../routing/navigationService';
 import { PublicHeader } from './final/PublicHeader';
 import { SystemsBudgetModal } from './SystemsBudgetModal';
-import { PrivacyPolicyDialog } from './PrivacyPolicyDialog';
 import {
   BrandExamplesDialog,
   type BrandExampleCategory,
@@ -35,7 +35,7 @@ import {
 } from './BrandInsightDialog';
 
 const WHATSAPP_NUMBER = '5511920857756';
-const PAGE_TITLE = 'Empresa do Zero ao Digital | Marca, Site e Redes Sociais | GSA HUB';
+const PAGE_TITLE = 'Identidade e Web Design | Marca, Site e Redes Sociais | GSA HUB';
 const PAGE_DESCRIPTION = 'Da primeira ideia a uma marca pronta. Criação de nome, logo, identidade visual, materiais, redes sociais, conteúdo e presença digital para transformar uma ideia em uma marca profissional.';
 
 interface BrandJourneyPageProps {
@@ -190,7 +190,7 @@ function applyBrandMetadata() {
     ['meta[name="description"]', 'name', 'description', PAGE_DESCRIPTION],
     ['meta[property="og:title"]', 'property', 'og:title', PAGE_TITLE],
     ['meta[property="og:description"]', 'property', 'og:description', PAGE_DESCRIPTION],
-    ['meta[property="og:url"]', 'property', 'og:url', `${window.location.origin}/empresa-do-zero-ao-digital`],
+    ['meta[property="og:url"]', 'property', 'og:url', `${window.location.origin}/identidade-e-web-design`],
   ] as const;
 
   const managed: Array<{ element: HTMLMetaElement; previous: string | null; created: boolean }> = [];
@@ -218,7 +218,6 @@ function applyBrandMetadata() {
 
 export function BrandJourneyPage({ onBack, onSystems, onLogin }: BrandJourneyPageProps) {
   const [budgetOpen, setBudgetOpen] = useState(false);
-  const [privacyOpen, setPrivacyOpen] = useState(false);
   const [selectedExample, setSelectedExample] = useState<BrandExampleCategory | null>(null);
   const [insightSelection, setInsightSelection] = useState<BrandInsightSelection | null>(null);
 
@@ -487,7 +486,7 @@ export function BrandJourneyPage({ onBack, onSystems, onLogin }: BrandJourneyPag
           <div className="flex flex-wrap gap-x-5 gap-y-3 text-sm font-bold text-white/65">
             <button type="button" onClick={onBack} className="hover:text-[#d6bb80]">Início</button>
             <button type="button" onClick={onSystems} className="hover:text-[#d6bb80]">Sites e Sistemas</button>
-            <button type="button" onClick={() => setPrivacyOpen(true)} className="hover:text-[#d6bb80]">Privacidade</button>
+            <button type="button" onClick={() => navigate('/privacidade')} className="hover:text-[#d6bb80]">Privacidade</button>
             <button type="button" onClick={openWhatsApp} className="hover:text-[#d6bb80]">Contato</button>
           </div>
         </div>
@@ -505,7 +504,6 @@ export function BrandJourneyPage({ onBack, onSystems, onLogin }: BrandJourneyPag
         onRequestBudget={() => setBudgetOpen(true)}
       />
       <SystemsBudgetModal isOpen={budgetOpen} onClose={() => setBudgetOpen(false)} />
-      <PrivacyPolicyDialog isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
     </div>
   );
 }

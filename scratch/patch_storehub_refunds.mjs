@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+const p='src/components/client/StoreHub.tsx';
+let s=fs.readFileSync(p,'utf8').replace(/\r\n/g,'\n');
+const old=/const fetchMyRefunds = async \(\) => \{[\s\S]*?\n  \};\n\n  \/\/ Data states/;
+if(!old.test(s)) throw new Error('fetch refund block missing');
+s=s.replace(old,`const fetchMyRefunds = async () => {\n    setLoadingRefunds(true);\n    try {\n      const data = await callClientRpc<any[]>('gsa_client_store_refunds');\n      setRefunds(Array.isArray(data) ? data : []);\n    } catch (err) {\n      console.error('Erro ao carregar reembolsos do cliente:', err);\n    } finally {\n      setLoadingRefunds(false);\n    }\n  };\n\n  // Data states`);
+s=s.replace("if (refund.status === 'pendente') {\n                  currentLevel = 2;", "if (refund.status === 'pendente' || refund.status === 'aguardando_estorno') {\n                  currentLevel = 2;");
+s=s.replace(/\(refund\.ordens_compra\?\.orcamento_id \|\| refund\.ordens_assinatura\?\.orcamento_id\)/g,'refund.orcamento_id');
+s=s.replace("const orcamentoId = refund.ordens_compra?.orcamento_id || refund.ordens_assinatura?.orcamento_id;", "const orcamentoId = refund.orcamento_id;");
+s=s.replace("refund.ordens_compra?.orcamentos?.codigo_orcamento || refund.ordens_assinatura?.orcamentos?.codigo_orcamento || refund.ordens_compra?.codigo_ordem || refund.ordens_assinatura?.codigo_ordem || 'PEDIDO'", "refund.codigo_orcamento || refund.codigo_ordem || 'PEDIDO'");
+s=s.replace("{refund.status === 'pago' ? 'Pago' : refund.status === 'cancelado' ? 'Cancelado' : isOverdue ? 'Atrasado' : `Pendente: ${diffDays}d`}", "{refund.status === 'pago' ? 'Pago' : refund.status === 'cancelado' ? 'Cancelado' : refund.status === 'aguardando_estorno' ? 'Aguardando estorno' : isOverdue ? 'Atrasado' : `Pendente: ${diffDays}d`}");
+fs.writeFileSync(p,s,'utf8');
+console.log('STOREHUB_REFUNDS_PATCHED');

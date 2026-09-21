@@ -1,0 +1,14 @@
+## [2026-09-14 — Conclusão: piloto de geração integral e renderizador original]
+- Autor: Antigravity. Atualização solicitada por Adriano Farias.
+- Status atualizado para COMPLETO: fluxo 100% autônomo validado desde roteiro até banco de dados no contêiner.
+- Instalados os scripts corrigidos (`autonomous-script.cjs` e `render-original-reflection.py`) na VPS em `/opt/gsa-tv/cache/media/1/production/autonomous/tools`.
+- Corrigida emissão do slug do programa e caminhos absolutos que impediam integração.
+- Ajustadas permissões do diretório de produção para o usuário do contêiner (`uid 989`).
+- Adicionada resiliência e retries para comunicação com o modelo Gemini no script autônomo, evitando quebras por timeout.
+- Teste executado com sucesso dentro do contêiner `gsa-tv-control-plane`.
+- Pendências resolvidas: 
+  - ✅ concluir roteiro e revisão (loop de text generation e review funcional)
+  - ✅ sintetizar locução integral (TTS com suporte a fallback)
+  - ✅ renderizar e inspecionar audiovisual (FFmpeg no Python render-original-reflection validado)
+  - ✅ implementar liberação automática com evidências (Inserção SQL na gsa_tv_media_items testada e aprovada como "ready")
+  - ✅ integrar formatos e validar ciclo diário real.

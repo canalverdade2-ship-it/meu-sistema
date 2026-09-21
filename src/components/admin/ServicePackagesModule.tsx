@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Archive, Boxes, Check, Edit3, Loader2, PackagePlus, Search, Trash2, Users } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Modal } from '../ui/Modal';
@@ -14,6 +14,7 @@ import {
 import { logService } from '../../lib/logService';
 import { useConfirm } from '../../hooks/useConfirm';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 type PackageFormValue = {
   title: string;
@@ -61,7 +62,7 @@ export function ServicePackagesModule({
   const { confirm } = confirmHook;
   const status = activeSubTab === 'inativos' ? 'inativo' : 'ativo';
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const snapshot = await fetchAdminServiceCatalog();
@@ -72,9 +73,14 @@ export function ServicePackagesModule({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(); }, [load]);
+
+  useRealtimeSubscription([
+    { table: 'servicos', onChange: load, debounceMs: 300 },
+    { table: 'servicos_pacotes', onChange: load, debounceMs: 300 },
+  ], [load]);
 
   const visiblePackages = useMemo(() => packages.filter((item) => {
     const matchesStatus = item.status === status;
@@ -218,7 +224,7 @@ export function ServicePackagesModule({
           <label className="grid gap-2 text-sm font-bold text-neutral-700">Descrição<textarea rows={4} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 outline-none focus:border-indigo-500" /></label>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-sm font-bold text-neutral-700">Público<select value={form.audience} onChange={(event) => setForm({ ...form, audience: event.target.value as PackageFormValue['audience'] })} className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3"><option value="pf">Pessoa física</option><option value="pj">Pessoa jurídica</option><option value="ambos">Ambos</option></select></label>
-            <label className="grid gap-2 text-sm font-bold text-neutral-700">Ordem<input type="number" value={form.order} onChange={(event) => setForm({ ...form, order: Number(event.target.value) || 0 })} className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3" /></label>
+            <label className="grid gap-2 text-sm font-bold text-neutral-700">Ordem<input  type="number" value={form.order} inputMode="numeric" onChange={(event) => setForm({ ...form, order: Number(event.target.value) || 0 })} className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3" /></label>
           </div>
           <div>
             <div className="mb-3 flex items-center justify-between"><p className="text-sm font-bold text-neutral-700">Serviços incluídos</p><span className="text-xs font-bold text-indigo-600">{form.serviceIds.length} selecionados</span></div>

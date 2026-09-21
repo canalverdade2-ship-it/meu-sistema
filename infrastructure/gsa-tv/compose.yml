@@ -1,0 +1,77 @@
+# GSA TV — compose de referência da arquitetura atual.
+# Produção usa os mesmos serviços/volumes com segredos em arquivos protegidos.
+services:
+  ffplayout:
+    image: gsa-tv/ffplayout:2.1.0-arm64
+    container_name: gsa-tv-ffplayout
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8787:8787"
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    volumes:
+      - /opt/gsa-tv/config/ffplayout:/state
+      - /opt/gsa-tv/playlists:/playlists
+      - /opt/gsa-tv/cache/media:/media:ro
+      - /opt/gsa-tv/preview:/public
+      - /opt/gsa-tv/logs/ffplayout:/logs
+    networks: [gsa-tv-net]
+
+  control-plane:
+    build: ./services/playout-api
+    image: gsa-tv/control-plane:1.6.4
+    container_name: gsa-tv-control-plane
+    restart: unless-stopped
+    network_mode: host
+    env_file: /opt/gsa-tv/control-plane/.env
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    volumes:
+      - /opt/gsa-tv/playlists:/playlists
+      - /opt/gsa-tv/cache/media:/media
+      - /opt/gsa-tv/fallback:/fallback:ro
+      - /opt/gsa-tv/preview:/preview:ro
+      - /opt/gsa-tv/control-plane/secrets/ffplayout-admin-password:/run/secrets/ffplayout-admin-password:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:9202/health',r=>process.exit(r.statusCode===200?0:1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  watchdog:
+    build: ./services/watchdog
+    image: gsa-tv/watchdog:1.1.0
+    container_name: gsa-tv-watchdog
+    restart: unless-stopped
+    network_mode: host
+    env_file: /opt/gsa-tv/watchdog/.env
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    volumes:
+      - /opt/gsa-tv/preview:/preview:ro
+      - /opt/gsa-tv/control-plane/secrets/ffplayout-admin-password:/run/secrets/ffplayout-admin-password:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:9204/health',r=>process.exit(r.statusCode===200?0:1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  gsa-tv-net:
+    name: gsa-tv-net
+    driver: bridge
+
+# A ponte n8n é um serviço systemd vinculado apenas à rede Docker privada
+# gsa-tv-automation-net; ela não expõe uma porta pública nem credenciais.

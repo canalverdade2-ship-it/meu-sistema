@@ -3,11 +3,17 @@ export const routes = {
   // Rotas Públicas
   public: {
     home: () => '/',
+    privacy: () => '/privacidade',
     services: () => '/servicos-e-assinaturas',
     freeTools: () => '/servicos-gratuitos',
     systems: () => '/criacao-de-site-e-sistemas',
-    partners: () => '/parceiros',
-    partner: (slug: string) => `/parceiros/${slug}`,
+    brandJourney: () => '/identidade-e-web-design',
+    identidadeWebDesign: () => '/identidade-e-web-design',
+    partners: () => '/nossos-parceiros',
+    partner: (slug: string) => `/nossos-parceiros/${slug}`,
+    partnerApplication: () => '/nossos-parceiros/solicitar',
+    protocolConsult: () => '/consulta-protocolo',
+    protocolConsultWithCode: (codigo: string) => `/consulta-protocolo?codigo=${encodeURIComponent(codigo)}`,
     ads: () => '/anuncios',
     advertise: () => '/anuncie',
     affiliates: () => '/afiliados',
@@ -131,6 +137,7 @@ export const routes = {
     },
     store: {
       root: () => '/marketplace/loja',
+      menu: () => '/marketplace/menu-loja',
       products: () => '/marketplace/loja/produtos',
       product: (id: string) => `/marketplace/loja/produtos/${id}`,
       subscriptions: () => '/marketplace/loja/assinaturas',
@@ -302,6 +309,7 @@ export const routes = {
     configuracoes: () => '/admin/configuracoes',
     acessos: () => '/admin/acessos',
     sistema: () => '/admin/sistema',
+    gsaTv: () => '/admin/gsa-tv',
     saude: {
       root: () => '/admin/saude',
       dashboard: () => '/admin/saude/dashboard',
@@ -313,8 +321,6 @@ export const routes = {
       assessorias: () => '/admin/saude/assessorias',
       comissoes: () => '/admin/saude/comissoes',
       documentos: () => '/admin/saude/documentos',
-      assistencias: () => '/admin/saude/atendimentos', // DUPLICADO: aponta para atendimentos
-      sinistros: () => '/admin/saude/atendimentos', // DUPLICADO: aponta para atendimentos
       atendimentos: () => '/admin/saude/atendimentos',
     },
     seguros: {
@@ -338,6 +344,7 @@ export const routes = {
     home: () => '/prestador',
     login: () => '/login/prestador',
     dashboard: () => '/prestador/dashboard',
+    profile: () => '/prestador/perfil',
     payables: () => '/prestador/financeiro',
     demands: () => '/prestador/demandas',
     demand: (id: string) => `/prestador/demandas/${id}`,

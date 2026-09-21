@@ -1,0 +1,230 @@
+{
+  "id": "gsaTvYoutubeMonitor05",
+  "name": "GSA TV 05 - YouTube Transport Monitor",
+  "active": true,
+  "settings": {
+    "saveManualExecutions": true,
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo"
+  },
+  "tags": [
+    {
+      "name": "gsa-tv"
+    },
+    {
+      "name": "v2-vps"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "s5",
+      "name": "Cron - Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/5 * * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "exec-trigger",
+      "name": "Execute - Test or Reuse",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        440
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "h5",
+      "name": "HTTP - Automation Snapshot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://172.30.250.1:19202/automation/snapshot",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "c5",
+      "name": "Code - Assess YouTube Transport",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const c=$json.channel||{};const configured=Boolean(c.youtube_video_id_configured);const transport=c.signal_state==='sending';const expected=c.desired_state==='running'||c.desired_state==='paused';return [{json:{healthy:!expected||transport,transport,expected,youtube_video_id_configured:configured,verification:configured?'transport_and_id_available':'transport_only',last_signal_at:c.last_signal_at||null}}];"
+      }
+    },
+    {
+      "id": "i5",
+      "name": "IF - Transport Healthy?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond",
+              "leftValue": "={{ $json.healthy }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "n5",
+      "name": "No-op - Transport OK",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        180
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "h52",
+      "name": "HTTP - Enqueue Health Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1120,
+        420
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.30.250.1:19202/automation/jobs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"job_type\":\"health_check\",\"payload\":{\"source\":\"n8n-youtube-monitor\"}}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Cron - Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Automation Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Automation Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Code - Assess YouTube Transport",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Assess YouTube Transport": {
+      "main": [
+        [
+          {
+            "node": "IF - Transport Healthy?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Transport Healthy?": {
+      "main": [
+        [
+          {
+            "node": "No-op - Transport OK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP - Enqueue Health Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute - Test or Reuse": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Automation Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

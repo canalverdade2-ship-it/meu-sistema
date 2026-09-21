@@ -166,6 +166,40 @@ async function main() {
     "if (area === 'provider') return module === 'home' || Boolean(session.prestadorId);",
   ]);
 
+  await includes('supabase/migrations/20260830123000_provider_registration_otp_and_authorization_hardening.sql', [
+    'gsa_provider_registration_challenges',
+    'gsa_verify_provider_registration_challenge',
+    'p_verification_token text',
+    "'pendente', extensions.crypt(v_pin",
+    'public.gsa_provider_context(true)',
+    'gsa_normalize_provider_pix_key',
+    'gsa_is_safe_provider_result_url',
+    "arquivos_resultado=coalesce(arquivos_resultado,'[]'::jsonb)||v_files",
+    'DROP FUNCTION IF EXISTS public.gsa_public_register_provider(jsonb)',
+    "p.proname LIKE 'gsa_provider_%'",
+  ]);
+
+  await includes('supabase/functions/gsa-auth-session/index.ts', [
+    "'request_provider_registration_code'",
+    "'verify_provider_registration_code'",
+    'sendWhatsAppMessage(normalizedPayload.telefone',
+    "admin.rpc('gsa_verify_provider_registration_challenge'",
+  ]);
+
+  await includes('src/components/auth/WhatsAppPinVerification.tsx', [
+    'secureProviderRegistration',
+    "action: 'request_provider_registration_code'",
+    "action: 'verify_provider_registration_code'",
+    'data?.verification_token',
+  ]);
+
+  await includes('src/pages/ProviderAccessPage.tsx', [
+    'registrationVerificationToken',
+    'p_verification_token: registrationVerificationToken',
+    'secureProviderRegistration',
+    'Cadastro enviado para análise',
+  ]);
+
   await includes('src/components/admin/AcessosModule.tsx', [
     "['cadastro', 'Cadastros (clientes e prestadores)']",
     "['prestadores', 'Prestadores (sem acesso a clientes)']",

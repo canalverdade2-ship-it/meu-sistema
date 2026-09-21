@@ -126,6 +126,31 @@ export const freeToolsProAccess = {
     return result;
   },
 
+  async requestWhatsAppVoucher(tool: ProToolId, phone: string) {
+    return invoke<{
+      success: boolean;
+      phone?: string;
+      voucher_code?: string;
+      error?: string;
+      message?: string;
+    }>('request_whatsapp_voucher', tool, { phone });
+  },
+
+  async consumeSession(tool: ProToolId) {
+    const token = getStoredProSession(tool);
+    if (!token) return { success: false, consumed: false };
+    try {
+      const result = await invoke<{ success: boolean; consumed?: boolean }>('consume_pro_usage', tool, {
+        pro_session_token: token,
+      });
+      clearStoredProSession(tool);
+      return result;
+    } catch {
+      clearStoredProSession(tool);
+      return { success: false, consumed: false };
+    }
+  },
+
   async createCheckout(tool: ProToolId, customer?: { name?: string; email?: string; phone?: string }) {
     return invoke<{ success: boolean; order_nsu?: string; checkout_url?: string; error?: string }>('create_checkout', tool, {
       customer_name: customer?.name || undefined,

@@ -1,1 +1,1 @@
-sudo docker exec n8n-db psql -U n8n -d n8n -c "SELECT id, status, mode, \"startedAt\", \"stoppedAt\" FROM execution_entity ORDER BY id DESC LIMIT 5;"
+PGPASSWORD='GSA_SENHA_FORTE_2026' psql -h 127.0.0.1 -p 5433 -U supabase_admin -d gsahub -c "SELECT created_at, passo, mensagem FROM automacao_scraping_logs ORDER BY created_at DESC LIMIT 10;"

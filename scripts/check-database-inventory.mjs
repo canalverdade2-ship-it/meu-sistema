@@ -114,6 +114,7 @@ function localMigrationInventory() {
   const filesByVersion = new Map();
 
   for (const name of fs.readdirSync(directory).sort()) {
+    if (!name.endsWith('.sql')) continue;
     const version = name.match(/^(\d{14})_/i)?.[1];
     if (!version) continue;
     const absolutePath = path.join(directory, name);

@@ -1,0 +1,1 @@
+cat /tmp/n8n_success.json | grep -o '\"success\":[^}]*' | tail -n 1

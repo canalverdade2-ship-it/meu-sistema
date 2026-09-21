@@ -29,15 +29,40 @@ import { generateFaturaPDF } from '../../../lib/pdf';
 import { whatsappNotificationService } from '../../../lib/whatsappNotificationService';
 
 export const getFaturaDetails = (fat: any) => {
+  const resolveItemName = (fallback: string) => {
+    const nomeServico = fat.ordens_servico?.orcamentos?.servicos?.nome;
+    const nomeAssinatura = fat.ordens_assinatura?.assinaturas?.nome;
+    const nomeProduto = fat.ordens_compra?.produtos?.nome;
+    if (nomeServico) return nomeServico;
+    if (nomeAssinatura) return nomeAssinatura;
+    if (nomeProduto) return nomeProduto;
+    if (fat.tipo === 'produto' || fat.tipo === 'loja') return 'Pedido Marketplace';
+    if (fat.tipo === 'assinatura') return 'Plano de Assinatura';
+    if (fat.observacoes && fat.observacoes.trim() !== '') return fat.observacoes;
+    return fallback;
+  };
+
+  const resolveItemLabel = (tipo: string) => {
+    if (tipo === 'produto' || tipo === 'loja') return 'Marketplace';
+    if (tipo === 'assinatura') return 'Assinatura';
+    if (tipo === 'pacote_nivel') return 'Nível VIP';
+    return 'Serviço';
+  };
+
   // 1. Se houver itens_faturados já salvos (novo padrão para faturas manuais), priorizar
   if (Array.isArray(fat.itens_faturados) && fat.itens_faturados.length > 0) {
     const mainItem = fat.itens_faturados[0];
+    let baseName = mainItem.descricao || 'Cobrança';
+    if (baseName === 'Cobrança' || baseName === 'Produto' || baseName === 'Serviço') {
+      baseName = resolveItemName(baseName);
+    }
+    
     return {
       orderType: fat.os_id ? 'OS' : (fat.ordem_compra_id ? 'OC' : (fat.ordem_assinatura_id ? 'OA' : 'FAT')),
       orderCode: fat.ordens_servico?.codigo_os || fat.ordens_compra?.codigo_ordem || fat.ordens_assinatura?.codigo_ordem || fat.codigo_fatura,
       orcamentoCode: fat.ordens_servico?.orcamentos?.codigo_orcamento || fat.ordens_compra?.orcamentos?.codigo_orcamento || fat.ordens_assinatura?.orcamentos?.codigo_orcamento,
-      itemName: mainItem.descricao || 'Cobrança',
-      itemLabel: fat.tipo === 'produto' ? 'Produto' : (fat.tipo === 'assinatura' ? 'Assinatura' : 'Serviço'),
+      itemName: baseName,
+      itemLabel: resolveItemLabel(fat.tipo),
       valorItem: Number(mainItem.valor_unitario) || Number(fat.valor_total) || 0,
       valorAdicional: Number(fat.ordens_compra?.orcamentos?.valor_adicional || fat.ordens_assinatura?.orcamentos?.valor_adicional || fat.ordens_servico?.orcamentos?.valor_adicional || 0),
       descricaoAdicional: fat.ordens_compra?.orcamentos?.descricao_adicional || fat.ordens_assinatura?.orcamentos?.descricao_adicional || fat.ordens_servico?.orcamentos?.descricao_adicional || null,
@@ -60,7 +85,7 @@ export const getFaturaDetails = (fat: any) => {
       orderCode: fat.codigo_fatura,
       orcamentoCode: null,
       itemName: fat.itens_faturados?.[0]?.descricao || 'Nível VIP',
-      itemLabel: 'Nível VIP',
+      itemLabel: resolveItemLabel(fat.tipo),
       valorItem: Number(fat.valor_total) || 0,
       valorAdicional: 0,
       descricaoAdicional: null,
@@ -69,14 +94,14 @@ export const getFaturaDetails = (fat: any) => {
       quantidade: 1,
       promocao: null,
     };
-  } else if (fat.tipo === 'produto') {
-    const orc = fat.ordens_compra?.orcamentos;
+  } else if (fat.tipo === 'produto' || fat.tipo === 'loja') {
+    const orc = fat.ordens_compra?.orcamentos || fat.orcamentos;
     return {
       orderType: 'OC',
-      orderCode: fat.ordens_compra?.codigo_ordem || fat.ordens_compra?.codigo_oc,
+      orderCode: fat.ordens_compra?.codigo_ordem || fat.ordens_compra?.codigo_oc || fat.codigo_fatura,
       orcamentoCode: orc?.codigo_orcamento,
-      itemName: fat.ordens_compra?.produtos?.nome || 'Produto',
-      itemLabel: 'Produto',
+      itemName: resolveItemName('Pedido Marketplace'),
+      itemLabel: resolveItemLabel(fat.tipo),
       valorItem: Number(fat.ordens_compra?.produtos?.valor || orc?.valor_servico) || Number(fat.valor_total) || 0,
       valorAdicional: Number(orc?.valor_adicional) || 0,
       descricaoAdicional: orc?.descricao_adicional,
@@ -91,8 +116,8 @@ export const getFaturaDetails = (fat: any) => {
       orderType: 'OA',
       orderCode: fat.ordens_assinatura?.codigo_ordem || fat.ordens_assinatura?.codigo_oa,
       orcamentoCode: orc?.codigo_orcamento,
-      itemName: fat.ordens_assinatura?.assinaturas?.nome || 'Assinatura',
-      itemLabel: 'Assinatura',
+      itemName: resolveItemName('Plano de Assinatura'),
+      itemLabel: resolveItemLabel(fat.tipo),
       valorItem: Number(fat.ordens_assinatura?.assinaturas?.valor || orc?.valor_servico) || Number(fat.valor_total) || 0,
       quantidade_meses: fat.ordens_assinatura?.prazo_meses || orc?.quantidade_meses,
       prazo_indeterminado: orc?.prazo_indeterminado,
@@ -110,8 +135,8 @@ export const getFaturaDetails = (fat: any) => {
       orderType: 'OS',
       orderCode: fat.ordens_servico?.codigo_os || fat.codigo_fatura,
       orcamentoCode: orc?.codigo_orcamento,
-      itemName: orc?.servicos?.nome || fat.observacoes || 'Serviço',
-      itemLabel: 'Serviço',
+      itemName: resolveItemName('Serviço'),
+      itemLabel: resolveItemLabel(fat.tipo),
       valorItem: Number(orc?.valor_servico) || Number(fat.valor_total) || 0,
       valorAdicional: Number(orc?.valor_adicional) || 0,
       descricaoAdicional: orc?.descricao_adicional,
@@ -154,6 +179,16 @@ export function FaturasList({
   const [contestacaoMotivo, setContestacaoMotivo] = useState('');
   const [contestacaoDescricao, setContestacaoDescricao] = useState('');
   const [enviandoContestacao, setEnviandoContestacao] = useState(false);
+  const [taxaEntregaPadrao, setTaxaEntregaPadrao] = useState(30);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const { data } = await supabase.from('system_settings').select('value').eq('key', 'loja_taxa_entrega_padrao').maybeSingle();
+      if (data) setTaxaEntregaPadrao(parseFloat(data.value) || 30);
+    };
+    fetchSettings();
+  }, []);
+
   const [faturaPointsDiscount, setFaturaPointsDiscount] = useState<number | null>(null);
   const [faturaWalletDiscount, setFaturaWalletDiscount] = useState<number>(0);
   const [faturaCupomDesconto, setFaturaCupomDesconto] = useState<any>(null);
@@ -458,6 +493,19 @@ export function FaturasList({
         itens_faturados,
         historico_pagamentos,
         pagamentos(*),
+        orcamentos (
+          id,
+          codigo_orcamento,
+          total,
+          desconto,
+          taxa_entrega,
+          cupom_desconto_id,
+          cupom_entrega_id,
+          desconto_cupom,
+          desconto_promocional,
+          cupom_desconto:cupons_loja!fk_orcamentos_cupom_desconto(codigo_cupom),
+          cupom_entrega:cupons_loja!fk_orcamentos_cupom_entrega(codigo_cupom)
+        ),
         ordens_servico (
           codigo_os,
           orcamentos (
@@ -490,7 +538,11 @@ export function FaturasList({
             desconto,
             taxa_entrega,
             cupom_desconto_id,
-            cupom_entrega_id
+            cupom_entrega_id,
+            desconto_cupom,
+            desconto_promocional,
+            cupom_desconto:cupons_loja!fk_orcamentos_cupom_desconto(codigo_cupom),
+            cupom_entrega:cupons_loja!fk_orcamentos_cupom_entrega(codigo_cupom)
           )
         ),
         ordens_assinatura (
@@ -509,13 +561,17 @@ export function FaturasList({
             taxa_entrega,
             cupom_desconto_id,
             cupom_entrega_id,
+            desconto_cupom,
+            desconto_promocional,
+            cupom_desconto:cupons_loja!fk_orcamentos_cupom_desconto(codigo_cupom),
+            cupom_entrega:cupons_loja!fk_orcamentos_cupom_entrega(codigo_cupom),
             quantidade_meses,
             prazo_indeterminado
           )
         )
       `)
       .eq('cliente_id', clientId)
-      .not('tipo', 'in', '("emprestimo_parcela")');
+      .or('tipo.neq.emprestimo_parcela,tipo.is.null');
     
     const { data, error } = await query.order('data_vencimento', { ascending: false });
     
@@ -689,7 +745,7 @@ export function FaturasList({
               {fat.status === 'protestado' ? (
                 <><ShieldAlert className="h-4 w-4" /> GRAVE: Protestado em Cartório</>
               ) : fat.status === 'pago' ? (
-                <><CheckCircle className="h-4 w-4" /> Pago em {formatDate(fat.data_pagamento!)}</>
+                <><CheckCircle className="h-4 w-4" /> Pago{fat.data_pagamento ? ` em ${formatDate(fat.data_pagamento)}` : ''}</>
               ) : fat.status === 'vencida' ? (
                 <><AlertCircle className="h-4 w-4" /> Vencida em {formatDate(fat.data_vencimento)}</>
               ) : fat.status === 'pendente_pagamento' ? (
@@ -1295,15 +1351,10 @@ export function FaturasList({
             {/* Resumo Financeiro da Fatura com Detalhamento de Descontos */}
             {(() => {
               const fComp = selectedFatura as any;
-              const orcamentoDesconto = fComp.ordens_compra?.orcamentos?.desconto 
-                || fComp.ordens_assinatura?.orcamentos?.desconto 
-                || fComp.ordens_servico?.orcamentos?.desconto 
-                || 0;
+              const orcamento = fComp.orcamentos || fComp.ordens_compra?.orcamentos || fComp.ordens_assinatura?.orcamentos || fComp.ordens_servico?.orcamentos;
               
-              const taxaEntrega = fComp.ordens_compra?.orcamentos?.taxa_entrega 
-                || fComp.ordens_assinatura?.orcamentos?.taxa_entrega 
-                || fComp.ordens_servico?.orcamentos?.taxa_entrega 
-                || 0;
+              const orcamentoDesconto = orcamento?.desconto || 0;
+              const taxaEntrega = orcamento?.taxa_entrega !== undefined && orcamento?.taxa_entrega !== null ? Number(orcamento.taxa_entrega) : null;
 
               const rawTotalDesconto = Number(orcamentoDesconto) 
                 || (Number(selectedFatura.desconto_voucher_aplicado || 0) + Number(selectedFatura.desconto_pontos_aplicado || 0)) 
@@ -1315,6 +1366,21 @@ export function FaturasList({
               const subtotalItens = (selectedFatura.itens_faturados && selectedFatura.itens_faturados.length > 0)
                 ? selectedFatura.itens_faturados.reduce((acc: number, item: any) => acc + Number(item.subtotal || item.valor || 0), 0)
                 : (details.valorItem * details.quantidade);
+
+              const cupomEntregaId = orcamento?.cupom_entrega_id;
+              const cupomEntregaCode = orcamento?.cupom_entrega?.codigo_cupom;
+              const cupomDescontoId = orcamento?.cupom_desconto_id;
+              const cupomDescontoCode = orcamento?.cupom_desconto?.codigo_cupom;
+              const descontoCupom = Number(orcamento?.desconto_cupom || 0);
+              const descontoPromocional = Number(orcamento?.desconto_promocional || 0);
+
+              const cupomEntrega = orcamento?.cupom_entrega;
+              const cupomDesconto = orcamento?.cupom_desconto;
+
+              const pointsDiscount = faturaPointsDiscount !== null 
+                ? faturaPointsDiscount 
+                : (selectedFatura.desconto_pontos_aplicado ? Number(selectedFatura.desconto_pontos_aplicado) : 0);
+              const couponDiscount = Math.max(0, totalDesconto - pointsDiscount);
 
               return (
                 <div className="space-y-4 pt-6 border-t border-black/5">
@@ -1342,61 +1408,55 @@ export function FaturasList({
                     )}
 
                     {/* Frete se houver */}
-                    {(taxaEntrega > 0 || faturaCupomEntrega || selectedFatura.itens_faturados?.some((i: any) => i.tipo === 'produto') || selectedFatura.ordens_compra) && (
-                      <div className="flex justify-between text-sm font-medium text-neutral-500">
-                        <span>Frete</span>
-                        <span className={taxaEntrega === 0 ? "text-emerald-600 font-bold" : ""}>
-                          {taxaEntrega > 0 ? formatCurrency(taxaEntrega) : 'Grátis'}
-                        </span>
+                    {(taxaEntrega !== null && taxaEntrega !== undefined && (taxaEntrega > 0 || cupomEntregaId || faturaCupomEntrega || selectedFatura.itens_faturados?.some((i: any) => i.tipo === 'produto') || selectedFatura.ordens_compra)) && (
+                      <>
+                        <div className="flex justify-between text-sm font-medium text-neutral-500">
+                          <span>Frete / Entrega</span>
+                          {taxaEntrega > 0 ? (
+                            <span>{formatCurrency(taxaEntrega)}</span>
+                          ) : (cupomEntregaId || faturaCupomEntrega) ? (
+                            <span>{formatCurrency(taxaEntregaPadrao)}</span>
+                          ) : (
+                            <span className="text-emerald-600 font-bold">Grátis</span>
+                          )}
+                        </div>
+                        
+                        {taxaEntrega === 0 && (cupomEntregaId || faturaCupomEntrega) && (
+                          <div className="flex justify-between text-sm font-bold text-emerald-700">
+                            <span>Cupom de Frete {cupomEntrega?.codigo_cupom || faturaCupomEntrega?.codigo_cupom ? `(${cupomEntrega?.codigo_cupom || faturaCupomEntrega?.codigo_cupom})` : ''}</span>
+                            <span>- {formatCurrency(taxaEntregaPadrao)}</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Outros descontos (Cupom, Promocional) */}
+                    {(descontoCupom > 0 || couponDiscount > 0) && (
+                      <div className="flex justify-between text-sm font-bold text-emerald-700">
+                        <span>Cupom de Desconto {cupomDesconto?.codigo_cupom || faturaCupomDesconto?.codigo_cupom ? `(${cupomDesconto?.codigo_cupom || faturaCupomDesconto?.codigo_cupom})` : ''}</span>
+                        <span>- {formatCurrency(descontoCupom > 0 ? descontoCupom : couponDiscount)}</span>
                       </div>
                     )}
 
-                    {/* Descontos detalhados */}
-                    {totalDesconto > 0 && (() => {
-                      const pointsDiscount = faturaPointsDiscount !== null 
-                        ? faturaPointsDiscount 
-                        : (selectedFatura.desconto_pontos_aplicado ? Number(selectedFatura.desconto_pontos_aplicado) : 0);
+                    {descontoPromocional > 0 && (
+                      <div className="flex justify-between text-sm font-bold text-emerald-700">
+                        <span>Desconto Promocional</span>
+                        <span>- {formatCurrency(descontoPromocional)}</span>
+                      </div>
+                    )}
 
-                      const couponDiscount = Math.max(0, totalDesconto - pointsDiscount);
-
-                      return (
-                        <div className="space-y-1.5 bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100/50 my-2">
-                          <div className="flex justify-between text-sm font-black text-emerald-800">
-                            <span>Descontos Aplicados</span>
-                            <span>-{formatCurrency(totalDesconto)}</span>
-                          </div>
-                          
-                          {/* Detalhe do desconto de pontos */}
-                          {pointsDiscount > 0 && (
-                            <div className="flex justify-between text-xs text-emerald-600 font-bold pl-3 border-l-2 border-emerald-300">
-                              <span>Carteira de Pontos ({Math.round(pointsDiscount * 100)} pts)</span>
-                              <span>-{formatCurrency(pointsDiscount)}</span>
-                            </div>
-                          )}
-
-                          {/* Detalhe do cupom de desconto */}
-                          {couponDiscount > 0 && (
-                            <div className="flex justify-between text-xs text-emerald-600 font-bold pl-3 border-l-2 border-emerald-300">
-                              <span>{faturaCupomDesconto?.codigo_cupom ? `Cupom: ${faturaCupomDesconto.codigo_cupom}` : 'Desconto Aplicado'}</span>
-                              <span>-{formatCurrency(couponDiscount)}</span>
-                            </div>
-                          )}
-
-                          {/* Detalhe do cupom de entrega */}
-                          {faturaCupomEntrega && (
-                            <div className="flex justify-between text-xs text-emerald-600 font-bold pl-3 border-l-2 border-emerald-300">
-                              <span>Cupom Frete: {faturaCupomEntrega.codigo_cupom}</span>
-                              <span>Frete Grátis</span>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
+                    {/* Desconto de Pontos / Carteira GSA */}
+                    {pointsDiscount > 0 && (
+                      <div className="flex justify-between text-sm font-bold text-emerald-700">
+                        <span>Carteira de Pontos ({Math.round(pointsDiscount * 100)} pts)</span>
+                        <span>- {formatCurrency(pointsDiscount)}</span>
+                      </div>
+                    )}
 
                     {walletDiscountValue > 0 && (
-                      <div className="flex justify-between text-sm font-medium text-neutral-500">
+                      <div className="flex justify-between text-sm font-bold text-emerald-700">
                         <span>Saldo da Carteira</span>
-                        <span className="text-emerald-600 font-bold">-{formatCurrency(walletDiscountValue)}</span>
+                        <span>- {formatCurrency(walletDiscountValue)}</span>
                       </div>
                     )}
                   </div>

@@ -1,0 +1,31 @@
+import { runSshScript } from './ssh2-run.mjs';
+
+const mappings={
+'GSA Mercado':['casting-board-01-news-business-tech-2026-09-04.png','linha superior, posição 1'],
+'GSA Tempo':['casting-board-01-news-business-tech-2026-09-04.png','linha superior, posição 2'],
+'GSA Cidadania':['casting-board-01-news-business-tech-2026-09-04.png','linha superior, posição 3'],
+'GSA Business':['casting-board-01-news-business-tech-2026-09-04.png','linha superior, posição 4'],
+'GSA Tech':['casting-board-01-news-business-tech-2026-09-04.png','linha inferior, posição 1'],
+'GSA Motor':['casting-board-01-news-business-tech-2026-09-04.png','linha inferior, posição 2'],
+'GSA Agro':['casting-board-01-news-business-tech-2026-09-04.png','linha inferior, posição 3'],
+'GSA Mundo':['casting-board-01-news-business-tech-2026-09-04.png','linha inferior, posição 4'],
+'GSA Destinos':['casting-board-02-lifestyle-faith-sports-2026-09-04.png','linha superior, posição 1'],
+'GSA Bem Viver':['casting-board-02-lifestyle-faith-sports-2026-09-04.png','linha superior, posição 2'],
+'GSA Sabor':['casting-board-02-lifestyle-faith-sports-2026-09-04.png','linha superior, posição 3'],
+'GSA Em Fé':['casting-board-02-lifestyle-faith-sports-2026-09-04.png','linha superior, posição 4'],
+'GSA Hora da Palavra':['casting-board-02-lifestyle-faith-sports-2026-09-04.png','linha inferior, posição 1'],
+'GSA Tá na Rede':['casting-board-02-lifestyle-faith-sports-2026-09-04.png','linha inferior, posição 2'],
+'GSA Esportes':['casting-board-02-lifestyle-faith-sports-2026-09-04.png','linha inferior, posição 3'],
+'GSA Mistérios':['casting-board-02-lifestyle-faith-sports-2026-09-04.png','linha inferior, posição 4'],
+'GSA Music':['casting-board-03-entertainment-narrators-2026-09-04.png','linha superior, posição 1'],
+'GSA Cinema':['casting-board-03-entertainment-narrators-2026-09-04.png','linha superior, posição 2'],
+'GSA Sessão Pipoca':['casting-board-03-entertainment-narrators-2026-09-04.png','linha superior, posição 3'],
+'GSA Planeta Terra':['casting-board-03-entertainment-narrators-2026-09-04.png','linha inferior, posição 1'],
+'GSA Histórias da Bíblia':['casting-board-03-entertainment-narrators-2026-09-04.png','linha inferior, posição 2'],
+'GSA Desenhos':['casting-board-03-entertainment-narrators-2026-09-04.png','linha inferior, posição 3']
+};
+const registry=`# GSA TV — Registro Oficial de Avatares Aprovados\n\nAprovação: 04/09/2026\n\nEstado: APROVADO PELO RESPONSÁVEL.\n\n## Mapeamento dos 22 novos avatares\n\n${Object.entries(mappings).map(([p,[f,pos]])=>`- **${p}** — ${f}; ${pos}.`).join('\n')}\n\n## GSA News\n\n- GSA Manhã News, GSA Meio Dia News e GSA News Noite mantêm os dois âncoras fixos já definidos no Google Vids.\n- Voz masculina Holt e voz feminina Nyla.\n- Não substituir os rostos nem gerar novos âncoras sem nova aprovação expressa.\n\n## Proteção de continuidade\n\n- Os rostos aprovados são identidades permanentes.\n- Produções individuais devem preservar rosto, idade percebida, cabelo, tom de pele e características reconhecíveis.\n- Figurino pode variar somente dentro do padrão-base aprovado do programa.\n- Expressões e gestos devem ser naturais, sem alterar a identidade facial.\n- Troca de avatar exige nova aprovação expressa.\n`;
+const note=`\n\n#### 2026-09-04 — APROVAÇÃO FORMAL DOS AVATARES\n\n- O responsável aprovou expressamente todos os candidatos apresentados nas três pranchas de casting.\n- Os 22 novos rostos foram vinculados às posições exatas documentadas de cada programa.\n- Os dois âncoras já existentes do GSA News foram preservados, totalizando o núcleo de identidades aprovado da grade.\n- As três pranchas passam a ser referências visuais imutáveis para produção dos arquivos individuais.\n- Cada ficha de programa foi atualizada para registrar AVATAR APROVADO e a localização exata de sua referência.\n- Regra permanente: preservar rosto, idade percebida, cabelo, tom de pele e características reconhecíveis em todos os episódios.\n- Voz, cenário e arquivo individual de cada novo avatar ainda precisam ser produzidos/vinculados; a aprovação visual não os aprova automaticamente.\n- Troca de qualquer rosto exige nova aprovação expressa do responsável.\n- Registro oficial: /home/opc/gsa-ai/docs/GSA_TV_AVATARS_OFFICIAL_APPROVED_2026-09-04.md.\n- Nenhuma alteração foi feita na grade, logos, encoder ou sinal ao vivo.\n`;
+const payload=Buffer.from(JSON.stringify({mappings,registry,note}),'utf8').toString('base64');
+const sh=`printf '%s' '${payload}'|base64 -d >/tmp/gsa-avatar-approval.json\npython3 - <<'PY'\nimport json\nfrom pathlib import Path\nd=json.loads(Path('/tmp/gsa-avatar-approval.json').read_text(encoding='utf-8'))\nPath('/home/opc/gsa-ai/docs/GSA_TV_AVATARS_OFFICIAL_APPROVED_2026-09-04.md').write_text(d['registry'],encoding='utf-8')\nroot=Path('/home/opc/gsa-ai/docs/programas')\nfor program,(board,pos) in d['mappings'].items():\n    slug=''.join(c if c.isalnum() else '_' for c in program.upper())\n    import unicodedata,re\n    slug=''.join(c for c in unicodedata.normalize('NFD',program.upper()) if unicodedata.category(c)!='Mn')\n    slug=re.sub(r'[^A-Z0-9]+','_',slug).strip('_')\n    p=root/(slug+'_FICHA.md')\n    if not p.exists(): continue\n    s=p.read_text(encoding='utf-8')\n    line=f'- Avatar: APROVADO em 04/09/2026 — referência {board}, {pos}.'\n    if line not in s:s += '\\n## Avatar aprovado\\n\\n'+line+'\\n'\n    p.write_text(s,encoding='utf-8')\nfor name in ['GSA_MANHA_NEWS_FICHA.md','GSA_MEIO_DIA_NEWS_FICHA.md','GSA_NEWS_NOITE_FICHA.md']:\n    p=root/name\n    if p.exists():\n        s=p.read_text(encoding='utf-8')\n        line='- Avatares: APROVADOS — dois âncoras fixos existentes no Google Vids; vozes Holt e Nyla.'\n        if line not in s:s += '\\n## Avatares aprovados\\n\\n'+line+'\\n'\n        p.write_text(s,encoding='utf-8')\nwith Path('/home/opc/gsa-ai/GSA_TV_MEMORY_CHANGELOG.md').open('a',encoding='utf-8') as f:f.write(d['note'])\nPY\nrm -f /tmp/gsa-avatar-approval.json\ngrep -RIl 'Avatar: APROVADO\|Avatares: APROVADOS' /home/opc/gsa-ai/docs/programas/*_FICHA.md | wc -l\ntail -n 15 /home/opc/gsa-ai/GSA_TV_MEMORY_CHANGELOG.md`;
+const result=await runSshScript(sh,120000);process.stdout.write(result.stdout);if(result.stderr)process.stderr.write(result.stderr);

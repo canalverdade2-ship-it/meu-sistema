@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, MoreHorizontal, Package, Trash2, User, Building2, Store, Image as ImageIcon, Upload, Loader2, History, Settings2, Check, Minus, AlertCircle, PackagePlus, Camera, Tag, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Produto } from '../../types';
@@ -9,7 +9,7 @@ import { canDeleteRecord } from '../../lib/deleteRequest';
 import { logService } from '../../lib/logService';
 import { AdminWhatsAppButton } from './ui/AdminWhatsAppButton';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
-import { getAdminProductSupplierConfig, upsertAdminProductSupplierConfig, setAdminProductDiscount } from '../../lib/adminRpc';
+import { callAdminRpc, getAdminProductSupplierConfig, upsertAdminProductSupplierConfig, setAdminProductDiscount } from '../../lib/adminRpc';
 import { useConfirm } from '../../hooks/useConfirm';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { maskPhone } from '../../lib/utils';
@@ -22,6 +22,7 @@ import { sessionService } from '../../lib/sessionService';
 import { adjustAdminProductStock, archiveAdminCatalogItems, deleteAdminProductsBulk, saveAdminProductCatalog } from '../../lib/adminStoreOperations';
 import { removePublicStoreImage, removeUnusedPublicStoreImages, uploadPublicStoreImage } from '../../lib/publicStoreImage';
 import { hasActiveProductDiscount, formatProductDiscountPercentage, getProductDiscountValidityInfo, getProductRemainingDaysText } from '../../lib/productPricing';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 // Helper functions for gallery mapping
 const mapGalleryToColumns = (images: string[]) => {
@@ -45,7 +46,19 @@ const mapColumnsToGallery = (item: any) => {
 };
 
 
-export function ProdutosModule({ activeSubTab, initialItemId, colaboradorId, colaboradorNome }: { activeSubTab?: 'ativos' | 'inativos', initialItemId?: string, colaboradorId?: string, colaboradorNome?: string }) {
+export function ProdutosModule({
+  activeSubTab,
+  initialItemId,
+  colaboradorId,
+  colaboradorNome,
+  adminType,
+}: {
+  activeSubTab?: 'ativos' | 'inativos';
+  initialItemId?: string;
+  colaboradorId?: string;
+  colaboradorNome?: string;
+  adminType?: 'admin' | 'colaborador' | string;
+}) {
   const confirmHook = useConfirm();
   const { confirm } = confirmHook;
   const [activeTab, setActiveTab] = useState<'ativos' | 'inativos'>('ativos');
@@ -77,21 +90,34 @@ export function ProdutosModule({ activeSubTab, initialItemId, colaboradorId, col
     return produtos.slice(start, start + pageSize);
   }, [produtos, currentPage, pageSize]);
 
+  const [selectAllMatching, setSelectAllMatching] = useState(false);
+
   const toggleSelection = (id: string) => {
     const newSet = new Set(selectedIds);
-    if (newSet.has(id)) newSet.delete(id);
-    else newSet.add(id);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+      setSelectAllMatching(false);
+    } else {
+      newSet.add(id);
+    }
     setSelectedIds(newSet);
   };
 
   const handleSelectAll = () => {
-    if (selectedIds.size === produtos.length && produtos.length > 0) {
+    if (selectAllMatching) {
+      setSelectAllMatching(false);
       setSelectedIds(new Set());
     } else {
+      setSelectAllMatching(true);
       setSelectedIds(new Set(produtos.map(p => p.id)));
     }
     setShowBulkMenu(false);
   };
+
+  useEffect(() => {
+    setSelectAllMatching(false);
+    setSelectedIds(new Set());
+  }, [search, activeTab, tipoClienteFilter, categoriaFilter]);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null);
@@ -205,27 +231,6 @@ export function ProdutosModule({ activeSubTab, initialItemId, colaboradorId, col
     }
   }, [initialItemId, produtos]);
 
-  useEffect(() => {
-    fetchProdutos();
-
-    const channel = supabase
-      .channel('admin-produtos-updates')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'produtos'
-      }, (payload) => {
-        fetchProdutos();
-        if (payload.new && selectedProduto && (payload.new as any).id === selectedProduto.id) {
-          setSelectedProduto(prev => prev ? { ...prev, ...payload.new } as Produto : null);
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeTab, search, tipoClienteFilter, categoriaFilter, selectedProduto?.id]);
 
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -252,67 +257,77 @@ const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
   }
 };
 
-  const fetchProdutos = async () => {
-    let allData: Produto[] = [];
-    let from = 0;
-    const step = 1000;
-    let hasMore = true;
+  const fetchProdutos = useCallback(async () => {
+    let query = supabase
+      .from('produtos')
+      .select('*')
+      .eq('status', activeTab === 'ativos' ? 'ativo' : 'inativo');
+    
+    if (tipoClienteFilter === 'pf' || tipoClienteFilter === 'pj') {
+      query = query.in('tipo_cliente', [tipoClienteFilter, 'ambos']);
+    } else if (tipoClienteFilter === 'ambos') {
+      query = query.eq('tipo_cliente', 'ambos');
+    }
 
-    while (hasMore) {
-      let query = supabase
-        .from('produtos')
-        .select('*')
-        .eq('status', activeTab === 'ativos' ? 'ativo' : 'inativo');
-      
-      if (tipoClienteFilter === 'pf' || tipoClienteFilter === 'pj') {
-        query = query.in('tipo_cliente', [tipoClienteFilter, 'ambos']);
-      } else if (tipoClienteFilter === 'ambos') {
-        query = query.eq('tipo_cliente', 'ambos');
+    const safeSearch = search.replace(/[,()]/g, ' ').trim();
+    if (safeSearch) {
+      const searchClean = safeSearch.replace(/[\s\.\-]/g, '');
+      const searchConditions = [`nome.ilike.%${safeSearch}%`];
+      if (searchClean.length > 0) {
+        searchConditions.push(`codigo_produto.ilike.%${searchClean}%`);
+        searchConditions.push(`codigo_barras.ilike.%${searchClean}%`);
       }
+      query = query.or(searchConditions.join(','));
+    }
 
-      const safeSearch = search.replace(/[,()]/g, ' ').trim();
-      if (safeSearch) {
-        const searchClean = safeSearch.replace(/[\s\.\-]/g, '');
-        const searchConditions = [`nome.ilike.%${safeSearch}%`];
-        if (searchClean.length > 0) {
-          searchConditions.push(`codigo_produto.ilike.%${searchClean}%`);
-          searchConditions.push(`codigo_barras.ilike.%${searchClean}%`);
-        }
-        query = query.or(searchConditions.join(','));
-      }
-
-      if (categoriaFilter !== 'todos') {
-        if (categoriaFilter === 'sem_categoria') {
-          query = query.is('categoria_id', null);
-        } else {
-          query = query.eq('categoria_id', categoriaFilter);
-        }
-      }
-
-      const { data, error } = await query
-        .order('codigo_produto', { ascending: false })
-        .range(from, from + step - 1);
-
-      if (error) {
-        console.error('Erro ao consultar produtos no Supabase:', error);
-        toast.error(`Falha na conexão com o banco de dados: ${error.message || 'Timeout de Conexão'}`);
-        break;
-      }
-
-      if (data && data.length > 0) {
-        allData = allData.concat(data);
-        if (data.length < step || allData.length >= 20000) {
-          hasMore = false;
-        } else {
-          from += step;
-        }
+    if (categoriaFilter !== 'todos') {
+      if (categoriaFilter === 'sem_categoria') {
+        query = query.is('categoria_id', null);
       } else {
-        hasMore = false;
+        query = query.eq('categoria_id', categoriaFilter);
       }
     }
 
-    setProdutos(allData);
-  };
+    const { data, error } = await query
+      .order('codigo_produto', { ascending: false })
+      .range(0, 999);
+
+    if (error) {
+      if (error.message?.includes('Lock broken by another request')) {
+        // Silently ignore Web Locks API aborts (caused by concurrent token refreshes)
+        // because the concurrent request that "stole" the lock will succeed and update the state.
+        return;
+      }
+      console.error('Erro ao consultar produtos no Supabase:', error);
+      toast.error(`Falha na conexão com o banco de dados: ${error.message || 'Timeout de Conexão'}`);
+      return;
+    }
+
+    setProdutos(data || []);
+  }, [activeTab, search, tipoClienteFilter, categoriaFilter]);
+
+  useEffect(() => {
+    fetchProdutos();
+  }, [fetchProdutos]);
+
+  useRealtimeSubscription([
+    {
+      table: 'produtos',
+      onChange: fetchProdutos,
+      onPayload: (payload) => {
+        if (payload.new && selectedProduto && (payload.new as any).id === selectedProduto.id) {
+          setSelectedProduto(prev => prev ? { ...prev, ...payload.new } as Produto : null);
+        }
+      },
+      debounceMs: 300,
+    },
+    { table: 'loja_categorias', onChange: fetchProdutos, debounceMs: 300 },
+    { table: 'loja_estoque_historico', onChange: fetchProdutos, debounceMs: 300 },
+    { table: 'produto_fornecedor_config', onChange: fetchProdutos, debounceMs: 300 },
+    { table: 'produto_variantes', onChange: fetchProdutos, debounceMs: 300 },
+    { table: 'produto_variacao_grupos', onChange: fetchProdutos, debounceMs: 300 },
+    { table: 'produto_variacao_opcoes', onChange: fetchProdutos, debounceMs: 300 },
+  ]);
 
 const handleCreate = async (formData: any) => {
   const { imagens_adicionais, fornecedor_config, ...otherData } = formData;
@@ -382,37 +397,49 @@ const handleUpdate = async (formData: any) => {
   }
 };
 
-const handleBulkDelete = async () => {
+  const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
     
-    if (colaboradorId) {
+    if (adminType === 'colaborador') {
       toast.error('Colaboradores não podem excluir em lote. Solicite exclusão individualmente.');
       return;
     }
 
-    const count = selectedIds.size;
+    const count = selectAllMatching ? 'TODOS OS' : selectedIds.size;
     if (!await confirm({ 
       title: 'Excluir Produtos', 
-      message: `Deseja excluir definitivamente os ${count} produto(s) selecionados? Esta ação removerá os produtos do catálogo e da loja.` 
+      message: `Deseja excluir definitivamente ${count} produto(s) correspondente(s) aos filtros atuais? Esta ação removerá os produtos do catálogo e da loja permanentemente.` 
     })) {
       return;
     }
 
     setIsDeleting(true);
     const ids = Array.from(selectedIds) as string[];
+    const toastId = toast.loading(selectAllMatching ? `Excluindo todos os produtos correspondentes...` : `Excluindo ${ids.length} produto(s)...`);
     try {
+      if (selectAllMatching) {
+        await callAdminRpc('gsa_admin_delete_products_by_filter', {
+          p_status: activeTab === 'ativos' ? 'ativo' : 'inativo',
+          p_tipo_cliente: tipoClienteFilter === 'ambos' ? 'ambos' : (tipoClienteFilter === 'todos' ? null : tipoClienteFilter),
+          p_categoria_id: categoriaFilter === 'todos' ? null : categoriaFilter,
+          p_search: search || null
+        });
+        setSelectAllMatching(false);
+      } else {
+        await deleteAdminProductsBulk(ids);
+      }
+      
       setSelectedIds(new Set());
-      await deleteAdminProductsBulk(ids);
-      toast.success(`${ids.length} produto(s) excluído(s) com sucesso.`);
+      toast.success(`Produtos excluídos com sucesso.`, { id: toastId });
       await logService.logAction({
         acao: 'EXCLUIR_PRODUTO_LOTE',
         ator_tipo: 'admin',
         ator_nome: 'Administrador',
-        detalhes: `Excluiu ${ids.length} produtos em lote.`
+        detalhes: selectAllMatching ? 'Excluiu TODOS os produtos filtrados em lote.' : `Excluiu ${ids.length} produtos em lote.`
       });
       await fetchProdutos();
     } catch (err: any) {
-      toast.error(handleError(err, 'Ocorreu um erro ao excluir os produtos.'));
+      toast.error(handleError(err, 'Ocorreu um erro ao excluir os produtos.'), { id: toastId });
       await fetchProdutos();
     } finally {
       setIsDeleting(false);
@@ -499,8 +526,8 @@ const handleBulkDelete = async () => {
                     onClick={handleSelectAll}
                     className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 rounded-lg transition-colors"
                   >
-                    {selectedIds.size === produtos.length && produtos.length > 0 ? 'Remover Seleção' : 'Selecionar Todos'}
-                    <span className="text-xs text-neutral-400">({produtos.length})</span>
+                    {selectAllMatching ? 'Remover Seleção' : 'Selecionar Todos'}
+                    <span className="text-xs text-neutral-400">({selectAllMatching ? 'Tudo' : produtos.length})</span>
                   </button>
                   <div className="h-px bg-neutral-100 my-1" />
                   <button
@@ -837,13 +864,14 @@ const handleBulkDelete = async () => {
                         <label className="block text-xs font-bold text-neutral-400 uppercase mb-2">
                           {discountType === 'porcentagem' ? 'Valor do Desconto (%)' : 'Valor do Desconto (R$)'}
                         </label>
-                        <input
+                        <input 
                           type="number"
                           step="0.01"
                           min="0.01"
                           placeholder={discountType === 'porcentagem' ? 'Ex: 40' : 'Ex: 20'}
                           value={discountValue}
-                          onChange={(e) => setDiscountValue(e.target.value)}
+                          inputMode="numeric"
+onChange={(e) => setDiscountValue(e.target.value)}
                           className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none"
                         />
                       </div>
@@ -999,13 +1027,14 @@ const handleBulkDelete = async () => {
                           <div className="space-y-2">
                             <div>
                               <label className="block text-xs font-bold text-neutral-400 uppercase mb-1">Unidades com desconto</label>
-                              <input
+                              <input 
                                 type="number"
                                 step="1"
                                 min="1"
                                 placeholder="Ex: 50"
                                 value={discountQuantityLimit}
-                                onChange={(e) => setDiscountQuantityLimit(e.target.value)}
+                                inputMode="numeric"
+onChange={(e) => setDiscountQuantityLimit(e.target.value)}
                                 className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none"
                               />
                             </div>
@@ -1275,11 +1304,10 @@ const handleBulkDelete = async () => {
                           setSelectedProduto({ ...selectedProduto, tipo_cliente: next });
                           const auditTag = colaboradorNome ? ` [Alt. por: ${colaboradorNome}]` : '';
                           try {
-                            const { error } = await supabase.from('produtos').update({ 
-                              tipo_cliente: next,
-                              descricao: `${selectedProduto.descricao || ''} ${auditTag}`.trim()
-                            }).eq('id', selectedProduto.id);
-                            if (error) throw error;
+                            await callAdminRpc('gsa_admin_patch_marketplace_product', {
+                              p_produto_id: selectedProduto.id,
+                              p_patch: { tipo_cliente: next, descricao: `${selectedProduto.descricao || ''} ${auditTag}`.trim() },
+                            });
                             
                             toast.success('Tipo de cliente atualizado.');
                             
@@ -1319,12 +1347,10 @@ const handleBulkDelete = async () => {
                       setSelectedProduto({ ...selectedProduto, categoria_id: catId, categoria: catNome });
                       const auditTag = colaboradorNome ? ` [Alt. por: ${colaboradorNome}]` : '';
                       try {
-                        const { error } = await supabase.from('produtos').update({ 
-                          categoria_id: catId || null,
-                          categoria: catNome || null,
-                          descricao: `${selectedProduto.descricao || ''} ${auditTag}`.trim()
-                        }).eq('id', selectedProduto.id);
-                        if (error) throw error;
+                        await callAdminRpc('gsa_admin_patch_marketplace_product', {
+                          p_produto_id: selectedProduto.id,
+                          p_patch: { categoria_id: catId || null, categoria: catNome || null, descricao: `${selectedProduto.descricao || ''} ${auditTag}`.trim() },
+                        });
                         
                         toast.success('Categoria atualizada.');
                         await logService.logAction({
@@ -1366,11 +1392,10 @@ const handleBulkDelete = async () => {
                         setSelectedProduto({ ...selectedProduto, ocultar_valor: newOcultar });
                         const auditTag = colaboradorNome ? ` [Alt. por: ${colaboradorNome}]` : '';
                         try {
-                          const { error } = await supabase.from('produtos').update({ 
-                            ocultar_valor: newOcultar,
-                            descricao: `${selectedProduto.descricao || ''} ${auditTag}`.trim()
-                          }).eq('id', selectedProduto.id);
-                          if (error) throw error;
+                          await callAdminRpc('gsa_admin_patch_marketplace_product', {
+                            p_produto_id: selectedProduto.id,
+                            p_patch: { ocultar_valor: newOcultar, descricao: `${selectedProduto.descricao || ''} ${auditTag}`.trim() },
+                          });
                           
                           toast.success('Visibilidade de preço atualizada.');
                           await logService.logAction({
@@ -1408,8 +1433,7 @@ const handleBulkDelete = async () => {
                           const val = e.target.checked;
                           setSelectedProduto({ ...selectedProduto, visivel_na_loja: val });
                           try {
-                            const { error } = await supabase.from('produtos').update({ visivel_na_loja: val }).eq('id', selectedProduto.id);
-                            if (error) throw error;
+                            await callAdminRpc('gsa_admin_patch_marketplace_product', { p_produto_id: selectedProduto.id, p_patch: { visivel_na_loja: val } });
                             toast.success('Visibilidade na loja atualizada.');
                             fetchProdutos();
                           } catch (error) {
@@ -1436,8 +1460,7 @@ const handleBulkDelete = async () => {
                           const val = e.target.checked;
                           setSelectedProduto({ ...selectedProduto, controle_estoque: val });
                           try {
-                            const { error } = await supabase.from('produtos').update({ controle_estoque: val }).eq('id', selectedProduto.id);
-                            if (error) throw error;
+                            await callAdminRpc('gsa_admin_patch_marketplace_product', { p_produto_id: selectedProduto.id, p_patch: { controle_estoque: val } });
                             toast.success('Controle de estoque atualizado.');
                             fetchProdutos();
                           } catch (error) {
@@ -1586,13 +1609,14 @@ const handleBulkDelete = async () => {
                       }
 
                       try {
-                        await archiveAdminCatalogItems('produto', [selectedProduto.id]);
-                        toast.success('Produto inativado com sucesso.');
+                        await deleteAdminProductsBulk([selectedProduto.id]);
+                        toast.success('Produto excluído definitivamente com sucesso.');
                         setIsDetailOpen(false);
                         setIsDeleting(false);
+                        setProdutos((prev) => prev.filter((p) => p.id !== selectedProduto.id));
                         fetchProdutos();
                       } catch (error) {
-                        toast.error(handleError(error, 'Erro ao inativar produto'));
+                        toast.error(handleError(error, 'Erro ao excluir produto'));
                       }
                     }}
                     className="flex-1 rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 transition-all shadow-lg shadow-red-600/20"
@@ -1609,11 +1633,14 @@ const handleBulkDelete = async () => {
                       const newStatus = selectedProduto.status === 'ativo' ? 'inativo' : 'ativo';
                       const auditTag = colaboradorNome ? ` [Alt. por: ${colaboradorNome}]` : '';
                       try {
-                        const { error } = await supabase.from('produtos').update({ 
-                          status: newStatus,
-                          descricao: `${selectedProduto.descricao || ''} ${auditTag}`.trim()
-                        }).eq('id', selectedProduto.id);
-                        if (error) throw error;
+                        if (newStatus === 'inativo') {
+                          await archiveAdminCatalogItems('produto', [selectedProduto.id]);
+                        } else {
+                          await callAdminRpc('gsa_admin_patch_marketplace_product', {
+                            p_produto_id: selectedProduto.id,
+                            p_patch: { status: newStatus, descricao: `${selectedProduto.descricao || ''} ${auditTag}`.trim() },
+                          });
+                        }
                         
                         toast.success(`Produto ${newStatus === 'ativo' ? 'ativado' : 'inativado'} com sucesso.`);
                         
@@ -2489,8 +2516,10 @@ const removeGalleryImage = (index: number) => {
                         <label className="mb-1 block text-xs font-bold text-neutral-700">Telefone / WhatsApp (Opcional)</label>
                         <input 
                           type="text" 
+                          inputMode="tel"
+                          maxLength={15}
                           value={maskPhone(fornecedorConfig.telefone || '')}
-                          onChange={e => setFornecedorConfig({...fornecedorConfig, telefone: e.target.value})}
+                          onChange={e => setFornecedorConfig({...fornecedorConfig, telefone: maskPhone(e.target.value)})}
                           placeholder="(00) 00000-0000"
                           className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none"
                         />
@@ -2526,8 +2555,10 @@ const removeGalleryImage = (index: number) => {
                         <input 
                           type="text" 
                           required
+                          inputMode="tel"
+                          maxLength={15}
                           value={maskPhone(fornecedorConfig.telefone || '')}
-                          onChange={e => setFornecedorConfig({...fornecedorConfig, telefone: e.target.value})}
+                          onChange={e => setFornecedorConfig({...fornecedorConfig, telefone: maskPhone(e.target.value)})}
                           placeholder="(00) 00000-0000"
                           className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none"
                         />
@@ -2586,38 +2617,39 @@ const removeGalleryImage = (index: number) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
           <label className="mb-1 block text-sm font-bold text-neutral-700">Valor de Custo (R$) *</label>
-          <input 
+          <input  
             type="number" 
             step="0.01"
             min="0"
             required
             value={formData.valor_custo}
-            onChange={e => handleCustoChange(e.target.value)}
+            inputMode="numeric"
+onChange={(e) => handleCustoChange(e.target.value)}
             className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none font-bold"
           />
         </div>
         <div>
           <label className="mb-1 block text-sm font-bold text-neutral-700">Margem de Lucro (%) *</label>
-          <input 
+          <input  
             type="number" 
             step="0.1"
             min="0"
             required
             value={formData.porcentagem_lucro}
-            onChange={e => handleLucroChange(e.target.value)}
+            inputMode="numeric"
+onChange={(e) => handleLucroChange(e.target.value)}
             className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none font-bold text-emerald-600"
           />
         </div>
         <div>
           <label className="mb-1 block text-sm font-bold text-neutral-700">Valor de Venda (Final)</label>
-          <input 
+          <input  
             type="number" 
             step="0.01"
             required
             readOnly
             value={formData.valor}
-            className="w-full rounded-xl border border-neutral-200 bg-indigo-50 px-4 py-3 focus:outline-none font-black text-indigo-600"
-          />
+            className="w-full rounded-xl border border-neutral-200 bg-indigo-50 px-4 py-3 focus:outline-none font-black text-indigo-600" inputMode="numeric"/>
           <p className="mt-1 text-[10px] text-neutral-400">Calculado automaticamente: Custo + Margem.</p>
         </div>
       </div>
@@ -2721,12 +2753,13 @@ const removeGalleryImage = (index: number) => {
         {formData.controle_estoque && (
           <div className="pl-14 animate-in slide-in-from-top-2 fade-in">
             <label className="mb-1 block text-xs font-bold text-neutral-700">Quantidade em Estoque</label>
-            <input 
+            <input  
               type="number" 
               required
               min="0"
               value={formData.estoque_disponivel}
-              onChange={e => setFormData({...formData, estoque_disponivel: e.target.value})}
+              inputMode="numeric"
+onChange={(e) => setFormData({...formData, estoque_disponivel: e.target.value})}
               className="w-full sm:w-1/2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 focus:border-indigo-500 focus:outline-none"
             />
           </div>
@@ -2869,12 +2902,13 @@ return (
             <div>
               <label className="text-xs font-bold text-neutral-700 uppercase mb-1.5 block">Quantidade *</label>
               <div className="relative">
-                <input 
+                <input  
                   type="number"
                   min="1"
                   placeholder="Ex: 10"
                   value={ajuste}
-                  onChange={e => setAjuste(e.target.value)}
+                  inputMode="numeric"
+onChange={(e) => setAjuste(e.target.value)}
                   className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-bold focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
                 />
               </div>

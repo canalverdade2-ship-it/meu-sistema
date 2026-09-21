@@ -1,0 +1,136 @@
+{
+  "program": "GSA Cinema",
+  "duration_seconds": 3600,
+  "video_standard": "1920x1080p30 H.264",
+  "audio_standard": "AAC stereo 48kHz, target -16 LUFS, acceptance -17 to -15 LUFS, true peak <= -1.0 dBFS",
+  "master_asset_root": "idents-1080p30-lufs16",
+  "support_assets": {
+    "scenario": "gsa-cinema-cenario-master-8s-1080p30.mp4",
+    "continuity_presenting": "gsa-cinema-estamos-apresentando-master-10s-1080p30.mp4",
+    "continuity_return": "gsa-cinema-voltamos-a-apresentar-master-10s-1080p30.mp4"
+  },
+  "timeline": [
+    {
+      "in": "00:00:00",
+      "out": "00:00:45",
+      "segment": "Cold Open",
+      "editorial_status": "pending",
+      "asset_status": "ready",
+      "identity": "gsa-cinema-abertura-master-10s-1080p30.mp4"
+    },
+    {
+      "in": "00:00:45",
+      "out": "00:02:15",
+      "segment": "Abertura oficial + destaques",
+      "editorial_status": "pending",
+      "asset_status": "ready",
+      "identity": "gsa-cinema-abertura-master-10s-1080p30.mp4"
+    },
+    {
+      "in": "00:02:15",
+      "out": "00:05:30",
+      "segment": "Apresentacao",
+      "editorial_status": "presenter_pending",
+      "asset_status": "scenario_ready",
+      "identity": "gsa-cinema-cenario-master-8s-1080p30.mp4"
+    },
+    {
+      "in": "00:05:30",
+      "out": "00:12:30",
+      "segment": "Radar GSA",
+      "editorial_status": "titles_and_rights_pending",
+      "asset_status": "ready",
+      "identity": "gsa-cinema-radar-master-8s-1080p30.mp4"
+    },
+    {
+      "in": "00:12:30",
+      "out": "00:14:30",
+      "segment": "Intervalo 1",
+      "editorial_status": "continuity_ready",
+      "asset_status": "ready",
+      "identity": "gsa-cinema-bumper-master-5s-1080p30.mp4"
+    },
+    {
+      "in": "00:14:30",
+      "out": "00:22:00",
+      "segment": "Cena em Foco",
+      "editorial_status": "rights_pending",
+      "asset_status": "ready",
+      "identity": "gsa-cinema-cena-em-foco-master-8s-1080p30.mp4"
+    },
+    {
+      "in": "00:22:00",
+      "out": "00:28:30",
+      "segment": "Por Tras da Tela",
+      "editorial_status": "rights_or_original_demo_pending",
+      "asset_status": "ready",
+      "identity": "gsa-cinema-por-tras-da-tela-master-8s-1080p30.mp4"
+    },
+    {
+      "in": "00:28:30",
+      "out": "00:30:30",
+      "segment": "Intervalo 2",
+      "editorial_status": "continuity_ready",
+      "asset_status": "ready",
+      "identity": "gsa-cinema-bumper-master-5s-1080p30.mp4"
+    },
+    {
+      "in": "00:30:30",
+      "out": "00:36:30",
+      "segment": "Arquivo GSA Cinema",
+      "editorial_status": "archive_rights_pending",
+      "asset_status": "ready",
+      "identity": "gsa-cinema-arquivo-master-8s-1080p30.mp4"
+    },
+    {
+      "in": "00:36:30",
+      "out": "00:43:30",
+      "segment": "Desafio 24 Quadros",
+      "editorial_status": "game_content_pending",
+      "asset_status": "ready",
+      "identity": "gsa-cinema-desafio-24-quadros-master-8s-1080p30.mp4"
+    },
+    {
+      "in": "00:43:30",
+      "out": "00:45:30",
+      "segment": "Intervalo 3",
+      "editorial_status": "continuity_ready",
+      "asset_status": "ready",
+      "identity": "gsa-cinema-bumper-master-5s-1080p30.mp4"
+    },
+    {
+      "in": "00:45:30",
+      "out": "00:52:30",
+      "segment": "GSA Recomenda",
+      "editorial_status": "titles_and_rights_pending",
+      "asset_status": "ready",
+      "identity": "gsa-cinema-recomenda-master-8s-1080p30.mp4"
+    },
+    {
+      "in": "00:52:30",
+      "out": "00:57:30",
+      "segment": "Sessao Especial",
+      "editorial_status": "subject_and_rights_pending",
+      "asset_status": "ready",
+      "identity": "gsa-cinema-sessao-especial-master-8s-1080p30.mp4"
+    },
+    {
+      "in": "00:57:30",
+      "out": "00:59:10",
+      "segment": "Agenda + Interacao",
+      "editorial_status": "agenda_and_qr_pending",
+      "asset_status": "ready",
+      "identity": "gsa-cinema-agenda-master-8s-1080p30.mp4"
+    },
+    {
+      "in": "00:59:10",
+      "out": "01:00:00",
+      "segment": "Encerramento + creditos",
+      "editorial_status": "credits_pending",
+      "asset_status": "ready",
+      "identity": "gsa-cinema-encerramento-master-10s-1080p30.mp4"
+    }
+  ],
+  "production_asset_status": "complete",
+  "episode_master_status": "blocked_by_editorial_presenter_rights_and_schedule"
+}

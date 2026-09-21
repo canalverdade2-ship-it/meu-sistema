@@ -6,6 +6,8 @@ import {
 import { formatCurrency, formatDate } from '../../../lib/utils';
 import { Modal } from '../../ui/Modal';
 import { toast } from 'react-hot-toast';
+import { routes } from '../../../routing/routeCatalog';
+import { navigate } from '../../../routing/navigationService';
 import type { CupomLoja } from '../../../types';
 
 interface AvailableCouponsModalProps {
@@ -105,13 +107,13 @@ export default function AvailableCouponsModal({
               value={manualCode}
               onChange={(e) => setManualCode(e.target.value.toUpperCase())}
               placeholder="Possui outro código? Digite aqui (Ex: DESCONTO10)..."
-              className="w-full rounded-xl border border-neutral-300 bg-neutral-50/80 pl-9 pr-3 py-2.5 text-xs font-bold text-neutral-900 placeholder:text-neutral-400 uppercase tracking-wider focus:border-[#17345f] focus:bg-white focus:outline-none transition-all"
+              className="w-full rounded-xl border border-neutral-300 bg-neutral-50/80 pl-9 pr-3 py-2.5 text-xs font-bold text-neutral-900 placeholder:text-neutral-400 uppercase tracking-wider focus:border-[#17345f] focus:bg-white focus:outline-none focus-visible:ring-[#9b742f] transition-all"
             />
           </div>
           <button
             type="submit"
             disabled={!manualCode.trim()}
-            className="rounded-xl bg-[#17345f] px-4 py-2.5 text-xs font-black text-white hover:bg-[#102746] disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer shadow-xs shrink-0"
+            className="rounded-xl bg-[#17345f] px-4 py-2.5 text-xs font-black text-white hover:bg-[#102746] disabled:opacity-50 disabled:cursor-not-allowed focus-visible:ring-[#9b742f] transition-all cursor-pointer shadow-xs shrink-0"
           >
             Aplicar
           </button>
@@ -124,10 +126,21 @@ export default function AvailableCouponsModal({
               <Ticket className="h-8 w-8 text-neutral-300" aria-hidden="true" />
             </div>
             <h3 className="mt-4 text-sm font-black text-neutral-900 uppercase tracking-wide">
-              Nenhum cupom disponível nesta categoria
+              Nenhum benefício disponível nesta categoria
             </h3>
-            <p className="mt-1.5 max-w-[280px] text-xs leading-relaxed text-neutral-500 font-medium">
-              Você pode ativar novos cupons na aba <strong>Meus Cupons</strong> para utilizá-los no checkout.
+            <p className="mt-1.5 max-w-[300px] text-xs leading-relaxed text-neutral-500 font-medium">
+              Você pode ver e ativar todos os seus cupons na nossa{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  navigate(routes.marketplace.store.cupons());
+                }}
+                className="font-bold underline text-[#17345f] hover:text-[#0f2342] cursor-pointer"
+              >
+                Página de Cupons & Benefícios
+              </button>
+              .
             </p>
           </div>
         ) : (
@@ -239,9 +252,9 @@ export default function AvailableCouponsModal({
                           <h4 className="text-sm font-black text-neutral-900 group-hover:text-[#17345f] transition-colors leading-snug">
                             {coupon.nome_cupom}
                           </h4>
-                          {coupon.descricao ? (
+                          {(coupon as any).descricao ? (
                             <p className="text-xs text-neutral-500 font-medium line-clamp-2 mt-0.5">
-                              {coupon.descricao}
+                              {(coupon as any).descricao}
                             </p>
                           ) : (
                             <p className="text-xs text-neutral-400 font-medium mt-0.5">
@@ -271,7 +284,7 @@ export default function AvailableCouponsModal({
                             ) : (
                               <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
                             )}
-                            <span>Compra mínima: <strong>{formatCurrency(minValor)}</strong></span>
+                            <span>Compra mínima de <strong>{formatCurrency(minValor)}</strong></span>
                             {faltandoParaMinimo > 0 && (
                               <span className="text-amber-700 font-medium">
                                 (faltam {formatCurrency(faltandoParaMinimo)})

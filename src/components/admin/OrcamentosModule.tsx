@@ -956,12 +956,13 @@ export function OrcamentosModule({ activeSubTab, initialItemId, adminType, colab
         <div className="space-y-6">
           <div>
             <label className="mb-1 block text-sm font-bold text-neutral-700">Desconto Máximo Final (%)</label>
-            <input 
+            <input  
               type="number"
               min="0"
               max="100"
               value={isNaN(renegotiateValue) ? 0 : renegotiateValue}
-              onChange={e => {
+              inputMode="numeric"
+onChange={e => {
                 const val = e.target.value === '' ? 0 : Number(e.target.value);
                 setRenegotiateValue(isNaN(val) ? 0 : val);
               }}
@@ -1390,10 +1391,11 @@ function OrcamentoWizard({ onFinish, onCancel, colaboradorNome }: { onFinish: ()
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-bold text-neutral-700">Desconto da Promoção (Valor)</label>
-                  <input 
+                  <input  
                     type="text" 
                     value={maskCurrency(formData.promocao_desconto_manual)}
-                    onChange={e => handleCurrencyInputChange(e.target.value, (val) => setFormData({...formData, promocao_desconto_manual: val}))}
+                    inputMode="decimal"
+onChange={(e) => handleCurrencyInputChange(e.target.value, (val) => setFormData({...formData, promocao_desconto_manual: val}))}
                     className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 font-bold text-indigo-600 focus:border-indigo-500 focus:outline-none"
                   />
                 </div>
@@ -1405,6 +1407,7 @@ function OrcamentoWizard({ onFinish, onCancel, colaboradorNome }: { onFinish: ()
                 <label className="mb-1 block text-sm font-bold text-neutral-700">Valor Base (Serviço/Produto/Assinatura) *</label>
                 <input 
                   type="text" 
+                  inputMode="numeric"
                   required
                   value={maskCurrency(formData.valor_servico)}
                   onChange={e => handleCurrencyInputChange(e.target.value, (val) => setFormData({...formData, valor_servico: val}))}
@@ -1415,6 +1418,7 @@ function OrcamentoWizard({ onFinish, onCancel, colaboradorNome }: { onFinish: ()
                 <label className="mb-1 block text-sm font-bold text-neutral-700">Quantidade</label>
                 <input 
                   type="number" 
+                  inputMode="numeric"
                   min="1"
                   value={formData.quantidade}
                   onChange={e => setFormData({...formData, quantidade: parseInt(e.target.value) || 1})}
@@ -1425,6 +1429,7 @@ function OrcamentoWizard({ onFinish, onCancel, colaboradorNome }: { onFinish: ()
                 <label className="mb-1 block text-sm font-bold text-neutral-700">Valor Adicional</label>
                 <input 
                   type="text" 
+                  inputMode="numeric"
                   value={maskCurrency(formData.valor_adicional)}
                   onChange={e => handleCurrencyInputChange(e.target.value, (val) => setFormData({...formData, valor_adicional: val}))}
                   className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none"
@@ -1443,6 +1448,7 @@ function OrcamentoWizard({ onFinish, onCancel, colaboradorNome }: { onFinish: ()
                 <label className="mb-1 block text-sm font-bold text-neutral-700">Acréscimo</label>
                 <input 
                   type="text" 
+                  inputMode="numeric"
                   value={maskCurrency(formData.acrescimo)}
                   onChange={e => handleCurrencyInputChange(e.target.value, (val) => setFormData({...formData, acrescimo: val}))}
                   className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none"
@@ -1452,6 +1458,7 @@ function OrcamentoWizard({ onFinish, onCancel, colaboradorNome }: { onFinish: ()
                 <label className="mb-1 block text-sm font-bold text-neutral-700">Desconto</label>
                 <input 
                   type="text" 
+                  inputMode="numeric"
                   value={maskCurrency(formData.desconto)}
                   onChange={e => handleCurrencyInputChange(e.target.value, (val) => setFormData({...formData, desconto: val}))}
                   className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none"
@@ -2256,37 +2263,41 @@ function OrcamentoDetails({
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest pl-2 block leading-none">Valor Principal (Base)</label>
-                    <input 
+                    <input  
                       type="text"
                       value={maskCurrency(editData.valor_servico)}
-                      onChange={e => handleCurrencyInputChange(e.target.value, (val) => setEditData({...editData, valor_servico: val}))}
+                      inputMode="decimal"
+onChange={(e) => handleCurrencyInputChange(e.target.value, (val) => setEditData({...editData, valor_servico: val}))}
                       className="w-full rounded-2xl bg-white p-5 font-black text-xl text-neutral-900 ring-1 ring-neutral-200 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm"
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest pl-2 block leading-none">Insumos/Adicionais</label>
-                    <input 
+                    <input  
                       type="text"
                       value={maskCurrency(editData.valor_adicional)}
-                      onChange={e => handleCurrencyInputChange(e.target.value, (val) => setEditData({...editData, valor_adicional: val}))}
+                      inputMode="decimal"
+onChange={(e) => handleCurrencyInputChange(e.target.value, (val) => setEditData({...editData, valor_adicional: val}))}
                       className="w-full rounded-2xl bg-white p-5 font-black text-xl text-neutral-900 ring-1 ring-neutral-200 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all shadow-sm"
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest pl-2 block leading-none">Taxas Extras (Acréscimo)</label>
-                    <input 
+                    <input  
                       type="text"
                       value={maskCurrency(editData.acrescimo)}
-                      onChange={e => handleCurrencyInputChange(e.target.value, (val) => setEditData({...editData, acrescimo: val}))}
+                      inputMode="decimal"
+onChange={(e) => handleCurrencyInputChange(e.target.value, (val) => setEditData({...editData, acrescimo: val}))}
                       className="w-full rounded-2xl bg-emerald-50/50 p-5 font-black text-xl text-emerald-700 ring-1 ring-emerald-100 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all shadow-sm"
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-neutral-500 uppercase tracking-widest pl-2 block leading-none">Bônus Especial (Desconto)</label>
-                    <input 
+                    <input  
                       type="text"
                       value={maskCurrency(editData.desconto)}
-                      onChange={e => handleCurrencyInputChange(e.target.value, (val) => setEditData({...editData, desconto: val}))}
+                      inputMode="decimal"
+onChange={(e) => handleCurrencyInputChange(e.target.value, (val) => setEditData({...editData, desconto: val}))}
                       className="w-full rounded-2xl bg-red-50/50 p-5 font-black text-xl text-red-700 ring-1 ring-red-100 focus:ring-4 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all shadow-sm"
                     />
                   </div>

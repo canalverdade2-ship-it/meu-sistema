@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { Client } from 'ssh2';
+const root=path.resolve('.');
+const creds=fs.readFileSync(path.join(root,'CREDENCIAIS_SISTEMA_GSA.md'),'utf8');
+const keyPath=creds.match(/Chave Privada:\*\*\s*([^\r\n]+)/i)?.[1]?.trim();
+if(!keyPath) throw new Error('Chave SSH nao encontrada');
+const out=path.join(root,'assets','gsa-tv','audio','gsa-news-dramatic-transition-accent.mp3');
+fs.mkdirSync(path.dirname(out),{recursive:true});
+const c=new Client();
+c.on('ready',()=>c.sftp((err,s)=>{if(err)throw err;s.fastGet('/opt/gsa-tv/cache/media/1/identity/audio/sfx/gsa_sfx_049_dramatic_transition_accent.mp3',out,e=>{c.end();if(e)throw e;console.log(out)})}));
+c.connect({host:'147.15.43.141',port:22,username:'opc',privateKey:fs.readFileSync(keyPath),readyTimeout:15000});

@@ -1,0 +1,3895 @@
+[
+  {
+    "name": "AcessosModule.tsx",
+    "path": "src\\components\\admin\\AcessosModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "colaboradores",
+      "solicitacoes_exclusao",
+      "sistema_logs"
+    ],
+    "tableDetails": [
+      {
+        "table": "colaboradores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "solicitacoes_exclusao",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "sistema_logs",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "AdminPrestadorDocumentos.tsx",
+    "path": "src\\components\\admin\\prestadores\\AdminPrestadorDocumentos.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "prestador_documentos",
+      "documentos_prestador"
+    ],
+    "tableDetails": [
+      {
+        "table": "prestador_documentos",
+        "hasFilter": true,
+        "filter": "`prestador_id=eq.${prestadorId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "documentos_prestador",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "AdvertiserPortal.tsx",
+    "path": "src\\pages\\AdvertiserPortal.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "gsa_advertisers",
+      "gsa_ad_requests",
+      "gsa_ad_proposals",
+      "gsa_ad_campaigns",
+      "gsa_ad_creatives",
+      "gsa_ad_payments",
+      "gsa_ad_negotiations"
+    ],
+    "tableDetails": [
+      {
+        "table": "gsa_advertisers",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_ad_requests",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_ad_proposals",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_ad_campaigns",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_ad_creatives",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_ad_payments",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_ad_negotiations",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      }
+    ],
+    "antiPatterns": [
+      {
+        "category": "6. Polling mascarado",
+        "severity": "🟡 Alerta",
+        "detail": "Uso de setInterval para re-fetch periódico em vez de ou concorrente a Realtime CDC."
+      }
+    ],
+    "severity": "🟡 Alerta"
+  },
+  {
+    "name": "AdvertisingAdminModule.tsx",
+    "path": "src\\components\\admin\\AdvertisingAdminModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "advertising_requests",
+      "advertising_proposals",
+      "advertising_campaigns",
+      "advertising_creatives",
+      "advertising_payments",
+      "advertising_placements"
+    ],
+    "tableDetails": [
+      {
+        "table": "advertising_requests",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "advertising_proposals",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "advertising_campaigns",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "advertising_creatives",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "advertising_payments",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "advertising_placements",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "AffiliateAdminModule.tsx",
+    "path": "src\\components\\admin\\AffiliateAdminModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "gsa_afiliados",
+      "gsa_afiliado_programas",
+      "gsa_afiliado_comissoes",
+      "gsa_afiliado_saques",
+      "gsa_afiliado_links",
+      "indicacoes"
+    ],
+    "tableDetails": [
+      {
+        "table": "gsa_afiliados",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_afiliado_programas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_afiliado_comissoes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_afiliado_saques",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_afiliado_links",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "indicacoes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "AfiliadoDashboard.tsx",
+    "path": "src\\pages\\Afiliado\\AfiliadoDashboard.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "gsa_afiliados",
+      "gsa_afiliado_links",
+      "gsa_afiliado_comissoes",
+      "gsa_afiliado_saques",
+      "gsa_afiliado_programas",
+      "saques"
+    ],
+    "tableDetails": [
+      {
+        "table": "gsa_afiliados",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_afiliado_links",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_afiliado_comissoes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_afiliado_saques",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_afiliado_programas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "saques",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      }
+    ],
+    "antiPatterns": [
+      {
+        "category": "1. Broadcast sem filtro em tabela crítica/tenant",
+        "severity": "🔴 Crítico",
+        "detail": "Tabela 'saques' monitorada sem filtro de ID do usuário/tenant em componente cliente/portal."
+      }
+    ],
+    "severity": "🔴 Crítico"
+  },
+  {
+    "name": "AfiliadosSection.tsx",
+    "path": "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "gsa_afiliados",
+      "indicacoes",
+      "saques"
+    ],
+    "tableDetails": [
+      {
+        "table": "gsa_afiliados",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "indicacoes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "saques",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [
+      {
+        "category": "1. Broadcast sem filtro em tabela crítica/tenant",
+        "severity": "🔴 Crítico",
+        "detail": "Tabela 'saques' monitorada sem filtro de ID do usuário/tenant em componente cliente/portal."
+      }
+    ],
+    "severity": "🔴 Crítico"
+  },
+  {
+    "name": "AreaVipView.tsx",
+    "path": "src\\components\\admin\\super-domains\\contratos\\AreaVipView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "clientes"
+    ],
+    "tableDetails": [
+      {
+        "table": "clientes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "AssinaturasModule.tsx",
+    "path": "src\\components\\admin\\AssinaturasModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "assinaturas",
+      "ordens_assinatura",
+      "loja_categorias"
+    ],
+    "tableDetails": [
+      {
+        "table": "assinaturas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "ordens_assinatura",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "loja_categorias",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "AtendimentoTicketsView.tsx",
+    "path": "src\\components\\admin\\super-domains\\contratos\\AtendimentoTicketsView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "tickets",
+      "ticket_mensagens"
+    ],
+    "tableDetails": [
+      {
+        "table": "tickets",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "ticket_mensagens",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "CalculadorasGatewayView.tsx",
+    "path": "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "vouchers",
+      "system_settings"
+    ],
+    "tableDetails": [
+      {
+        "table": "vouchers",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "system_settings",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "CareersAdminModule.tsx",
+    "path": "src\\components\\admin\\CareersAdminModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "gsa_careers_applications",
+      "trabalhe_conosco"
+    ],
+    "tableDetails": [
+      {
+        "table": "gsa_careers_applications",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "trabalhe_conosco",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "CheckoutModal.tsx",
+    "path": "src\\components\\client\\store\\CheckoutModal.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "clientes",
+      "cupons_ativados",
+      "cupons_loja"
+    ],
+    "tableDetails": [
+      {
+        "table": "clientes",
+        "hasFilter": true,
+        "filter": "clientId ? `id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 150
+      },
+      {
+        "table": "cupons_ativados",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 150
+      },
+      {
+        "table": "cupons_loja",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 150
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "CheckoutPage.tsx",
+    "path": "src\\components\\client\\store\\CheckoutPage.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "loja_carrinhos",
+      "clientes",
+      "produtos",
+      "cupons_loja"
+    ],
+    "tableDetails": [
+      {
+        "table": "loja_carrinhos",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "clientes",
+        "hasFilter": true,
+        "filter": "clientId ? `id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "produtos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "cupons_loja",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ClassifiedsModule.tsx",
+    "path": "src\\components\\admin\\ClassifiedsModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "classificados_anuncios",
+      "classificados_propostas",
+      "classificados_mensagens",
+      "classificados_transacoes",
+      "classificados_midias"
+    ],
+    "tableDetails": [
+      {
+        "table": "classificados_anuncios",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "classificados_propostas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "classificados_mensagens",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "classificados_transacoes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "classificados_midias",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ClientAffiliatePanel.tsx",
+    "path": "src\\components\\client\\ClientAffiliatePanel.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "gsa_afiliados",
+      "saques",
+      "carteira_lancamentos",
+      "indicacoes",
+      "points_transactions",
+      "pontos_movimentacoes"
+    ],
+    "tableDetails": [
+      {
+        "table": "gsa_afiliados",
+        "hasFilter": true,
+        "filter": "_clientId ? `cliente_id=eq.${_clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "saques",
+        "hasFilter": true,
+        "filter": "_clientId ? `cliente_id=eq.${_clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "carteira_lancamentos",
+        "hasFilter": true,
+        "filter": "_clientId ? `cliente_id=eq.${_clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "indicacoes",
+        "hasFilter": true,
+        "filter": "_clientId ? `indicador_id=eq.${_clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "points_transactions",
+        "hasFilter": true,
+        "filter": "_clientId ? `client_id=eq.${_clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "pontos_movimentacoes",
+        "hasFilter": true,
+        "filter": "_clientId ? `cliente_id=eq.${_clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ClientAreaVIP.tsx",
+    "path": "src\\components\\client\\ClientAreaVIP.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "client_levels",
+      "level_history",
+      "assinaturas"
+    ],
+    "tableDetails": [
+      {
+        "table": "client_levels",
+        "hasFilter": true,
+        "filter": "`cliente_id=eq.${cliente.id",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "level_history",
+        "hasFilter": true,
+        "filter": "`cliente_id=eq.${cliente.id",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "client_levels",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "assinaturas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "client_levels",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "level_history",
+        "hasFilter": true,
+        "filter": "`cliente_id=eq.${cliente.id",
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [
+      {
+        "category": "2. Channel name instável",
+        "severity": "🟡 Alerta",
+        "detail": "Geração de channelName com Math.random() dinâmico."
+      },
+      {
+        "category": "4. Double subscription",
+        "severity": "🟡 Alerta",
+        "detail": "Mesma tabela monitorada múltiplas vezes no componente: client_levels, level_history."
+      }
+    ],
+    "severity": "🟡 Alerta"
+  },
+  {
+    "name": "ClientAssinaturas.tsx",
+    "path": "src\\components\\client\\ClientAssinaturas.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "ordens_assinatura",
+      "faturas",
+      "assinaturas"
+    ],
+    "tableDetails": [
+      {
+        "table": "ordens_assinatura",
+        "hasFilter": true,
+        "filter": "`cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "faturas",
+        "hasFilter": true,
+        "filter": "`cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "assinaturas",
+        "hasFilter": true,
+        "filter": "`cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ClientFidelidade.tsx",
+    "path": "src\\components\\client\\ClientFidelidade.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "clientes",
+      "vouchers",
+      "indicacoes",
+      "pontos_movimentacoes",
+      "system_settings"
+    ],
+    "tableDetails": [
+      {
+        "table": "clientes",
+        "hasFilter": true,
+        "filter": "clientId ? `id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "vouchers",
+        "hasFilter": true,
+        "filter": "clientId ? `id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "indicacoes",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "pontos_movimentacoes",
+        "hasFilter": true,
+        "filter": "clientId ? `indicador_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "system_settings",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ClientFinanceiro.tsx",
+    "path": "src\\components\\client\\ClientFinanceiro.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "clientes",
+      "faturas",
+      "saques",
+      "transferencias",
+      "carteira_lancamentos",
+      "ordens_fiscais",
+      "tickets",
+      "system_settings"
+    ],
+    "tableDetails": [
+      {
+        "table": "clientes",
+        "hasFilter": true,
+        "filter": "clientId ? `id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "faturas",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "saques",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "transferencias",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "carteira_lancamentos",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "ordens_fiscais",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "tickets",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "system_settings",
+        "hasFilter": true,
+        "filter": "'key=eq.valor_minimo_saque'",
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ClientIndiqueGanhe.tsx",
+    "path": "src\\components\\client\\ClientIndiqueGanhe.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "indicacoes",
+      "vouchers",
+      "clientes"
+    ],
+    "tableDetails": [
+      {
+        "table": "indicacoes",
+        "hasFilter": true,
+        "filter": "clientId ? `indicador_id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 150
+      },
+      {
+        "table": "vouchers",
+        "hasFilter": true,
+        "filter": "clientId ? `id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 150
+      },
+      {
+        "table": "clientes",
+        "hasFilter": true,
+        "filter": "clientId ? `id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 150
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ClientMeuCredito.tsx",
+    "path": "src\\components\\client\\ClientMeuCredito.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "loja_credito_solicitacoes",
+      "loja_credito_movimentacoes",
+      "faturas",
+      "clientes",
+      "loja_credito_documentos"
+    ],
+    "tableDetails": [
+      {
+        "table": "loja_credito_solicitacoes",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "loja_credito_movimentacoes",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "faturas",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "clientes",
+        "hasFilter": true,
+        "filter": "clientId ? `id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "loja_credito_documentos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ClientOrcamentos.tsx",
+    "path": "src\\components\\client\\ClientOrcamentos.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "orcamentos",
+      "loja_avaliacoes",
+      "loja_solicitacoes"
+    ],
+    "tableDetails": [
+      {
+        "table": "orcamentos",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "loja_avaliacoes",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "loja_solicitacoes",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ClientPontos.tsx",
+    "path": "src\\components\\client\\ClientPontos.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "clientes",
+      "pontos_movimentacoes"
+    ],
+    "tableDetails": [
+      {
+        "table": "clientes",
+        "hasFilter": true,
+        "filter": "clienteId ? `id=eq.${clienteId",
+        "hasDebounce": true,
+        "debounceMs": 150
+      },
+      {
+        "table": "pontos_movimentacoes",
+        "hasFilter": true,
+        "filter": "clienteId ? `cliente_id=eq.${clienteId",
+        "hasDebounce": true,
+        "debounceMs": 150
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ClientProdutos.tsx",
+    "path": "src\\components\\client\\ClientProdutos.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "ordens_compra",
+      "produtos",
+      "faturas"
+    ],
+    "tableDetails": [
+      {
+        "table": "ordens_compra",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "produtos",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "faturas",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ClientProfile.tsx",
+    "path": "src\\components\\client\\ClientProfile.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "cliente_documentos",
+      "documentos_cliente",
+      "clientes"
+    ],
+    "tableDetails": [
+      {
+        "table": "cliente_documentos",
+        "hasFilter": true,
+        "filter": "cliente?.id ? `cliente_id=eq.${cliente.id",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "documentos_cliente",
+        "hasFilter": true,
+        "filter": "cliente?.id ? `cliente_id=eq.${cliente.id",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "clientes",
+        "hasFilter": true,
+        "filter": "cliente?.id ? `id=eq.${cliente.id",
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ClientServicos.tsx",
+    "path": "src\\components\\client\\ClientServicos.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "ordens_servico",
+      "orcamentos",
+      "os_notas",
+      "os_suporte_mensagens"
+    ],
+    "tableDetails": [
+      {
+        "table": "ordens_servico",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "orcamentos",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "os_notas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "os_suporte_mensagens",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "os_notas",
+        "hasFilter": true,
+        "filter": "`os_id=eq.${osId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "os_suporte_mensagens",
+        "hasFilter": true,
+        "filter": "`os_id=eq.${osId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "os_notas",
+        "hasFilter": true,
+        "filter": "`os_id=eq.${osId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "os_suporte_mensagens",
+        "hasFilter": true,
+        "filter": "`os_id=eq.${osId",
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [
+      {
+        "category": "4. Double subscription",
+        "severity": "🟡 Alerta",
+        "detail": "Mesma tabela monitorada múltiplas vezes no componente: os_notas, os_suporte_mensagens."
+      }
+    ],
+    "severity": "🟡 Alerta"
+  },
+  {
+    "name": "ClientSuporte.tsx",
+    "path": "src\\components\\client\\ClientSuporte.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "tickets",
+      "ticket_mensagens"
+    ],
+    "tableDetails": [
+      {
+        "table": "tickets",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "ticket_mensagens",
+        "hasFilter": true,
+        "filter": "selectedTicket?.id ? `ticket_id=eq.${selectedTicket.id",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "tickets",
+        "hasFilter": true,
+        "filter": "selectedTicket?.id ? `id=eq.${selectedTicket.id",
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [
+      {
+        "category": "4. Double subscription",
+        "severity": "🟡 Alerta",
+        "detail": "Mesma tabela monitorada múltiplas vezes no componente: tickets."
+      }
+    ],
+    "severity": "🟡 Alerta"
+  },
+  {
+    "name": "ClientTransferencias.tsx",
+    "path": "src\\components\\client\\ClientTransferencias.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "transferencias",
+      "clientes",
+      "pontos_movimentacoes",
+      "saques"
+    ],
+    "tableDetails": [
+      {
+        "table": "transferencias",
+        "hasFilter": true,
+        "filter": "clientId ? `id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "clientes",
+        "hasFilter": true,
+        "filter": "clientId ? `id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "pontos_movimentacoes",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "saques",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ClientVouchers.tsx",
+    "path": "src\\components\\client\\ClientVouchers.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "vouchers",
+      "cupons_loja",
+      "cupons_ativados",
+      "clientes"
+    ],
+    "tableDetails": [
+      {
+        "table": "vouchers",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "cupons_loja",
+        "hasFilter": true,
+        "filter": "clientId ? `id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "cupons_ativados",
+        "hasFilter": true,
+        "filter": "clientId ? `id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "clientes",
+        "hasFilter": true,
+        "filter": "clientId ? `id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "CobrancaView.tsx",
+    "path": "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "cobrancas",
+      "cobranca_historico",
+      "cobranca_acordo_parcelas"
+    ],
+    "tableDetails": [
+      {
+        "table": "cobrancas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "cobranca_historico",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "cobranca_acordo_parcelas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ConfiguracoesModule.tsx",
+    "path": "src\\components\\admin\\ConfiguracoesModule.tsx",
+    "hookType": "useRealtimeTable",
+    "tables": [
+      "'system_settings'"
+    ],
+    "tableDetails": [
+      {
+        "table": "'system_settings'",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ContratosDocumentosView.tsx",
+    "path": "src\\components\\admin\\super-domains\\contratos\\ContratosDocumentosView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "contratos"
+    ],
+    "tableDetails": [
+      {
+        "table": "contratos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "CreateListingWizard.tsx",
+    "path": "src\\components\\client\\marketplace\\classifieds\\CreateListingWizard.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "classificados_comissoes_config"
+    ],
+    "tableDetails": [
+      {
+        "table": "classificados_comissoes_config",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [
+      {
+        "category": "7. Realtime em componente inativo",
+        "severity": "🟡 Alerta",
+        "detail": "Modal/Drawer com realtime ativo sem controle de 'enabled: isOpen', mantendo WebSocket aberto quando fechado."
+      }
+    ],
+    "severity": "🟡 Alerta"
+  },
+  {
+    "name": "CrmClientesView.tsx",
+    "path": "src\\components\\admin\\super-domains\\contratos\\CrmClientesView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "clientes"
+    ],
+    "tableDetails": [
+      {
+        "table": "clientes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [
+      {
+        "category": "1. Broadcast sem filtro em tabela crítica/tenant",
+        "severity": "🔴 Crítico",
+        "detail": "Tabela 'clientes' monitorada sem filtro de ID do usuário/tenant em componente cliente/portal."
+      }
+    ],
+    "severity": "🔴 Crítico"
+  },
+  {
+    "name": "Dashboard.tsx",
+    "path": "src\\components\\admin\\Dashboard.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "faturas",
+      "cobrancas",
+      "saques",
+      "emprestimos",
+      "orcamentos",
+      "ordens_servico",
+      "ordens_fiscais",
+      "tickets",
+      "clientes",
+      "ordens_compra",
+      "vouchers",
+      "prestador_demandas",
+      "promocoes"
+    ],
+    "tableDetails": [
+      {
+        "table": "faturas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "cobrancas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "saques",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "emprestimos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "orcamentos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "ordens_servico",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "ordens_fiscais",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "tickets",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "clientes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "ordens_compra",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "vouchers",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "prestador_demandas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "promocoes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      }
+    ],
+    "antiPatterns": [
+      {
+        "category": "6. Polling mascarado",
+        "severity": "🟡 Alerta",
+        "detail": "Uso de setInterval para re-fetch periódico em vez de ou concorrente a Realtime CDC."
+      }
+    ],
+    "severity": "🟡 Alerta"
+  },
+  {
+    "name": "DemandasColaboradorModule.tsx",
+    "path": "src\\components\\admin\\DemandasColaboradorModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "prestador_demandas",
+      "prestador_demandas_historico",
+      "demanda_comentarios",
+      "os_notas",
+      "os_suporte_mensagens",
+      "colaboradores",
+      "prestadores"
+    ],
+    "tableDetails": [
+      {
+        "table": "prestador_demandas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "prestador_demandas_historico",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "demanda_comentarios",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "os_notas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "os_suporte_mensagens",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "colaboradores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "prestadores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "DemandasComentarios.tsx",
+    "path": "src\\components\\admin\\demandas\\DemandasComentarios.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "demanda_comentarios"
+    ],
+    "tableDetails": [
+      {
+        "table": "demanda_comentarios",
+        "hasFilter": true,
+        "filter": "`demanda_id=eq.${demandaId",
+        "hasDebounce": true,
+        "debounceMs": 100
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "DemandasDashboard.tsx",
+    "path": "src\\components\\admin\\demandas\\DemandasDashboard.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "prestador_demandas",
+      "colaboradores",
+      "prestadores"
+    ],
+    "tableDetails": [
+      {
+        "table": "prestador_demandas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "colaboradores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "prestadores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "DemandasDetalhesModal.tsx",
+    "path": "src\\components\\admin\\demandas\\DemandasDetalhesModal.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "prestador_demandas",
+      "prestador_demandas_historico",
+      "os_suporte_mensagens"
+    ],
+    "tableDetails": [
+      {
+        "table": "prestador_demandas",
+        "hasFilter": true,
+        "filter": "`id=eq.${demanda.id",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "prestador_demandas_historico",
+        "hasFilter": true,
+        "filter": "`demanda_id=eq.${demanda.id",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "os_suporte_mensagens",
+        "hasFilter": true,
+        "filter": "`os_id=eq.${osId",
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [
+      {
+        "category": "7. Realtime em componente inativo",
+        "severity": "🟡 Alerta",
+        "detail": "Modal/Drawer com realtime ativo sem controle de 'enabled: isOpen', mantendo WebSocket aberto quando fechado."
+      }
+    ],
+    "severity": "🟡 Alerta"
+  },
+  {
+    "name": "EcommerceHeader.tsx",
+    "path": "src\\components\\client\\store\\EcommerceHeader.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "loja_carrinhos",
+      "clientes"
+    ],
+    "tableDetails": [
+      {
+        "table": "loja_carrinhos",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 100
+      },
+      {
+        "table": "clientes",
+        "hasFilter": true,
+        "filter": "clientId ? `id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 100
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "EcommerceHome.tsx",
+    "path": "src\\components\\client\\store\\EcommerceHome.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "produtos",
+      "loja_carrinhos"
+    ],
+    "tableDetails": [
+      {
+        "table": "produtos",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "loja_carrinhos",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [
+      {
+        "category": "6. Polling mascarado",
+        "severity": "🟡 Alerta",
+        "detail": "Uso de setInterval para re-fetch periódico em vez de ou concorrente a Realtime CDC."
+      }
+    ],
+    "severity": "🟡 Alerta"
+  },
+  {
+    "name": "EditClassifiedListingPage.tsx",
+    "path": "src\\components\\client\\marketplace\\classifieds\\EditClassifiedListingPage.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "classificados_anuncios",
+      "classificados_midias"
+    ],
+    "tableDetails": [
+      {
+        "table": "classificados_anuncios",
+        "hasFilter": true,
+        "filter": "anuncioId ? `id=eq.${anuncioId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "classificados_midias",
+        "hasFilter": true,
+        "filter": "anuncioId ? `anuncio_id=eq.${anuncioId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "EmprestimosCreditoView.tsx",
+    "path": "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "emprestimos",
+      "emprestimo_parcelas",
+      "loja_credito_solicitacoes"
+    ],
+    "tableDetails": [
+      {
+        "table": "emprestimos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "emprestimo_parcelas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "loja_credito_solicitacoes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "FaturamentoView.tsx",
+    "path": "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "faturas",
+      "cobrancas",
+      "ordens_fiscais"
+    ],
+    "tableDetails": [
+      {
+        "table": "faturas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "cobrancas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "ordens_fiscais",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "FidelidadePromocoesSection.tsx",
+    "path": "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "vouchers",
+      "cliente_premios",
+      "pontos_movimentacoes",
+      "cupons_loja",
+      "loja_solicitacoes",
+      "indicacoes"
+    ],
+    "tableDetails": [
+      {
+        "table": "vouchers",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "cliente_premios",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "pontos_movimentacoes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "cupons_loja",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "loja_solicitacoes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "indicacoes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "FinanceiroSuperDomain.tsx",
+    "path": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "faturas",
+      "saques",
+      "cobrancas",
+      "ordens_fiscais"
+    ],
+    "tableDetails": [
+      {
+        "table": "faturas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "saques",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "cobrancas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "ordens_fiscais",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "FiscalModule.tsx",
+    "path": "src\\components\\admin\\FiscalModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "ordens_fiscais",
+      "faturas"
+    ],
+    "tableDetails": [
+      {
+        "table": "ordens_fiscais",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "faturas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "FiscalView.tsx",
+    "path": "src\\components\\admin\\super-domains\\financeiro\\FiscalView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "ordens_fiscais"
+    ],
+    "tableDetails": [
+      {
+        "table": "ordens_fiscais",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "FluxoCaixaView.tsx",
+    "path": "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "saques",
+      "transferencias"
+    ],
+    "tableDetails": [
+      {
+        "table": "saques",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "transferencias",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "FornecedoresModule.tsx",
+    "path": "src\\components\\admin\\FornecedoresModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "fornecedores",
+      "ordens_compra",
+      "produto_fornecedor_config",
+      "produtos",
+      "fornecedor_produtos",
+      "fornecedor_pedidos",
+      "fornecedor_entregas",
+      "fornecedor_documentos"
+    ],
+    "tableDetails": [
+      {
+        "table": "fornecedores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "ordens_compra",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "produto_fornecedor_config",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "produtos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "fornecedor_produtos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "fornecedor_pedidos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "fornecedor_entregas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "fornecedor_documentos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "FornecedoresSection.tsx",
+    "path": "src\\components\\admin\\super-domains\\pessoas\\FornecedoresSection.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "parceiros",
+      "parceiros_resgates",
+      "fornecedores"
+    ],
+    "tableDetails": [
+      {
+        "table": "parceiros",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "parceiros_resgates",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "fornecedores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "GovernancaAcessosView.tsx",
+    "path": "src\\components\\admin\\super-domains\\governanca\\GovernancaAcessosView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "colaboradores",
+      "funcoes",
+      "solicitacoes_exclusao",
+      "admin_sessoes"
+    ],
+    "tableDetails": [
+      {
+        "table": "colaboradores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "funcoes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "solicitacoes_exclusao",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "admin_sessoes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "GovernancaAuditoriaView.tsx",
+    "path": "src\\components\\admin\\super-domains\\governanca\\GovernancaAuditoriaView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "sistema_logs",
+      "audit_trail",
+      "solicitacoes_exclusao",
+      "system_settings"
+    ],
+    "tableDetails": [
+      {
+        "table": "sistema_logs",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "audit_trail",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "sistema_logs",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "solicitacoes_exclusao",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "system_settings",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [
+      {
+        "category": "4. Double subscription",
+        "severity": "🟡 Alerta",
+        "detail": "Mesma tabela monitorada múltiplas vezes no componente: sistema_logs."
+      }
+    ],
+    "severity": "🟡 Alerta"
+  },
+  {
+    "name": "GovernancaConfiguracoesView.tsx",
+    "path": "src\\components\\admin\\super-domains\\governanca\\GovernancaConfiguracoesView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "system_settings",
+      "payment_methods",
+      "configuracoes"
+    ],
+    "tableDetails": [
+      {
+        "table": "system_settings",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "payment_methods",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "configuracoes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "GovernancaExecutiveDashboard.tsx",
+    "path": "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "clientes",
+      "faturas",
+      "saques",
+      "prestador_demandas",
+      "ordens_servico",
+      "colaboradores",
+      "sistema_logs"
+    ],
+    "tableDetails": [
+      {
+        "table": "clientes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "faturas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "saques",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "prestador_demandas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "ordens_servico",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "colaboradores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "sistema_logs",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "GovernancaInfraView.tsx",
+    "path": "src\\components\\admin\\super-domains\\governanca\\GovernancaInfraView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "colaboradores",
+      "clientes",
+      "system_settings",
+      "gsa_whatsapp_ramais"
+    ],
+    "tableDetails": [
+      {
+        "table": "colaboradores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "clientes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "system_settings",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "gsa_whatsapp_ramais",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "GsaSaudeView.tsx",
+    "path": "src\\components\\admin\\super-domains\\contratos\\GsaSaudeView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "saude_contratos"
+    ],
+    "tableDetails": [
+      {
+        "table": "saude_contratos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "GsaSegurosView.tsx",
+    "path": "src\\components\\admin\\super-domains\\contratos\\GsaSegurosView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "seguros_apolices"
+    ],
+    "tableDetails": [
+      {
+        "table": "seguros_apolices",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "GsaTvModule.tsx",
+    "path": "src\\components\\admin\\GsaTvModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "gsa_tv_channels",
+      "gsa_tv_media_items",
+      "gsa_tv_schedule_slots",
+      "gsa_tv_playlists",
+      "gsa_tv_incidents",
+      "gsa_tv_audit_log",
+      "gsa_tv_jobs"
+    ],
+    "tableDetails": [
+      {
+        "table": "gsa_tv_channels",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_tv_media_items",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_tv_schedule_slots",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_tv_playlists",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_tv_incidents",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_tv_audit_log",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_tv_jobs",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "HubEmpresasView.tsx",
+    "path": "src\\components\\admin\\super-domains\\contratos\\HubEmpresasView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "clientes"
+    ],
+    "tableDetails": [
+      {
+        "table": "clientes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "NovaDemandaModal.tsx",
+    "path": "src\\components\\admin\\demandas\\NovaDemandaModal.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "ordens_servico",
+      "colaboradores",
+      "prestadores"
+    ],
+    "tableDetails": [
+      {
+        "table": "ordens_servico",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "colaboradores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "prestadores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [
+      {
+        "category": "7. Realtime em componente inativo",
+        "severity": "🟡 Alerta",
+        "detail": "Modal/Drawer com realtime ativo sem controle de 'enabled: isOpen', mantendo WebSocket aberto quando fechado."
+      }
+    ],
+    "severity": "🟡 Alerta"
+  },
+  {
+    "name": "NovoPrestadorDrawer.tsx",
+    "path": "src\\components\\admin\\super-domains\\pessoas\\NovoPrestadorDrawer.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "prestadores"
+    ],
+    "tableDetails": [
+      {
+        "table": "prestadores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "OperacoesSuperDomain.tsx",
+    "path": "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "orcamentos",
+      "ordens_servico",
+      "prestador_demandas",
+      "ordens_compra"
+    ],
+    "tableDetails": [
+      {
+        "table": "orcamentos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 400
+      },
+      {
+        "table": "ordens_servico",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 400
+      },
+      {
+        "table": "prestador_demandas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 400
+      },
+      {
+        "table": "ordens_compra",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 400
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "OrcamentosWorkstation.tsx",
+    "path": "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx",
+    "hookType": "useRealtimeTable",
+    "tables": [
+      "orcamentos",
+      "['orcamentos', 'ordens_servico']"
+    ],
+    "tableDetails": [
+      {
+        "table": "orcamentos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "['orcamentos', 'ordens_servico']",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "orcamentos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [
+      {
+        "category": "2. Channel name instável",
+        "severity": "🔴 Crítico",
+        "detail": "Geração de channelName com Date.now() em render loop ou subscription imperativa."
+      },
+      {
+        "category": "4. Double subscription",
+        "severity": "🟡 Alerta",
+        "detail": "Mesma tabela monitorada múltiplas vezes no componente: orcamentos."
+      }
+    ],
+    "severity": "🔴 Crítico"
+  },
+  {
+    "name": "OrdensAssinaturaModule.tsx",
+    "path": "src\\components\\admin\\OrdensAssinaturaModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "ordens_assinatura",
+      "assinaturas",
+      "faturas",
+      "orcamentos",
+      "clientes"
+    ],
+    "tableDetails": [
+      {
+        "table": "ordens_assinatura",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "assinaturas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "faturas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "orcamentos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "clientes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "OrdensCompraModule.tsx",
+    "path": "src\\components\\admin\\OrdensCompraModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "ordens_compra",
+      "produtos",
+      "faturas",
+      "cupons_loja",
+      "orcamentos",
+      "clientes",
+      "pagamentos"
+    ],
+    "tableDetails": [
+      {
+        "table": "ordens_compra",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "produtos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "faturas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "cupons_loja",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "orcamentos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "clientes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "pagamentos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "PartnersAdminModule.tsx",
+    "path": "src\\components\\admin\\PartnersAdminModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "parceiros"
+    ],
+    "tableDetails": [
+      {
+        "table": "parceiros",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "PartnersPage.tsx",
+    "path": "src\\components\\public\\PartnersPage.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "parceiros"
+    ],
+    "tableDetails": [
+      {
+        "table": "parceiros",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "PaymentModal.tsx",
+    "path": "src\\components\\client\\financeiro\\PaymentModal.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "clientes",
+      "vouchers"
+    ],
+    "tableDetails": [
+      {
+        "table": "clientes",
+        "hasFilter": true,
+        "filter": "fatura?.cliente_id ? `id=eq.${fatura.cliente_id",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "vouchers",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "PayoutClearanceDrawer.tsx",
+    "path": "src\\components\\admin\\super-domains\\pessoas\\PayoutClearanceDrawer.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "prestador_saques",
+      "saques"
+    ],
+    "tableDetails": [
+      {
+        "table": "prestador_saques",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "saques",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "PessoasSuperDomain.tsx",
+    "path": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "prestadores",
+      "prestador_saques",
+      "saques",
+      "fornecedores",
+      "gsa_afiliados",
+      "career_applications"
+    ],
+    "tableDetails": [
+      {
+        "table": "prestadores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "prestador_saques",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "saques",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "fornecedores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "gsa_afiliados",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "career_applications",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "PrestadorDetailDrawer.tsx",
+    "path": "src\\components\\admin\\super-domains\\pessoas\\PrestadorDetailDrawer.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "prestadores",
+      "prestador_demandas"
+    ],
+    "tableDetails": [
+      {
+        "table": "prestadores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "prestador_demandas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [
+      {
+        "category": "1. Broadcast sem filtro em tabela crítica/tenant",
+        "severity": "🔴 Crítico",
+        "detail": "Tabela 'prestador_demandas' monitorada sem filtro de ID do usuário/tenant em componente cliente/portal."
+      }
+    ],
+    "severity": "🔴 Crítico"
+  },
+  {
+    "name": "PrestadoresSection.tsx",
+    "path": "src\\components\\admin\\super-domains\\pessoas\\PrestadoresSection.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "prestadores"
+    ],
+    "tableDetails": [
+      {
+        "table": "prestadores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ProdutosModule.tsx",
+    "path": "src\\components\\admin\\ProdutosModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "produtos",
+      "loja_categorias",
+      "loja_estoque_historico",
+      "produto_fornecedor_config",
+      "produto_variantes",
+      "produto_variacao_grupos",
+      "produto_variacao_opcoes"
+    ],
+    "tableDetails": [
+      {
+        "table": "produtos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "loja_categorias",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "loja_estoque_historico",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "produto_fornecedor_config",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "produto_variantes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "produto_variacao_grupos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "produto_variacao_opcoes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ProtectionAdminModule.tsx",
+    "path": "src\\components\\admin\\ProtectionAdminModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [],
+    "tableDetails": [],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ProtocolConsultPage.tsx",
+    "path": "src\\components\\public\\ProtocolConsultPage.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "parceiros_resgates"
+    ],
+    "tableDetails": [
+      {
+        "table": "parceiros_resgates",
+        "hasFilter": true,
+        "filter": "result?.protocolo ? `protocolo=eq.${result.protocolo",
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "PurchasesPage.tsx",
+    "path": "src\\components\\client\\store\\PurchasesPage.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "orcamentos",
+      "ordens_compra",
+      "ordens_assinatura",
+      "loja_pedido_itens",
+      "loja_pedidos"
+    ],
+    "tableDetails": [
+      {
+        "table": "orcamentos",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "ordens_compra",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "ordens_assinatura",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "loja_pedido_itens",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "loja_pedidos",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "RentabilidadeReembolsosView.tsx",
+    "path": "src\\components\\admin\\super-domains\\financeiro\\RentabilidadeReembolsosView.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "loja_reembolsos"
+    ],
+    "tableDetails": [
+      {
+        "table": "loja_reembolsos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "SaquesList.tsx",
+    "path": "src\\components\\client\\financeiro\\SaquesList.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "saques"
+    ],
+    "tableDetails": [
+      {
+        "table": "saques",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "SaquesRepassesSection.tsx",
+    "path": "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "prestador_saques",
+      "saques"
+    ],
+    "tableDetails": [
+      {
+        "table": "prestador_saques",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "saques",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ScrapingAdminModule.tsx",
+    "path": "src\\components\\admin\\ScrapingAdminModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "automacao_scraping_configs",
+      "system_settings"
+    ],
+    "tableDetails": [
+      {
+        "table": "automacao_scraping_configs",
+        "hasFilter": true,
+        "filter": "'key=eq.n8n_base_url'",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "system_settings",
+        "hasFilter": true,
+        "filter": "'key=eq.n8n_base_url'",
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ServicePackagesModule.tsx",
+    "path": "src\\components\\admin\\ServicePackagesModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "servicos",
+      "catalog_packages",
+      "catalog_services"
+    ],
+    "tableDetails": [
+      {
+        "table": "servicos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "catalog_packages",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "catalog_services",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ServicosModule.tsx",
+    "path": "src\\components\\admin\\ServicosModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "servicos",
+      "loja_categorias",
+      "catalog_services"
+    ],
+    "tableDetails": [
+      {
+        "table": "servicos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "loja_categorias",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "catalog_services",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ShopeeOperationsModule.tsx",
+    "path": "src\\components\\admin\\ShopeeOperationsModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "shopee_fulfillment_jobs",
+      "shopee_automation_workers",
+      "ordens_compra",
+      "orcamentos"
+    ],
+    "tableDetails": [
+      {
+        "table": "shopee_fulfillment_jobs",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "shopee_automation_workers",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "ordens_compra",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "orcamentos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "SiteCampaignAdminModule.tsx",
+    "path": "src\\components\\admin\\SiteCampaignAdminModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "system_settings",
+      "site_campaigns",
+      "site_campaign_events"
+    ],
+    "tableDetails": [
+      {
+        "table": "system_settings",
+        "hasFilter": true,
+        "filter": "'key=eq.site_campaigns'",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "site_campaigns",
+        "hasFilter": true,
+        "filter": "'key=eq.site_campaigns'",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "site_campaign_events",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "StoreHub.tsx",
+    "path": "src\\components\\client\\StoreHub.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "produtos",
+      "loja_carrinhos",
+      "orcamentos",
+      "loja_reembolsos",
+      "cliente_promocoes",
+      "loja_solicitacoes"
+    ],
+    "tableDetails": [
+      {
+        "table": "produtos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "loja_carrinhos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "orcamentos",
+        "hasFilter": true,
+        "filter": "`cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "loja_reembolsos",
+        "hasFilter": true,
+        "filter": "`cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "cliente_promocoes",
+        "hasFilter": true,
+        "filter": "`cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "loja_solicitacoes",
+        "hasFilter": true,
+        "filter": "`cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "orcamentos",
+        "hasFilter": true,
+        "filter": "`cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "loja_reembolsos",
+        "hasFilter": true,
+        "filter": "`cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "cliente_promocoes",
+        "hasFilter": true,
+        "filter": "`cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "loja_solicitacoes",
+        "hasFilter": true,
+        "filter": "`cliente_id=eq.${clientId",
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [
+      {
+        "category": "2. Channel name instável",
+        "severity": "🔴 Crítico",
+        "detail": "Geração de channelName com Date.now() em render loop ou subscription imperativa."
+      },
+      {
+        "category": "4. Double subscription",
+        "severity": "🟡 Alerta",
+        "detail": "Mesma tabela monitorada múltiplas vezes no componente: orcamentos, loja_reembolsos, cliente_promocoes, loja_solicitacoes."
+      }
+    ],
+    "severity": "🔴 Crítico"
+  },
+  {
+    "name": "SupportConversationModal.tsx",
+    "path": "src\\components\\common\\SupportConversationModal.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "suporte_mensagens",
+      "prestador_suporte_demandas"
+    ],
+    "tableDetails": [
+      {
+        "table": "suporte_mensagens",
+        "hasFilter": true,
+        "filter": "currentSuporte?.id ? `suporte_id=eq.${currentSuporte.id",
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "prestador_suporte_demandas",
+        "hasFilter": true,
+        "filter": "currentSuporte?.id ? `id=eq.${currentSuporte.id",
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "SystemMonitorModule.tsx",
+    "path": "src\\components\\admin\\SystemMonitorModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "colaboradores",
+      "clientes",
+      "fornecedores",
+      "prestadores",
+      "gsa_afiliados",
+      "sistema_logs",
+      "system_settings"
+    ],
+    "tableDetails": [
+      {
+        "table": "colaboradores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "clientes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "fornecedores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "prestadores",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "gsa_afiliados",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "sistema_logs",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      },
+      {
+        "table": "system_settings",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 500
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "TrabalheConoscoSection.tsx",
+    "path": "src\\components\\admin\\super-domains\\pessoas\\TrabalheConoscoSection.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "career_applications",
+      "trabalhe_conosco"
+    ],
+    "tableDetails": [
+      {
+        "table": "career_applications",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      },
+      {
+        "table": "trabalhe_conosco",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": false,
+        "debounceMs": null
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "TravelAdminModule.tsx",
+    "path": "src\\components\\admin\\TravelAdminModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "viagens_pacotes",
+      "viagens_propostas",
+      "viagens_transacoes",
+      "viagens_orcamentos",
+      "viagens_categorias",
+      "viagens_passageiros",
+      "viagens_pacote_imagens",
+      "clientes"
+    ],
+    "tableDetails": [
+      {
+        "table": "viagens_pacotes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "viagens_propostas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "viagens_transacoes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "viagens_orcamentos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "viagens_categorias",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "viagens_passageiros",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "viagens_pacote_imagens",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "clientes",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "TravelCancellationsPage.tsx",
+    "path": "src\\components\\client\\marketplace\\travel\\TravelCancellationsPage.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "viagens_transacoes",
+      "viagens_cancelamentos"
+    ],
+    "tableDetails": [
+      {
+        "table": "viagens_transacoes",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "viagens_cancelamentos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "TravelProposalsPage.tsx",
+    "path": "src\\components\\client\\marketplace\\travel\\TravelProposalsPage.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "viagens_propostas"
+    ],
+    "tableDetails": [
+      {
+        "table": "viagens_propostas",
+        "hasFilter": true,
+        "filter": "clientId ? `cliente_id=eq.${clientId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "TravelQuoteRequestPage.tsx",
+    "path": "src\\components\\client\\marketplace\\travel\\TravelQuoteRequestPage.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "viagens_pacotes"
+    ],
+    "tableDetails": [
+      {
+        "table": "viagens_pacotes",
+        "hasFilter": true,
+        "filter": "packageId ? `id=eq.${packageId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "TravelReservationPage.tsx",
+    "path": "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "viagens_transacoes",
+      "viagens_passageiros",
+      "viagens_passageiro_documentos",
+      "viagens_vouchers"
+    ],
+    "tableDetails": [
+      {
+        "table": "viagens_transacoes",
+        "hasFilter": true,
+        "filter": "transacaoId ? `id=eq.${transacaoId",
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "viagens_passageiros",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "viagens_passageiro_documentos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "viagens_vouchers",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "usePublicRegistrationSettings.ts",
+    "path": "src\\hooks\\usePublicRegistrationSettings.ts",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "system_settings"
+    ],
+    "tableDetails": [
+      {
+        "table": "system_settings",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "VendasModule.tsx",
+    "path": "src\\components\\admin\\VendasModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "orcamentos",
+      "ordens_servico",
+      "ordens_compra",
+      "ordens_assinatura",
+      "prestador_demandas"
+    ],
+    "tableDetails": [
+      {
+        "table": "orcamentos",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "ordens_servico",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "ordens_compra",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "ordens_assinatura",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      },
+      {
+        "table": "prestador_demandas",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  },
+  {
+    "name": "ViagensCategoriasModule.tsx",
+    "path": "src\\components\\admin\\ViagensCategoriasModule.tsx",
+    "hookType": "useRealtimeSubscription",
+    "tables": [
+      "viagens_categorias"
+    ],
+    "tableDetails": [
+      {
+        "table": "viagens_categorias",
+        "hasFilter": false,
+        "filter": null,
+        "hasDebounce": true,
+        "debounceMs": 300
+      }
+    ],
+    "antiPatterns": [],
+    "severity": "🟢 OK"
+  }
+]

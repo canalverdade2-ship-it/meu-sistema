@@ -1,0 +1,3921 @@
+[
+  {
+    "file": "src/components/admin/AcessosModule.tsx",
+    "baseName": "AcessosModule",
+    "srcRefsCount": 0,
+    "srcRefs": [],
+    "scriptRefsCount": 2,
+    "scriptRefs": [
+      "scripts/check-admin-panel-contracts.ts",
+      "scripts/check-provider-portal-security-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/AdminNavigation.tsx",
+    "baseName": "AdminNavigation",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/pages/AdminPanel.tsx",
+      "src/routing/adminNavigation.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/super-domains-adversarial-challenger.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/AdvertisingAdminModule.tsx",
+    "baseName": "AdvertisingAdminModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/MidiaOperacoesSubDomain.tsx"
+    ],
+    "scriptRefsCount": 2,
+    "scriptRefs": [
+      "scripts/check-advertising-completion.ts",
+      "scripts/check-advertising-foundation.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/AffiliateAdminModule.tsx",
+    "baseName": "AffiliateAdminModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/FinanceiroModule.tsx"
+    ],
+    "scriptRefsCount": 2,
+    "scriptRefs": [
+      "scripts/check-affiliate-contracts.ts",
+      "scripts/resolve-active-merge-conflicts.py"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/AreaVIPModule.tsx",
+    "baseName": "AreaVIPModule",
+    "srcRefsCount": 0,
+    "srcRefs": [],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/AssinaturasModule.tsx",
+    "baseName": "AssinaturasModule",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/CadastroModule.tsx",
+      "src/components/admin/super-domains/operacoes/CatalogoSubDomain.tsx"
+    ],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-products-subscriptions-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/CadastroModule.tsx",
+    "baseName": "CadastroModule",
+    "srcRefsCount": 0,
+    "srcRefs": [],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-admin-panel-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/CalculatorProAdminPanel.tsx",
+    "baseName": "CalculatorProAdminPanel",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/ConfiguracoesModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaConfiguracoesView.tsx"
+    ],
+    "scriptRefsCount": 2,
+    "scriptRefs": [
+      "scripts/check-calculator-pro-panel-contracts.ts",
+      "scripts/check-free-tools-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/CalculatorProPaymentConfiguration.tsx",
+    "baseName": "CalculatorProPaymentConfiguration",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/ConfiguracoesModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaConfiguracoesView.tsx"
+    ],
+    "scriptRefsCount": 2,
+    "scriptRefs": [
+      "scripts/check-free-tools-contracts.ts",
+      "scripts/check-free-tools-pro-security-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/CareersAdminModule.tsx",
+    "baseName": "CareersAdminModule",
+    "srcRefsCount": 0,
+    "srcRefs": [],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-careers-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ClassifiedsModule.tsx",
+    "baseName": "ClassifiedsModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/MidiaOperacoesSubDomain.tsx"
+    ],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-admin-panel-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/clientes/AdminClienteDocumentos.tsx",
+    "baseName": "AdminClienteDocumentos",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/ClientesModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ClientesModule.tsx",
+    "baseName": "ClientesModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/CobrancaModule.tsx",
+    "baseName": "CobrancaModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/FinanceiroModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/CollaboratorDashboard.tsx",
+    "baseName": "CollaboratorDashboard",
+    "srcRefsCount": 5,
+    "srcRefs": [
+      "src/components/admin/super-domains/governanca/GovernancaCollaboratorDashboard.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaSuperDomain.tsx",
+      "src/components/admin/super-domains/governanca/index.ts",
+      "src/components/admin/super-domains/governanca/types.ts",
+      "src/pages/AdminPanel.tsx"
+    ],
+    "scriptRefsCount": 2,
+    "scriptRefs": [
+      "scripts/check-admin-panel-contracts.ts",
+      "scripts/check-collaborator-boundary-contracts.ts"
+    ],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/governanca-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ConfiguracoesModule.tsx",
+    "baseName": "ConfiguracoesModule",
+    "srcRefsCount": 0,
+    "srcRefs": [],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-admin-panel-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/CreditoModule.tsx",
+    "baseName": "CreditoModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/VendasModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/CuponsLojaModule.tsx",
+    "baseName": "CuponsLojaModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/Dashboard.tsx",
+    "baseName": "Dashboard",
+    "srcRefsCount": 33,
+    "srcRefs": [
+      "src/App.tsx",
+      "src/components/admin/CobrancaModule.tsx",
+      "src/components/admin/CollaboratorDashboard.tsx",
+      "src/components/admin/demandas/DemandasDashboard.tsx",
+      "src/components/admin/DemandasColaboradorModule.tsx",
+      "src/components/admin/EmprestimosModule.tsx",
+      "src/components/admin/FinanceiroModule.tsx",
+      "src/components/admin/GsaTvModule.tsx",
+      "src/components/admin/ProtectionAdminModule.tsx",
+      "src/components/admin/RelatoriosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaAcessosView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaCollaboratorDashboard.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaExecutiveDashboard.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaSuperDomain.tsx",
+      "src/components/admin/super-domains/governanca/index.ts",
+      "src/components/admin/super-domains/governanca/types.ts",
+      "src/components/business/BusinessDashboard.tsx",
+      "src/components/client/ClientDashboard.tsx",
+      "src/components/client/marketplace/classifieds/ClassifiedsClientDashboard.tsx",
+      "src/components/client/marketplace/MarketplaceGSAStore.tsx",
+      "src/components/client/store/PurchasesPage.tsx",
+      "src/components/public/PublicVIPPresentationPage.tsx",
+      "src/components/ui/DashboardLayout.tsx",
+      "src/pages/AdminPanel.tsx",
+      "src/pages/AdvertiserPortal.tsx",
+      "src/pages/Afiliado/AfiliadoDashboard.tsx",
+      "src/pages/ClientLoginPage.tsx",
+      "src/pages/ClientPortal.tsx",
+      "src/pages/Fornecedor/FornecedorDashboard.tsx",
+      "src/pages/Prestador/PrestadorDashboard.tsx",
+      "src/routing/adminNavigation.ts",
+      "src/routing/routeCatalog.ts"
+    ],
+    "scriptRefsCount": 7,
+    "scriptRefs": [
+      "scripts/check-admin-panel-contracts.ts",
+      "scripts/check-affiliate-contracts.ts",
+      "scripts/check-client-audience-portals.ts",
+      "scripts/check-collaborator-boundaries-runtime.cjs",
+      "scripts/check-collaborator-boundary-contracts.ts",
+      "scripts/check-provider-portal-security-contracts.ts",
+      "scripts/check-supplier-procurement-contracts.ts"
+    ],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/governanca-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 1,
+    "otherRefs": [
+      "supabase/functions/gsa-tv-proxy/index.ts"
+    ]
+  },
+  {
+    "file": "src/components/admin/demandas/DemandasComentarios.tsx",
+    "baseName": "DemandasComentarios",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/demandas/DemandasDetalhesModal.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/demandas/DemandasDashboard.tsx",
+    "baseName": "DemandasDashboard",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/DemandasColaboradorModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
+    "baseName": "DemandasDetalhesModal",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/DemandasColaboradorModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/demandas/DemandasKanban.tsx",
+    "baseName": "DemandasKanban",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/DemandasColaboradorModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/demandas/DemandasTabela.tsx",
+    "baseName": "DemandasTabela",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/DemandasColaboradorModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/demandas/NovaDemandaModal.tsx",
+    "baseName": "NovaDemandaModal",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/DemandasColaboradorModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/DemandasColaboradorModule.tsx",
+    "baseName": "DemandasColaboradorModule",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/DemandasWorkstation.tsx",
+      "src/pages/AdminPanel.tsx"
+    ],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-collaborator-boundary-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ecommerce/EcommerceAnalytics.tsx",
+    "baseName": "EcommerceAnalytics",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ecommerce/PricingPanel.tsx",
+    "baseName": "PricingPanel",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/EmpresaModule.tsx",
+    "baseName": "EmpresaModule",
+    "srcRefsCount": 0,
+    "srcRefs": [],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/EmprestimosModule.tsx",
+    "baseName": "EmprestimosModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/VendasModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "baseName": "FinanceiroModule",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/ClientesModule.tsx",
+      "src/validation/step3_finance_gamification.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/FiscalModule.tsx",
+    "baseName": "FiscalModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/FinanceiroModule.tsx"
+    ],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-admin-panel-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/FornecedoresModule.tsx",
+    "baseName": "FornecedoresModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/TravelAdminModule.tsx"
+    ],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-supplier-procurement-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/GsaTvModule.tsx",
+    "baseName": "GsaTvModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/MidiaOperacoesSubDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/IndicacoesModule.tsx",
+    "baseName": "IndicacoesModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/infra/CloudflareManager.tsx",
+    "baseName": "CloudflareManager",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/SystemMonitorModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/infra/OracleMetricsPanel.tsx",
+    "baseName": "OracleMetricsPanel",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/SystemMonitorModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/infra/VPSTerminal.tsx",
+    "baseName": "VPSTerminal",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/SystemMonitorModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/infra/WhatsAppQRCodeManager.tsx",
+    "baseName": "WhatsAppQRCodeManager",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/SystemMonitorModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/LojaCategoriasModule.tsx",
+    "baseName": "LojaCategoriasModule",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/CadastroModule.tsx",
+      "src/components/admin/super-domains/operacoes/CatalogoSubDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "baseName": "LojaTrocasModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/OrcamentosModule.tsx",
+    "baseName": "OrcamentosModule",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/VendasModule.tsx",
+      "src/validation/step2_sales_flow.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/OrdensAssinaturaModule.tsx",
+    "baseName": "OrdensAssinaturaModule",
+    "srcRefsCount": 3,
+    "srcRefs": [
+      "src/components/admin/ClientesModule.tsx",
+      "src/components/admin/super-domains/operacoes/ComprasAssinaturasWorkstation.tsx",
+      "src/components/admin/VendasModule.tsx"
+    ],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-products-subscriptions-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/OrdensCompraModule.tsx",
+    "baseName": "OrdensCompraModule",
+    "srcRefsCount": 3,
+    "srcRefs": [
+      "src/components/admin/ClientesModule.tsx",
+      "src/components/admin/super-domains/operacoes/ComprasAssinaturasWorkstation.tsx",
+      "src/components/admin/VendasModule.tsx"
+    ],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-products-subscriptions-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/OrdensServicoModule.tsx",
+    "baseName": "OrdensServicoModule",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/ClientesModule.tsx",
+      "src/components/admin/VendasModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/PainelRentabilidade.tsx",
+    "baseName": "PainelRentabilidade",
+    "srcRefsCount": 6,
+    "srcRefs": [
+      "src/components/admin/FinanceiroModule.tsx",
+      "src/components/admin/OrcamentosModule.tsx",
+      "src/components/admin/OrdensServicoModule.tsx",
+      "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+      "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/PartnersAdminModule.tsx",
+    "baseName": "PartnersAdminModule",
+    "srcRefsCount": 0,
+    "srcRefs": [],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-partners-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/PremiosModule.tsx",
+    "baseName": "PremiosModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/prestadores/AdminPrestadorDocumentos.tsx",
+    "baseName": "AdminPrestadorDocumentos",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/prestadores/PrestadoresCadastro.tsx",
+      "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/prestadores/AdminPrestadorPremios.tsx",
+    "baseName": "AdminPrestadorPremios",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/prestadores/PrestadoresCadastro.tsx",
+      "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/prestadores/AdminPrestadorPromocoes.tsx",
+    "baseName": "AdminPrestadorPromocoes",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/prestadores/PrestadoresCadastro.tsx",
+      "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/prestadores/AdminPrestadorVouchers.tsx",
+    "baseName": "AdminPrestadorVouchers",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/prestadores/PrestadoresCadastro.tsx",
+      "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/prestadores/PrestadoresCadastro.tsx",
+    "baseName": "PrestadoresCadastro",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/CadastroModule.tsx",
+      "src/components/admin/PrestadoresModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "baseName": "PrestadoresDemandas",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/VendasModule.tsx",
+      "src/validation/step2_sales_flow.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/prestadores/PrestadoresFinanceiro.tsx",
+    "baseName": "PrestadoresFinanceiro",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/FinanceiroModule.tsx",
+      "src/components/admin/PrestadoresModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/PrestadoresModule.tsx",
+    "baseName": "PrestadoresModule",
+    "srcRefsCount": 0,
+    "srcRefs": [],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/products/BarcodeScannerModal.tsx",
+    "baseName": "BarcodeScannerModal",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/ProdutosModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/products/BulkProductImportModal.tsx",
+    "baseName": "BulkProductImportModal",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/ProdutosModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/products/import/ExcelImportSource.tsx",
+    "baseName": "ExcelImportSource",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/products/BulkProductImportModal.tsx",
+      "src/components/admin/products/import/TextImportSource.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/products/import/ImportSourceSelector.tsx",
+    "baseName": "ImportSourceSelector",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/products/BulkProductImportModal.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/products/import/ImportSupplierMode.tsx",
+    "baseName": "ImportSupplierMode",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/products/BulkProductImportModal.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/products/import/MediaImportSource.tsx",
+    "baseName": "MediaImportSource",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/products/BulkProductImportModal.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/products/import/TextImportSource.tsx",
+    "baseName": "TextImportSource",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/products/BulkProductImportModal.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/products/import/UrlImportSource.tsx",
+    "baseName": "UrlImportSource",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/products/BulkProductImportModal.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/products/ProductVariationsEditor.tsx",
+    "baseName": "ProductVariationsEditor",
+    "srcRefsCount": 0,
+    "srcRefs": [],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ProdutosModule.tsx",
+    "baseName": "ProdutosModule",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/CadastroModule.tsx",
+      "src/components/admin/super-domains/operacoes/CatalogoSubDomain.tsx"
+    ],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-products-subscriptions-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/PromoAnalytics.tsx",
+    "baseName": "PromoAnalytics",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/PromocaoQuantidadeModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/PromocaoQuantidadeForm.tsx",
+    "baseName": "PromocaoQuantidadeForm",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/PromocaoQuantidadeModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/PromocaoQuantidadeModule.tsx",
+    "baseName": "PromocaoQuantidadeModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/PromocoesModule.tsx",
+    "baseName": "PromocoesModule",
+    "srcRefsCount": 0,
+    "srcRefs": [],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/PromoDetalhesModal.tsx",
+    "baseName": "PromoDetalhesModal",
+    "srcRefsCount": 3,
+    "srcRefs": [
+      "src/components/admin/PromocoesModule.tsx",
+      "src/components/client/ClientPromocoes.tsx",
+      "src/components/client/ClientPromoDetalhesModal.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ProtectionAdminModule.tsx",
+    "baseName": "ProtectionAdminModule",
+    "srcRefsCount": 0,
+    "srcRefs": [],
+    "scriptRefsCount": 2,
+    "scriptRefs": [
+      "scripts/check-admin-panel-contracts.ts",
+      "scripts/check-protection-direct-quote-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ReembolsosModule.tsx",
+    "baseName": "ReembolsosModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/relatorios/RelatorioClientes.tsx",
+    "baseName": "RelatorioClientes",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/RelatoriosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/relatorios/RelatorioCobranca.tsx",
+    "baseName": "RelatorioCobranca",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/RelatoriosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/relatorios/RelatorioCredito.tsx",
+    "baseName": "RelatorioCredito",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/RelatoriosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+    "baseName": "RelatorioEmprestimos",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/RelatoriosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/relatorios/RelatorioExecutivo.tsx",
+    "baseName": "RelatorioExecutivo",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/RelatoriosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/relatorios/RelatorioFinanceiro.tsx",
+    "baseName": "RelatorioFinanceiro",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/RelatoriosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/relatorios/RelatorioFiscal.tsx",
+    "baseName": "RelatorioFiscal",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/RelatoriosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/relatorios/RelatorioGamificacao.tsx",
+    "baseName": "RelatorioGamificacao",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/RelatoriosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/relatorios/RelatorioLoja.tsx",
+    "baseName": "RelatorioLoja",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/RelatoriosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/relatorios/RelatorioMarketing.tsx",
+    "baseName": "RelatorioMarketing",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/RelatoriosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/relatorios/RelatorioOperacional.tsx",
+    "baseName": "RelatorioOperacional",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/RelatoriosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/relatorios/RelatorioOS.tsx",
+    "baseName": "RelatorioOS",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/RelatoriosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/relatorios/RelatorioPrestadores.tsx",
+    "baseName": "RelatorioPrestadores",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/RelatoriosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "baseName": "RelatorioRentabilidade",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/RelatoriosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/relatorios/RelatorioSuporte.tsx",
+    "baseName": "RelatorioSuporte",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/RelatoriosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/relatorios/utils/relatorioExport.ts",
+    "baseName": "relatorioExport",
+    "srcRefsCount": 15,
+    "srcRefs": [
+      "src/components/admin/relatorios/RelatorioClientes.tsx",
+      "src/components/admin/relatorios/RelatorioCobranca.tsx",
+      "src/components/admin/relatorios/RelatorioCredito.tsx",
+      "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+      "src/components/admin/relatorios/RelatorioExecutivo.tsx",
+      "src/components/admin/relatorios/RelatorioFinanceiro.tsx",
+      "src/components/admin/relatorios/RelatorioFiscal.tsx",
+      "src/components/admin/relatorios/RelatorioGamificacao.tsx",
+      "src/components/admin/relatorios/RelatorioLoja.tsx",
+      "src/components/admin/relatorios/RelatorioMarketing.tsx",
+      "src/components/admin/relatorios/RelatorioOperacional.tsx",
+      "src/components/admin/relatorios/RelatorioOS.tsx",
+      "src/components/admin/relatorios/RelatorioPrestadores.tsx",
+      "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "src/components/admin/relatorios/RelatorioSuporte.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/RelatoriosModule.tsx",
+    "baseName": "RelatoriosModule",
+    "srcRefsCount": 0,
+    "srcRefs": [],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-admin-panel-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ScrapingAdminModule.tsx",
+    "baseName": "ScrapingAdminModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/AutomacaoOperacoesSubDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ScrapingExecutionMonitorModal.tsx",
+    "baseName": "ScrapingExecutionMonitorModal",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/ScrapingAdminModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ServicePackagesModule.tsx",
+    "baseName": "ServicePackagesModule",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/CadastroModule.tsx",
+      "src/components/admin/super-domains/operacoes/CatalogoSubDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ServicosModule.tsx",
+    "baseName": "ServicosModule",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/CadastroModule.tsx",
+      "src/components/admin/super-domains/operacoes/CatalogoSubDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ShopeeOperationsModule.tsx",
+    "baseName": "ShopeeOperationsModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/AutomacaoOperacoesSubDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/SiteCampaignAdminModule.tsx",
+    "baseName": "SiteCampaignAdminModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/SiteCampaignAdminPage.tsx"
+    ],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-site-campaign-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/SiteCampaignAdminPage.tsx",
+    "baseName": "SiteCampaignAdminPage",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/MidiaOperacoesSubDomain.tsx"
+    ],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-site-campaign-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/SiteCampaignDeletionPanel.tsx",
+    "baseName": "SiteCampaignDeletionPanel",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/SiteCampaignAdminPage.tsx"
+    ],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-site-campaign-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/SiteCampaignPermissionMatrix.tsx",
+    "baseName": "SiteCampaignPermissionMatrix",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/SiteCampaignAdminPage.tsx"
+    ],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-site-campaign-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/AreaVipView.tsx",
+    "baseName": "AreaVipView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/contratos/ContratosSuperDomain.tsx",
+      "src/components/admin/super-domains/contratos/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/contratos-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+    "baseName": "AtendimentoTicketsView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/contratos/ContratosSuperDomain.tsx",
+      "src/components/admin/super-domains/contratos/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/contratos-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/contratos.types.ts",
+    "baseName": "contratos.types",
+    "srcRefsCount": 9,
+    "srcRefs": [
+      "src/components/admin/super-domains/contratos/AreaVipView.tsx",
+      "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+      "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+      "src/components/admin/super-domains/contratos/ContratosSuperDomain.tsx",
+      "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+      "src/components/admin/super-domains/contratos/GsaSaudeView.tsx",
+      "src/components/admin/super-domains/contratos/GsaSegurosView.tsx",
+      "src/components/admin/super-domains/contratos/HubEmpresasView.tsx",
+      "src/components/admin/super-domains/contratos/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+    "baseName": "ContratosDocumentosView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/contratos/ContratosSuperDomain.tsx",
+      "src/components/admin/super-domains/contratos/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/contratos-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/ContratosSuperDomain.tsx",
+    "baseName": "ContratosSuperDomain",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/contratos/index.ts",
+      "src/pages/AdminPanel.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/contratos-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+    "baseName": "CrmClientesView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/contratos/ContratosSuperDomain.tsx",
+      "src/components/admin/super-domains/contratos/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/contratos-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/GsaSaudeView.tsx",
+    "baseName": "GsaSaudeView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/contratos/ContratosSuperDomain.tsx",
+      "src/components/admin/super-domains/contratos/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/contratos-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/GsaSegurosView.tsx",
+    "baseName": "GsaSegurosView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/contratos/ContratosSuperDomain.tsx",
+      "src/components/admin/super-domains/contratos/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/contratos-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/HubEmpresasView.tsx",
+    "baseName": "HubEmpresasView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/contratos/ContratosSuperDomain.tsx",
+      "src/components/admin/super-domains/contratos/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/contratos-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/contratos/index.ts",
+    "baseName": "index",
+    "srcRefsCount": 105,
+    "srcRefs": [
+      "src/careers.css",
+      "src/components/admin/AreaVIPModule.tsx",
+      "src/components/admin/AssinaturasModule.tsx",
+      "src/components/admin/clientes/AdminClienteDocumentos.tsx",
+      "src/components/admin/ClientesModule.tsx",
+      "src/components/admin/CobrancaModule.tsx",
+      "src/components/admin/DemandasColaboradorModule.tsx",
+      "src/components/admin/ecommerce/EcommerceAnalytics.tsx",
+      "src/components/admin/FornecedoresModule.tsx",
+      "src/components/admin/infra/WhatsAppQRCodeManager.tsx",
+      "src/components/admin/OrcamentosModule.tsx",
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/admin/prestadores/AdminPrestadorDocumentos.tsx",
+      "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+      "src/components/admin/products/import/ExcelImportSource.tsx",
+      "src/components/admin/products/ProductVariationsEditor.tsx",
+      "src/components/admin/ProdutosModule.tsx",
+      "src/components/admin/ServicosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "src/components/admin/super-domains/shared/TacticalDataGrid.tsx",
+      "src/components/admin/SystemMonitorModule.tsx",
+      "src/components/admin/TravelAdminModule.tsx",
+      "src/components/admin/ui/AdminDomainCard.tsx",
+      "src/components/auth/RestrictedAccessModal.tsx",
+      "src/components/auth/SetupAccessPin.tsx",
+      "src/components/auth/WhatsAppPinVerification.tsx",
+      "src/components/business/BusinessDashboard.tsx",
+      "src/components/client/ClientAreaVIP.tsx",
+      "src/components/client/ClientAssinaturas.tsx",
+      "src/components/client/ClientDashboard.tsx",
+      "src/components/client/ClientIndiqueGanhe.tsx",
+      "src/components/client/ClientOrcamentos.tsx",
+      "src/components/client/ClientPontos.tsx",
+      "src/components/client/ClientPremios.tsx",
+      "src/components/client/ClientProfile.tsx",
+      "src/components/client/ClientPromocoes.tsx",
+      "src/components/client/ClientServicos.tsx",
+      "src/components/client/ClientSuporte.tsx",
+      "src/components/client/ClientVouchers.tsx",
+      "src/components/client/financeiro/FaturasList.tsx",
+      "src/components/client/marketplace/classifieds/ClassifiedDetailPage.tsx",
+      "src/components/client/marketplace/classifieds/CreateListingWizard.tsx",
+      "src/components/client/marketplace/classifieds/EditClassifiedListingPage.tsx",
+      "src/components/client/marketplace/ClassifiedsHubPage.tsx",
+      "src/components/client/marketplace/MarketplaceHome.tsx",
+      "src/components/client/marketplace/MarketplaceSubmoduleCard.tsx",
+      "src/components/client/marketplace/protection/HealthMarketplaceLandingPage.tsx",
+      "src/components/client/marketplace/protection/InsuranceMarketplaceLandingPage.tsx",
+      "src/components/client/marketplace/travel/TravelHubMenu.tsx",
+      "src/components/client/marketplace/travel/TravelPackageDetailPage.tsx",
+      "src/components/client/store/CartDrawer.tsx",
+      "src/components/client/store/CouponsPage.tsx",
+      "src/components/client/store/EcommerceHeader.tsx",
+      "src/components/client/store/HeroBannerCarousel.tsx",
+      "src/components/client/store/ProductDetailsModal.tsx",
+      "src/components/client/store/PromotionsPage.tsx",
+      "src/components/client/store/StoreHubPurchases.tsx",
+      "src/components/client/StoreHub.tsx",
+      "src/components/prestador/PrestadorDemandas.tsx",
+      "src/components/prestador/PrestadorDocumentos.tsx",
+      "src/components/prestador/PrestadorVouchers.tsx",
+      "src/components/public/AdvertisingPage.tsx",
+      "src/components/public/AffiliatePublicPage.tsx",
+      "src/components/public/BrandInsightDialog.tsx",
+      "src/components/public/BrandJourneyPage.tsx",
+      "src/components/public/BrandPortfolioDialog.tsx",
+      "src/components/public/BrandPortfolioInteractiveDialog.tsx",
+      "src/components/public/final/PublicHeader.tsx",
+      "src/components/public/final/PublicHomeLanding.tsx",
+      "src/components/public/final/PublicHomePlan3.css",
+      "src/components/public/final/PublicServiceDialogs.tsx",
+      "src/components/public/final/PublicServicesPage.tsx",
+      "src/components/public/FreeToolsCalculatorDialog.tsx",
+      "src/components/public/PartnerApplicationModal.tsx",
+      "src/components/public/PartnersPage.tsx",
+      "src/components/public/PublicVIPPresentationPage.tsx",
+      "src/components/public/SystemsInsightDialog.tsx",
+      "src/components/public/SystemsPageFinal.tsx",
+      "src/components/public/SystemsShowcaseDialog.tsx",
+      "src/components/ui/AccessibleDialog.tsx",
+      "src/components/ui/PinInput.tsx",
+      "src/components/ui/UniversalNotificationBell.tsx",
+      "src/gsa-store.css",
+      "src/hooks/useAutoFitTabs.ts",
+      "src/hooks/useDialogAccessibility.ts",
+      "src/lib/errorReporter.ts",
+      "src/lib/excelImportService.ts",
+      "src/lib/pdf.ts",
+      "src/lib/privateStorage.ts",
+      "src/lib/productVariations.ts",
+      "src/lib/providerStorage.ts",
+      "src/lib/supabase.ts",
+      "src/lib/textImportService.ts",
+      "src/main.tsx",
+      "src/pages/AdvertiserPortal.tsx",
+      "src/pages/Careers/CareersLandingPage.tsx",
+      "src/pages/Fornecedor/FornecedorDashboard.tsx",
+      "src/pages/Fornecedor/FornecedorLandingPage.tsx",
+      "src/pages/Prestador/ProviderLandingPage.tsx",
+      "src/styles/partners/application-page.css",
+      "src/styles/partners/base.css",
+      "src/styles/partners/identity.css",
+      "src/styles/partners/responsive.css",
+      "src/supplier-portal.css"
+    ],
+    "scriptRefsCount": 16,
+    "scriptRefs": [
+      "scripts/audit-production-real.mjs",
+      "scripts/check-admin-migrations-runtime.cjs",
+      "scripts/check-advertising-completion.ts",
+      "scripts/check-advertising-foundation.ts",
+      "scripts/check-classifieds-production-contracts.ts",
+      "scripts/check-client-portal-security-contracts.ts",
+      "scripts/check-database-inventory.mjs",
+      "scripts/check-free-tools-contracts.ts",
+      "scripts/check-free-tools-pro-security-contracts.ts",
+      "scripts/check-home-public-contracts.ts",
+      "scripts/check-partners-contracts.ts",
+      "scripts/check-supplier-procurement-contracts.ts",
+      "scripts/classifieds-complete-production-verification.sql",
+      "scripts/gsa-viagens-parcelamento-verify.sql",
+      "scripts/test-final-home-audit.sql",
+      "scripts/test-final-home-auth-security.sql"
+    ],
+    "testRefsCount": 3,
+    "testRefs": [
+      "src/tests/wishlist.test.ts",
+      "tests/e2e/0-stress-real-data.spec.ts",
+      "tests/e2e/2-authenticated-production-smoke.spec.ts"
+    ],
+    "otherRefsCount": 15,
+    "otherRefs": [
+      "supabase/config.toml",
+      "supabase/functions/gsa-ads-public/index.ts",
+      "supabase/functions/gsa-auth-session/index_test.ts",
+      "supabase/functions/gsa-classified-media/index.ts",
+      "supabase/functions/gsa-partner-application/index.ts",
+      "supabase/functions/gsa-public-budget/index_test.ts",
+      "supabase/functions/_shared/product_import_schema.ts",
+      "supabase/functions/_shared/product_variation_parser.ts",
+      "supabase/functions/_shared/product_variation_parser_test.ts",
+      "supabase/functions/_shared/ssrf_validator.ts",
+      "supabase/migrations/20260722040000_harden_advertising_backend.sql",
+      "supabase/migrations/20260722235959_harden_gsa_careers_flow.sql",
+      "supabase/migrations/20260723130000_add_missing_fk_indexes.sql",
+      "supabase/migrations/20260729120000_optimize_performance_indexes_and_sequences.sql",
+      "supabase/migrations/20260817120000_product_variations_marketplace.sql"
+    ]
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/CalculadorasGatewayView.tsx",
+    "baseName": "CalculadorasGatewayView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+      "src/components/admin/super-domains/financeiro/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/financeiro-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/CobrancaView.tsx",
+    "baseName": "CobrancaView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+      "src/components/admin/super-domains/financeiro/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/financeiro-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+    "baseName": "EmprestimosCreditoView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+      "src/components/admin/super-domains/financeiro/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/financeiro-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+    "baseName": "FaturamentoView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+      "src/components/admin/super-domains/financeiro/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/financeiro-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+    "baseName": "FinanceiroSuperDomain",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/financeiro/index.ts",
+      "src/pages/AdminPanel.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/financeiro-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FiscalView.tsx",
+    "baseName": "FiscalView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+      "src/components/admin/super-domains/financeiro/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/financeiro-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/FluxoCaixaView.tsx",
+    "baseName": "FluxoCaixaView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+      "src/components/admin/super-domains/financeiro/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/financeiro-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/index.ts",
+    "baseName": "index",
+    "srcRefsCount": 105,
+    "srcRefs": [
+      "src/careers.css",
+      "src/components/admin/AreaVIPModule.tsx",
+      "src/components/admin/AssinaturasModule.tsx",
+      "src/components/admin/clientes/AdminClienteDocumentos.tsx",
+      "src/components/admin/ClientesModule.tsx",
+      "src/components/admin/CobrancaModule.tsx",
+      "src/components/admin/DemandasColaboradorModule.tsx",
+      "src/components/admin/ecommerce/EcommerceAnalytics.tsx",
+      "src/components/admin/FornecedoresModule.tsx",
+      "src/components/admin/infra/WhatsAppQRCodeManager.tsx",
+      "src/components/admin/OrcamentosModule.tsx",
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/admin/prestadores/AdminPrestadorDocumentos.tsx",
+      "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+      "src/components/admin/products/import/ExcelImportSource.tsx",
+      "src/components/admin/products/ProductVariationsEditor.tsx",
+      "src/components/admin/ProdutosModule.tsx",
+      "src/components/admin/ServicosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "src/components/admin/super-domains/shared/TacticalDataGrid.tsx",
+      "src/components/admin/SystemMonitorModule.tsx",
+      "src/components/admin/TravelAdminModule.tsx",
+      "src/components/admin/ui/AdminDomainCard.tsx",
+      "src/components/auth/RestrictedAccessModal.tsx",
+      "src/components/auth/SetupAccessPin.tsx",
+      "src/components/auth/WhatsAppPinVerification.tsx",
+      "src/components/business/BusinessDashboard.tsx",
+      "src/components/client/ClientAreaVIP.tsx",
+      "src/components/client/ClientAssinaturas.tsx",
+      "src/components/client/ClientDashboard.tsx",
+      "src/components/client/ClientIndiqueGanhe.tsx",
+      "src/components/client/ClientOrcamentos.tsx",
+      "src/components/client/ClientPontos.tsx",
+      "src/components/client/ClientPremios.tsx",
+      "src/components/client/ClientProfile.tsx",
+      "src/components/client/ClientPromocoes.tsx",
+      "src/components/client/ClientServicos.tsx",
+      "src/components/client/ClientSuporte.tsx",
+      "src/components/client/ClientVouchers.tsx",
+      "src/components/client/financeiro/FaturasList.tsx",
+      "src/components/client/marketplace/classifieds/ClassifiedDetailPage.tsx",
+      "src/components/client/marketplace/classifieds/CreateListingWizard.tsx",
+      "src/components/client/marketplace/classifieds/EditClassifiedListingPage.tsx",
+      "src/components/client/marketplace/ClassifiedsHubPage.tsx",
+      "src/components/client/marketplace/MarketplaceHome.tsx",
+      "src/components/client/marketplace/MarketplaceSubmoduleCard.tsx",
+      "src/components/client/marketplace/protection/HealthMarketplaceLandingPage.tsx",
+      "src/components/client/marketplace/protection/InsuranceMarketplaceLandingPage.tsx",
+      "src/components/client/marketplace/travel/TravelHubMenu.tsx",
+      "src/components/client/marketplace/travel/TravelPackageDetailPage.tsx",
+      "src/components/client/store/CartDrawer.tsx",
+      "src/components/client/store/CouponsPage.tsx",
+      "src/components/client/store/EcommerceHeader.tsx",
+      "src/components/client/store/HeroBannerCarousel.tsx",
+      "src/components/client/store/ProductDetailsModal.tsx",
+      "src/components/client/store/PromotionsPage.tsx",
+      "src/components/client/store/StoreHubPurchases.tsx",
+      "src/components/client/StoreHub.tsx",
+      "src/components/prestador/PrestadorDemandas.tsx",
+      "src/components/prestador/PrestadorDocumentos.tsx",
+      "src/components/prestador/PrestadorVouchers.tsx",
+      "src/components/public/AdvertisingPage.tsx",
+      "src/components/public/AffiliatePublicPage.tsx",
+      "src/components/public/BrandInsightDialog.tsx",
+      "src/components/public/BrandJourneyPage.tsx",
+      "src/components/public/BrandPortfolioDialog.tsx",
+      "src/components/public/BrandPortfolioInteractiveDialog.tsx",
+      "src/components/public/final/PublicHeader.tsx",
+      "src/components/public/final/PublicHomeLanding.tsx",
+      "src/components/public/final/PublicHomePlan3.css",
+      "src/components/public/final/PublicServiceDialogs.tsx",
+      "src/components/public/final/PublicServicesPage.tsx",
+      "src/components/public/FreeToolsCalculatorDialog.tsx",
+      "src/components/public/PartnerApplicationModal.tsx",
+      "src/components/public/PartnersPage.tsx",
+      "src/components/public/PublicVIPPresentationPage.tsx",
+      "src/components/public/SystemsInsightDialog.tsx",
+      "src/components/public/SystemsPageFinal.tsx",
+      "src/components/public/SystemsShowcaseDialog.tsx",
+      "src/components/ui/AccessibleDialog.tsx",
+      "src/components/ui/PinInput.tsx",
+      "src/components/ui/UniversalNotificationBell.tsx",
+      "src/gsa-store.css",
+      "src/hooks/useAutoFitTabs.ts",
+      "src/hooks/useDialogAccessibility.ts",
+      "src/lib/errorReporter.ts",
+      "src/lib/excelImportService.ts",
+      "src/lib/pdf.ts",
+      "src/lib/privateStorage.ts",
+      "src/lib/productVariations.ts",
+      "src/lib/providerStorage.ts",
+      "src/lib/supabase.ts",
+      "src/lib/textImportService.ts",
+      "src/main.tsx",
+      "src/pages/AdvertiserPortal.tsx",
+      "src/pages/Careers/CareersLandingPage.tsx",
+      "src/pages/Fornecedor/FornecedorDashboard.tsx",
+      "src/pages/Fornecedor/FornecedorLandingPage.tsx",
+      "src/pages/Prestador/ProviderLandingPage.tsx",
+      "src/styles/partners/application-page.css",
+      "src/styles/partners/base.css",
+      "src/styles/partners/identity.css",
+      "src/styles/partners/responsive.css",
+      "src/supplier-portal.css"
+    ],
+    "scriptRefsCount": 16,
+    "scriptRefs": [
+      "scripts/audit-production-real.mjs",
+      "scripts/check-admin-migrations-runtime.cjs",
+      "scripts/check-advertising-completion.ts",
+      "scripts/check-advertising-foundation.ts",
+      "scripts/check-classifieds-production-contracts.ts",
+      "scripts/check-client-portal-security-contracts.ts",
+      "scripts/check-database-inventory.mjs",
+      "scripts/check-free-tools-contracts.ts",
+      "scripts/check-free-tools-pro-security-contracts.ts",
+      "scripts/check-home-public-contracts.ts",
+      "scripts/check-partners-contracts.ts",
+      "scripts/check-supplier-procurement-contracts.ts",
+      "scripts/classifieds-complete-production-verification.sql",
+      "scripts/gsa-viagens-parcelamento-verify.sql",
+      "scripts/test-final-home-audit.sql",
+      "scripts/test-final-home-auth-security.sql"
+    ],
+    "testRefsCount": 3,
+    "testRefs": [
+      "src/tests/wishlist.test.ts",
+      "tests/e2e/0-stress-real-data.spec.ts",
+      "tests/e2e/2-authenticated-production-smoke.spec.ts"
+    ],
+    "otherRefsCount": 15,
+    "otherRefs": [
+      "supabase/config.toml",
+      "supabase/functions/gsa-ads-public/index.ts",
+      "supabase/functions/gsa-auth-session/index_test.ts",
+      "supabase/functions/gsa-classified-media/index.ts",
+      "supabase/functions/gsa-partner-application/index.ts",
+      "supabase/functions/gsa-public-budget/index_test.ts",
+      "supabase/functions/_shared/product_import_schema.ts",
+      "supabase/functions/_shared/product_variation_parser.ts",
+      "supabase/functions/_shared/product_variation_parser_test.ts",
+      "supabase/functions/_shared/ssrf_validator.ts",
+      "supabase/migrations/20260722040000_harden_advertising_backend.sql",
+      "supabase/migrations/20260722235959_harden_gsa_careers_flow.sql",
+      "supabase/migrations/20260723130000_add_missing_fk_indexes.sql",
+      "supabase/migrations/20260729120000_optimize_performance_indexes_and_sequences.sql",
+      "supabase/migrations/20260817120000_product_variations_marketplace.sql"
+    ]
+  },
+  {
+    "file": "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+    "baseName": "RentabilidadeReembolsosView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+      "src/components/admin/super-domains/financeiro/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/financeiro-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/governanca/GovernancaAcessosView.tsx",
+    "baseName": "GovernancaAcessosView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/governanca/GovernancaSuperDomain.tsx",
+      "src/components/admin/super-domains/governanca/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 3,
+    "testRefs": [
+      "src/tests/governanca-super-domain.test.ts",
+      "src/tests/super-domains-adversarial-challenger.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+    "baseName": "GovernancaAuditoriaView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/governanca/GovernancaSuperDomain.tsx",
+      "src/components/admin/super-domains/governanca/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/governanca-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/governanca/GovernancaCollaboratorDashboard.tsx",
+    "baseName": "GovernancaCollaboratorDashboard",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/governanca/GovernancaSuperDomain.tsx",
+      "src/components/admin/super-domains/governanca/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/governanca-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/governanca/GovernancaConfiguracoesView.tsx",
+    "baseName": "GovernancaConfiguracoesView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/governanca/GovernancaSuperDomain.tsx",
+      "src/components/admin/super-domains/governanca/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/governanca-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/governanca/GovernancaExecutiveDashboard.tsx",
+    "baseName": "GovernancaExecutiveDashboard",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/governanca/GovernancaSuperDomain.tsx",
+      "src/components/admin/super-domains/governanca/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/governanca-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+    "baseName": "GovernancaInfraView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/governanca/GovernancaSuperDomain.tsx",
+      "src/components/admin/super-domains/governanca/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/governanca-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx",
+    "baseName": "GovernancaRelatoriosView",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/governanca/GovernancaSuperDomain.tsx",
+      "src/components/admin/super-domains/governanca/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 3,
+    "testRefs": [
+      "src/tests/governanca-super-domain.test.ts",
+      "src/tests/super-domains-adversarial-challenger.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/governanca/GovernancaSuperDomain.tsx",
+    "baseName": "GovernancaSuperDomain",
+    "srcRefsCount": 3,
+    "srcRefs": [
+      "src/components/admin/super-domains/governanca/index.ts",
+      "src/components/admin/super-domains/governanca/types.ts",
+      "src/pages/AdminPanel.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/governanca-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/governanca/index.ts",
+    "baseName": "index",
+    "srcRefsCount": 105,
+    "srcRefs": [
+      "src/careers.css",
+      "src/components/admin/AreaVIPModule.tsx",
+      "src/components/admin/AssinaturasModule.tsx",
+      "src/components/admin/clientes/AdminClienteDocumentos.tsx",
+      "src/components/admin/ClientesModule.tsx",
+      "src/components/admin/CobrancaModule.tsx",
+      "src/components/admin/DemandasColaboradorModule.tsx",
+      "src/components/admin/ecommerce/EcommerceAnalytics.tsx",
+      "src/components/admin/FornecedoresModule.tsx",
+      "src/components/admin/infra/WhatsAppQRCodeManager.tsx",
+      "src/components/admin/OrcamentosModule.tsx",
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/admin/prestadores/AdminPrestadorDocumentos.tsx",
+      "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+      "src/components/admin/products/import/ExcelImportSource.tsx",
+      "src/components/admin/products/ProductVariationsEditor.tsx",
+      "src/components/admin/ProdutosModule.tsx",
+      "src/components/admin/ServicosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "src/components/admin/super-domains/shared/TacticalDataGrid.tsx",
+      "src/components/admin/SystemMonitorModule.tsx",
+      "src/components/admin/TravelAdminModule.tsx",
+      "src/components/admin/ui/AdminDomainCard.tsx",
+      "src/components/auth/RestrictedAccessModal.tsx",
+      "src/components/auth/SetupAccessPin.tsx",
+      "src/components/auth/WhatsAppPinVerification.tsx",
+      "src/components/business/BusinessDashboard.tsx",
+      "src/components/client/ClientAreaVIP.tsx",
+      "src/components/client/ClientAssinaturas.tsx",
+      "src/components/client/ClientDashboard.tsx",
+      "src/components/client/ClientIndiqueGanhe.tsx",
+      "src/components/client/ClientOrcamentos.tsx",
+      "src/components/client/ClientPontos.tsx",
+      "src/components/client/ClientPremios.tsx",
+      "src/components/client/ClientProfile.tsx",
+      "src/components/client/ClientPromocoes.tsx",
+      "src/components/client/ClientServicos.tsx",
+      "src/components/client/ClientSuporte.tsx",
+      "src/components/client/ClientVouchers.tsx",
+      "src/components/client/financeiro/FaturasList.tsx",
+      "src/components/client/marketplace/classifieds/ClassifiedDetailPage.tsx",
+      "src/components/client/marketplace/classifieds/CreateListingWizard.tsx",
+      "src/components/client/marketplace/classifieds/EditClassifiedListingPage.tsx",
+      "src/components/client/marketplace/ClassifiedsHubPage.tsx",
+      "src/components/client/marketplace/MarketplaceHome.tsx",
+      "src/components/client/marketplace/MarketplaceSubmoduleCard.tsx",
+      "src/components/client/marketplace/protection/HealthMarketplaceLandingPage.tsx",
+      "src/components/client/marketplace/protection/InsuranceMarketplaceLandingPage.tsx",
+      "src/components/client/marketplace/travel/TravelHubMenu.tsx",
+      "src/components/client/marketplace/travel/TravelPackageDetailPage.tsx",
+      "src/components/client/store/CartDrawer.tsx",
+      "src/components/client/store/CouponsPage.tsx",
+      "src/components/client/store/EcommerceHeader.tsx",
+      "src/components/client/store/HeroBannerCarousel.tsx",
+      "src/components/client/store/ProductDetailsModal.tsx",
+      "src/components/client/store/PromotionsPage.tsx",
+      "src/components/client/store/StoreHubPurchases.tsx",
+      "src/components/client/StoreHub.tsx",
+      "src/components/prestador/PrestadorDemandas.tsx",
+      "src/components/prestador/PrestadorDocumentos.tsx",
+      "src/components/prestador/PrestadorVouchers.tsx",
+      "src/components/public/AdvertisingPage.tsx",
+      "src/components/public/AffiliatePublicPage.tsx",
+      "src/components/public/BrandInsightDialog.tsx",
+      "src/components/public/BrandJourneyPage.tsx",
+      "src/components/public/BrandPortfolioDialog.tsx",
+      "src/components/public/BrandPortfolioInteractiveDialog.tsx",
+      "src/components/public/final/PublicHeader.tsx",
+      "src/components/public/final/PublicHomeLanding.tsx",
+      "src/components/public/final/PublicHomePlan3.css",
+      "src/components/public/final/PublicServiceDialogs.tsx",
+      "src/components/public/final/PublicServicesPage.tsx",
+      "src/components/public/FreeToolsCalculatorDialog.tsx",
+      "src/components/public/PartnerApplicationModal.tsx",
+      "src/components/public/PartnersPage.tsx",
+      "src/components/public/PublicVIPPresentationPage.tsx",
+      "src/components/public/SystemsInsightDialog.tsx",
+      "src/components/public/SystemsPageFinal.tsx",
+      "src/components/public/SystemsShowcaseDialog.tsx",
+      "src/components/ui/AccessibleDialog.tsx",
+      "src/components/ui/PinInput.tsx",
+      "src/components/ui/UniversalNotificationBell.tsx",
+      "src/gsa-store.css",
+      "src/hooks/useAutoFitTabs.ts",
+      "src/hooks/useDialogAccessibility.ts",
+      "src/lib/errorReporter.ts",
+      "src/lib/excelImportService.ts",
+      "src/lib/pdf.ts",
+      "src/lib/privateStorage.ts",
+      "src/lib/productVariations.ts",
+      "src/lib/providerStorage.ts",
+      "src/lib/supabase.ts",
+      "src/lib/textImportService.ts",
+      "src/main.tsx",
+      "src/pages/AdvertiserPortal.tsx",
+      "src/pages/Careers/CareersLandingPage.tsx",
+      "src/pages/Fornecedor/FornecedorDashboard.tsx",
+      "src/pages/Fornecedor/FornecedorLandingPage.tsx",
+      "src/pages/Prestador/ProviderLandingPage.tsx",
+      "src/styles/partners/application-page.css",
+      "src/styles/partners/base.css",
+      "src/styles/partners/identity.css",
+      "src/styles/partners/responsive.css",
+      "src/supplier-portal.css"
+    ],
+    "scriptRefsCount": 16,
+    "scriptRefs": [
+      "scripts/audit-production-real.mjs",
+      "scripts/check-admin-migrations-runtime.cjs",
+      "scripts/check-advertising-completion.ts",
+      "scripts/check-advertising-foundation.ts",
+      "scripts/check-classifieds-production-contracts.ts",
+      "scripts/check-client-portal-security-contracts.ts",
+      "scripts/check-database-inventory.mjs",
+      "scripts/check-free-tools-contracts.ts",
+      "scripts/check-free-tools-pro-security-contracts.ts",
+      "scripts/check-home-public-contracts.ts",
+      "scripts/check-partners-contracts.ts",
+      "scripts/check-supplier-procurement-contracts.ts",
+      "scripts/classifieds-complete-production-verification.sql",
+      "scripts/gsa-viagens-parcelamento-verify.sql",
+      "scripts/test-final-home-audit.sql",
+      "scripts/test-final-home-auth-security.sql"
+    ],
+    "testRefsCount": 3,
+    "testRefs": [
+      "src/tests/wishlist.test.ts",
+      "tests/e2e/0-stress-real-data.spec.ts",
+      "tests/e2e/2-authenticated-production-smoke.spec.ts"
+    ],
+    "otherRefsCount": 15,
+    "otherRefs": [
+      "supabase/config.toml",
+      "supabase/functions/gsa-ads-public/index.ts",
+      "supabase/functions/gsa-auth-session/index_test.ts",
+      "supabase/functions/gsa-classified-media/index.ts",
+      "supabase/functions/gsa-partner-application/index.ts",
+      "supabase/functions/gsa-public-budget/index_test.ts",
+      "supabase/functions/_shared/product_import_schema.ts",
+      "supabase/functions/_shared/product_variation_parser.ts",
+      "supabase/functions/_shared/product_variation_parser_test.ts",
+      "supabase/functions/_shared/ssrf_validator.ts",
+      "supabase/migrations/20260722040000_harden_advertising_backend.sql",
+      "supabase/migrations/20260722235959_harden_gsa_careers_flow.sql",
+      "supabase/migrations/20260723130000_add_missing_fk_indexes.sql",
+      "supabase/migrations/20260729120000_optimize_performance_indexes_and_sequences.sql",
+      "supabase/migrations/20260817120000_product_variations_marketplace.sql"
+    ]
+  },
+  {
+    "file": "src/components/admin/super-domains/governanca/types.ts",
+    "baseName": "types",
+    "srcRefsCount": 119,
+    "srcRefs": [
+      "src/App.tsx",
+      "src/components/admin/AdvertisingAdminModule.tsx",
+      "src/components/admin/AssinaturasModule.tsx",
+      "src/components/admin/ClientesModule.tsx",
+      "src/components/admin/CuponsLojaModule.tsx",
+      "src/components/admin/EmpresaModule.tsx",
+      "src/components/admin/EmprestimosModule.tsx",
+      "src/components/admin/FinanceiroModule.tsx",
+      "src/components/admin/FornecedoresModule.tsx",
+      "src/components/admin/LojaCategoriasModule.tsx",
+      "src/components/admin/LojaTrocasModule.tsx",
+      "src/components/admin/OrcamentosModule.tsx",
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/admin/OrdensServicoModule.tsx",
+      "src/components/admin/PartnersAdminModule.tsx",
+      "src/components/admin/products/BulkProductImportModal.tsx",
+      "src/components/admin/products/import/ExcelImportSource.tsx",
+      "src/components/admin/products/import/ImportSourceSelector.tsx",
+      "src/components/admin/products/import/ImportSupplierMode.tsx",
+      "src/components/admin/products/import/MediaImportSource.tsx",
+      "src/components/admin/products/import/TextImportSource.tsx",
+      "src/components/admin/products/ProductVariationsEditor.tsx",
+      "src/components/admin/ProdutosModule.tsx",
+      "src/components/admin/PromocaoQuantidadeModule.tsx",
+      "src/components/admin/PromocoesModule.tsx",
+      "src/components/admin/PromoDetalhesModal.tsx",
+      "src/components/admin/ServicosModule.tsx",
+      "src/components/admin/SiteCampaignAdminModule.tsx",
+      "src/components/admin/SiteCampaignDeletionPanel.tsx",
+      "src/components/admin/super-domains/contratos/AreaVipView.tsx",
+      "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+      "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+      "src/components/admin/super-domains/contratos/ContratosSuperDomain.tsx",
+      "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+      "src/components/admin/super-domains/contratos/GsaSaudeView.tsx",
+      "src/components/admin/super-domains/contratos/GsaSegurosView.tsx",
+      "src/components/admin/super-domains/contratos/HubEmpresasView.tsx",
+      "src/components/admin/super-domains/contratos/index.ts",
+      "src/components/admin/super-domains/governanca/GovernancaAcessosView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaCollaboratorDashboard.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaConfiguracoesView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaExecutiveDashboard.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaSuperDomain.tsx",
+      "src/components/admin/super-domains/governanca/index.ts",
+      "src/components/admin/super-domains/operacoes/index.ts",
+      "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+      "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+      "src/components/admin/super-domains/operacoes/types.ts",
+      "src/components/admin/super-domains/pessoas/FornecedoresSection.tsx",
+      "src/components/admin/TicketsModule.tsx",
+      "src/components/admin/VouchersModule.tsx",
+      "src/components/ads/AdvertisingSlot.tsx",
+      "src/components/business/BusinessDashboard.tsx",
+      "src/components/campaigns/SiteCampaignBootstrap.tsx",
+      "src/components/campaigns/SiteCampaignLayer.tsx",
+      "src/components/client/ClientAffiliatePanel.tsx",
+      "src/components/client/ClientAreaVIP.tsx",
+      "src/components/client/ClientDashboard.tsx",
+      "src/components/client/ClientEmprestimos.tsx",
+      "src/components/client/ClientFidelidade.tsx",
+      "src/components/client/ClientFinanceiro.tsx",
+      "src/components/client/ClientGSAStore.tsx",
+      "src/components/client/ClientIndiqueGanhe.tsx",
+      "src/components/client/ClientMeuCredito.tsx",
+      "src/components/client/ClientOrcamentos.tsx",
+      "src/components/client/ClientPontos.tsx",
+      "src/components/client/ClientProfile.tsx",
+      "src/components/client/ClientPromocoes.tsx",
+      "src/components/client/ClientPromoDetalhesModal.tsx",
+      "src/components/client/ClientServicos.tsx",
+      "src/components/client/ClientServicosAssinaturas.tsx",
+      "src/components/client/ClientSuporte.tsx",
+      "src/components/client/ClientTransferencias.tsx",
+      "src/components/client/ClientVouchers.tsx",
+      "src/components/client/financeiro/FaturasList.tsx",
+      "src/components/client/financeiro/NotasFiscaisList.tsx",
+      "src/components/client/store/AvailableCouponsModal.tsx",
+      "src/components/client/store/BlogPostPage.tsx",
+      "src/components/client/store/CartDrawer.tsx",
+      "src/components/client/store/CheckoutModal.tsx",
+      "src/components/client/store/CheckoutPage.tsx",
+      "src/components/client/store/CouponsPage.tsx",
+      "src/components/client/store/ProductPage.tsx",
+      "src/components/client/store/PurchasesPage.tsx",
+      "src/components/client/store/QuantityModal.tsx",
+      "src/components/public/AdvertisingPage.tsx",
+      "src/components/public/PartnerApplicationModal.tsx",
+      "src/components/public/PartnersPage.tsx",
+      "src/components/ui/UniversalNotificationBell.tsx",
+      "src/features/affiliates/service.ts",
+      "src/features/partners/service.ts",
+      "src/hooks/useStoreProducts.ts",
+      "src/lib/adminStoreOperations.ts",
+      "src/lib/advertiserAccess.ts",
+      "src/lib/excelImportService.ts",
+      "src/lib/notifications.tsx",
+      "src/lib/notificationService.ts",
+      "src/lib/pdf.ts",
+      "src/lib/productIdentification.ts",
+      "src/lib/productPricing.ts",
+      "src/lib/productUrlImportService.ts",
+      "src/lib/productVariations.ts",
+      "src/lib/promocaoQuantidadeEngine.ts",
+      "src/lib/siteCampaigns.ts",
+      "src/lib/supplierOperations.ts",
+      "src/lib/textImportService.ts",
+      "src/pages/AdvertiserPortal.tsx",
+      "src/pages/Afiliado/AfiliadoDashboard.tsx",
+      "src/pages/ClientPortal.tsx",
+      "src/pages/Fornecedor/FornecedorDashboard.tsx",
+      "src/routing/navigationService.ts",
+      "src/routing/routeMatcher.ts",
+      "src/routing/routeSecurity.ts",
+      "src/routing/useAppLocation.ts",
+      "src/types.ts",
+      "src/vite-env.d.ts"
+    ],
+    "scriptRefsCount": 7,
+    "scriptRefs": [
+      "scripts/backup-storage.mjs",
+      "scripts/check-advertising-foundation.ts",
+      "scripts/check-products-subscriptions-contracts.ts",
+      "scripts/check-site-campaign-contracts.ts",
+      "scripts/check-site-campaign-migrations-runtime.cjs",
+      "scripts/classifieds-media-production-verification.sql",
+      "scripts/test-storage-restore.mjs"
+    ],
+    "testRefsCount": 1,
+    "testRefs": [
+      "src/tests/productVariations.test.ts"
+    ],
+    "otherRefsCount": 14,
+    "otherRefs": [
+      "supabase/migrations/20260715212051_universal_product_import.sql",
+      "supabase/migrations/20260718120000_gsa_saude_complete.sql",
+      "supabase/migrations/20260718121000_gsa_seguros_complete.sql",
+      "supabase/migrations/20260720123000_gsa_viagens_storage_and_quotes.sql",
+      "supabase/migrations/20260720200000_private_service_support_documents.sql",
+      "supabase/migrations/20260720232000_harden_client_portal_audit_findings.sql",
+      "supabase/migrations/20260721183000_classifieds_media_storage_production.sql",
+      "supabase/migrations/20260721223100_complete_advertising_platform.sql",
+      "supabase/migrations/20260722001000_partner_public_applications.sql",
+      "supabase/migrations/20260722020000_supplier_procurement_foundation.sql",
+      "supabase/migrations/20260722235959_harden_gsa_careers_flow.sql",
+      "supabase/migrations/20260723053000_supplier_payment_completion.sql",
+      "supabase/migrations/20260724223300_site_campaigns_security.sql",
+      "supabase/migrations/20260803173000_fix_points_movement_type_check_constraint.sql"
+    ]
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/AutomacaoOperacoesSubDomain.tsx",
+    "baseName": "AutomacaoOperacoesSubDomain",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/index.ts",
+      "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/operacoes-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/CatalogoSubDomain.tsx",
+    "baseName": "CatalogoSubDomain",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/index.ts",
+      "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/operacoes-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/ComprasAssinaturasWorkstation.tsx",
+    "baseName": "ComprasAssinaturasWorkstation",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/index.ts",
+      "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/operacoes-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/DemandasWorkstation.tsx",
+    "baseName": "DemandasWorkstation",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/index.ts",
+      "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/operacoes-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/index.ts",
+    "baseName": "index",
+    "srcRefsCount": 105,
+    "srcRefs": [
+      "src/careers.css",
+      "src/components/admin/AreaVIPModule.tsx",
+      "src/components/admin/AssinaturasModule.tsx",
+      "src/components/admin/clientes/AdminClienteDocumentos.tsx",
+      "src/components/admin/ClientesModule.tsx",
+      "src/components/admin/CobrancaModule.tsx",
+      "src/components/admin/DemandasColaboradorModule.tsx",
+      "src/components/admin/ecommerce/EcommerceAnalytics.tsx",
+      "src/components/admin/FornecedoresModule.tsx",
+      "src/components/admin/infra/WhatsAppQRCodeManager.tsx",
+      "src/components/admin/OrcamentosModule.tsx",
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/admin/prestadores/AdminPrestadorDocumentos.tsx",
+      "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+      "src/components/admin/products/import/ExcelImportSource.tsx",
+      "src/components/admin/products/ProductVariationsEditor.tsx",
+      "src/components/admin/ProdutosModule.tsx",
+      "src/components/admin/ServicosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "src/components/admin/super-domains/shared/TacticalDataGrid.tsx",
+      "src/components/admin/SystemMonitorModule.tsx",
+      "src/components/admin/TravelAdminModule.tsx",
+      "src/components/admin/ui/AdminDomainCard.tsx",
+      "src/components/auth/RestrictedAccessModal.tsx",
+      "src/components/auth/SetupAccessPin.tsx",
+      "src/components/auth/WhatsAppPinVerification.tsx",
+      "src/components/business/BusinessDashboard.tsx",
+      "src/components/client/ClientAreaVIP.tsx",
+      "src/components/client/ClientAssinaturas.tsx",
+      "src/components/client/ClientDashboard.tsx",
+      "src/components/client/ClientIndiqueGanhe.tsx",
+      "src/components/client/ClientOrcamentos.tsx",
+      "src/components/client/ClientPontos.tsx",
+      "src/components/client/ClientPremios.tsx",
+      "src/components/client/ClientProfile.tsx",
+      "src/components/client/ClientPromocoes.tsx",
+      "src/components/client/ClientServicos.tsx",
+      "src/components/client/ClientSuporte.tsx",
+      "src/components/client/ClientVouchers.tsx",
+      "src/components/client/financeiro/FaturasList.tsx",
+      "src/components/client/marketplace/classifieds/ClassifiedDetailPage.tsx",
+      "src/components/client/marketplace/classifieds/CreateListingWizard.tsx",
+      "src/components/client/marketplace/classifieds/EditClassifiedListingPage.tsx",
+      "src/components/client/marketplace/ClassifiedsHubPage.tsx",
+      "src/components/client/marketplace/MarketplaceHome.tsx",
+      "src/components/client/marketplace/MarketplaceSubmoduleCard.tsx",
+      "src/components/client/marketplace/protection/HealthMarketplaceLandingPage.tsx",
+      "src/components/client/marketplace/protection/InsuranceMarketplaceLandingPage.tsx",
+      "src/components/client/marketplace/travel/TravelHubMenu.tsx",
+      "src/components/client/marketplace/travel/TravelPackageDetailPage.tsx",
+      "src/components/client/store/CartDrawer.tsx",
+      "src/components/client/store/CouponsPage.tsx",
+      "src/components/client/store/EcommerceHeader.tsx",
+      "src/components/client/store/HeroBannerCarousel.tsx",
+      "src/components/client/store/ProductDetailsModal.tsx",
+      "src/components/client/store/PromotionsPage.tsx",
+      "src/components/client/store/StoreHubPurchases.tsx",
+      "src/components/client/StoreHub.tsx",
+      "src/components/prestador/PrestadorDemandas.tsx",
+      "src/components/prestador/PrestadorDocumentos.tsx",
+      "src/components/prestador/PrestadorVouchers.tsx",
+      "src/components/public/AdvertisingPage.tsx",
+      "src/components/public/AffiliatePublicPage.tsx",
+      "src/components/public/BrandInsightDialog.tsx",
+      "src/components/public/BrandJourneyPage.tsx",
+      "src/components/public/BrandPortfolioDialog.tsx",
+      "src/components/public/BrandPortfolioInteractiveDialog.tsx",
+      "src/components/public/final/PublicHeader.tsx",
+      "src/components/public/final/PublicHomeLanding.tsx",
+      "src/components/public/final/PublicHomePlan3.css",
+      "src/components/public/final/PublicServiceDialogs.tsx",
+      "src/components/public/final/PublicServicesPage.tsx",
+      "src/components/public/FreeToolsCalculatorDialog.tsx",
+      "src/components/public/PartnerApplicationModal.tsx",
+      "src/components/public/PartnersPage.tsx",
+      "src/components/public/PublicVIPPresentationPage.tsx",
+      "src/components/public/SystemsInsightDialog.tsx",
+      "src/components/public/SystemsPageFinal.tsx",
+      "src/components/public/SystemsShowcaseDialog.tsx",
+      "src/components/ui/AccessibleDialog.tsx",
+      "src/components/ui/PinInput.tsx",
+      "src/components/ui/UniversalNotificationBell.tsx",
+      "src/gsa-store.css",
+      "src/hooks/useAutoFitTabs.ts",
+      "src/hooks/useDialogAccessibility.ts",
+      "src/lib/errorReporter.ts",
+      "src/lib/excelImportService.ts",
+      "src/lib/pdf.ts",
+      "src/lib/privateStorage.ts",
+      "src/lib/productVariations.ts",
+      "src/lib/providerStorage.ts",
+      "src/lib/supabase.ts",
+      "src/lib/textImportService.ts",
+      "src/main.tsx",
+      "src/pages/AdvertiserPortal.tsx",
+      "src/pages/Careers/CareersLandingPage.tsx",
+      "src/pages/Fornecedor/FornecedorDashboard.tsx",
+      "src/pages/Fornecedor/FornecedorLandingPage.tsx",
+      "src/pages/Prestador/ProviderLandingPage.tsx",
+      "src/styles/partners/application-page.css",
+      "src/styles/partners/base.css",
+      "src/styles/partners/identity.css",
+      "src/styles/partners/responsive.css",
+      "src/supplier-portal.css"
+    ],
+    "scriptRefsCount": 16,
+    "scriptRefs": [
+      "scripts/audit-production-real.mjs",
+      "scripts/check-admin-migrations-runtime.cjs",
+      "scripts/check-advertising-completion.ts",
+      "scripts/check-advertising-foundation.ts",
+      "scripts/check-classifieds-production-contracts.ts",
+      "scripts/check-client-portal-security-contracts.ts",
+      "scripts/check-database-inventory.mjs",
+      "scripts/check-free-tools-contracts.ts",
+      "scripts/check-free-tools-pro-security-contracts.ts",
+      "scripts/check-home-public-contracts.ts",
+      "scripts/check-partners-contracts.ts",
+      "scripts/check-supplier-procurement-contracts.ts",
+      "scripts/classifieds-complete-production-verification.sql",
+      "scripts/gsa-viagens-parcelamento-verify.sql",
+      "scripts/test-final-home-audit.sql",
+      "scripts/test-final-home-auth-security.sql"
+    ],
+    "testRefsCount": 3,
+    "testRefs": [
+      "src/tests/wishlist.test.ts",
+      "tests/e2e/0-stress-real-data.spec.ts",
+      "tests/e2e/2-authenticated-production-smoke.spec.ts"
+    ],
+    "otherRefsCount": 15,
+    "otherRefs": [
+      "supabase/config.toml",
+      "supabase/functions/gsa-ads-public/index.ts",
+      "supabase/functions/gsa-auth-session/index_test.ts",
+      "supabase/functions/gsa-classified-media/index.ts",
+      "supabase/functions/gsa-partner-application/index.ts",
+      "supabase/functions/gsa-public-budget/index_test.ts",
+      "supabase/functions/_shared/product_import_schema.ts",
+      "supabase/functions/_shared/product_variation_parser.ts",
+      "supabase/functions/_shared/product_variation_parser_test.ts",
+      "supabase/functions/_shared/ssrf_validator.ts",
+      "supabase/migrations/20260722040000_harden_advertising_backend.sql",
+      "supabase/migrations/20260722235959_harden_gsa_careers_flow.sql",
+      "supabase/migrations/20260723130000_add_missing_fk_indexes.sql",
+      "supabase/migrations/20260729120000_optimize_performance_indexes_and_sequences.sql",
+      "supabase/migrations/20260817120000_product_variations_marketplace.sql"
+    ]
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/MidiaOperacoesSubDomain.tsx",
+    "baseName": "MidiaOperacoesSubDomain",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/index.ts",
+      "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/operacoes-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+    "baseName": "OperacoesSuperDomain",
+    "srcRefsCount": 3,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/index.ts",
+      "src/components/admin/super-domains/operacoes/types.ts",
+      "src/pages/AdminPanel.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/operacoes-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+    "baseName": "OrcamentosWorkstation",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/index.ts",
+      "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/operacoes-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+    "baseName": "OrdensServicoWorkstation",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/index.ts",
+      "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/operacoes-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/types.ts",
+    "baseName": "types",
+    "srcRefsCount": 118,
+    "srcRefs": [
+      "src/App.tsx",
+      "src/components/admin/AdvertisingAdminModule.tsx",
+      "src/components/admin/AssinaturasModule.tsx",
+      "src/components/admin/ClientesModule.tsx",
+      "src/components/admin/CuponsLojaModule.tsx",
+      "src/components/admin/EmpresaModule.tsx",
+      "src/components/admin/EmprestimosModule.tsx",
+      "src/components/admin/FinanceiroModule.tsx",
+      "src/components/admin/FornecedoresModule.tsx",
+      "src/components/admin/LojaCategoriasModule.tsx",
+      "src/components/admin/LojaTrocasModule.tsx",
+      "src/components/admin/OrcamentosModule.tsx",
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/admin/OrdensServicoModule.tsx",
+      "src/components/admin/PartnersAdminModule.tsx",
+      "src/components/admin/products/BulkProductImportModal.tsx",
+      "src/components/admin/products/import/ExcelImportSource.tsx",
+      "src/components/admin/products/import/ImportSourceSelector.tsx",
+      "src/components/admin/products/import/ImportSupplierMode.tsx",
+      "src/components/admin/products/import/MediaImportSource.tsx",
+      "src/components/admin/products/import/TextImportSource.tsx",
+      "src/components/admin/products/ProductVariationsEditor.tsx",
+      "src/components/admin/ProdutosModule.tsx",
+      "src/components/admin/PromocaoQuantidadeModule.tsx",
+      "src/components/admin/PromocoesModule.tsx",
+      "src/components/admin/PromoDetalhesModal.tsx",
+      "src/components/admin/ServicosModule.tsx",
+      "src/components/admin/SiteCampaignAdminModule.tsx",
+      "src/components/admin/SiteCampaignDeletionPanel.tsx",
+      "src/components/admin/super-domains/contratos/AreaVipView.tsx",
+      "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+      "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+      "src/components/admin/super-domains/contratos/ContratosSuperDomain.tsx",
+      "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+      "src/components/admin/super-domains/contratos/GsaSaudeView.tsx",
+      "src/components/admin/super-domains/contratos/GsaSegurosView.tsx",
+      "src/components/admin/super-domains/contratos/HubEmpresasView.tsx",
+      "src/components/admin/super-domains/contratos/index.ts",
+      "src/components/admin/super-domains/governanca/GovernancaAcessosView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaCollaboratorDashboard.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaConfiguracoesView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaExecutiveDashboard.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaSuperDomain.tsx",
+      "src/components/admin/super-domains/governanca/index.ts",
+      "src/components/admin/super-domains/operacoes/index.ts",
+      "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+      "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+      "src/components/admin/super-domains/pessoas/FornecedoresSection.tsx",
+      "src/components/admin/TicketsModule.tsx",
+      "src/components/admin/VouchersModule.tsx",
+      "src/components/ads/AdvertisingSlot.tsx",
+      "src/components/business/BusinessDashboard.tsx",
+      "src/components/campaigns/SiteCampaignBootstrap.tsx",
+      "src/components/campaigns/SiteCampaignLayer.tsx",
+      "src/components/client/ClientAffiliatePanel.tsx",
+      "src/components/client/ClientAreaVIP.tsx",
+      "src/components/client/ClientDashboard.tsx",
+      "src/components/client/ClientEmprestimos.tsx",
+      "src/components/client/ClientFidelidade.tsx",
+      "src/components/client/ClientFinanceiro.tsx",
+      "src/components/client/ClientGSAStore.tsx",
+      "src/components/client/ClientIndiqueGanhe.tsx",
+      "src/components/client/ClientMeuCredito.tsx",
+      "src/components/client/ClientOrcamentos.tsx",
+      "src/components/client/ClientPontos.tsx",
+      "src/components/client/ClientProfile.tsx",
+      "src/components/client/ClientPromocoes.tsx",
+      "src/components/client/ClientPromoDetalhesModal.tsx",
+      "src/components/client/ClientServicos.tsx",
+      "src/components/client/ClientServicosAssinaturas.tsx",
+      "src/components/client/ClientSuporte.tsx",
+      "src/components/client/ClientTransferencias.tsx",
+      "src/components/client/ClientVouchers.tsx",
+      "src/components/client/financeiro/FaturasList.tsx",
+      "src/components/client/financeiro/NotasFiscaisList.tsx",
+      "src/components/client/store/AvailableCouponsModal.tsx",
+      "src/components/client/store/BlogPostPage.tsx",
+      "src/components/client/store/CartDrawer.tsx",
+      "src/components/client/store/CheckoutModal.tsx",
+      "src/components/client/store/CheckoutPage.tsx",
+      "src/components/client/store/CouponsPage.tsx",
+      "src/components/client/store/ProductPage.tsx",
+      "src/components/client/store/PurchasesPage.tsx",
+      "src/components/client/store/QuantityModal.tsx",
+      "src/components/public/AdvertisingPage.tsx",
+      "src/components/public/PartnerApplicationModal.tsx",
+      "src/components/public/PartnersPage.tsx",
+      "src/components/ui/UniversalNotificationBell.tsx",
+      "src/features/affiliates/service.ts",
+      "src/features/partners/service.ts",
+      "src/hooks/useStoreProducts.ts",
+      "src/lib/adminStoreOperations.ts",
+      "src/lib/advertiserAccess.ts",
+      "src/lib/excelImportService.ts",
+      "src/lib/notifications.tsx",
+      "src/lib/notificationService.ts",
+      "src/lib/pdf.ts",
+      "src/lib/productIdentification.ts",
+      "src/lib/productPricing.ts",
+      "src/lib/productUrlImportService.ts",
+      "src/lib/productVariations.ts",
+      "src/lib/promocaoQuantidadeEngine.ts",
+      "src/lib/siteCampaigns.ts",
+      "src/lib/supplierOperations.ts",
+      "src/lib/textImportService.ts",
+      "src/pages/AdvertiserPortal.tsx",
+      "src/pages/Afiliado/AfiliadoDashboard.tsx",
+      "src/pages/ClientPortal.tsx",
+      "src/pages/Fornecedor/FornecedorDashboard.tsx",
+      "src/routing/navigationService.ts",
+      "src/routing/routeMatcher.ts",
+      "src/routing/routeSecurity.ts",
+      "src/routing/useAppLocation.ts",
+      "src/types.ts",
+      "src/vite-env.d.ts"
+    ],
+    "scriptRefsCount": 7,
+    "scriptRefs": [
+      "scripts/backup-storage.mjs",
+      "scripts/check-advertising-foundation.ts",
+      "scripts/check-products-subscriptions-contracts.ts",
+      "scripts/check-site-campaign-contracts.ts",
+      "scripts/check-site-campaign-migrations-runtime.cjs",
+      "scripts/classifieds-media-production-verification.sql",
+      "scripts/test-storage-restore.mjs"
+    ],
+    "testRefsCount": 1,
+    "testRefs": [
+      "src/tests/productVariations.test.ts"
+    ],
+    "otherRefsCount": 14,
+    "otherRefs": [
+      "supabase/migrations/20260715212051_universal_product_import.sql",
+      "supabase/migrations/20260718120000_gsa_saude_complete.sql",
+      "supabase/migrations/20260718121000_gsa_seguros_complete.sql",
+      "supabase/migrations/20260720123000_gsa_viagens_storage_and_quotes.sql",
+      "supabase/migrations/20260720200000_private_service_support_documents.sql",
+      "supabase/migrations/20260720232000_harden_client_portal_audit_findings.sql",
+      "supabase/migrations/20260721183000_classifieds_media_storage_production.sql",
+      "supabase/migrations/20260721223100_complete_advertising_platform.sql",
+      "supabase/migrations/20260722001000_partner_public_applications.sql",
+      "supabase/migrations/20260722020000_supplier_procurement_foundation.sql",
+      "supabase/migrations/20260722235959_harden_gsa_careers_flow.sql",
+      "supabase/migrations/20260723053000_supplier_payment_completion.sql",
+      "supabase/migrations/20260724223300_site_campaigns_security.sql",
+      "supabase/migrations/20260803173000_fix_points_movement_type_check_constraint.sql"
+    ]
+  },
+  {
+    "file": "src/components/admin/super-domains/operacoes/ViagensSubDomain.tsx",
+    "baseName": "ViagensSubDomain",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/index.ts",
+      "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/operacoes-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/AfiliadosSection.tsx",
+    "baseName": "AfiliadosSection",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/pessoas/index.ts",
+      "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/pessoas-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+    "baseName": "FidelidadePromocoesSection",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/pessoas/index.ts",
+      "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/pessoas-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/FornecedoresSection.tsx",
+    "baseName": "FornecedoresSection",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/pessoas/index.ts",
+      "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/pessoas-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/index.ts",
+    "baseName": "index",
+    "srcRefsCount": 105,
+    "srcRefs": [
+      "src/careers.css",
+      "src/components/admin/AreaVIPModule.tsx",
+      "src/components/admin/AssinaturasModule.tsx",
+      "src/components/admin/clientes/AdminClienteDocumentos.tsx",
+      "src/components/admin/ClientesModule.tsx",
+      "src/components/admin/CobrancaModule.tsx",
+      "src/components/admin/DemandasColaboradorModule.tsx",
+      "src/components/admin/ecommerce/EcommerceAnalytics.tsx",
+      "src/components/admin/FornecedoresModule.tsx",
+      "src/components/admin/infra/WhatsAppQRCodeManager.tsx",
+      "src/components/admin/OrcamentosModule.tsx",
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/admin/prestadores/AdminPrestadorDocumentos.tsx",
+      "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+      "src/components/admin/products/import/ExcelImportSource.tsx",
+      "src/components/admin/products/ProductVariationsEditor.tsx",
+      "src/components/admin/ProdutosModule.tsx",
+      "src/components/admin/ServicosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "src/components/admin/super-domains/shared/TacticalDataGrid.tsx",
+      "src/components/admin/SystemMonitorModule.tsx",
+      "src/components/admin/TravelAdminModule.tsx",
+      "src/components/admin/ui/AdminDomainCard.tsx",
+      "src/components/auth/RestrictedAccessModal.tsx",
+      "src/components/auth/SetupAccessPin.tsx",
+      "src/components/auth/WhatsAppPinVerification.tsx",
+      "src/components/business/BusinessDashboard.tsx",
+      "src/components/client/ClientAreaVIP.tsx",
+      "src/components/client/ClientAssinaturas.tsx",
+      "src/components/client/ClientDashboard.tsx",
+      "src/components/client/ClientIndiqueGanhe.tsx",
+      "src/components/client/ClientOrcamentos.tsx",
+      "src/components/client/ClientPontos.tsx",
+      "src/components/client/ClientPremios.tsx",
+      "src/components/client/ClientProfile.tsx",
+      "src/components/client/ClientPromocoes.tsx",
+      "src/components/client/ClientServicos.tsx",
+      "src/components/client/ClientSuporte.tsx",
+      "src/components/client/ClientVouchers.tsx",
+      "src/components/client/financeiro/FaturasList.tsx",
+      "src/components/client/marketplace/classifieds/ClassifiedDetailPage.tsx",
+      "src/components/client/marketplace/classifieds/CreateListingWizard.tsx",
+      "src/components/client/marketplace/classifieds/EditClassifiedListingPage.tsx",
+      "src/components/client/marketplace/ClassifiedsHubPage.tsx",
+      "src/components/client/marketplace/MarketplaceHome.tsx",
+      "src/components/client/marketplace/MarketplaceSubmoduleCard.tsx",
+      "src/components/client/marketplace/protection/HealthMarketplaceLandingPage.tsx",
+      "src/components/client/marketplace/protection/InsuranceMarketplaceLandingPage.tsx",
+      "src/components/client/marketplace/travel/TravelHubMenu.tsx",
+      "src/components/client/marketplace/travel/TravelPackageDetailPage.tsx",
+      "src/components/client/store/CartDrawer.tsx",
+      "src/components/client/store/CouponsPage.tsx",
+      "src/components/client/store/EcommerceHeader.tsx",
+      "src/components/client/store/HeroBannerCarousel.tsx",
+      "src/components/client/store/ProductDetailsModal.tsx",
+      "src/components/client/store/PromotionsPage.tsx",
+      "src/components/client/store/StoreHubPurchases.tsx",
+      "src/components/client/StoreHub.tsx",
+      "src/components/prestador/PrestadorDemandas.tsx",
+      "src/components/prestador/PrestadorDocumentos.tsx",
+      "src/components/prestador/PrestadorVouchers.tsx",
+      "src/components/public/AdvertisingPage.tsx",
+      "src/components/public/AffiliatePublicPage.tsx",
+      "src/components/public/BrandInsightDialog.tsx",
+      "src/components/public/BrandJourneyPage.tsx",
+      "src/components/public/BrandPortfolioDialog.tsx",
+      "src/components/public/BrandPortfolioInteractiveDialog.tsx",
+      "src/components/public/final/PublicHeader.tsx",
+      "src/components/public/final/PublicHomeLanding.tsx",
+      "src/components/public/final/PublicHomePlan3.css",
+      "src/components/public/final/PublicServiceDialogs.tsx",
+      "src/components/public/final/PublicServicesPage.tsx",
+      "src/components/public/FreeToolsCalculatorDialog.tsx",
+      "src/components/public/PartnerApplicationModal.tsx",
+      "src/components/public/PartnersPage.tsx",
+      "src/components/public/PublicVIPPresentationPage.tsx",
+      "src/components/public/SystemsInsightDialog.tsx",
+      "src/components/public/SystemsPageFinal.tsx",
+      "src/components/public/SystemsShowcaseDialog.tsx",
+      "src/components/ui/AccessibleDialog.tsx",
+      "src/components/ui/PinInput.tsx",
+      "src/components/ui/UniversalNotificationBell.tsx",
+      "src/gsa-store.css",
+      "src/hooks/useAutoFitTabs.ts",
+      "src/hooks/useDialogAccessibility.ts",
+      "src/lib/errorReporter.ts",
+      "src/lib/excelImportService.ts",
+      "src/lib/pdf.ts",
+      "src/lib/privateStorage.ts",
+      "src/lib/productVariations.ts",
+      "src/lib/providerStorage.ts",
+      "src/lib/supabase.ts",
+      "src/lib/textImportService.ts",
+      "src/main.tsx",
+      "src/pages/AdvertiserPortal.tsx",
+      "src/pages/Careers/CareersLandingPage.tsx",
+      "src/pages/Fornecedor/FornecedorDashboard.tsx",
+      "src/pages/Fornecedor/FornecedorLandingPage.tsx",
+      "src/pages/Prestador/ProviderLandingPage.tsx",
+      "src/styles/partners/application-page.css",
+      "src/styles/partners/base.css",
+      "src/styles/partners/identity.css",
+      "src/styles/partners/responsive.css",
+      "src/supplier-portal.css"
+    ],
+    "scriptRefsCount": 16,
+    "scriptRefs": [
+      "scripts/audit-production-real.mjs",
+      "scripts/check-admin-migrations-runtime.cjs",
+      "scripts/check-advertising-completion.ts",
+      "scripts/check-advertising-foundation.ts",
+      "scripts/check-classifieds-production-contracts.ts",
+      "scripts/check-client-portal-security-contracts.ts",
+      "scripts/check-database-inventory.mjs",
+      "scripts/check-free-tools-contracts.ts",
+      "scripts/check-free-tools-pro-security-contracts.ts",
+      "scripts/check-home-public-contracts.ts",
+      "scripts/check-partners-contracts.ts",
+      "scripts/check-supplier-procurement-contracts.ts",
+      "scripts/classifieds-complete-production-verification.sql",
+      "scripts/gsa-viagens-parcelamento-verify.sql",
+      "scripts/test-final-home-audit.sql",
+      "scripts/test-final-home-auth-security.sql"
+    ],
+    "testRefsCount": 3,
+    "testRefs": [
+      "src/tests/wishlist.test.ts",
+      "tests/e2e/0-stress-real-data.spec.ts",
+      "tests/e2e/2-authenticated-production-smoke.spec.ts"
+    ],
+    "otherRefsCount": 15,
+    "otherRefs": [
+      "supabase/config.toml",
+      "supabase/functions/gsa-ads-public/index.ts",
+      "supabase/functions/gsa-auth-session/index_test.ts",
+      "supabase/functions/gsa-classified-media/index.ts",
+      "supabase/functions/gsa-partner-application/index.ts",
+      "supabase/functions/gsa-public-budget/index_test.ts",
+      "supabase/functions/_shared/product_import_schema.ts",
+      "supabase/functions/_shared/product_variation_parser.ts",
+      "supabase/functions/_shared/product_variation_parser_test.ts",
+      "supabase/functions/_shared/ssrf_validator.ts",
+      "supabase/migrations/20260722040000_harden_advertising_backend.sql",
+      "supabase/migrations/20260722235959_harden_gsa_careers_flow.sql",
+      "supabase/migrations/20260723130000_add_missing_fk_indexes.sql",
+      "supabase/migrations/20260729120000_optimize_performance_indexes_and_sequences.sql",
+      "supabase/migrations/20260817120000_product_variations_marketplace.sql"
+    ]
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/NovoPrestadorDrawer.tsx",
+    "baseName": "NovoPrestadorDrawer",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/pessoas/index.ts",
+      "src/components/admin/super-domains/pessoas/PrestadoresSection.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/pessoas-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/PayoutClearanceDrawer.tsx",
+    "baseName": "PayoutClearanceDrawer",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/pessoas/index.ts",
+      "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/pessoas-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+    "baseName": "PessoasSuperDomain",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/pessoas/index.ts",
+      "src/pages/AdminPanel.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/pessoas-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+    "baseName": "PrestadorDetailDrawer",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/pessoas/index.ts",
+      "src/components/admin/super-domains/pessoas/PrestadoresSection.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/pessoas-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/PrestadoresSection.tsx",
+    "baseName": "PrestadoresSection",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/pessoas/index.ts",
+      "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/pessoas-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx",
+    "baseName": "SaquesRepassesSection",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/pessoas/index.ts",
+      "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/pessoas-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/pessoas/TrabalheConoscoSection.tsx",
+    "baseName": "TrabalheConoscoSection",
+    "srcRefsCount": 2,
+    "srcRefs": [
+      "src/components/admin/super-domains/pessoas/index.ts",
+      "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/pessoas-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/shared/CommandSlideOver.tsx",
+    "baseName": "CommandSlideOver",
+    "srcRefsCount": 29,
+    "srcRefs": [
+      "src/components/admin/super-domains/contratos/AreaVipView.tsx",
+      "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+      "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+      "src/components/admin/super-domains/contratos/GsaSaudeView.tsx",
+      "src/components/admin/super-domains/contratos/GsaSegurosView.tsx",
+      "src/components/admin/super-domains/contratos/HubEmpresasView.tsx",
+      "src/components/admin/super-domains/financeiro/CalculadorasGatewayView.tsx",
+      "src/components/admin/super-domains/financeiro/CobrancaView.tsx",
+      "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+      "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "src/components/admin/super-domains/financeiro/FiscalView.tsx",
+      "src/components/admin/super-domains/financeiro/FluxoCaixaView.tsx",
+      "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaAcessosView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaCollaboratorDashboard.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaConfiguracoesView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaExecutiveDashboard.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "src/components/admin/super-domains/pessoas/AfiliadosSection.tsx",
+      "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "src/components/admin/super-domains/pessoas/FornecedoresSection.tsx",
+      "src/components/admin/super-domains/pessoas/NovoPrestadorDrawer.tsx",
+      "src/components/admin/super-domains/pessoas/PayoutClearanceDrawer.tsx",
+      "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+      "src/components/admin/super-domains/pessoas/TrabalheConoscoSection.tsx",
+      "src/components/admin/super-domains/shared/index.ts",
+      "src/components/ui/CommandSlideOver.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/foundations-shared-components.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/shared/index.ts",
+    "baseName": "index",
+    "srcRefsCount": 105,
+    "srcRefs": [
+      "src/careers.css",
+      "src/components/admin/AreaVIPModule.tsx",
+      "src/components/admin/AssinaturasModule.tsx",
+      "src/components/admin/clientes/AdminClienteDocumentos.tsx",
+      "src/components/admin/ClientesModule.tsx",
+      "src/components/admin/CobrancaModule.tsx",
+      "src/components/admin/DemandasColaboradorModule.tsx",
+      "src/components/admin/ecommerce/EcommerceAnalytics.tsx",
+      "src/components/admin/FornecedoresModule.tsx",
+      "src/components/admin/infra/WhatsAppQRCodeManager.tsx",
+      "src/components/admin/OrcamentosModule.tsx",
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/admin/prestadores/AdminPrestadorDocumentos.tsx",
+      "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+      "src/components/admin/products/import/ExcelImportSource.tsx",
+      "src/components/admin/products/ProductVariationsEditor.tsx",
+      "src/components/admin/ProdutosModule.tsx",
+      "src/components/admin/ServicosModule.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "src/components/admin/super-domains/shared/TacticalDataGrid.tsx",
+      "src/components/admin/SystemMonitorModule.tsx",
+      "src/components/admin/TravelAdminModule.tsx",
+      "src/components/admin/ui/AdminDomainCard.tsx",
+      "src/components/auth/RestrictedAccessModal.tsx",
+      "src/components/auth/SetupAccessPin.tsx",
+      "src/components/auth/WhatsAppPinVerification.tsx",
+      "src/components/business/BusinessDashboard.tsx",
+      "src/components/client/ClientAreaVIP.tsx",
+      "src/components/client/ClientAssinaturas.tsx",
+      "src/components/client/ClientDashboard.tsx",
+      "src/components/client/ClientIndiqueGanhe.tsx",
+      "src/components/client/ClientOrcamentos.tsx",
+      "src/components/client/ClientPontos.tsx",
+      "src/components/client/ClientPremios.tsx",
+      "src/components/client/ClientProfile.tsx",
+      "src/components/client/ClientPromocoes.tsx",
+      "src/components/client/ClientServicos.tsx",
+      "src/components/client/ClientSuporte.tsx",
+      "src/components/client/ClientVouchers.tsx",
+      "src/components/client/financeiro/FaturasList.tsx",
+      "src/components/client/marketplace/classifieds/ClassifiedDetailPage.tsx",
+      "src/components/client/marketplace/classifieds/CreateListingWizard.tsx",
+      "src/components/client/marketplace/classifieds/EditClassifiedListingPage.tsx",
+      "src/components/client/marketplace/ClassifiedsHubPage.tsx",
+      "src/components/client/marketplace/MarketplaceHome.tsx",
+      "src/components/client/marketplace/MarketplaceSubmoduleCard.tsx",
+      "src/components/client/marketplace/protection/HealthMarketplaceLandingPage.tsx",
+      "src/components/client/marketplace/protection/InsuranceMarketplaceLandingPage.tsx",
+      "src/components/client/marketplace/travel/TravelHubMenu.tsx",
+      "src/components/client/marketplace/travel/TravelPackageDetailPage.tsx",
+      "src/components/client/store/CartDrawer.tsx",
+      "src/components/client/store/CouponsPage.tsx",
+      "src/components/client/store/EcommerceHeader.tsx",
+      "src/components/client/store/HeroBannerCarousel.tsx",
+      "src/components/client/store/ProductDetailsModal.tsx",
+      "src/components/client/store/PromotionsPage.tsx",
+      "src/components/client/store/StoreHubPurchases.tsx",
+      "src/components/client/StoreHub.tsx",
+      "src/components/prestador/PrestadorDemandas.tsx",
+      "src/components/prestador/PrestadorDocumentos.tsx",
+      "src/components/prestador/PrestadorVouchers.tsx",
+      "src/components/public/AdvertisingPage.tsx",
+      "src/components/public/AffiliatePublicPage.tsx",
+      "src/components/public/BrandInsightDialog.tsx",
+      "src/components/public/BrandJourneyPage.tsx",
+      "src/components/public/BrandPortfolioDialog.tsx",
+      "src/components/public/BrandPortfolioInteractiveDialog.tsx",
+      "src/components/public/final/PublicHeader.tsx",
+      "src/components/public/final/PublicHomeLanding.tsx",
+      "src/components/public/final/PublicHomePlan3.css",
+      "src/components/public/final/PublicServiceDialogs.tsx",
+      "src/components/public/final/PublicServicesPage.tsx",
+      "src/components/public/FreeToolsCalculatorDialog.tsx",
+      "src/components/public/PartnerApplicationModal.tsx",
+      "src/components/public/PartnersPage.tsx",
+      "src/components/public/PublicVIPPresentationPage.tsx",
+      "src/components/public/SystemsInsightDialog.tsx",
+      "src/components/public/SystemsPageFinal.tsx",
+      "src/components/public/SystemsShowcaseDialog.tsx",
+      "src/components/ui/AccessibleDialog.tsx",
+      "src/components/ui/PinInput.tsx",
+      "src/components/ui/UniversalNotificationBell.tsx",
+      "src/gsa-store.css",
+      "src/hooks/useAutoFitTabs.ts",
+      "src/hooks/useDialogAccessibility.ts",
+      "src/lib/errorReporter.ts",
+      "src/lib/excelImportService.ts",
+      "src/lib/pdf.ts",
+      "src/lib/privateStorage.ts",
+      "src/lib/productVariations.ts",
+      "src/lib/providerStorage.ts",
+      "src/lib/supabase.ts",
+      "src/lib/textImportService.ts",
+      "src/main.tsx",
+      "src/pages/AdvertiserPortal.tsx",
+      "src/pages/Careers/CareersLandingPage.tsx",
+      "src/pages/Fornecedor/FornecedorDashboard.tsx",
+      "src/pages/Fornecedor/FornecedorLandingPage.tsx",
+      "src/pages/Prestador/ProviderLandingPage.tsx",
+      "src/styles/partners/application-page.css",
+      "src/styles/partners/base.css",
+      "src/styles/partners/identity.css",
+      "src/styles/partners/responsive.css",
+      "src/supplier-portal.css"
+    ],
+    "scriptRefsCount": 16,
+    "scriptRefs": [
+      "scripts/audit-production-real.mjs",
+      "scripts/check-admin-migrations-runtime.cjs",
+      "scripts/check-advertising-completion.ts",
+      "scripts/check-advertising-foundation.ts",
+      "scripts/check-classifieds-production-contracts.ts",
+      "scripts/check-client-portal-security-contracts.ts",
+      "scripts/check-database-inventory.mjs",
+      "scripts/check-free-tools-contracts.ts",
+      "scripts/check-free-tools-pro-security-contracts.ts",
+      "scripts/check-home-public-contracts.ts",
+      "scripts/check-partners-contracts.ts",
+      "scripts/check-supplier-procurement-contracts.ts",
+      "scripts/classifieds-complete-production-verification.sql",
+      "scripts/gsa-viagens-parcelamento-verify.sql",
+      "scripts/test-final-home-audit.sql",
+      "scripts/test-final-home-auth-security.sql"
+    ],
+    "testRefsCount": 3,
+    "testRefs": [
+      "src/tests/wishlist.test.ts",
+      "tests/e2e/0-stress-real-data.spec.ts",
+      "tests/e2e/2-authenticated-production-smoke.spec.ts"
+    ],
+    "otherRefsCount": 15,
+    "otherRefs": [
+      "supabase/config.toml",
+      "supabase/functions/gsa-ads-public/index.ts",
+      "supabase/functions/gsa-auth-session/index_test.ts",
+      "supabase/functions/gsa-classified-media/index.ts",
+      "supabase/functions/gsa-partner-application/index.ts",
+      "supabase/functions/gsa-public-budget/index_test.ts",
+      "supabase/functions/_shared/product_import_schema.ts",
+      "supabase/functions/_shared/product_variation_parser.ts",
+      "supabase/functions/_shared/product_variation_parser_test.ts",
+      "supabase/functions/_shared/ssrf_validator.ts",
+      "supabase/migrations/20260722040000_harden_advertising_backend.sql",
+      "supabase/migrations/20260722235959_harden_gsa_careers_flow.sql",
+      "supabase/migrations/20260723130000_add_missing_fk_indexes.sql",
+      "supabase/migrations/20260729120000_optimize_performance_indexes_and_sequences.sql",
+      "supabase/migrations/20260817120000_product_variations_marketplace.sql"
+    ]
+  },
+  {
+    "file": "src/components/admin/super-domains/shared/SplitScreenLayout.tsx",
+    "baseName": "SplitScreenLayout",
+    "srcRefsCount": 4,
+    "srcRefs": [
+      "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+      "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+      "src/components/admin/super-domains/shared/index.ts"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/foundations-shared-components.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/shared/StatusBadge.tsx",
+    "baseName": "StatusBadge",
+    "srcRefsCount": 41,
+    "srcRefs": [
+      "src/components/admin/AffiliateAdminModule.tsx",
+      "src/components/admin/prestadores/PrestadoresCadastro.tsx",
+      "src/components/admin/super-domains/contratos/AreaVipView.tsx",
+      "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+      "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+      "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+      "src/components/admin/super-domains/contratos/GsaSaudeView.tsx",
+      "src/components/admin/super-domains/contratos/GsaSegurosView.tsx",
+      "src/components/admin/super-domains/contratos/HubEmpresasView.tsx",
+      "src/components/admin/super-domains/financeiro/CalculadorasGatewayView.tsx",
+      "src/components/admin/super-domains/financeiro/CobrancaView.tsx",
+      "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+      "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "src/components/admin/super-domains/financeiro/FiscalView.tsx",
+      "src/components/admin/super-domains/financeiro/FluxoCaixaView.tsx",
+      "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaAcessosView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaCollaboratorDashboard.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaConfiguracoesView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaExecutiveDashboard.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+      "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+      "src/components/admin/super-domains/pessoas/AfiliadosSection.tsx",
+      "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "src/components/admin/super-domains/pessoas/FornecedoresSection.tsx",
+      "src/components/admin/super-domains/pessoas/PayoutClearanceDrawer.tsx",
+      "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+      "src/components/admin/super-domains/pessoas/PrestadoresSection.tsx",
+      "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx",
+      "src/components/admin/super-domains/pessoas/TrabalheConoscoSection.tsx",
+      "src/components/admin/super-domains/shared/index.ts",
+      "src/components/admin/TravelAdminModule.tsx",
+      "src/components/client/marketplace/classifieds/MyClassifiedsPage.tsx",
+      "src/components/client/marketplace/classifieds/MyNegotiationsPage.tsx",
+      "src/components/prestador/PrestadorDemandas.tsx",
+      "src/components/prestador/PrestadorFinanceiro.tsx",
+      "src/lib/pdf.ts",
+      "src/pages/AdvertiserPortal.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 4,
+    "testRefs": [
+      "src/tests/contratos-super-domain.test.ts",
+      "src/tests/foundations-shared-components.test.ts",
+      "src/tests/super-domains-adversarial-challenger.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/super-domains/shared/TacticalDataGrid.tsx",
+    "baseName": "TacticalDataGrid",
+    "srcRefsCount": 25,
+    "srcRefs": [
+      "src/components/admin/super-domains/contratos/AreaVipView.tsx",
+      "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+      "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+      "src/components/admin/super-domains/contratos/GsaSaudeView.tsx",
+      "src/components/admin/super-domains/contratos/GsaSegurosView.tsx",
+      "src/components/admin/super-domains/contratos/HubEmpresasView.tsx",
+      "src/components/admin/super-domains/financeiro/CalculadorasGatewayView.tsx",
+      "src/components/admin/super-domains/financeiro/CobrancaView.tsx",
+      "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+      "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "src/components/admin/super-domains/financeiro/FiscalView.tsx",
+      "src/components/admin/super-domains/financeiro/FluxoCaixaView.tsx",
+      "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaAcessosView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaConfiguracoesView.tsx",
+      "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "src/components/admin/super-domains/pessoas/AfiliadosSection.tsx",
+      "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "src/components/admin/super-domains/pessoas/FornecedoresSection.tsx",
+      "src/components/admin/super-domains/pessoas/PrestadoresSection.tsx",
+      "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx",
+      "src/components/admin/super-domains/pessoas/TrabalheConoscoSection.tsx",
+      "src/components/admin/super-domains/shared/index.ts",
+      "src/components/ui/TacticalDataGrid.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 2,
+    "testRefs": [
+      "src/tests/foundations-shared-components.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/SystemMonitorModule.tsx",
+    "baseName": "SystemMonitorModule",
+    "srcRefsCount": 0,
+    "srcRefs": [],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-admin-panel-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/SystemStatusIndicator.tsx",
+    "baseName": "SystemStatusIndicator",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/pages/AdminPanel.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/TicketsModule.tsx",
+    "baseName": "TicketsModule",
+    "srcRefsCount": 0,
+    "srcRefs": [],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/TravelAdminModule.tsx",
+    "baseName": "TravelAdminModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/super-domains/operacoes/ViagensSubDomain.tsx"
+    ],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-admin-panel-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ui/AdminActivityFeed.tsx",
+    "baseName": "AdminActivityFeed",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/super-domains/governanca/GovernancaExecutiveDashboard.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ui/AdminCommandPalette.tsx",
+    "baseName": "AdminCommandPalette",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/pages/AdminPanel.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ui/AdminDomainCard.tsx",
+    "baseName": "AdminDomainCard",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/super-domains/governanca/GovernancaExecutiveDashboard.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ui/AdminWhatsAppButton.tsx",
+    "baseName": "AdminWhatsAppButton",
+    "srcRefsCount": 22,
+    "srcRefs": [
+      "src/components/admin/clientes/AdminClienteDocumentos.tsx",
+      "src/components/admin/ClientesModule.tsx",
+      "src/components/admin/CobrancaModule.tsx",
+      "src/components/admin/CreditoModule.tsx",
+      "src/components/admin/EmprestimosModule.tsx",
+      "src/components/admin/FinanceiroModule.tsx",
+      "src/components/admin/IndicacoesModule.tsx",
+      "src/components/admin/OrcamentosModule.tsx",
+      "src/components/admin/OrdensAssinaturaModule.tsx",
+      "src/components/admin/OrdensCompraModule.tsx",
+      "src/components/admin/OrdensServicoModule.tsx",
+      "src/components/admin/PremiosModule.tsx",
+      "src/components/admin/prestadores/AdminPrestadorDocumentos.tsx",
+      "src/components/admin/ProdutosModule.tsx",
+      "src/components/admin/PromocoesModule.tsx",
+      "src/components/admin/ReembolsosModule.tsx",
+      "src/components/admin/super-domains/financeiro/CobrancaView.tsx",
+      "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+      "src/components/admin/TicketsModule.tsx",
+      "src/components/admin/VouchersModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/VendasModule.tsx",
+    "baseName": "VendasModule",
+    "srcRefsCount": 0,
+    "srcRefs": [],
+    "scriptRefsCount": 1,
+    "scriptRefs": [
+      "scripts/check-admin-panel-contracts.ts"
+    ],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/ViagensCategoriasModule.tsx",
+    "baseName": "ViagensCategoriasModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/TravelAdminModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  },
+  {
+    "file": "src/components/admin/VouchersModule.tsx",
+    "baseName": "VouchersModule",
+    "srcRefsCount": 1,
+    "srcRefs": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptRefsCount": 0,
+    "scriptRefs": [],
+    "testRefsCount": 0,
+    "testRefs": [],
+    "otherRefsCount": 0,
+    "otherRefs": []
+  }
+]

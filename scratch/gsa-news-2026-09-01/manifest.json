@@ -1,0 +1,68 @@
+{
+  "title": "GSA News — 01/09/2026",
+  "date": "1º de setembro de 2026",
+  "stories": [
+    {
+      "id": "intro",
+      "section": "ABERTURA",
+      "title": "GSA News",
+      "subtitle": "Brasil e mundo · edição de hoje",
+      "source": "Produção GSA TV",
+      "script": "Olá. Eu sou o apresentador virtual do GSA News. Nesta terça-feira, 1º de setembro de 2026, você acompanha os principais acontecimentos do Brasil e do mundo, com informações verificadas em fontes oficiais e veículos de referência. Nesta edição: o crescimento da economia brasileira no segundo trimestre, a pressão do petróleo e dos juros sobre os mercados globais, a tragédia das enchentes no Nepal e a agenda internacional das Nações Unidas. Começa agora o GSA News."
+    },
+    {
+      "id": "brasil",
+      "section": "BRASIL · ECONOMIA",
+      "title": "PIB cresce 0,5% no 2º trimestre",
+      "subtitle": "Resultado supera a previsão de 0,4% do mercado",
+      "source": "Reuters · IBGE, 01/09/2026",
+      "script": "No Brasil, o Produto Interno Bruto cresceu zero vírgula cinco por cento no segundo trimestre de dois mil e vinte e seis, na comparação com os três primeiros meses do ano. O resultado divulgado nesta terça ficou acima da previsão de zero vírgula quatro por cento apontada por economistas consultados pela Reuters. Na comparação com o mesmo período do ano passado, a economia avançou dois por cento. A agropecuária teve alta de dois vírgula oito por cento no trimestre, enquanto serviços e indústria tiveram crescimento mais moderado. O dado reforça a leitura de desaceleração em relação ao primeiro trimestre, quando o PIB havia crescido um vírgula um por cento."
+    },
+    {
+      "id": "mercados",
+      "section": "MUNDO · MERCADOS",
+      "title": "Petróleo e juros pressionam mercados",
+      "subtitle": "Brent supera US$ 92 em meio a novas tensões",
+      "source": "Reuters, 01/09/2026",
+      "script": "Nos mercados internacionais, setembro começou com forte pressão sobre títulos públicos e bolsas. O petróleo Brent subiu mais de dois por cento e chegou a cerca de noventa e dois dólares e sessenta e seis centavos por barril, em meio à retomada das tensões entre Estados Unidos e Irã e aos riscos para o transporte de energia no Oriente Médio. O movimento aumenta a preocupação com inflação e juros. Rendimentos de títulos públicos também avançaram nos Estados Unidos, na Europa e no Japão, tornando o crédito mais caro e pressionando ativos de risco em diferentes mercados."
+    },
+    {
+      "id": "nepal",
+      "section": "MUNDO · CLIMA",
+      "title": "Enchentes deixam mais de mil mortos",
+      "subtitle": "Equipes tentam alcançar comunidades isoladas no Nepal",
+      "source": "Agência Brasil · Lusa, 01/09/2026",
+      "script": "No sul da Ásia, as enchentes que atingiram o Nepal e áreas da China já deixaram mais de mil mortos. Segundo as autoridades citadas pela Agência Brasil, o Nepal contabiliza novecentas e oitenta e sete mortes e três mil novecentas e dezesseis pessoas desaparecidas. Na China, a atualização mais recente elevou o total conjunto para pelo menos mil e três vítimas. Mais de onze mil e oitocentas pessoas já foram resgatadas. Helicópteros e outras aeronaves estão sendo usados para chegar a comunidades isoladas, depois que estradas e pontes foram destruídas por cheias e deslizamentos."
+    },
+    {
+      "id": "onu",
+      "section": "MUNDO · DIPLOMACIA",
+      "title": "ONU abre agenda de setembro",
+      "subtitle": "Ucrânia, desarmamento e assistência a vítimas estão na pauta",
+      "source": "Nações Unidas, 01/09/2026",
+      "script": "Em Nova York, as Nações Unidas abrem a agenda de setembro com uma série de reuniões nesta terça-feira. A Assembleia Geral tem sessão sobre a situação nos territórios temporariamente ocupados da Ucrânia e sobre desarmamento. Também acontece uma reunião internacional dedicada à assistência a vítimas e à recuperação ambiental em comunidades afetadas pelo uso ou teste de armas nucleares. O Conselho de Segurança inicia o mês com consultas sobre seu programa de trabalho e outros assuntos internacionais."
+    },
+    {
+      "id": "outro",
+      "section": "ENCERRAMENTO",
+      "title": "GSA News",
+      "subtitle": "Informação verificada · Brasil e mundo",
+      "source": "GSA TV",
+      "script": "Esses foram os destaques desta edição do GSA News. As informações desta programação foram apuradas em fontes oficiais, Reuters, Agência Brasil e Nações Unidas, com atualização nesta terça-feira, primeiro de setembro de dois mil e vinte e seis. Imagens criadas por inteligência artificial são usadas apenas como ilustração e são identificadas na tela. Continue acompanhando a GSA TV. Até a próxima edição."
+    }
+  ],
+  "aiPrompts": {
+    "presenter": "Apresentador virtual fictício brasileiro para telejornal GSA News. Homem de aproximadamente 38 anos, aparência elegante e acolhedora, cabelo castanho escuro curto, barba muito discreta e bem aparada, terno azul-marinho, camisa branca, gravata azul escura. Sentado em bancada de telejornal moderna, olhando diretamente para a câmera. Estúdio premium azul-marinho e dourado, mapa-múndi abstrato ao fundo, iluminação broadcast realista. Sem texto, sem logotipos, sem marcas de terceiros, sem representar pessoa real. Formato horizontal 16:9.",
+    "nepal": "Imagem jornalística ilustrativa gerada por IA: panorama amplo de região montanhosa do Himalaia após enchentes severas, rios transbordados, estradas interrompidas, equipes de resgate vistas à distância e helicóptero de emergência no céu. Tom documental respeitoso, sem corpos, sem feridos identificáveis, sem texto, sem logotipos, não representar fotografia de evento real específico. Horizontal 16:9.",
+    "onu": "Imagem jornalística ilustrativa gerada por IA: salão de assembleia internacional inspirado em arquitetura diplomática contemporânea, delegações vistas de longe, grande painel abstrato de mapa-múndi azul, ambiente de cooperação multilateral e diplomacia. Sem símbolos oficiais reproduzidos, sem pessoas identificáveis, sem texto. Horizontal 16:9."
+  },
+  "veoPrompts": {
+    "opening": "A cinematic 8-second opening shot for a premium Brazilian television news program. Modern dark navy and gold newsroom, abstract world map screens, camera slowly pushes toward an empty anchor desk, subtle animated data lines and newsroom lights, sophisticated broadcast atmosphere, no readable text, no logos, no real people, 16:9, photorealistic, smooth camera movement.",
+    "markets": "An 8-second cinematic news illustration of global financial markets under pressure: abstract glowing bond yield charts rising on transparent screens, oil tanker silhouettes moving through a strategic sea corridor at dusk, crude oil price indicators represented only as abstract lines and numbers too small to read, tense but factual broadcast visual language, no real flags, no logos, no identifiable people, 16:9, photorealistic."
+  },
+  "sources": [
+    "Reuters — Brazil GDP / global markets / oil, 01/09/2026",
+    "Agência Brasil / Lusa — enchentes Nepal, 01/09/2026",
+    "Nações Unidas — agenda de 01/09/2026"
+  ]
+}

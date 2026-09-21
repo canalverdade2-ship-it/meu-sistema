@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.98.0';
 type JsonRecord = Record<string, unknown>;
 const MAX_BODY_BYTES = 128_000;
 
-const DEFAULT_ALLOWED_ORIGINS = ['http://10.0.2.189:3000', 'http://localhost:3000', 'http://127.0.0.1:3000'];
+const DEFAULT_ALLOWED_ORIGINS = ['http://10.0.2.189:3000', 'http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5173', 'http://127.0.0.1:5173', 'https://gsahub.pages.dev', 'https://gsa-hub.pages.dev', 'https://sistema.grupogsaservicos.com.br', 'https://grupo-gsa.com.br', 'https://www.grupo-gsa.com.br'];
 
 function configuredOrigins() {
   return (Deno.env.get('ALLOWED_ORIGINS') || DEFAULT_ALLOWED_ORIGINS.join(','))
@@ -48,6 +48,35 @@ async function handleWebhook(request: Request, raw: string, supabaseUrl: string,
   const { data, error } = await admin.rpc('gsa_ads_process_payment_event', { p_provider: event.provider, p_event_id: event.eventId, p_reference: event.reference, p_status: event.status, p_payload: payload });
   if (error) { console.error('Advertising payment webhook failed', error); return json(error.code === 'P0002' ? 404 : 500, { error: 'event_processing_failed' }); }
   return json(200, { success: true, duplicate: Boolean(data?.duplicate), status: data?.status || event.status });
+}
+
+async function handleInfinitePayWebhook(body: JsonRecord, supabaseUrl: string, serviceRoleKey: string): Promise<Response> {
+  const handle = String(Deno.env.get('INFINITEPAY_HANDLE') || '').trim().replace(/^\$/, '');
+  const orderNsu = String(body.order_nsu || '').trim().slice(0, 200);
+  const transactionNsu = String(body.transaction_nsu || '').trim().slice(0, 200);
+  const invoiceSlug = String(body.invoice_slug || body.slug || '').trim().slice(0, 200);
+  if (!handle) return json(503, { error: 'server_not_configured' });
+  if (!orderNsu || !transactionNsu) return json(400, { error: 'invalid_payment_webhook' });
+  const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } }) as any;
+  const { data: payment, error: paymentError } = await admin.from('gsa_ad_payments').select('id,provider,provider_reference,amount,currency,status').eq('provider_reference', orderNsu).maybeSingle();
+  if (paymentError) { console.error('Advertising payment lookup failed', paymentError); return json(500, { error: 'payment_lookup_failed' }); }
+  if (!payment) return json(404, { error: 'payment_not_found' });
+  if (String(payment.provider || '').toLowerCase() !== 'infinitepay') return json(409, { error: 'payment_provider_mismatch' });
+  if (payment.status === 'paid') return json(200, { success: true, duplicate: true, status: 'paid' });
+  const checkPayload: JsonRecord = { handle, order_nsu: orderNsu, transaction_nsu: transactionNsu };
+  if (invoiceSlug) checkPayload.slug = invoiceSlug;
+  const verificationResponse = await fetch('https://api.checkout.infinitepay.io/payment_check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(checkPayload) });
+  if (!verificationResponse.ok) return json(502, { error: 'payment_verification_failed' });
+  const verification = await verificationResponse.json().catch(() => ({}));
+  const paid = verification?.paid === true || ['paid', 'approved'].includes(String(verification?.status || '').toLowerCase());
+  const paidAmountCents = Number(verification?.paid_amount ?? verification?.amount ?? 0);
+  const expectedAmountCents = Math.round(Number(payment.amount || 0) * 100);
+  if (!paid) return json(409, { error: 'payment_not_confirmed' });
+  if (!Number.isFinite(paidAmountCents) || paidAmountCents !== expectedAmountCents) return json(409, { error: 'payment_amount_mismatch' });
+  const payload = { webhook: body, verification };
+  const { data, error } = await admin.rpc('gsa_ads_process_payment_event', { p_provider: 'infinitepay', p_event_id: transactionNsu, p_reference: orderNsu, p_status: 'paid', p_amount: Number(payment.amount), p_currency: String(payment.currency || 'BRL'), p_payload: payload });
+  if (error) { console.error('Advertising payment processing failed', error); return json(error.code === 'P0002' ? 404 : 409, { error: 'payment_processing_failed' }); }
+  return json(200, { success: true, duplicate: Boolean(data?.duplicate), status: data?.status || 'paid' });
 }
 
 async function findExistingUser(admin: any, email: string) {
@@ -119,7 +148,10 @@ export async function handleRequest(request: Request) {
   if (!(request.headers.get('content-type') || '').toLowerCase().includes('application/json')) return json(415, { error: 'unsupported_media_type' }, origin);
   let body: JsonRecord;
   try { body = await readJsonWithinLimit(request, MAX_BODY_BYTES); } catch (error) { return json(error instanceof RangeError ? 413 : 400, { error: error instanceof RangeError ? 'payload_too_large' : 'invalid_json' }, origin); }
-  try { return await handleAdminInvite(request, body, origin, supabaseUrl, anonKey, serviceRoleKey); } catch (error) { console.error('gsa-ads-admin error', error); return json(500, { error: error instanceof Error ? error.message : 'internal_error' }, origin); }
+  try {
+    if (body.order_nsu && body.transaction_nsu && !body.action) return await handleInfinitePayWebhook(body, supabaseUrl, serviceRoleKey);
+    return await handleAdminInvite(request, body, origin, supabaseUrl, anonKey, serviceRoleKey);
+  } catch (error) { console.error('gsa-ads-admin error', error); return json(500, { error: 'internal_error' }, origin); }
 }
 
 if (import.meta.main) Deno.serve(handleRequest);

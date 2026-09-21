@@ -38,6 +38,34 @@ Deno.test('normaliza tipos de tecnologia e da jornada de marca', () => {
   assertEquals(branding?.metadata.source, 'public_brand_journey');
 });
 
+Deno.test('normaliza e filtra anexos válidos no orçamento', () => {
+  const withAttachments = normalizePayload({
+    nome: 'Empresa com Anexo',
+    email: 'anexo@example.com',
+    telefone: '11999998888',
+    tipo: 'site',
+    solicitacao: 'Segue em anexo a apresentação da identidade e requisitos do site.',
+    website: '',
+    started_at: new Date(Date.now() - 5_000).toISOString(),
+    anexos: [
+      {
+        nome: 'briefing.pdf',
+        url: 'https://example.supabase.co/storage/v1/object/public/orcamentos-anexos/public/leads/briefing.pdf',
+        tipo: 'application/pdf',
+        tamanho: 102400,
+      },
+      {
+        nome: 'malicioso.exe',
+        url: 'http://inseguro.example.com/malicioso.exe', // Deve ignorar (não é https)
+      },
+    ],
+  });
+
+  assertEquals(withAttachments?.anexos?.length, 1);
+  assertEquals(withAttachments?.anexos?.[0].nome, 'briefing.pdf');
+  assertEquals(withAttachments?.anexos?.[0].tamanho, 102400);
+});
+
 Deno.test('rejeita payload inválido antes de acessar o banco', () => {
   assertEquals(normalizePayload({
     nome: 'A',

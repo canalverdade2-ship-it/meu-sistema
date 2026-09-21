@@ -1,6 +1,13 @@
 export type AffiliateStatus = 'ativo' | 'suspenso' | 'encerrado';
-export type AffiliateCommissionStatus = 'pendente' | 'disponivel' | 'paga' | 'estornada';
+export type AffiliateCommissionStatus = 'pendente' | 'disponivel' | 'paga' | 'revertida';
 export type AffiliatePayoutStatus = 'solicitado' | 'aprovado' | 'pago' | 'rejeitado' | 'cancelado';
+export type AffiliateTransferStatus = 'concluida' | 'cancelada' | 'estornada';
+
+/** Versão vigente dos Termos de Uso do Programa de Afiliados.
+ *  Altere SOMENTE aqui sempre que publicar novos termos.
+ *  Usar em AffiliateAccessPage (registerAffiliate) e AfiliadoDashboard (activateProfile). */
+export const AFFILIATE_CURRENT_TERMS_VERSION = '2026-08-29';
+
 
 export interface AffiliateProfile {
   id: string;
@@ -75,6 +82,19 @@ export interface AffiliatePayout {
   motivo?: string;
 }
 
+export interface AffiliateTransfer {
+  id: string;
+  codigo: string;
+  valor: number;
+  status: AffiliateTransferStatus;
+  direcao: 'enviada' | 'recebida';
+  contraparteNome: string;
+  contraparteCodigo: string;
+  observacao?: string;
+  concluidaEm?: string;
+  estornadaEm?: string;
+}
+
 export interface AffiliateSummary {
   cliques: number;
   conversoes: number;
@@ -106,6 +126,7 @@ export interface AffiliateSnapshot {
   summary: AffiliateSummary;
   commissions: AffiliateCommission[];
   payouts: AffiliatePayout[];
+  transfers?: AffiliateTransfer[];
   pointsEvents?: AffiliatePointsEvent[];
 }
 
@@ -123,4 +144,26 @@ export interface CreateAffiliateLinkInput {
   programaCodigo: string;
   destino: string;
   titulo: string;
+}
+
+export interface AffiliateTransferTarget {
+  id: string;
+  codigoPublico: string;
+  nomeDivulgacao: string;
+  nomeCompleto?: string;
+  email?: string;
+  telefone?: string;
+  cnpj?: string;
+  tipoPessoa?: string;
+  nomeMascarado?: string;
+  emailMascarado?: string;
+  telefoneMascarado?: string;
+}
+
+export interface ProfileAccessState {
+  clientId: string;
+  clientProfileActive: boolean;
+  affiliateProfileActive: boolean;
+  clientProfileActivatedAt?: string;
+  registrationOrigin?: string;
 }

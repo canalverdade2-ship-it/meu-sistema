@@ -85,27 +85,10 @@ export const EMPRESTIMO_STEPS = [
  * Verifica se o cliente pode solicitar um novo empréstimo
  */
 export async function verificarElegibilidadeEmprestimo(clienteId: string): Promise<{ elegivel: boolean; motivo?: string }> {
-  // 1. Buscar configuração de limite
-  const { data: settings } = await supabase
-    .from('system_settings')
-    .select('value')
-    .eq('key', 'emprestimo_limite_simultaneos')
-    .single();
-  
-  const limite = parseInt(settings?.value || '1');
+  // A quantidade de empréstimos ativos ou em análise não limita novas solicitações.
+  // Cada pedido segue para avaliação independente da equipe responsável.
 
-  // 2. Contar empréstimos ativos/em análise
-  const { count } = await supabase
-    .from('emprestimos')
-    .select('*', { count: 'exact', head: true })
-    .eq('cliente_id', clienteId)
-    .not('status', 'in', '("quitado","cancelado","proposta_expirada")');
-
-  if (count && count >= limite) {
-    return { elegivel: false, motivo: `Você já possui ${count} empréstimo(s) ativo(s). O limite é de ${limite} empréstimo(s) simultâneo(s).` };
-  }
-
-  // 3. Verificar inadimplência
+  // Verificar inadimplência
   const { count: parcelasVencidas } = await supabase
     .from('emprestimo_parcelas')
     .select('*', { count: 'exact', head: true })

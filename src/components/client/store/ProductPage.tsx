@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import DOMPurify from 'dompurify';
 import { 
   ArrowLeft, 
   ShoppingCart, 
@@ -11,14 +12,15 @@ import {
   Minus,
   Plus,
   Gift,
-  Eye,
   Package,
   Check,
   MessageCircle,
   ArrowRight,
   CreditCard,
   QrCode,
-  RotateCcw
+  RotateCcw,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { formatCurrency } from '../../../lib/utils';
@@ -35,6 +37,14 @@ import { clientOperationalWrite } from '../../../lib/clientOperationalWrite';
 import { fetchWishlistFromDb, isInWishlist, toggleWishlist } from '../../../lib/wishlistStorage';
 import { toast } from 'react-hot-toast';
 import { usePixDiscount, checkPixDiscountApplies } from '../../../hooks/usePixDiscount';
+import {
+  applyVariantToProduct,
+  buildVariationSelection,
+  fetchPublicProductVariations,
+  fetchPublicVariantsByIds,
+  findVariantForSelections,
+} from '../../../lib/productVariations';
+import type { ProductVariationsPayload, ProductVariantInput } from '../../../types/productVariations';
 
 interface ProductPageProps {
   productId: string;
@@ -53,14 +63,84 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [variations, setVariations] = useState<ProductVariationsPayload>({ grupos: [], variantes: [] });
+  const [variationSelections, setVariationSelections] = useState<Record<string, string>>({});
+  const [loadingVariations, setLoadingVariations] = useState(false);
+  const [variationError, setVariationError] = useState('');
 
   // Estados de Avaliações Reais e Presença em Tempo Real
   const [displayRating, setDisplayRating] = useState(4.9);
   const [displayRatingCount, setDisplayRatingCount] = useState(0);
   const [realViewersCount, setRealViewersCount] = useState(1);
+  const selectedVariant = useMemo(
+    () => findVariantForSelections(variations, variationSelections),
+    [variations, variationSelections],
+  );
+
+  const selectedOptionImage = useMemo(() => {
+    if (selectedVariant?.imagem_url) return selectedVariant.imagem_url;
+    for (const group of variations.grupos) {
+      const selectedKey = variationSelections[group.chave];
+      if (!selectedKey) continue;
+      const option = group.opcoes.find((opt) => opt.chave === selectedKey);
+      if (option?.imagem_url) return option.imagem_url;
+    }
+    const matchingVariant = variations.variantes.find((variant) => {
+      if (!variant.imagem_url) return false;
+      return Object.entries(variationSelections).every(
+        ([groupKey, optionKey]) => !optionKey || variant.selecoes?.[groupKey] === optionKey
+      );
+    });
+    if (matchingVariant?.imagem_url) return matchingVariant.imagem_url;
+    return null;
+  }, [selectedVariant, variations, variationSelections]);
+
+  useEffect(() => {
+    if (selectedOptionImage) setActiveImage(0);
+  }, [selectedOptionImage]);
+  const selectedProduct = useMemo(
+    () => selectedVariant ? applyVariantToProduct(product, selectedVariant) : product,
+    [product, selectedVariant],
+  );
   const pixSettings = usePixDiscount();
-  const pixAtivo = product ? checkPixDiscountApplies(product, pixSettings) : false;
+  const pixAtivo = selectedProduct ? checkPixDiscountApplies(selectedProduct, pixSettings) : false;
   const pixPorcentagem = pixSettings.porcentagem;
+
+  useEffect(() => {
+    let active = true;
+    if (!product?.id || !product?.possui_variacoes) {
+      setVariations({ grupos: [], variantes: [] });
+      setVariationSelections({});
+      setVariationError('');
+      setLoadingVariations(false);
+      return () => { active = false; };
+    }
+
+    setLoadingVariations(true);
+    setVariationError('');
+    fetchPublicProductVariations(product.id)
+      .then((data) => {
+        if (!active) return;
+        setVariations(data);
+        if (!data.grupos.length || !data.variantes.length) {
+          setVariationError('As opções deste produto estão temporariamente indisponíveis.');
+          return;
+        }
+        const automatic: Record<string, string> = {};
+        data.grupos.forEach((group) => {
+          if (group.opcoes.length === 1) automatic[group.chave] = group.opcoes[0].chave;
+        });
+        setVariationSelections(automatic);
+      })
+      .catch((error) => {
+        if (!active) return;
+        console.error('[ProductPage] Erro ao carregar variações:', error);
+        setVariationError('Não foi possível carregar as opções deste produto.');
+      })
+      .finally(() => { if (active) setLoadingVariations(false); });
+
+    return () => { active = false; };
+  }, [product?.id, product?.possui_variacoes]);
 
   useEffect(() => {
     let isMounted = true;
@@ -286,42 +366,96 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
     );
   }
 
-  const images = [
+  const images = Array.from(new Set([
+    selectedOptionImage,
+    selectedVariant?.imagem_url,
+    selectedProduct.imagem_url,
     product.imagem_url,
     product.imagem_url_2,
     product.imagem_url_3,
     product.imagem_url_4,
     product.imagem_url_5
-  ].filter(Boolean) as string[];
+  ].filter(Boolean))) as string[];
 
-  const currentImage = images[activeImage] || images[0] || product.imagem_url || '';
-  const hasDiscount = hasActiveProductDiscount(product);
-  const currentPrice = hasDiscount ? getProductEffectivePrice(product) : Number(product.valor || 0);
-  const regularPrice = Number(product.valor || 0);
-  const discountPct = hasDiscount ? getProductDiscountPercentage(product) : 0;
+  const currentImage = images[activeImage] || images[0] || selectedProduct.imagem_url || '';
+  const hasDiscount = hasActiveProductDiscount(selectedProduct);
+  const currentPrice = hasDiscount ? getProductEffectivePrice(selectedProduct) : Number(selectedProduct.valor || 0);
+  const regularPrice = Number(selectedProduct.valor || 0);
+  const discountPct = hasDiscount ? getProductDiscountPercentage(selectedProduct) : 0;
   const pontosGanhos = Math.floor(currentPrice);
   const categoryName = product.loja_categoria?.nome || product.categorias?.nome || product.categoria_nome || product.categoria || 'Produtos GSA';
 
   const installmentValue = currentPrice > 0 ? (currentPrice / 12).toFixed(2).replace('.', ',') : '0,00';
 
   // Controle de estoque (mesma regra do QuantityModal)
-  const controlaEstoque = Boolean(product.controle_estoque);
-  const estoqueDisponivel = Number(product.estoque_disponivel || 0);
-  const semEstoque = controlaEstoque && estoqueDisponivel <= 0;
+  const requiresVariation = Boolean(product.possui_variacoes);
+  const variationIncomplete = requiresVariation && !selectedVariant;
+  const controlaEstoque = Boolean(selectedProduct.controle_estoque);
+  const estoqueDisponivel = Number(selectedProduct.estoque_disponivel || 0);
+  const semEstoque = !variationIncomplete && controlaEstoque && estoqueDisponivel <= 0;
   const maxQuantity = controlaEstoque ? Math.max(1, estoqueDisponivel) : 99;
+
+  const optionAvailable = (groupKey: string, optionKey: string) => variations.variantes.some((variant) => {
+    if (variant.ativo === false || variant.selecoes?.[groupKey] !== optionKey) return false;
+    return !variant.controle_estoque || Number(variant.estoque_disponivel || 0) > 0;
+  });
+
+  const selectVariationOption = (groupKey: string, optionKey: string) => {
+    setVariationSelections((current) => {
+      const next = { ...current, [groupKey]: optionKey };
+      for (const [otherGroup, otherOption] of Object.entries(next)) {
+        if (otherGroup === groupKey) continue;
+        const compatible = variations.variantes.some((variant) => (
+          variant.ativo !== false
+          && variant.selecoes?.[groupKey] === optionKey
+          && variant.selecoes?.[otherGroup] === otherOption
+          && (!variant.controle_estoque || Number(variant.estoque_disponivel || 0) > 0)
+        ));
+        if (!compatible) delete next[otherGroup];
+      }
+      return next;
+    });
+    setQuantity(1);
+    setActiveImage(0);
+  };
 
   const handleAddToCart = async (openCartAfter = false) => {
     console.log('[ProductPage] handleAddToCart start:', { openCartAfter, clientId, semEstoque, controlaEstoque, quantity, estoqueDisponivel, productId: product?.id });
     try {
-      if (semEstoque) {
-        console.log('[ProductPage] handleAddToCart early return: semEstoque');
-        toast.error('Produto sem estoque disponível no momento.');
+      if (variationIncomplete || loadingVariations) {
+        toast.error('Selecione todas as opções do produto antes de continuar.');
         return;
       }
-      if (controlaEstoque && quantity > estoqueDisponivel) {
+      if (variationError) {
+        toast.error(variationError);
+        return;
+      }
+
+      let purchaseVariant: ProductVariantInput | null = selectedVariant;
+      if (purchaseVariant?.id) {
+        const [freshVariant] = await fetchPublicVariantsByIds([purchaseVariant.id]);
+        if (!freshVariant || freshVariant.produto_id !== product.id) {
+          toast.error('Esta combinação não está mais disponível. Escolha outra opção.');
+          return;
+        }
+        purchaseVariant = freshVariant;
+      }
+
+      const purchaseProduct = purchaseVariant ? applyVariantToProduct(product, purchaseVariant) : product;
+      const purchaseControlsStock = Boolean(purchaseProduct.controle_estoque);
+      const purchaseStock = Number(purchaseProduct.estoque_disponivel || 0);
+      const purchaseOutOfStock = purchaseControlsStock && purchaseStock <= 0;
+      const variationSelection = purchaseVariant ? buildVariationSelection(purchaseVariant) : null;
+
+      if (purchaseOutOfStock) {
+        console.log('[ProductPage] handleAddToCart early return: semEstoque');
+        toast.error(purchaseVariant ? 'Esta combinação está sem estoque no momento.' : 'Produto sem estoque disponível no momento.');
+        return;
+      }
+      if (purchaseControlsStock && quantity > purchaseStock) {
         console.log('[ProductPage] handleAddToCart early return: quantity > estoqueDisponivel');
-        toast.error(`Apenas ${estoqueDisponivel} unidade(s) disponível(is) em estoque.`);
-        setQuantity(Math.max(1, estoqueDisponivel));
+        toast.error(`Apenas ${purchaseStock} unidade(s) disponível(is) desta combinação.`);
+        setQuantity(Math.max(1, purchaseStock));
         return;
       }
 
@@ -334,21 +468,26 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
         let parsed = rawCart ? JSON.parse(rawCart) : { items: [] };
         if (!Array.isArray(parsed?.items)) parsed.items = [];
 
+        const targetVariantId = variationSelection?.variante_id || null;
         const existingIdx = parsed.items.findIndex(
-          (c: any) => c.item_id === product.id && c.tipo === 'produto'
+          (c: any) => c.item_id === product.id && c.tipo === 'produto' && (c.produto_variante_id || null) === targetVariantId
         );
 
         if (existingIdx >= 0) {
           const novaQuantidade = Number(parsed.items[existingIdx].quantidade || 1) + quantity;
           // Nunca deixa a quantidade combinada (existente + nova) ultrapassar o estoque disponível.
-          parsed.items[existingIdx].quantidade = controlaEstoque
-            ? Math.min(novaQuantidade, estoqueDisponivel)
+          parsed.items[existingIdx].quantidade = purchaseControlsStock
+            ? Math.min(novaQuantidade, purchaseStock)
             : novaQuantidade;
+          parsed.items[existingIdx].opcoes_variacao = variationSelection;
+          parsed.items[existingIdx].produto_variante_id = targetVariantId;
         } else {
           parsed.items.push({
             item_id: product.id,
             tipo: 'produto',
             quantidade: quantity,
+            produto_variante_id: targetVariantId,
+            opcoes_variacao: variationSelection,
           });
         }
         parsed.updatedAt = new Date().toISOString();
@@ -366,28 +505,41 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
         return;
       }
 
-      const { data: existing } = await supabase
+      const targetVariantId = variationSelection?.variante_id || null;
+      let query = supabase
         .from('loja_carrinhos')
         .select('id, quantidade')
         .eq('cliente_id', clientId)
-        .eq('item_id', product.id)
-        .maybeSingle();
+        .eq('item_id', product.id);
+
+      if (targetVariantId) {
+        query = query.eq('produto_variante_id', targetVariantId);
+      } else {
+        query = query.is('produto_variante_id', null);
+      }
+
+      const { data: existing } = await query.maybeSingle();
 
       if (existing) {
         const novaQuantidade = Number(existing.quantidade || 1) + quantity;
         // Nunca deixa a quantidade combinada (existente + nova) ultrapassar o estoque disponível.
-        const quantidadeFinal = controlaEstoque ? Math.min(novaQuantidade, estoqueDisponivel) : novaQuantidade;
+        const quantidadeFinal = purchaseControlsStock ? Math.min(novaQuantidade, purchaseStock) : novaQuantidade;
         await clientOperationalWrite(clientId, 'loja_carrinhos', 'update', {
           quantidade: quantidadeFinal,
+          ...(targetVariantId ? { produto_variante_id: targetVariantId } : {}),
           updated_at: new Date().toISOString()
         }, { id: existing.id });
       } else {
-        await clientOperationalWrite(clientId, 'loja_carrinhos', 'insert', {
+        const insertData: any = {
           item_id: product.id,
           tipo: 'produto',
           quantidade: quantity,
           updated_at: new Date().toISOString()
-        });
+        };
+        if (targetVariantId) {
+          insertData.produto_variante_id = targetVariantId;
+        }
+        await clientOperationalWrite(clientId, 'loja_carrinhos', 'insert', insertData);
       }
 
       toast.success(`${quantity}x ${product.nome} adicionado ao carrinho!`);
@@ -406,6 +558,14 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
 
   const handleWhatsAppOrder = async () => {
     try {
+      if (variationIncomplete || loadingVariations) {
+        toast.error('Selecione todas as opções do produto antes de continuar.');
+        return;
+      }
+      if (variationError) {
+        toast.error(variationError);
+        return;
+      }
       // 1. Busca telefone oficial do WhatsApp configurado no sistema
       let phone = '5511920857756';
       try {
@@ -437,6 +597,7 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
         ``,
         `🛒 *Produto:* ${product.nome}`,
         `🔖 *Código:* ${refCode}`,
+        ...(selectedVariant ? [`🎨 *Variação:* ${Object.entries(selectedVariant.combinacao || {}).map(([group, option]) => `${group}: ${option}`).join(' · ')}`] : []),
         `📦 *Quantidade:* ${quantity} unidade(s)`,
         `💵 *Valor:* ${totalItens}${precoPix ? ` (ou ${precoPix} com desconto no PIX)` : ''}`,
         `🔗 *Link:* ${window.location.href}`,
@@ -489,7 +650,7 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
           
           <div className="flex flex-col-reverse gap-4 md:flex-row lg:col-span-6">
             {images.length > 1 && (
-              <div className="flex gap-3 overflow-x-auto pb-2 md:flex-col md:overflow-visible md:pb-0">
+              <div className="flex gap-3 overflow-x-auto pb-2 md:flex-col md:overflow-visible md:pb-0 overscroll-x-contain touch-pan-y touch-pan-x">
                 {images.map((img, idx) => (
                   <button
                     key={idx}
@@ -546,7 +707,7 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
             
             {/* Lógica de cálculo de preços (inserido no render p/ acesso seguro a pixAtivo/currentPrice) */}
             {(() => {
-              const currentPrice = hasDiscount ? getProductEffectivePrice(product) : Number(product.valor || 0);
+              const currentPrice = hasDiscount ? getProductEffectivePrice(selectedProduct) : Number(selectedProduct.valor || 0);
               const pixPrice = pixAtivo ? currentPrice - (currentPrice * (pixPorcentagem / 100)) : currentPrice;
               
               return (
@@ -556,7 +717,11 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
               <span className="rounded-lg bg-neutral-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#17345f]">
                 {categoryName}
               </span>
-              {semEstoque ? (
+              {variationIncomplete ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-bold text-indigo-700">
+                  Escolha as opções
+                </span>
+              ) : semEstoque ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-bold text-red-700">
                   Esgotado
                 </span>
@@ -647,6 +812,69 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
             </div>
 
             <div className="mt-6 space-y-4">
+              {requiresVariation && (
+                <section className="rounded-2xl border border-neutral-200 bg-white p-4" aria-label="Opções do produto">
+                  {loadingVariations ? (
+                    <div className="flex items-center justify-center gap-2 py-4 text-sm font-bold text-neutral-500">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Carregando opções...
+                    </div>
+                  ) : variationError ? (
+                    <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-bold text-red-700">
+                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> {variationError}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {variations.grupos.map((group) => (
+                        <div key={group.chave}>
+                          <div className="flex items-center justify-between gap-2">
+                            <h3 className="text-xs font-black uppercase tracking-wider text-neutral-800">{group.nome}</h3>
+                            <span className="text-[10px] font-bold text-neutral-400">
+                              {variationSelections[group.chave] ? 'Selecionado' : 'Escolha uma opção'}
+                            </span>
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {group.opcoes.map((option) => {
+                              const isSelected = variationSelections[group.chave] === option.chave;
+                              const isAvailable = optionAvailable(group.chave, option.chave);
+                              return (
+                                <button
+                                  key={option.chave}
+                                  type="button"
+                                  disabled={!isAvailable}
+                                  onClick={() => selectVariationOption(group.chave, option.chave)}
+                                  className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-black transition ${isSelected
+                                    ? 'border-[#17345f] bg-[#17345f] text-white shadow-sm'
+                                    : isAvailable
+                                      ? 'border-neutral-200 bg-white text-neutral-700 hover:border-[#17345f]'
+                                      : 'cursor-not-allowed border-neutral-100 bg-neutral-50 text-neutral-300 line-through'
+                                  }`}
+                                >
+                                  {option.imagem_url && <img src={option.imagem_url} alt="" className="h-7 w-7 rounded-md object-cover" />}
+                                  {!option.imagem_url && option.cor_hex && (
+                                    <span className="h-4 w-4 rounded-full border border-white/60" style={{ backgroundColor: option.cor_hex }} />
+                                  )}
+                                  {option.nome}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                      {selectedVariant && (
+                        <div className={`rounded-xl border px-3 py-2.5 text-xs font-bold ${semEstoque ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-800'}`}>
+                          {semEstoque
+                            ? 'Esta combinação está esgotada.'
+                            : selectedVariant.controle_estoque
+                              ? `${selectedVariant.estoque_disponivel} unidade(s) desta combinação`
+                              : 'Combinação disponível'}
+                          {selectedVariant.sku && <span className="ml-2 font-mono text-[10px] opacity-70">SKU {selectedVariant.sku}</span>}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </section>
+              )}
+
               <div className="flex flex-wrap items-center gap-3">
                 <span className="text-xs font-bold text-neutral-700 uppercase tracking-wider">Quantidade:</span>
                 <div className="flex items-center rounded-xl border border-neutral-300 bg-white shadow-xs">
@@ -663,7 +891,7 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
                   <button 
                     type="button"
                     onClick={() => setQuantity(Math.min(maxQuantity, quantity + 1))}
-                    disabled={quantity >= maxQuantity}
+                    disabled={variationIncomplete || quantity >= maxQuantity}
                     className="flex h-10 w-10 items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-30 rounded-r-xl transition-colors cursor-pointer"
                     aria-label="Aumentar quantidade"
                   >
@@ -693,17 +921,17 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
                 <button 
                   type="button"
                   onClick={() => handleAddToCart(true)}
-                  disabled={isAddingToCart || semEstoque}
+                  disabled={isAddingToCart || semEstoque || variationIncomplete || loadingVariations || Boolean(variationError)}
                   className="flex items-center justify-center gap-2 rounded-2xl bg-[#17345f] px-6 py-4 text-sm font-black text-white shadow-lg shadow-[#17345f]/25 transition-all hover:bg-[#0c2340] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer disabled:opacity-50"
                 >
                   <ShoppingCart className="h-5 w-5" />
-                  {semEstoque ? 'Produto Esgotado' : isAddingToCart ? 'Processando...' : 'Comprar Agora'}
+                  {semEstoque ? 'Combinação Esgotada' : variationIncomplete ? 'Escolha as Opções' : isAddingToCart ? 'Processando...' : 'Comprar Agora'}
                 </button>
 
                 <button 
                   type="button"
                   onClick={() => handleAddToCart(false)}
-                  disabled={isAddingToCart || semEstoque}
+                  disabled={isAddingToCart || semEstoque || variationIncomplete || loadingVariations || Boolean(variationError)}
                   className="flex items-center justify-center gap-2 rounded-2xl border-2 border-[#17345f] bg-white px-6 py-4 text-sm font-black text-[#17345f] shadow-sm transition-all hover:bg-[#17345f]/5 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer disabled:opacity-50"
                 >
                   <Plus className="h-5 w-5" />
@@ -715,6 +943,7 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
                 <button 
                   type="button"
                   onClick={handleWhatsAppOrder}
+                  disabled={variationIncomplete || loadingVariations || Boolean(variationError)}
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-xs font-bold text-emerald-700 border border-emerald-200 transition-colors hover:bg-emerald-100 cursor-pointer"
                 >
                   <MessageCircle className="h-4 w-4 text-emerald-600" />
@@ -786,7 +1015,10 @@ export function ProductPage({ productId, clientId, onRequireAuth }: ProductPageP
               <div 
                 className="prose prose-neutral max-w-none"
                 dangerouslySetInnerHTML={{ 
-                  __html: String(product.descricao_detalhada).replace(/\n/g, '<br/>') 
+                  __html: DOMPurify.sanitize(
+                    String(product.descricao_detalhada).replace(/\n/g, '<br/>'),
+                    { USE_PROFILES: { html: true } },
+                  )
                 }} 
               />
             ) : product.descricao ? (

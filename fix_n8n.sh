@@ -1,5 +1,1 @@
-sudo docker exec n8n n8n export:workflow --id=axrrRfvSTGkcFvXo --output=/tmp/wf.json
-sudo docker exec n8n sed -i 's/http:\/\/147.15.43.141:8080/http:\/\/evolution-api:8080/g' /tmp/wf.json
-sudo docker exec n8n n8n import:workflow --input=/tmp/wf.json
-sudo docker exec n8n n8n publish:workflow --id=axrrRfvSTGkcFvXo
-sudo docker restart n8n
+PGPASSWORD='GSA_SENHA_FORTE_2026' psql -h 127.0.0.1 -p 5433 -U supabase_admin -d gsahub -c "UPDATE public.system_settings SET value = '"http://n8n:5678"' WHERE key = 'n8n_base_url'; UPDATE public.automacao_scraping_configs SET n8n_webhook_url = REPLACE(n8n_webhook_url, 'http://127.0.0.1:5678', 'http://n8n:5678');"

@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+const p = 'C:/Users/Adriano Farias/Downloads/remix-9.10_-grupo-gsa---gestão-de-serviços - Copia (4)/src/components/client/ClientMeuCredito.tsx';
+const original = fs.readFileSync(p, 'utf8');
+const crlf = original.includes('\r\n');
+let s = original.replace(/\r\n/g, '\n');
+const a = "{Number(cliente.limite_credito_disponivel || 0) > 0 && (";
+const b = "{(Boolean(activeCreditWithdrawal) || Math.max(Number(cliente.limite_credito_disponivel || 0) - blockedCredit, 0) > 0) && (";
+const count = s.split(a).length - 1;
+if (count !== 1) throw new Error(`anchor esperado 1, encontrado ${count}`);
+s = s.replace(a, b);
+fs.writeFileSync(p, crlf ? s.replace(/\n/g, '\r\n') : s, 'utf8');
+console.log('WITHDRAW_BUTTON_EFFECTIVE_OK');

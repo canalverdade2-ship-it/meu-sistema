@@ -34,7 +34,19 @@ export async function clientOperationalWrite<T = any>(
   });
 
   if (error || !(result as any)?.success) {
-    throw new Error(error?.message || (result as any)?.error || 'Erro ao executar operação.');
+    const msg = String(error?.message || (result as any)?.error || '');
+    const lower = msg.toLowerCase();
+    if (
+      lower.includes('sessao de cliente invalida') ||
+      lower.includes('sessao invalida') ||
+      lower.includes('expirada') ||
+      lower.includes('encerrada')
+    ) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('gsa-session-revoked', { detail: { reason: 'superseded' } }));
+      }
+    }
+    throw new Error(msg || 'Erro ao executar operação.');
   }
 
   return ((result as any).data || null) as T | null;

@@ -1,0 +1,3 @@
+import { runSshScript } from './ssh2-run.mjs';
+const js=String.raw`const puppeteer=require('/usr/lib/node_modules/@wonderwhy-er/desktop-commander/node_modules/puppeteer');(async()=>{const b=await puppeteer.connect({browserURL:'http://127.0.0.1:9228'});const p=(await b.pages()).find(x=>x.url().includes('/videos/d/1NoUuv9KmksylGMfxKdbcXCvXHYZ9k89XvcwAhwKErjo/'));await p.screenshot({path:'/home/opc/gsa-ai/work/chamada-grade-v2/qc/vids-current.png'});await b.disconnect()})().catch(e=>{console.error(e.stack||e);process.exit(1)});`;
+const e=Buffer.from(js).toString('base64');const r=await runSshScript(`printf '%s' '${e}'|base64 -d >/tmp/cap.js\nnode /tmp/cap.js\nrm /tmp/cap.js`);process.stdout.write(r.stdout);

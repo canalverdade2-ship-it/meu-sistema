@@ -215,12 +215,14 @@ BEGIN
     INSERT INTO public.faturas (
       cliente_id,
       valor_total,
+      valor_final_pendente,
       status,
       data_vencimento,
       tipo,
       metadata
     ) VALUES (
       v_cliente_id,
+      v_valor_parcela,
       v_valor_parcela,
       'pendente',
       (CURRENT_DATE + make_interval(months => v_parcela_numero - 1))::DATE,

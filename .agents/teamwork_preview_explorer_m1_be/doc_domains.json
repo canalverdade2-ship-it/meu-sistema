@@ -1,0 +1,28 @@
+[
+  {
+    "num": 1,
+    "title": "Autenticação, Sessões & Governança de Segurança",
+    "expectedCount": 55,
+    "foundCount": 6,
+    "tables": [
+      "sistema_sessoes",
+      "gsa_auth_identities",
+      "gsa_auth_rate_limits",
+      "system_settings",
+      "empresa",
+      "gsa_admin_operation_requests"
+    ],
+    "body": "Infraestrutura de controle de sessão customizada, pontes com Supabase Auth (`auth.users`), rate limiting distribuído e trilhas de auditoria administrativa.\n- **sistema_sessoes**: `id` (UUID PK), `ator_tipo` (TEXT: cliente/admin/colaborador/prestador/fornecedor/afiliado), `ator_id` (UUID), `ator_nome` (TEXT), `status` (TEXT: ativo/encerrado/revogado), `token_hash` (TEXT), `token_hint` (TEXT), `origem` (TEXT), `metadata` (JSONB), `created_at`, `updated_at`.\n- **gsa_auth_identities**: `id` (UUID PK), `ator_tipo` (TEXT), `ator_id` (UUID), `auth_user_id` (UUID FK auth.users), `created_at`.\n- **gsa_auth_rate_limits**: `id` (UUID PK), `identifier` (TEXT), `action` (TEXT), `attempts` (INTEGER), `blocked_until` (TIMESTAMPTZ), `created_at`, `updated_at`.\n- **system_settings**: `id` (UUID PK), `key` (TEXT UNIQUE), `value` (TEXT), `description` (TEXT), `must_change_code` (BOOLEAN), `created_at`, `updated_at`.\n- **empresa**: `id` (UUID PK), `nome`, `razao_social`, `cnpj`, `telefone`, `responsavel`, `taxa_conversao_pontos` (DECIMAL), `created_at`, `updated_at`.\n- **gsa_admin_operation_requests**: `id` (UUID PK), `sessao_id` (UUID), `operacao` (TEXT), `payload` (JSONB), `status` (TEXT), `created_at`.\n- **audit_logs / gsa_audit_logs / sensitive_audit_logs**: tabelas de auditoria imutável de mutações sensíveis.\n- *Demais tabelas de apoio técnico*: `gsa_session_blacklists`, `gsa_security_nonces`, `rate_limit_entries`, `gsa_client_registration_challenges`, `whatsapp_ramais`, `admin_security_policies`, etc."
+  },
+  {
+    "num": 16,
+    "title": "Marketing, Campanhas & Vaquinhas Coletivas",
+    "expectedCount": 2,
+    "foundCount": 2,
+    "tables": [
+      "gsa_hero_banners",
+      "blog_posts"
+    ],
+    "body": "Banners institucionais com controle de datas e blog público para atração de tráfego orgânico.\n- **gsa_hero_banners**: Banners rotativos de alta resolução com agendamento temporal de exibição.\n- **blog_posts**: Artigos informativos indexados por categoria para SEO e nutrição de leads."
+  }
+]

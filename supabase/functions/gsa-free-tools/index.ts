@@ -1,7 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const MAX_BODY_BYTES = 64_000;
-const TOOLS = new Set(['termination', 'retirement', 'vacation', 'thirteenth', 'benefits', 'bpc']);
+const TOOLS = new Set(['termination', 'retirement', 'vacation', 'thirteenth', 'benefits', 'bpc', 'overtime', 'net_salary', 'mei_limit', 'unemployment', 'fator_r', 'amortization', 'internship_termination', 'prolabore_vs_lucros', 'employee_cost', 'night_shift_rural_urban', 'proportional_salary', 'late_fee_calculator', 'child_support']);
 const CHECKOUT_ENDPOINT = 'https://api.checkout.infinitepay.io/links';
 const PAYMENT_CHECK_ENDPOINT = 'https://api.checkout.infinitepay.io/payment_check';
 const VISITOR_TOKEN_PATTERN = /^[a-zA-Z0-9_-]{20,160}$/;
@@ -258,6 +258,70 @@ export async function handleRequest(request: Request) {
       if (!state.access) return json({ success: false, error: 'grant_not_available_after_payment' }, 409, allowedOrigin);
       const session = await createProSession(admin, toolId, visitorHash, state);
       return json({ success: true, paid: true, session }, session?.success ? 200 : 409, allowedOrigin);
+    }    if (action === 'request_whatsapp_voucher') {
+      const rawPhone = digits(payload.phone, 15);
+      if (!rawPhone || rawPhone.length < 10 || rawPhone.length > 13) {
+        return json({ success: false, error: 'invalid_phone', message: 'Informe um número de WhatsApp válido com DDD.' }, 400, allowedOrigin);
+      }
+      const product = await loadProduct(admin, toolId);
+      const productName = product?.nome || 'Calculadora Pro';
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let rand = '';
+      const bytes = crypto.getRandomValues(new Uint8Array(8));
+      for (let i = 0; i < 8; i += 1) rand += chars[bytes[i] % chars.length];
+      const voucherCode = `GSA-PRO-${rand}`;
+      const voucherHash = await sha256(voucherCode);
+
+      const { data, error } = await admin.rpc('gsa_calculator_request_whatsapp_voucher', {
+        p_phone: rawPhone,
+        p_tool_id: toolId,
+        p_voucher_code: voucherCode,
+        p_voucher_hash: voucherHash,
+        p_duracao_minutos: Number(product?.duracao_acesso_minutos || 1440),
+      });
+
+      if (error) throw error;
+      if (!data?.success) {
+        return json({
+          success: false,
+          error: data?.error || 'voucher_request_failed',
+          message: data?.message || 'Não foi possível solicitar o voucher para este número.'
+        }, data?.error === 'phone_already_used' ? 409 : 400, allowedOrigin);
+      }
+
+      const messageText = `🤖 *GSA HUB | Soluções Digitais*\n\nOlá! 👋\nSeu voucher exclusivo para a *${productName}* foi gerado com sucesso:\n\n🎟️ Código: *${voucherCode}*\n\n⚡ *Regra de uso:* Válido para *1 uso completo* (cálculo Pro e emissão de 1 relatório PDF detalhado).\n\nCopie o código acima e valide na tela da calculadora para desbloquear o modo Pro!`;
+
+      // Envia via Evolution API no servidor
+      const targetPhone = String(data.phone).startsWith('55') ? String(data.phone) : `55${data.phone}`;
+      for (const host of ['127.0.0.1', '147.15.43.141', '172.17.0.1', '172.19.0.1', 'evolution-api']) {
+        try {
+          const evoRes = await fetch(`http://${host}:8080/message/sendText/GSA_WhatsApp`, {
+            method: 'POST',
+            headers: { 'apikey': 'gsa_hub_evolution_token_2026', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ number: targetPhone, text: messageText, delay: 4000, presence: 'composing' }),
+            signal: AbortSignal.timeout(3500)
+          });
+          if (evoRes.ok) break;
+        } catch { /* tenta proximo host */ }
+      }
+
+      return json({
+        success: true,
+        message: 'voucher_sent_whatsapp',
+        phone: data.phone,
+        voucher_code: voucherCode
+      }, 200, allowedOrigin);
+    }
+
+    if (action === 'consume_pro_usage') {
+      if (!proSessionToken) return json({ success: false, error: 'token_missing' }, 400, allowedOrigin);
+      const tokenHash = await sha256(proSessionToken);
+      const { data, error } = await admin.rpc('gsa_calculator_consume_pro_session_internal', {
+        p_tool_id: toolId,
+        p_token_hash: tokenHash
+      });
+      if (error) throw error;
+      return json({ success: true, consumed: Boolean(data?.consumed) }, 200, allowedOrigin);
     }
 
     return json({ error: 'invalid_action' }, 400, allowedOrigin);

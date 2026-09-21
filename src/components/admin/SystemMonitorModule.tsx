@@ -1,11 +1,28 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Activity, Database, HardDrive, RefreshCw, Server, ShieldCheck, Users, Terminal as TerminalIcon, Globe, Cpu, ChevronDown, ChevronUp, X, Info, CheckCircle2, BarChart3, Lock, FileText, UserCheck, Search, ShieldAlert } from 'lucide-react';
+import {
+  Activity,
+  Database,
+  HardDrive,
+  RefreshCw,
+  Server,
+  ShieldCheck,
+  Users,
+  Cpu,
+  ChevronDown,
+  ChevronUp,
+  X,
+  CheckCircle2,
+  Lock,
+  Search,
+  MessageSquare,
+  Globe,
+} from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
 import { formatDateTime } from '../../lib/utils';
 import { sendAdminWhatsAppNotification } from '../../utils/n8nWhatsApp';
-import { MessageSquare } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 import { OracleMetricsPanel } from './infra/OracleMetricsPanel';
 import { VPSTerminal } from './infra/VPSTerminal';
@@ -66,7 +83,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
       // 1. Colaboradores
       const { data: cols } = await supabase.from('colaboradores').select('id, nome, email, created_at, status');
       if (cols && cols.length > 0) {
-        cols.forEach(c => {
+        cols.forEach((c) => {
           if (c.id && !seenIds.has(c.id)) {
             seenIds.add(c.id);
             users.push({
@@ -75,7 +92,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
               email: c.email || '—',
               tipo: c.email === 'admin@gsa.com' || (c.nome && c.nome.toLowerCase().includes('admin')) ? 'Administrador Master' : 'Colaborador GSA',
               status: c.status === 'inativo' ? 'Bloqueado' : 'Ativo',
-              created_at: c.created_at
+              created_at: c.created_at,
             });
           }
         });
@@ -86,7 +103,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
         const { data: clis, error: clisError } = await supabase.from('clientes').select('id, nome, email, data_cadastro, status').limit(100);
         if (clisError) throw clisError;
         if (clis && clis.length > 0) {
-          clis.forEach(c => {
+          clis.forEach((c) => {
             if (c.id && !seenIds.has(c.id)) {
               seenIds.add(c.id);
               users.push({
@@ -95,7 +112,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
                 email: c.email || '—',
                 tipo: 'Cliente GSA',
                 status: c.status === 'inativo' || c.status === 'bloqueado' ? 'Bloqueado' : 'Ativo',
-                created_at: c.data_cadastro
+                created_at: c.data_cadastro,
               });
             }
           });
@@ -106,10 +123,10 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
 
       // 3. Fornecedores
       try {
-        const { data: forns, error: fornsError } = await supabase.from('fornecedores').select('id, razao_social, email, created_at, status').limit(100);
-        if (fornsError) throw fornsError;
+        const supplierSnapshot = await callAdminRpc<any>('gsa_admin_supplier_snapshot');
+        const forns = Array.isArray(supplierSnapshot?.suppliers) ? supplierSnapshot.suppliers.slice(0, 100) : [];
         if (forns && forns.length > 0) {
-          forns.forEach(c => {
+          forns.forEach((c) => {
             if (c.id && !seenIds.has(c.id)) {
               seenIds.add(c.id);
               users.push({
@@ -118,7 +135,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
                 email: c.email || '—',
                 tipo: 'Fornecedor GSA',
                 status: c.status === 'inativo' ? 'Bloqueado' : 'Ativo',
-                created_at: c.created_at
+                created_at: c.created_at,
               });
             }
           });
@@ -141,7 +158,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
                 email: c.email || '—',
                 tipo: 'Prestador de Serviço',
                 status: c.status === 'inativo' ? 'Bloqueado' : 'Ativo',
-                created_at: c.created_at
+                created_at: c.created_at,
               });
             }
           });
@@ -164,7 +181,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
                 email: '—',
                 tipo: 'Afiliado GSA',
                 status: c.status === 'encerrado' ? 'Bloqueado' : 'Ativo',
-                created_at: c.created_at
+                created_at: c.created_at,
               });
             }
           });
@@ -174,7 +191,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
       }
 
       if (users.length > 0) {
-        setSnapshot(prev => ({ ...prev, users_list: users }));
+        setSnapshot((prev) => ({ ...prev, users_list: users }));
       }
     } catch (e) {
       console.warn('Erro ao carregar usuários de fallback:', e);
@@ -187,7 +204,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
       const success = await sendAdminWhatsAppNotification({
         title: 'Alerta de Observabilidade',
         message: `Status do sistema verificado via Painel Admin. Todos os serviços estão operando normalmente na Oracle Cloud com n8n ativo.`,
-        category: 'SISTEMA'
+        category: 'SISTEMA',
       });
       if (success) {
         toast.success('Notificação de WhatsApp enviada para o administrador!');
@@ -207,7 +224,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
     try {
       const data = await callAdminRpc<SystemSnapshot>('gsa_admin_system_snapshot');
       const usersList = Array.isArray(data?.users_list) && data.users_list.length > 0 ? data.users_list : [];
-      
+
       setSnapshot({
         metrics: data?.metrics || {},
         tables: Array.isArray(data?.tables) ? data.tables : [],
@@ -229,48 +246,17 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
 
   useEffect(() => {
     void load();
-    
-    // Inscrever em canais de Realtime WebSocket para atualizações 100% instantâneas
-    const channel = supabase
-      .channel('system-monitor-realtime-live')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'colaboradores' }, () => {
-        void load(true);
-        void fetchFallbackUsers();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'clientes' }, () => {
-        void load(true);
-        void fetchFallbackUsers();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'fornecedores' }, () => {
-        void load(true);
-        void fetchFallbackUsers();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestadores' }, () => {
-        void load(true);
-        void fetchFallbackUsers();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'gsa_afiliados' }, () => {
-        void load(true);
-        void fetchFallbackUsers();
-      })
-      .subscribe();
+  }, [load]);
 
-    const interval = window.setInterval(() => {
-      if (document.visibilityState === 'visible') void load(true);
-    }, 15_000);
-
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') void load(true);
-    };
-
-    document.addEventListener('visibilitychange', handleVisibility);
-
-    return () => {
-      window.clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibility);
-      supabase.removeChannel(channel);
-    };
-  }, [load, fetchFallbackUsers]);
+  useRealtimeSubscription([
+    { table: 'colaboradores', onChange: () => { void load(true); void fetchFallbackUsers(); }, debounceMs: 500 },
+    { table: 'clientes', onChange: () => { void load(true); void fetchFallbackUsers(); }, debounceMs: 500 },
+    { table: 'fornecedores', onChange: () => { void load(true); void fetchFallbackUsers(); }, debounceMs: 500 },
+    { table: 'prestadores', onChange: () => { void load(true); void fetchFallbackUsers(); }, debounceMs: 500 },
+    { table: 'gsa_afiliados', onChange: () => { void load(true); void fetchFallbackUsers(); }, debounceMs: 500 },
+    { table: 'sistema_logs', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'system_settings', onChange: () => void load(true), debounceMs: 500 },
+  ]);
 
   const metrics = snapshot.metrics || {};
   const filteredTables = useMemo(() => {
@@ -282,7 +268,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
   const filteredUsers = useMemo(() => {
     const value = userSearch.trim().toLowerCase();
     if (!value) return snapshot.users_list || [];
-    return (snapshot.users_list || []).filter((u) => 
+    return (snapshot.users_list || []).filter((u) =>
       (u.nome && u.nome.toLowerCase().includes(value)) ||
       (u.email && u.email.toLowerCase().includes(value)) ||
       (u.tipo && u.tipo.toLowerCase().includes(value))
@@ -324,11 +310,11 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
               <MessageSquare className={`h-4 w-4 ${sendingAlert ? 'animate-bounce' : ''}`} />
               {sendingAlert ? 'Enviando...' : 'Enviar Alerta WhatsApp'}
             </button>
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={async () => {
                 setRefreshing(true);
-                setRefreshKey(prev => prev + 1);
+                setRefreshKey((prev) => prev + 1);
                 try {
                   await load(true);
                   await fetchFallbackUsers();
@@ -338,8 +324,8 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
                 } finally {
                   setRefreshing(false);
                 }
-              }} 
-              disabled={refreshing} 
+              }}
+              disabled={refreshing}
               className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-neutral-900 disabled:opacity-60 hover:bg-neutral-100 transition-colors shadow-md cursor-pointer"
             >
               <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} /> Atualizar
@@ -410,7 +396,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
                     <Icon className="h-5 w-5" />
                   </span>
                   <span className="text-[10px] font-extrabold uppercase bg-neutral-100 text-neutral-500 px-2 py-1 rounded-md group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                    Detalhes ➔
+                    Detalhes →
                   </span>
                 </div>
                 <p className="mt-5 text-[10px] font-black uppercase tracking-wider text-neutral-400">{label}</p>
@@ -477,7 +463,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
             {activeCardModal === 'database' && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
-                  <span className="p-3 bg-purple-100 text-purple-600 rounded-2xl"><Database className="w-6 h-6"/></span>
+                  <span className="p-3 bg-purple-100 text-purple-600 rounded-2xl"><Database className="w-6 h-6" /></span>
                   <div>
                     <h3 className="text-xl font-black text-neutral-900">Banco de Dados PostgreSQL</h3>
                     <p className="text-xs text-neutral-500">Métricas e estatísticas do motor de banco na VPS</p>
@@ -498,12 +484,12 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
                   </div>
                   <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
                     <span className="text-xs font-bold text-neutral-500">Modo de Acesso</span>
-                    <span className="text-xs font-bold uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">Somente Leitura Protegido (RPC)</span>
+                    <span className="text-xs font-bold uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">Somente Leitura Protegido (RPC) - Visão somente leitura</span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
                     <span className="text-xs font-bold text-neutral-500">Status da Instância</span>
                     <span className="text-xs font-bold uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5"/> Ativo & Operacional
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Ativo & Operacional
                     </span>
                   </div>
                 </div>
@@ -514,7 +500,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
             {activeCardModal === 'storage' && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
-                  <span className="p-3 bg-blue-100 text-blue-600 rounded-2xl"><HardDrive className="w-6 h-6"/></span>
+                  <span className="p-3 bg-blue-100 text-blue-600 rounded-2xl"><HardDrive className="w-6 h-6" /></span>
                   <div>
                     <h3 className="text-xl font-black text-neutral-900">Armazenamento de Arquivos</h3>
                     <p className="text-xs text-neutral-500">Buckets de mídia, documentos e anexos do sistema</p>
@@ -536,7 +522,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
                   <div className="flex justify-between items-center p-3 bg-neutral-50 rounded-xl">
                     <span className="text-xs font-bold text-neutral-500">Políticas de Segurança (RLS)</span>
                     <span className="text-xs font-bold uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md flex items-center gap-1">
-                      <Lock className="w-3.5 h-3.5"/> Ativadas por Bucket
+                      <Lock className="w-3.5 h-3.5" /> Ativadas por Bucket
                     </span>
                   </div>
                 </div>
@@ -548,7 +534,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
               <div className="flex flex-col flex-1 overflow-hidden space-y-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span className="p-3 bg-emerald-100 text-emerald-600 rounded-2xl"><Users className="w-6 h-6"/></span>
+                    <span className="p-3 bg-emerald-100 text-emerald-600 rounded-2xl"><Users className="w-6 h-6" /></span>
                     <div>
                       <h3 className="text-xl font-black text-neutral-900">Usuários Cadastrados no Sistema</h3>
                       <p className="text-xs text-neutral-500">Listagem de todas as contas registradas no auth.users e perfis vinculados ({snapshot.users_list?.length || 0})</p>
@@ -559,12 +545,12 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
                 <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-neutral-50 p-3 rounded-2xl border border-neutral-100">
                   <div className="relative w-full sm:w-72">
                     <Search className="w-4 h-4 absolute left-3 top-3 text-neutral-400" />
-                    <input 
-                      type="text" 
-                      value={userSearch} 
-                      onChange={(e) => setUserSearch(e.target.value)} 
-                      placeholder="Pesquisar por nome, e-mail ou tipo..." 
-                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-neutral-200 bg-white outline-none focus:ring-2 focus:ring-emerald-500" 
+                    <input
+                      type="text"
+                      value={userSearch}
+                      onChange={(e) => setUserSearch(e.target.value)}
+                      placeholder="Pesquisar por nome, e-mail ou tipo..."
+                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-neutral-200 bg-white outline-none focus:ring-2 focus:ring-emerald-500"
                     />
                   </div>
                   <div className="text-xs text-neutral-500 font-bold">
@@ -630,7 +616,7 @@ export function SystemMonitorModule(_props: { colaboradorId?: string; colaborado
             {activeCardModal === 'tables' && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
-                  <span className="p-3 bg-amber-100 text-amber-600 rounded-2xl"><Server className="w-6 h-6"/></span>
+                  <span className="p-3 bg-amber-100 text-amber-600 rounded-2xl"><Server className="w-6 h-6" /></span>
                   <div>
                     <h3 className="text-xl font-black text-neutral-900">Mapeamento de Tabelas</h3>
                     <p className="text-xs text-neutral-500">Visão das principais tabelas registradas no PostgreSQL</p>

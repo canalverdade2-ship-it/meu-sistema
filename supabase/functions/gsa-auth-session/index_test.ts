@@ -34,6 +34,44 @@ Deno.test('normaliza somente documentos, PINs e tipos válidos', () => {
   }), null);
 });
 
+Deno.test('normaliza cadastro independente de afiliado', () => {
+  assertEquals(normalizePayload('register_affiliate', {
+    documento: '529.982.247-25',
+    nome: 'Pessoa Afiliada',
+    nome_divulgacao: 'Afiliado GSA',
+    email: 'Afiliado@Example.com',
+    telefone: '(11) 99999-0001',
+    pin: '4826',
+    pix_tipo: 'cpf',
+    pix_chave: '529.982.247-25',
+    termos_versao: '2026-08-29',
+    termos_aceitos: true,
+  }), {
+    documento: '52998224725',
+    nome: 'Pessoa Afiliada',
+    nome_divulgacao: 'Afiliado GSA',
+    email: 'afiliado@example.com',
+    telefone: '11999990001',
+    pin: '4826',
+    pix_tipo: 'cpf',
+    pix_chave: '529.982.247-25',
+    termos_versao: '2026-08-29',
+    termos_aceitos: 'true',
+  });
+
+  assertEquals(normalizePayload('register_affiliate', {
+    documento: '529.982.247-25',
+    nome: 'Pessoa Afiliada',
+    nome_divulgacao: 'Afiliado GSA',
+    email: 'invalido',
+    telefone: '11999990001',
+    pin: '4826',
+    pix_tipo: 'cpf',
+    pix_chave: '52998224725',
+    termos_aceitos: true,
+  }), null);
+});
+
 Deno.test('rejeita origem não autorizada antes de acessar o banco', async () => {
   await withAllowedOrigins('https://app.gsa.example', async () => {
     const response = await handleRequest(new Request('https://gateway.example', {
@@ -98,6 +136,7 @@ Deno.test('normaliza recuperação somente com e-mail válido e desafio UUID', (
 });
 
 Deno.test('aplica limite por identidade antes dos fluxos de recuperação', () => {
+  assertEquals(subjectRateLimitMode('register_affiliate'), 'before');
   assertEquals(subjectRateLimitMode('request_client_first_access'), 'before');
   assertEquals(subjectRateLimitMode('complete_client_first_access'), 'before');
   assertEquals(subjectRateLimitMode('request_client_recovery'), 'before');

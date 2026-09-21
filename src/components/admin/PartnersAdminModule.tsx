@@ -11,9 +11,13 @@ import {
   ShieldCheck,
   Trash2,
   Users,
+  Gift,
+  Ticket,
+  Link2,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { listAdminPartners, savePartner, setPartnerStatus } from '../../features/partners/service';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import {
   PARTNER_MODE_LABELS,
   PARTNER_STATUS_LABELS,
@@ -61,6 +65,13 @@ const EMPTY_FORM: PartnerFormData = {
   featured: false,
   display_order: 0,
   status: 'em_analise',
+  redemption_has_coupon: false,
+  redemption_coupon_code: '',
+  redemption_has_voucher: false,
+  redemption_has_link: true,
+  redemption_link: '',
+  redemption_auto_redirect: false,
+  redemption_instructions: '',
 };
 
 function slugify(value: string) {
@@ -115,6 +126,12 @@ export function PartnersAdminModule() {
   };
 
   useEffect(() => { void load(); }, []);
+
+  useRealtimeSubscription({
+    table: 'parceiros',
+    onChange: () => void load(),
+    debounceMs: 300,
+  });
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase('pt-BR');
@@ -200,8 +217,8 @@ export function PartnersAdminModule() {
                 </div>
                 <div className="mt-5 flex flex-wrap gap-2 border-t border-neutral-100 pt-4">
                   <button type="button" onClick={() => openEdit(partner)} className="inline-flex items-center gap-2 rounded-lg bg-indigo-50 px-3 py-2 text-xs font-black text-indigo-700"><Pencil className="h-4 w-4" /> Editar</button>
-                  {partner.status !== 'ativo' && partner.status !== 'excluido' && <button type="button" onClick={() => changeStatus(partner, 'ativo')} className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700"><Eye className="h-4 w-4" /> Publicar</button>}
-                  {partner.status === 'ativo' && <button type="button" onClick={() => changeStatus(partner, 'inativo')} className="inline-flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-black text-amber-700"><EyeOff className="h-4 w-4" /> Ocultar</button>}
+                  {partner.status !== 'ativo' && partner.status !== 'excluido' && <button type="button" onClick={() => changeStatus(partner, 'ativo')} className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700"><Eye className="h-4 w-4" /> Ativar</button>}
+                  {partner.status === 'ativo' && <button type="button" onClick={() => changeStatus(partner, 'inativo')} className="inline-flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-black text-amber-700"><EyeOff className="h-4 w-4" /> Desativar</button>}
                   {partner.status !== 'excluido' && <button type="button" onClick={() => changeStatus(partner, 'excluido')} className="inline-flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-black text-red-700"><Trash2 className="h-4 w-4" /> Excluir</button>}
                 </div>
               </div>
@@ -234,8 +251,8 @@ function PartnerFormModal({ partner, open, onClose, onSaved }: { partner: Partne
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!form.name.trim() || !form.category.trim() || !form.short_description.trim()) {
-      toast.error('Informe nome, categoria e descrição curta.');
+    if (!form.name.trim()) {
+      toast.error('Informe o nome do parceiro comercial.');
       return;
     }
     setSaving(true);
@@ -263,7 +280,7 @@ function PartnerFormModal({ partner, open, onClose, onSaved }: { partner: Partne
         <FormSection title="Apresentação pública" icon={<Building2 className="h-5 w-5" />}>
           <div className="grid gap-4 md:grid-cols-2"><Field label="Nome do parceiro" required value={form.name} onChange={(value) => { update('name', value); if (!partner && !form.slug) update('slug', slugify(value)); }} /><Field label="Categoria" required value={form.category} onChange={(value) => update('category', value)} /></div>
           <div className="grid gap-4 md:grid-cols-2"><Field label="Endereço da página (slug)" required value={form.slug} onChange={(value) => update('slug', slugify(value))} /><Field label="Razão social" value={form.legal_name || ''} onChange={(value) => update('legal_name', value)} /></div>
-          <Field label="Descrição curta" required value={form.short_description} onChange={(value) => update('short_description', value)} maxLength={280} />
+          <Field label="Descrição curta (opcional)" value={form.short_description} onChange={(value) => update('short_description', value)} maxLength={280} />
           <Area label="Descrição completa" value={form.description || ''} onChange={(value) => update('description', value)} rows={4} />
           <div className="grid gap-4 md:grid-cols-2"><Field label="URL do logotipo" value={form.logo_url || ''} onChange={(value) => update('logo_url', value)} /><Field label="URL da foto de capa" value={form.cover_url || ''} onChange={(value) => update('cover_url', value)} /></div>
         </FormSection>
@@ -285,6 +302,122 @@ function PartnerFormModal({ partner, open, onClose, onSaved }: { partner: Partne
         <FormSection title="Serviços, produtos e benefícios" icon={<ShieldCheck className="h-5 w-5" />}>
           <div className="grid gap-4 md:grid-cols-2"><Area label="Serviços e especialidades (um por linha)" value={servicesText} onChange={setServicesText} rows={6} /><Area label="Produtos e soluções (um por linha)" value={productsText} onChange={setProductsText} rows={6} /></div>
           <Area label="Benefício exclusivo para clientes GSA" value={form.benefits || ''} onChange={(value) => update('benefits', value)} rows={3} />
+        </FormSection>
+
+        <FormSection title="Configuração de Resgate de Benefício (Clientes GSA)" icon={<Gift className="h-5 w-5" />}>
+          {(() => {
+            const hasImmediate = Boolean(form.redemption_has_coupon || form.redemption_has_voucher || form.redemption_has_link);
+
+            return (
+              <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className={`flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-bold text-neutral-700 ${form.redemption_delay_24h ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <input 
+                      type="checkbox" 
+                      disabled={form.redemption_delay_24h || false}
+                      checked={form.redemption_has_coupon || false} 
+                      onChange={(event) => {
+                        update('redemption_has_coupon', event.target.checked);
+                        if (event.target.checked) update('redemption_delay_24h', false);
+                      }} 
+                      className="h-4 w-4 rounded" 
+                    />
+                    <Ticket className="h-4 w-4 text-amber-600" />
+                    Gerar cupom promocional
+                  </label>
+                  {form.redemption_has_coupon && !form.redemption_delay_24h && (
+                    <Field label="Código do cupom (opcional)" value={form.redemption_coupon_code || ''} onChange={(value) => update('redemption_coupon_code', value.toUpperCase())} placeholder="Ex: GSA100 (vazio = gera código único)" />
+                  )}
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className={`flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-bold text-neutral-700 ${form.redemption_delay_24h ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <input 
+                      type="checkbox" 
+                      disabled={form.redemption_delay_24h || false}
+                      checked={form.redemption_has_voucher || false} 
+                      onChange={(event) => {
+                        update('redemption_has_voucher', event.target.checked);
+                        if (event.target.checked) update('redemption_delay_24h', false);
+                      }} 
+                      className="h-4 w-4 rounded" 
+                    />
+                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                    Gerar voucher de convênio
+                  </label>
+
+                  <label className={`flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-bold text-neutral-700 ${form.redemption_delay_24h ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <input 
+                      type="checkbox" 
+                      disabled={form.redemption_delay_24h || false}
+                      checked={form.redemption_has_link || false} 
+                      onChange={(event) => {
+                        update('redemption_has_link', event.target.checked);
+                        if (event.target.checked) update('redemption_delay_24h', false);
+                      }} 
+                      className="h-4 w-4 rounded" 
+                    />
+                    <Link2 className="h-4 w-4 text-indigo-600" />
+                    Disponibilizar link da parceria
+                  </label>
+                </div>
+
+                {(form.redemption_has_link && !form.redemption_delay_24h) && (
+                  <div className="space-y-3">
+                    <Field label="Link de destino da parceria" value={form.redemption_link || ''} onChange={(value) => update('redemption_link', value)} placeholder="https://parceiro.com.br/promocao-gsa" />
+                    <label className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/70 p-3.5 text-sm font-bold text-amber-950 cursor-pointer">
+                      <input type="checkbox" checked={form.redemption_auto_redirect || false} onChange={(event) => update('redemption_auto_redirect', event.target.checked)} className="mt-0.5 h-4 w-4 rounded text-amber-600" />
+                      <div>
+                        <span>Redirecionar cliente automaticamente para o parceiro ao resgatar</span>
+                        <p className="text-xs font-normal text-amber-800/80 mt-0.5">Se marcado, abre o link em nova aba automaticamente ao clicar em Resgatar Agora. Se desmarcado, exibe o link sem abrir sozinho.</p>
+                      </div>
+                    </label>
+                  </div>
+                )}
+
+                {/* Caixa de 24h Exclusiva */}
+                <label className={`flex items-start gap-3 rounded-xl border p-3.5 text-sm font-bold transition-all ${
+                  hasImmediate 
+                    ? 'border-neutral-200 bg-neutral-100/70 opacity-60 cursor-not-allowed text-neutral-500'
+                    : form.redemption_delay_24h
+                    ? 'border-amber-400 bg-amber-50 text-amber-950 cursor-pointer'
+                    : 'border-neutral-200 bg-white text-neutral-800 cursor-pointer hover:border-amber-300'
+                }`}>
+                  <input 
+                    type="checkbox" 
+                    disabled={hasImmediate}
+                    checked={hasImmediate ? false : (form.redemption_delay_24h || false)} 
+                    onChange={(event) => {
+                      if (!hasImmediate) {
+                        update('redemption_delay_24h', event.target.checked);
+                      }
+                    }} 
+                    className="mt-0.5 h-4 w-4 rounded text-amber-600 disabled:opacity-40" 
+                  />
+                  <div>
+                    <span>Exibir pop-up informando prazo de 24 horas para ativação via WhatsApp</span>
+                    <p className="text-xs font-normal mt-0.5">
+                      {hasImmediate ? (
+                        <span className="text-amber-800 font-semibold">
+                          ⚠️ Bloqueado: Desmarque o cupom, voucher e link acima para ativar o modo 24h.
+                        </span>
+                      ) : form.redemption_delay_24h ? (
+                        <span className="text-amber-900 font-medium">
+                          • Ao resgatar, o cliente verá o pop-up de 24h e o resgate ficará pendente no painel para inserção do link.
+                        </span>
+                      ) : (
+                        <span className="text-neutral-500">
+                          • Marque para exigir cadastro manual e envio do link de ativação em até 24h por WhatsApp.
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </label>
+
+                <Area label="Instruções e regras de utilização do benefício" value={form.redemption_instructions || ''} onChange={(value) => update('redemption_instructions', value)} rows={2} />
+              </div>
+            );
+          })()}
         </FormSection>
 
         <FormSection title="Controle interno" icon={<Users className="h-5 w-5" />}>

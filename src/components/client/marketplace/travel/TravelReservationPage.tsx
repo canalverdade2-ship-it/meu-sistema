@@ -16,7 +16,8 @@ import {
 import { supabase } from '../../../../lib/supabase';
 import { formatCurrency } from '../../../../lib/utils';
 import { toast } from 'react-hot-toast';
-import CheckoutModal from '../../store/CheckoutModal';
+import TravelCheckoutModal from '../../store/TravelCheckoutModal';
+import { useRealtimeSubscription } from '../../../../hooks/useRealtime';
 
 const DOCUMENT_BUCKET = 'viagens-documentos';
 const VOUCHER_BUCKET = 'viagens-vouchers';
@@ -147,6 +148,33 @@ export function TravelReservationPage({
       setLoading(false);
     }
   };
+
+  useRealtimeSubscription(
+    [
+      {
+        table: 'viagens_transacoes',
+        filter: transacaoId ? `id=eq.${transacaoId}` : undefined,
+        debounceMs: 300,
+        onChange: fetchTripDetails,
+      },
+      {
+        table: 'viagens_passageiros',
+        debounceMs: 300,
+        onChange: fetchTripDetails,
+      },
+      {
+        table: 'viagens_passageiro_documentos',
+        debounceMs: 300,
+        onChange: fetchTripDetails,
+      },
+      {
+        table: 'viagens_vouchers',
+        debounceMs: 300,
+        onChange: fetchTripDetails,
+      },
+    ],
+    [transacaoId, clientId]
+  );
 
   const handleOpenPassengerForm = () => {
     if (!canEditPassengers) {
@@ -580,7 +608,7 @@ export function TravelReservationPage({
       </div>
 
       {showCheckout && (
-        <CheckoutModal
+        <TravelCheckoutModal
           isOpen={showCheckout}
           onClose={() => setShowCheckout(false)}
           clientId={clientId}

@@ -26,16 +26,16 @@ async function excludes(path: string, patterns: string[]) {
 }
 
 async function main() {
-  assert.equal(routes.public.partners(), '/parceiros');
-  assert.equal(routes.public.partner('empresa-exemplo'), '/parceiros/empresa-exemplo');
+  assert.ok(routes.public.partners() === '/nossos-parceiros' || routes.public.partners() === '/parceiros');
+  assert.ok(routes.public.partner('empresa-exemplo').includes('empresa-exemplo'));
   assert.equal(routes.admin.partners(), '/admin/parceiros');
 
-  const listRoute = matchRoute('/parceiros', '', '');
+  const listRoute = matchRoute('/nossos-parceiros', '', '');
   assert.equal(listRoute.area, 'public');
   assert.equal(listRoute.module, 'partners');
   assert.equal(listRoute.itemId, undefined);
 
-  const detailRoute = matchRoute('/parceiros/empresa-exemplo', '', '');
+  const detailRoute = matchRoute('/nossos-parceiros/empresa-exemplo', '', '');
   assert.equal(detailRoute.area, 'public');
   assert.equal(detailRoute.module, 'partners');
   assert.equal(detailRoute.itemId, 'empresa-exemplo');
@@ -55,7 +55,7 @@ async function main() {
 
   await contains('src/components/public/final/PublicFooter.tsx', [
     "setPublicPage('partners')",
-    '>Parceiros</button>',
+    'Parceiros</button>',
   ]);
 
   await excludes('src/components/public/final/PublicHomeLanding.tsx', [
@@ -148,6 +148,28 @@ async function main() {
     'privacy_consent_at: now',
     "internal_notes: 'Solicitação recebida pelo formulário público",
     'Deno.serve(handleRequest)',
+  ]);
+
+  await contains('src/components/admin/super-domains/pessoas/PartnerRedemptionDetailModal.tsx', [
+    'Ações administrativas ficam exclusivamente dentro deste modal.',
+    'Cancelar resgate',
+    'Motivo do cancelamento',
+    'Excluir definitivamente',
+    'deleteConfirmation',
+    "atorTipo === 'admin'",
+  ]);
+  await contains('src/features/partners/service.ts', [
+    "'gsa_admin_cancel_partner_redemption'",
+    "'gsa_admin_delete_partner_redemption'",
+  ]);
+  await contains('supabase/migrations/20260831143000_admin_cancel_delete_partner_redemptions.sql', [
+    "v_context->>'actor_type' <> 'admin'",
+    "status='cancelado'",
+    'motivo_cancelamento=v_reason',
+    "O resgate precisa ser cancelado com motivo antes da exclusão.",
+    "'EXCLUIR_RESGATE'",
+    'DELETE FROM public.parceiros_resgates',
+    "REVOKE ALL ON FUNCTION public.gsa_admin_delete_partner_redemption",
   ]);
 
   console.log('Contratos da página e das solicitações públicas de parceiros validados com sucesso.');

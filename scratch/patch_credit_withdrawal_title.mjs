@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+const p='C:/Users/Adriano Farias/Downloads/remix-9.10_-grupo-gsa---gestão-de-serviços - Copia (4)/src/components/client/ClientMeuCredito.tsx';
+const original=fs.readFileSync(p,'utf8');
+const crlf=original.includes('\r\n');
+let s=original.replace(/\r\n/g,'\n');
+const a="    case 'cancelamento_limite': return 'Cancelamento do Limite de Crédito';\n";
+const b=a+"    case 'saque_credito': return 'Saque de Crédito GSA';\n";
+const count=s.split(a).length-1;if(count!==1)throw new Error(`anchor ${count}`);
+s=s.replace(a,b);
+fs.writeFileSync(p,crlf?s.replace(/\n/g,'\r\n'):s,'utf8');
+console.log('TITLE_OK');

@@ -144,9 +144,17 @@ BEGIN
        OR coalesce(item ->> 'item_id', '') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
        OR coalesce(item ->> 'quantidade', '') !~ '^[0-9]+$'
        OR (item ->> 'quantidade')::integer NOT BETWEEN 1 AND 100
+       OR (
+         nullif(item ->> 'variante_id', '') IS NOT NULL
+         AND item ->> 'variante_id' !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+       )
+       OR (
+         nullif(item ->> 'produto_variante_id', '') IS NOT NULL
+         AND item ->> 'produto_variante_id' !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+       )
        OR EXISTS (
          SELECT 1 FROM jsonb_object_keys(item) AS key_name
-         WHERE key_name NOT IN ('tipo', 'item_id', 'quantidade', 'prazo_meses')
+         WHERE key_name NOT IN ('tipo', 'item_id', 'quantidade', 'prazo_meses', 'variante_id', 'produto_variante_id')
        )
   ) THEN
     RAISE EXCEPTION 'O carrinho contém item inválido ou campo não permitido.';
@@ -170,17 +178,32 @@ BEGIN
           THEN (item ->> 'prazo_meses')::integer
           ELSE 1
         END
-      )
+      ),
+      'variante_id', nullif(coalesce(item ->> 'variante_id', item ->> 'produto_variante_id'), ''),
+      'produto_variante_id', nullif(coalesce(item ->> 'produto_variante_id', item ->> 'variante_id'), '')
     )
     FROM jsonb_array_elements(v_cart) AS e(item)
-    GROUP BY item ->> 'tipo', item ->> 'item_id'
-    ORDER BY item ->> 'tipo', item ->> 'item_id'
+    GROUP BY item ->> 'tipo', item ->> 'item_id', coalesce(item ->> 'variante_id', item ->> 'produto_variante_id')
+    ORDER BY item ->> 'tipo', item ->> 'item_id', coalesce(item ->> 'variante_id', item ->> 'produto_variante_id', '')
   LOOP
     IF v_item ->> 'tipo' = 'produto' THEN
       SELECT * INTO v_product
       FROM public.produtos
       WHERE id = (v_item ->> 'item_id')::uuid
       FOR UPDATE;
+
+      -- Use variant price if present
+      IF nullif(coalesce(v_item ->> 'variante_id', v_item ->> 'produto_variante_id'), '') IS NOT NULL THEN
+        DECLARE
+          v_variant_price numeric;
+        BEGIN
+          SELECT valor INTO v_variant_price FROM public.produto_variantes
+          WHERE id = (coalesce(v_item ->> 'variante_id', v_item ->> 'produto_variante_id'))::uuid;
+          IF v_variant_price IS NOT NULL THEN
+            v_product.valor := v_variant_price;
+          END IF;
+        END;
+      END IF;
 
       IF NOT FOUND
          OR v_product.status <> 'ativo'
@@ -222,6 +245,8 @@ BEGIN
         'subtotal', round(v_effective_price * (v_item ->> 'quantidade')::integer, 2),
         'categoria_id', v_product.categoria_id,
         'is_brinde', false, 'promocao_id', null,
+        'variante_id', nullif(coalesce(v_item ->> 'variante_id', v_item ->> 'produto_variante_id'), ''),
+        'produto_variante_id', nullif(coalesce(v_item ->> 'produto_variante_id', v_item ->> 'variante_id'), ''),
         
         -- Snapshot de valores do desconto individual
         'valor_original', round(v_regular_price, 2),
@@ -313,7 +338,6 @@ BEGIN
       AND pq.data_inicio <= now()
       AND (pq.data_fim IS NULL OR pq.data_fim >= now())
     ORDER BY coalesce(pq.prioridade, 10), pq.id
-    FOR UPDATE OF pq
   LOOP
     IF v_promo.tipo_promocao = 'combo'
        OR v_promo.escopo_gatilho = 'combo' THEN
@@ -376,9 +400,19 @@ BEGIN
         CONTINUE;
       END IF;
       v_gift_qty := greatest(coalesce(v_promo.quantidade_brinde, 1), 1) * v_times;
-      IF coalesce(v_product.controle_estoque, false)
-         AND coalesce(v_product.estoque_disponivel, 0) < v_gift_qty THEN
-        CONTINUE;
+      IF coalesce(v_product.controle_estoque, false) THEN
+        -- Avaliar se o carrinho já contém esse item
+        DECLARE
+          v_carrinho_qty integer := 0;
+        BEGIN
+          SELECT sum((e.item ->> 'quantidade')::integer) INTO v_carrinho_qty
+          FROM jsonb_array_elements(v_cart) AS e(item)
+          WHERE e.item ->> 'item_id' = v_promo.produto_brinde_id::text;
+          
+          IF coalesce(v_product.estoque_disponivel, 0) < (v_gift_qty + coalesce(v_carrinho_qty, 0)) THEN
+            CONTINUE;
+          END IF;
+        END;
       END IF;
       
       -- Ganhe Outro Produto Brinde (usa preço original do brinde para salvar)
@@ -654,16 +688,19 @@ BEGIN
     v_installments := 1;
   END IF;
 
-  FOR v_item IN SELECT entry FROM jsonb_array_elements(v_items) AS x(entry)
+  FOR v_item IN
+    SELECT entry
+    FROM jsonb_array_elements(v_items) AS x(entry)
+    ORDER BY entry ->> 'tipo', entry ->> 'item_id', coalesce(entry ->> 'variante_id', entry ->> 'produto_variante_id', '')
   LOOP
-    IF entry ->> 'tipo' = 'produto' THEN
-      SELECT * INTO v_product FROM public.produtos WHERE id = (entry ->> 'item_id')::uuid FOR UPDATE;
+    IF v_item ->> 'tipo' = 'produto' THEN
+      SELECT * INTO v_product FROM public.produtos WHERE id = (v_item ->> 'item_id')::uuid FOR UPDATE;
       IF coalesce(v_product.controle_estoque, false) THEN
-        IF coalesce(v_product.estoque_disponivel, 0) < (entry ->> 'quantidade')::integer THEN
+        IF coalesce(v_product.estoque_disponivel, 0) < (v_item ->> 'quantidade')::integer THEN
           RAISE EXCEPTION 'Estoque insuficiente para %.', v_product.nome;
         END IF;
         UPDATE public.produtos
-        SET estoque_disponivel = estoque_disponivel - (entry ->> 'quantidade')::integer
+        SET estoque_disponivel = estoque_disponivel - (v_item ->> 'quantidade')::integer
         WHERE id = v_product.id;
       END IF;
     END IF;
@@ -740,7 +777,8 @@ BEGIN
     
     -- Novas colunas de desconto
     valor_original, desconto_produto_unitario, desconto_produto_percentual,
-    desconto_produto_tipo, desconto_produto_configurado
+    desconto_produto_tipo, desconto_produto_configurado,
+    produto_variante_id
   )
   SELECT
     v_orcamento_id, v_actor.cliente_id, entry ->> 'tipo', (entry ->> 'item_id')::uuid,
@@ -760,17 +798,19 @@ BEGIN
     coalesce((entry ->> 'desconto_produto_unitario')::numeric, 0.00),
     coalesce((entry ->> 'desconto_produto_percentual')::numeric, 0.00),
     entry ->> 'desconto_produto_tipo',
-    (entry ->> 'desconto_produto_configurado')::numeric
+    (entry ->> 'desconto_produto_configurado')::numeric,
+    nullif(coalesce(entry ->> 'produto_variante_id', entry ->> 'variante_id'), '')::uuid
   FROM jsonb_array_elements(v_items) AS x(entry);
 
   FOR v_item IN SELECT entry FROM jsonb_array_elements(v_items) AS x(entry)
   LOOP
     IF v_item ->> 'tipo' = 'produto' THEN
       INSERT INTO public.ordens_compra(
-        codigo_ordem, produto_id, cliente_id, status, quantidade, orcamento_id
+        codigo_ordem, produto_id, cliente_id, status, quantidade, orcamento_id, produto_variante_id
       ) VALUES (
         public.gsa_generate_code('OC'), (v_item ->> 'item_id')::uuid,
-        v_actor.cliente_id, v_order_status, (v_item ->> 'quantidade')::integer, v_orcamento_id
+        v_actor.cliente_id, v_order_status, (v_item ->> 'quantidade')::integer, v_orcamento_id,
+        nullif(coalesce(v_item ->> 'produto_variante_id', v_item ->> 'variante_id'), '')::uuid
       ) RETURNING id INTO v_order_id;
       v_first_purchase_order := coalesce(v_first_purchase_order, v_order_id);
     ELSIF v_item ->> 'tipo' = 'assinatura' THEN
@@ -909,6 +949,49 @@ BEGIN
         format('Parcela %s/%s do pedido %s', v_i, v_installments, v_code)
       ) RETURNING id INTO v_invoice_id;
     END LOOP;
+  END IF;
+
+  IF v_payment_method = 'outros' THEN
+    -- Gerar 1 fatura pendente para integração InfinitePay evitar faturas órfãs
+    SELECT coalesce(jsonb_agg(
+      entry || jsonb_build_object(
+        'subtotal_original', (entry ->> 'subtotal')::numeric,
+        'parcela', 1,
+        'total_parcelas', 1
+      )
+      ORDER BY entry ->> 'tipo', entry ->> 'nome'
+    ), '[]'::jsonb)
+    INTO v_invoice_items
+    FROM jsonb_array_elements(v_items) AS x(entry);
+
+    INSERT INTO public.faturas(
+      codigo_fatura, cliente_id, orcamento_id,
+      ordem_compra_id, ordem_assinatura_id, os_id,
+      valor_total, valor_final_pendente, status, tipo,
+      data_emissao, data_vencimento, gerada_automaticamente,
+      is_amortizacao_credito, forma_pagamento_escolhida,
+      itens_faturados, valor_base_original,
+      desconto_promocional_aplicado, desconto_voucher_aplicado,
+      desconto_pontos_aplicado, abatimento_carteira_aplicado,
+      acrescimo_manual, observacoes
+    ) VALUES (
+      'FAT-EXT-' || v_code || '-1/1',
+      v_actor.cliente_id, v_orcamento_id,
+      v_first_purchase_order, v_first_subscription_order, v_first_service_order,
+      v_total, v_total, 'pendente',
+      CASE WHEN v_first_purchase_order IS NOT NULL THEN 'produto'
+           WHEN v_first_subscription_order IS NOT NULL THEN 'assinatura'
+           ELSE 'servico' END,
+      current_date, current_date, true,
+      false, 'outros', v_invoice_items,
+      v_subtotal,
+      v_promo_discount,
+      v_coupon_discount,
+      v_points_discount,
+      v_wallet_discount,
+      v_interest,
+      'Fatura externa gerada para processamento.'
+    ) RETURNING id INTO v_invoice_id;
   END IF;
 
   DELETE FROM public.loja_carrinhos WHERE cliente_id = v_actor.cliente_id;

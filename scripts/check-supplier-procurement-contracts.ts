@@ -162,6 +162,35 @@ async function main() {
     'Pagamento confirmado',
   ]);
 
+  await contains('supabase/migrations/20260829232500_supplier_security_financial_hardening.sql', [
+    'DROP POLICY IF EXISTS "Allow All Access"',
+    'REVOKE ALL ON TABLE',
+    "'documentos_fornecedor'",
+    'gsa_admin_review_supplier_bank_change',
+    'gsa_admin_supplier_financial_anomalies',
+    'v_calculated_total',
+    'Valor total da nota divergente do pedido',
+    'v_expected_total',
+  ]);
+  await contains('supabase/migrations/20260829234000_secure_supplier_product_config_tables.sql', [
+    'produto_fornecedor_config',
+    'produtos_fornecedores_config',
+    'REVOKE ALL ON TABLE',
+  ]);
+  await excludes('src/pages/Fornecedor/FornecedorDashboard.tsx', [
+    ".from('fornecedores')",
+    '<Field label="Valor total da nota"',
+  ]);
+  await contains('src/pages/Fornecedor/FornecedorDashboard.tsx', [
+    'Total conciliado com o pedido',
+    'Alterações bancárias aguardam análise do sistema',
+  ]);
+  await contains('src/components/admin/FornecedoresModule.tsx', [
+    'reviewAdminSupplierBankChange',
+    'Conciliação financeira pendente',
+    'Alteração bancária pendente',
+  ]);
+
   const stockUpdate = operations.indexOf('UPDATE public.produtos', operations.indexOf('gsa_admin_review_supplier_delivery'));
   const historyInsert = operations.indexOf('INSERT INTO public.loja_estoque_historico', stockUpdate);
   const payableInsert = operations.indexOf('INSERT INTO public.contas_pagar', historyInsert);

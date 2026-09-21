@@ -23,6 +23,8 @@ import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
 import { supabase } from '../../lib/supabase';
 import { formatCurrency, formatDate, maskCPF, maskPhone } from '../../lib/utils';
+import { CareerVacanciesManager } from './CareerVacanciesManager';
+import { dispatchCareerStatusNotification } from '../../lib/careerNotifications';
 
 const CAREER_BUCKET = 'gsa-careers-resumes';
 
@@ -121,7 +123,10 @@ export function CareersAdminModule() {
 
   useEffect(() => {
     void fetchApplications();
-    const interval = window.setInterval(() => void fetchApplications(true), 20_000);
+  }, [fetchApplications]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => void fetchApplications(true), 15_000);
     return () => window.clearInterval(interval);
   }, [fetchApplications]);
 
@@ -202,6 +207,7 @@ export function CareersAdminModule() {
       setInterviewAt(toDateTimeLocal(updated.interview_at));
       setInterviewLocation(updated.interview_location || '');
       toast.success('Etapa atualizada e registrada no histórico.');
+      void dispatchCareerStatusNotification(updated);
       await fetchApplications(true);
     } catch (error) {
       console.error('Falha ao atualizar candidatura:', error);
@@ -279,7 +285,7 @@ export function CareersAdminModule() {
         <div>
           <span className="text-xs font-black uppercase tracking-widest text-emerald-600">Recursos Humanos & Seleção</span>
           <h1 className="mt-1 text-2xl font-black text-neutral-900 sm:text-3xl">Gestão de Candidaturas</h1>
-          <p className="mt-1 text-xs text-neutral-500">Dados centralizados, histórico auditável e sincronização automática a cada 20 segundos.</p>
+          <p className="mt-1 text-xs text-neutral-500">Dados centralizados, histórico auditável e sincronização em tempo real.</p>
         </div>
         <button onClick={() => void fetchApplications()} disabled={loading} className="inline-flex items-center justify-center gap-2 rounded-xl bg-neutral-100 px-4 py-2.5 text-xs font-bold text-neutral-700 hover:bg-neutral-200 disabled:opacity-60">
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> Atualizar banco
@@ -292,6 +298,8 @@ export function CareersAdminModule() {
         <Metric title="Em processo" value={metrics.active} icon={Search} />
         <Metric title="Finalizadas" value={metrics.completed} icon={ShieldCheck} />
       </div>
+
+      <CareerVacanciesManager />
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">

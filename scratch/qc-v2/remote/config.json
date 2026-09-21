@@ -1,0 +1,12 @@
+{
+  "output":"output/gsa-tv-chamada-grade-v2-visual.mp4",
+  "sections":[
+    {"name":"institucional","start":0,"end":7,"title":"GSA TV","subtitle":"UM UNIVERSO DE CONTEÚDO","logos":[]},
+    {"name":"jornalismo","start":7,"end":22,"title":"INFORMAÇÃO EM MOVIMENTO","subtitle":"JORNALISMO","logos":["gsa-manha-news.png","gsa-meio-dia-news.png","gsa-news-noite.png","gsa-tempo.png"]},
+    {"name":"futuro","start":22,"end":38,"title":"PRESENTE E FUTURO","subtitle":"CONHECIMENTO","logos":["gsa-mercado.png","gsa-cidadania.png","gsa-business.png","gsa-tech.png","gsa-motor.png"]},
+    {"name":"vida","start":38,"end":53,"title":"CAMINHOS QUE APROXIMAM","subtitle":"VIDA E MUNDO","logos":["gsa-agro.png","gsa-mundo.png","gsa-destinos.png","gsa-bem-viver.png","gsa-sabor.png"]},
+    {"name":"fe","start":53,"end":65,"title":"PALAVRA QUE FORTALECE","subtitle":"FÉ E INSPIRAÇÃO","logos":["gsa-em-fe.png","gsa-hora-da-palavra.png","gsa-historias-da-biblia.png"]},
+    {"name":"entretenimento","start":65,"end":78,"title":"EMOÇÃO PARA TODA A FAMÍLIA","subtitle":"ENTRETENIMENTO","logos":["gsa-music.png","gsa-ta-na-rede.png","gsa-esportes.png","gsa-cinema.png","gsa-sessao-pipoca.png","gsa-desenhos.png","gsa-planeta-terra.png","gsa-misterios.png"]},
+    {"name":"climax","start":78,"end":85,"title":"GSA TV","subtitle":"25 ATRAÇÕES","logos":[]}
+  ]
+}

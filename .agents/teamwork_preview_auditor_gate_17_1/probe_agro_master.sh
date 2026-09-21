@@ -1,0 +1,1 @@
+docker run --rm -i --user 1000:1000 -v /opt:/opt -v /home:/home -v /tmp:/tmp gsa-tv/control-plane:1.8.7 ffprobe -v error -show_entries format=duration,size,bit_rate:stream=codec_name,width,height,r_frame_rate,sample_rate,channels -of json /opt/gsa-tv/cache/media/1/program-masters/gsa-agro-master.mp4

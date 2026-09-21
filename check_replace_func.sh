@@ -1,0 +1,2 @@
+PGPASSWORD='GSA_SENHA_FORTE_2026' psql -h 127.0.0.1 -p 5433 -U supabase_admin -d gsahub -c "SELECT pg_get_functiondef(oid) FROM pg_proc WHERE proname = 'gsa_replace_product_variations';" > /tmp/func_def.txt 2>&1
+head -80 /tmp/func_def.txt

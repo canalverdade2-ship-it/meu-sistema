@@ -1,0 +1,6 @@
+$ErrorActionPreference = 'Stop'
+$filter = "drawbox=x=iw-430:y=42:w=394:h=44:color=0x07111f@0.94:t=fill:enable='between(t,20,289.99)+between(t,425,769.99)',drawbox=x=iw-430:y=42:w=5:h=44:color=0xc5a24d:t=fill:enable='between(t,20,289.99)+between(t,425,769.99)',drawbox=x=iw-290:y=86:w=254:h=32:color=0xc5a24d@0.96:t=fill:enable='between(t,20,289.99)+between(t,425,769.99)',drawtext=font='Arial':text='GSA Histórias da Bíblia':fontcolor=white:fontsize=25:x=w-412:y=53:enable='between(t,20,289.99)+between(t,425,769.99)',drawtext=font='Arial':text='O Filho Pródigo':fontcolor=0x07111f:fontsize=21:x=w-271:y=92:enable='between(t,20,289.99)+between(t,425,769.99)'"
+$filter = $filter.Replace('iw-430','36').Replace('iw-290','36').Replace('w-412','54').Replace('w-271','55')
+& ffmpeg -y -hide_banner -loglevel warning -i scratch/bible-episode-assets/master-original.mp4 -vf $filter -c:v libx264 -threads 4 -preset veryfast -crf 19 -pix_fmt yuv420p -c:a copy -movflags +faststart scratch/bible-episode-assets/master-tag.mp4
+if ($LASTEXITCODE -ne 0) { throw 'Render failed' }
+& ffmpeg -y -hide_banner -loglevel error -ss 150 -i scratch/bible-episode-assets/master-tag.mp4 -frames:v 1 scratch/bible-episode-assets/tag-preview.jpg

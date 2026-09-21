@@ -1,0 +1,26 @@
+import fs from 'node:fs';
+const p='src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx';
+let s=fs.readFileSync(p,'utf8').replace(/\r\n/g,'\n');
+function once(re,rep,label){const m=[...s.matchAll(new RegExp(re.source,re.flags.includes('g')?re.flags:re.flags+'g'))];if(m.length!==1)throw new Error(`${label}: ${m.length}`);s=s.replace(re,rep);}
+s=s.replace("import { useRealtimeSubscription } from '../../../../hooks/useRealtime';\n",'');
+s=s.replace("import { notificationService } from '../../../../lib/notificationService';\n",'');
+once(/(import \{ PainelRentabilidade \} from '\.\.\/\.\.\/PainelRentabilidade';)/, `$1\nimport { callAdminRpc } from '../../../../lib/adminRpc';`, 'admin rpc import');
+once(/(const \[paymentMethod, setPaymentMethod\] = useState\('pix_estorno'\);)/, `$1\n  const [paymentReference, setPaymentReference] = useState('');`, 'reference state');
+once(/const fetchReembolsos = async \(\) => \{[\s\S]*?\n  \};\n\n  useEffect/, `const fetchReembolsos = async () => {\n    setLoadingReembolsos(true);\n    try {\n      const data = await callAdminRpc<any[]>('gsa_admin_list_store_refunds');\n      setReembolsos(Array.isArray(data) ? data : []);\n    } catch (err) {\n      console.error('Erro ao buscar reembolsos:', err);\n      toast.error('Erro ao carregar reembolsos.');\n    } finally {\n      setLoadingReembolsos(false);\n    }\n  };\n\n  useEffect`, 'fetch refunds');
+s=s.replace("\n  useRealtimeSubscription({ table: 'loja_reembolsos', onChange: fetchReembolsos });\n",'\n');
+once(/const handleConfirmRefundPayment = async \(\) => \{[\s\S]*?\n  \};\n\n  \/\/ ── TacticalDataGrid/, `const handleConfirmRefundPayment = async () => {\n    if (!selectedRefund) return;\n    setIsSubmittingPayment(true);\n    try {\n      const isWallet = paymentMethod === 'credito_carteira';\n      const isAwaiting = selectedRefund.status === 'aguardando_estorno';\n      const action = isWallet ? 'credito_carteira' : (isAwaiting ? 'confirmar_externo' : 'aprovar_externo');\n      if (action === 'confirmar_externo' && !paymentReference.trim()) {\n        throw new Error('Informe a referência/comprovante do estorno externo.');\n      }\n      const result = await callAdminRpc<any>('gsa_admin_process_store_refund', {\n        p_reembolso_id: selectedRefund.id, p_acao: action, p_metodo: paymentMethod,\n        p_referencia: paymentReference.trim() || null, p_comprovante_url: null, p_observacoes: paymentNotes.trim() || null,\n      });\n      toast.success(result?.status === 'pago' ? 'Reembolso liquidado com segurança.' : 'Reembolso enviado para confirmação do estorno externo.');\n      setIsPayRefundOpen(false); setIsRefundDrawerOpen(false); setPaymentReference('');\n      await fetchReembolsos();\n    } catch (err: any) { toast.error(err?.message || 'Erro ao processar reembolso.'); }\n    finally { setIsSubmittingPayment(false); }\n  };\n\n  // ── TacticalDataGrid`, 'refund handler');
+s=s.replace(/row\.clientes\?\.nome/g,'row.cliente_nome');
+s=s.replace(/row\.clientes\?\.cpf \|\| row\.clientes\?\.email/g,'row.cliente_email');
+s=s.replace(/row\.valor\b/g,'row.valor_reembolso');
+s=s.replace(/row\.motivo\b/g,'row.motivo_cancelamento');
+s=s.replace(/selectedRefund\.clientes\?\.nome/g,'selectedRefund.cliente_nome');
+s=s.replace(/selectedRefund\.clientes\?\.cpf \|\| selectedRefund\.clientes\?\.email/g,'selectedRefund.cliente_email');
+s=s.replace(/selectedRefund\.valor\b/g,'selectedRefund.valor_reembolso');
+s=s.replace(/selectedRefund\.motivo\b/g,'selectedRefund.motivo_cancelamento');
+s=s.replace("{row.status === 'pendente' && (", "{['pendente', 'aguardando_estorno'].includes(row.status) && (");
+s=s.replace("setPaymentMethod('pix_estorno');\n                setIsPayRefundOpen(true);", "setPaymentMethod(row.metodo_reembolso || 'pix_estorno');\n                setPaymentReference('');\n                setIsPayRefundOpen(true);");
+s=s.replace('<span>Estornar</span>', "<span>{row.status === 'aguardando_estorno' ? 'Confirmar' : 'Estornar'}</span>");
+s=s.replace("label: 'Confirmar Estorno',", "label: selectedRefund?.status === 'aguardando_estorno' ? 'Confirmar Estorno Externo' : 'Processar Reembolso',");
+once(/(\s+<div className="space-y-1\.5">\n\s+<label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">\n\s+Observações \/ Comprovante)/, `\n          {paymentMethod !== 'credito_carteira' && selectedRefund?.status === 'aguardando_estorno' && (\n            <div className="space-y-1.5">\n              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">Referência do Estorno *</label>\n              <input value={paymentReference} onChange={(e) => setPaymentReference(e.target.value)} placeholder="ID/NSU/referência do provedor" className="w-full bg-white border border-slate-200 rounded-lg p-2 text-slate-900 shadow-2xs" />\n            </div>\n          )}\n$1`, 'reference input');
+fs.writeFileSync(p,s,'utf8');
+console.log('REFUND_VIEW_PATCHED');

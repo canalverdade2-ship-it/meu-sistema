@@ -758,12 +758,13 @@ function VoucherForm({ onSubmit, onCancel }: { onSubmit: (data: any) => Promise<
           <label className="mb-1 block text-sm font-bold text-neutral-700">
             {formData.tipo_valor === 'valor' ? 'Valor (R$) *' : 'Porcentagem (%) *'}
           </label>
-          <input 
+          <input  
             type={formData.tipo_valor === 'valor' ? "text" : "number"} 
             step={formData.tipo_valor === 'valor' ? "0.01" : "1"}
             required
             value={formData.tipo_valor === 'valor' ? maskCurrency(formData.valor) : formData.valor}
-            onChange={e => {
+            inputMode="decimal"
+            onChange={(e) => {
               if (formData.tipo_valor === 'valor') {
                 handleCurrencyInputChange(e.target.value, (val) => setFormData({...formData, valor: val.toString()}));
               } else {
@@ -775,10 +776,11 @@ function VoucherForm({ onSubmit, onCancel }: { onSubmit: (data: any) => Promise<
         </div>
         <div>
           <label className="mb-1 block text-sm font-bold text-neutral-700">Limite de Usos *</label>
-          <input 
+          <input  
             type="number" 
             required
             value={formData.usage_limit}
+            inputMode="numeric"
             onChange={e => setFormData({...formData, usage_limit: e.target.value})}
             className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none"
           />

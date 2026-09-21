@@ -19,3 +19,9 @@ coverage/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Ignore large media files
+scratch/**/*.mp4
+production/**/*.mp4
+assets/**/*.mp4
+*.mp4

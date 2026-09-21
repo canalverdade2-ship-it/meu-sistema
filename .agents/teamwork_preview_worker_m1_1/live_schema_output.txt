@@ -1,0 +1,96 @@
+id|uuid
+codigo_orcamento|text
+cliente_id|uuid
+servico_id|uuid
+produto_id|uuid
+assinatura_id|uuid
+categoria|text
+observacoes_servico|text
+valor_servico|numeric
+valor_produto|numeric
+valor_assinatura|numeric
+valor_adicional|numeric
+descricao_adicional|text
+acrescimo|numeric
+desconto|numeric
+promocao_desconto_manual|numeric
+total|numeric
+status|text
+data_criacao|timestamp with time zone
+desconto_solicitado_porcentagem|numeric
+motivo_desconto|text
+proposta_admin_porcentagem|numeric
+fase_negociacao|text
+quantidade_meses|integer
+quantidade|integer
+prazo_indeterminado|boolean
+promocao_id|uuid
+origem_renovacao_id|uuid
+tipo_renovacao|text
+motivo_cancelamento|text
+anexos|jsonb
+documentos_solicitados|jsonb
+dia_vencimento|integer
+data_emissao|date
+titulo_solicitacao|text
+descricao_solicitacao|text
+nivel_prioridade|text
+comprovante_concorrente|text
+comprovante_concorrente_urls|jsonb
+emprestimo_nome_completo|text
+emprestimo_data_nascimento|date
+emprestimo_rg|text
+emprestimo_cpf|text
+emprestimo_telefone|text
+emprestimo_cep|text
+emprestimo_numero_casa|text
+emprestimo_endereco_rua|text
+emprestimo_endereco_bairro|text
+emprestimo_endereco_cidade|text
+emprestimo_endereco_uf|text
+emprestimo_email|text
+emprestimo_valor_desejado|numeric
+emprestimo_parcelas_desejadas|integer
+emprestimo_data_desejada|date
+cupom_desconto_id|uuid
+cupom_entrega_id|uuid
+endereco_entrega|jsonb
+taxa_entrega|numeric
+entrega_cupom_aplicado|boolean
+origem_gsa_store|boolean
+status_entrega|text
+rastreio_codigo|text
+rastreio_transportadora|text
+data_pagamento_aprovado|timestamp with time zone
+data_separacao|timestamp with time zone
+data_envio|timestamp with time zone
+data_entrega|timestamp with time zone
+status_quitacao_credito|text
+valor_quitacao_acordo|numeric
+contato_publico|jsonb
+public_request_hash|text
+checkout_request_id|uuid
+subtotal_itens|numeric
+desconto_promocional|numeric
+desconto_cupom|numeric
+desconto_pontos|numeric
+abatimento_carteira|numeric
+forma_pagamento_loja|text
+parcelas_credito|integer
+total_contrato|numeric
+subtotal_preco_tabela|numeric
+desconto_produtos|numeric
+affiliate_attribution_id|uuid
+pacote_servico_id|uuid
+idx_orcamentos_assinatura_id|CREATE INDEX idx_orcamentos_assinatura_id ON public.orcamentos USING btree (assinatura_id)
+idx_orcamentos_cliente_id|CREATE INDEX idx_orcamentos_cliente_id ON public.orcamentos USING btree (cliente_id)
+idx_orcamentos_cliente_store_created|CREATE INDEX idx_orcamentos_cliente_store_created ON public.orcamentos USING btree (cliente_id, data_criacao DESC) WHERE (origem_gsa_store IS TRUE)
+idx_orcamentos_pacote_servico|CREATE INDEX idx_orcamentos_pacote_servico ON public.orcamentos USING btree (pacote_servico_id)
+idx_orcamentos_produto_id|CREATE INDEX idx_orcamentos_produto_id ON public.orcamentos USING btree (produto_id)
+idx_orcamentos_promocao_id|CREATE INDEX idx_orcamentos_promocao_id ON public.orcamentos USING btree (promocao_id)
+idx_orcamentos_servico_id|CREATE INDEX idx_orcamentos_servico_id ON public.orcamentos USING btree (servico_id)
+idx_orcamentos_status_cliente|CREATE INDEX idx_orcamentos_status_cliente ON public.orcamentos USING btree (status, cliente_id)
+orcamentos_codigo_orcamento_key|CREATE UNIQUE INDEX orcamentos_codigo_orcamento_key ON public.orcamentos USING btree (codigo_orcamento)
+orcamentos_pkey|CREATE UNIQUE INDEX orcamentos_pkey ON public.orcamentos USING btree (id)
+uq_orcamentos_checkout_request|CREATE UNIQUE INDEX uq_orcamentos_checkout_request ON public.orcamentos USING btree (checkout_request_id) WHERE (checkout_request_id IS NOT NULL)
+uq_orcamentos_public_request_hash|CREATE UNIQUE INDEX uq_orcamentos_public_request_hash ON public.orcamentos USING btree (public_request_hash) WHERE (public_request_hash IS NOT NULL)

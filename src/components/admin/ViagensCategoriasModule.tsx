@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { callAdminRpc } from '../../lib/adminRpc';
+import { callAdminRpc, createAdminRequestId } from '../../lib/adminRpc';
 import { Modal } from '../ui/Modal';
 import { EmptyState } from '../ui/EmptyState';
 import { toast } from 'react-hot-toast';
 import { Plus, Edit, Trash2, ListTree, RefreshCw, Loader2, CheckCircle2, XCircle, Map as MapIcon } from 'lucide-react';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 interface ViagemCategoria {
   id: string;
@@ -24,24 +25,15 @@ export function ViagensCategoriasModule() {
 
   useEffect(() => {
     loadData();
-
-    const channel = supabase
-      .channel('realtime_viagens_categorias')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'viagens_categorias' },
-        () => {
-          loadData();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
-  const loadData = async () => {
+  useRealtimeSubscription({
+    table: 'viagens_categorias',
+    onChange: loadData,
+    debounceMs: 300,
+  });
+
+  async function loadData() {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -131,8 +123,10 @@ export function ViagensCategoriasModule() {
 
     const toastId = toast.loading('Excluindo...');
     try {
-      const { error } = await supabase.from('viagens_categorias').delete().eq('id', item.id);
-      if (error) throw error;
+      await callAdminRpc('gsa_admin_delete_travel_category', {
+        p_categoria_id: item.id,
+        p_request_id: createAdminRequestId(),
+      });
       toast.success('Categoria excluída!', { id: toastId });
       loadData();
     } catch (err: any) {
@@ -242,10 +236,11 @@ export function ViagensCategoriasModule() {
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-neutral-700">Ordem</label>
-                <input
+                <input 
                   type="number"
                   value={editingItem?.ordem || 0}
-                  onChange={(e) => setEditingItem({ ...editingItem, ordem: Number(e.target.value) })}
+                  inputMode="numeric"
+onChange={(e) => setEditingItem({ ...editingItem, ordem: Number(e.target.value) })}
                   className="w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 />
               </div>

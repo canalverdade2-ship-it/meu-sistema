@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Cliente } from '../../types';
 import { formatCurrency, playPremiumBeep } from '../../lib/utils';
@@ -7,6 +7,7 @@ import confetti from 'canvas-confetti';
 import { motion } from 'framer-motion';
 import { useVipLevels } from '../../hooks/useVipLevels';
 import { useClientNotifications } from '../../hooks/useClientNotifications';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import { PaymentModal } from './financeiro/PaymentModal';
 import { SaquesList, CarteiraInfo } from './financeiro/SaquesList';
 import { ExtratoList } from './financeiro/ExtratoList';
@@ -171,56 +172,6 @@ export function ClientFinanceiro({
       fetchSaldo();
     }
 
-    const channelCliente = supabase
-      .channel('client-financeiro-cliente-updates')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'clientes',
-        filter: `id=eq.${clientId}`
-      }, () => {
-        fetchSaldo();
-      })
-      .subscribe();
-
-    const channelFaturas = supabase
-      .channel('client-financeiro-faturas-updates')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'faturas',
-        filter: `cliente_id=eq.${clientId}`
-      }, () => {
-        fetchSaldo();
-        checkFaturas();
-      })
-      .subscribe();
-
-    const channelTickets = supabase
-      .channel('client-financeiro-tickets-updates')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'tickets',
-        filter: `cliente_id=eq.${clientId}`
-      }, () => {
-        checkActiveRequest();
-        checkActiveMinRequest();
-      })
-      .subscribe();
-
-    const channelSettings = supabase
-      .channel('client-financeiro-settings-updates')
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'system_settings',
-        filter: `key=eq.valor_minimo_saque`
-      }, () => {
-        fetchMinSaque();
-      })
-      .subscribe();
-
     // Check for redemption success in URL
     const params = new URLSearchParams(window.location.search);
     if (params.get('redemption') === 'success') {
@@ -238,13 +189,60 @@ export function ClientFinanceiro({
     window.addEventListener('voucher-redeemed', handleRedemption);
 
     return () => {
-      supabase.removeChannel(channelCliente);
-      supabase.removeChannel(channelFaturas);
-      supabase.removeChannel(channelTickets);
-      supabase.removeChannel(channelSettings);
       window.removeEventListener('voucher-redeemed', handleRedemption);
     };
   }, [clientId, clienteProp]);
+
+  useRealtimeSubscription(
+    [
+      {
+        table: 'clientes',
+        filter: clientId ? `id=eq.${clientId}` : undefined,
+        onChange: fetchSaldo,
+      },
+      {
+        table: 'faturas',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: () => {
+          fetchSaldo();
+          checkFaturas();
+        },
+      },
+      {
+        table: 'saques',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: fetchSaldo,
+      },
+      {
+        table: 'transferencias',
+        onChange: fetchSaldo,
+      },
+      {
+        table: 'carteira_lancamentos',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: fetchSaldo,
+      },
+      {
+        table: 'ordens_fiscais',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: fetchSaldo,
+      },
+      {
+        table: 'tickets',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: () => {
+          checkActiveRequest();
+          checkActiveMinRequest();
+        },
+      },
+      {
+        table: 'system_settings',
+        filter: 'key=eq.valor_minimo_saque',
+        onChange: fetchMinSaque,
+      },
+    ],
+    [clientId]
+  );
 
   const triggerConfetti = () => {
     const end = Date.now() + 2000;
@@ -272,7 +270,7 @@ export function ClientFinanceiro({
     }());
   };
 
-  const fetchSaldo = async () => {
+  async function fetchSaldo() {
     const { data } = await supabase
       .from('clientes')
       .select('*, client_levels!nivel_id(*)')
@@ -293,7 +291,7 @@ export function ClientFinanceiro({
     }
   };
 
-  const fetchMinSaque = async () => {
+  async function fetchMinSaque() {
     try {
       const { data } = await supabase.from('system_settings').select('value').eq('key', 'valor_minimo_saque').maybeSingle();
       if (data) setMinSaque(parseFloat(data.value));

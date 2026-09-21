@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Search, MoreHorizontal, Calendar, CheckCircle, XCircle, Layers, ShieldCheck, AlertTriangle, Receipt, DollarSign, Info } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Search, MoreHorizontal, Calendar, CheckCircle, XCircle, Layers, ShieldCheck, AlertTriangle, Receipt, DollarSign, Info, Trash2, ShieldAlert } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Modal } from '../ui/Modal';
 import { formatCurrency, formatDate, handleError, generateUUID } from '../../lib/utils';
@@ -11,6 +11,8 @@ import { AdminWhatsAppButton } from './ui/AdminWhatsAppButton';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
 import { sessionService } from '../../lib/sessionService';
 import { activateAdminSubscription } from '../../lib/adminStoreOperations';
+import { deleteAdminEntityCascade } from '../../lib/adminRpc';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 const getAdminSessionForRpc = () => {
   const session = sessionService.getCurrentSession();
@@ -46,6 +48,9 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
   const [mesesProrrogacao, setMesesProrrogacao] = useState<number>(1);
   const [dataCancelamento, setDataCancelamento] = useState<string>('');
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
   const [isSubmittingSubscriptionAction, setIsSubmittingSubscriptionAction] = useState(false);
   const extensionRequestId = useRef(generateUUID());
   const cancellationRequestId = useRef(generateUUID());
@@ -76,26 +81,8 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
     }
   }, [initialItemId, ordens]);
 
-  useEffect(() => {
-    fetchOrdens();
 
-    const channel = supabase
-      .channel('admin-ordens-assinatura-updates')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'ordens_assinatura'
-      }, () => {
-        fetchOrdens();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeTab, search, filters]);
-
-  const fetchOrdens = async () => {
+  const fetchOrdens = useCallback(async () => {
     let selectStr = '*, assinaturas(nome, valor), clientes(nome), faturas(*), orcamentos(*)';
     if (search) {
       selectStr = '*, assinaturas!inner(nome, valor), clientes(nome), faturas(*), orcamentos(*)';
@@ -132,7 +119,19 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
     if (data) {
       setOrdens(data);
     }
-  };
+  }, [activeTab, search, filters]);
+
+  useEffect(() => {
+    fetchOrdens();
+  }, [fetchOrdens]);
+
+  useRealtimeSubscription([
+    { table: 'ordens_assinatura', onChange: fetchOrdens, debounceMs: 300 },
+    { table: 'assinaturas', onChange: fetchOrdens, debounceMs: 300 },
+    { table: 'faturas', onChange: fetchOrdens, debounceMs: 300 },
+    { table: 'orcamentos', onChange: fetchOrdens, debounceMs: 300 },
+    { table: 'clientes', onChange: fetchOrdens, debounceMs: 300 },
+  ], [fetchOrdens]);
 
   const executeSubscriptionCancellation = async (
     ordem: any,
@@ -156,6 +155,32 @@ export function OrdensAssinaturaModule({ activeSubTab, initialItemId, colaborado
 
     cancellationRequestId.current = generateUUID();
     return data as any;
+  };
+
+  const handleDeleteAssinaturaCascade = async () => {
+    if (!selectedOrdem || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      const result = await deleteAdminEntityCascade(
+        'ordem_assinatura',
+        selectedOrdem.id,
+        deleteReason || 'Exclusão direta via Painel de Ordens de Assinatura'
+      );
+      if (!result?.success) {
+        throw new Error(result?.message || 'Falha ao excluir ordem de assinatura.');
+      }
+      toast.success('Ordem de assinatura e histórico vinculados excluídos de ponta a ponta!');
+      setIsDeleteModalOpen(false);
+      setIsDetailOpen(false);
+      setSelectedOrdem(null);
+      setDeleteReason('');
+      await fetchOrdens();
+    } catch (err: any) {
+      console.error('Erro ao excluir ordem de assinatura:', err);
+      toast.error(handleError(err, 'Erro ao excluir ordem de assinatura'));
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleUpdateStatus = async (id: string, status: 'concluido' | 'cancelado', motivo?: string) => {
@@ -419,6 +444,10 @@ toast.success(result?.already_processed
             onOpenProrrogar={() => setIsProrrogarModalOpen(true)}
             onOpenCancelar={() => setIsCancelarModalOpen(true)}
             onUpdateStatus={handleUpdateStatus}
+            onDeleteClick={() => {
+              setDeleteReason('');
+              setIsDeleteModalOpen(true);
+            }}
           />
         )}
       </Modal>
@@ -434,11 +463,12 @@ toast.success(result?.already_processed
           </p>
           <div>
             <label className="block text-sm font-bold text-neutral-700 mb-1">Meses</label>
-            <input
+            <input 
               type="number"
               min="1"
               value={mesesProrrogacao}
-              onChange={(e) => setMesesProrrogacao(parseInt(e.target.value) || 1)}
+              inputMode="numeric"
+onChange={(e) => setMesesProrrogacao(parseInt(e.target.value) || 1)}
               className="w-full rounded-xl border-neutral-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
           </div>
@@ -480,6 +510,63 @@ toast.success(result?.already_processed
           </button>
         </div>
       </Modal>
+
+      {/* Modal Exclusão de Assinatura em Cascata */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => { if (!isDeleting) setIsDeleteModalOpen(false); }}
+        title="Excluir Ordem de Assinatura de Ponta a Ponta"
+      >
+        {selectedOrdem && (
+          <div className="space-y-4">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3">
+              <ShieldAlert className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+              <div className="text-xs text-red-900 space-y-1">
+                <p className="font-bold text-sm">Exclusão Master em Cascata</p>
+                <p className="leading-relaxed">
+                  Você está prestes a excluir permanentemente a assinatura <strong>{selectedOrdem.codigo_ordem || `#OA-${selectedOrdem.id.slice(0, 4).toUpperCase()}`}</strong> ({selectedOrdem.nome_assinatura_contratada || selectedOrdem.assinaturas?.nome}).
+                </p>
+                <p className="text-[11px] text-red-750">
+                  Esta ação é irreversível e executará a limpeza em cascata completa: faturas, cobranças, notificações e histórico vinculado serão removidos sem deixar pendências.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Motivo da Exclusão (Auditoria)
+              </label>
+              <input
+                type="text"
+                placeholder="Ex: Cancelamento definitivo e expurgo pelo Administrador..."
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                className="w-full p-2.5 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleDeleteAssinaturaCascade}
+                className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl disabled:opacity-50 shadow-sm flex items-center gap-1.5"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>{isDeleting ? 'Excluindo...' : 'Confirmar Exclusão'}</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
@@ -489,13 +576,15 @@ export function AssinaturaDetails({
   activeTab, 
   onOpenProrrogar, 
   onOpenCancelar, 
-  onUpdateStatus 
+  onUpdateStatus,
+  onDeleteClick
 }: { 
   ordem: any, 
   activeTab?: string, 
   onOpenProrrogar?: () => void, 
   onOpenCancelar?: () => void, 
-  onUpdateStatus?: (id: string, status: 'concluido' | 'cancelado', motivo?: string) => void 
+  onUpdateStatus?: (id: string, status: 'concluido' | 'cancelado', motivo?: string) => void,
+  onDeleteClick?: () => void
 }) {
   const orcamento = Array.isArray(ordem.orcamentos) ? ordem.orcamentos[0] : ordem.orcamentos;
   
@@ -647,6 +736,15 @@ export function AssinaturaDetails({
                 >
                   <XCircle className="h-4 w-4" /> Cancelar Ordem
                 </button>
+                {onDeleteClick && (
+                  <button 
+                    onClick={onDeleteClick}
+                    title="Excluir Assinatura em Cascata (Administrador Master)"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-600 hover:bg-red-700 text-white py-3 text-xs font-black uppercase tracking-widest transition-all shadow-md shadow-red-600/20"
+                  >
+                    <Trash2 className="h-4 w-4" /> Excluir Assinatura
+                  </button>
+                )}
               </div>
             )}
             
@@ -666,6 +764,15 @@ export function AssinaturaDetails({
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-50 hover:bg-red-100 text-red-600 py-3 text-xs font-black uppercase tracking-widest transition-all ring-1 ring-red-100"
                   >
                     <XCircle className="h-4 w-4" /> Cancelar Assinatura
+                  </button>
+                )}
+                {onDeleteClick && (
+                  <button 
+                    onClick={onDeleteClick}
+                    title="Excluir Assinatura em Cascata (Administrador Master)"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-600 hover:bg-red-700 text-white py-3 text-xs font-black uppercase tracking-widest transition-all shadow-md shadow-red-600/20"
+                  >
+                    <Trash2 className="h-4 w-4" /> Excluir Assinatura
                   </button>
                 )}
               </div>

@@ -11,7 +11,10 @@ const read = (relativePath: string) => fs.readFileSync(path.join(root, relativeP
 const landing = read('src/pages/Careers/CareersLandingPage.tsx');
 const access = read('src/pages/Careers/CareersAccessPage.tsx');
 const admin = read('src/components/admin/CareersAdminModule.tsx');
+const vacanciesAdmin = read('src/components/admin/CareerVacanciesManager.tsx');
 const migration = read('supabase/migrations/20260722235959_harden_gsa_careers_flow.sql');
+const evolutionMigration = read('supabase/migrations/20260831103000_careers_vacancies_and_notifications.sql');
+const notifications = read('supabase/functions/gsa-careers-notifications/index.ts');
 
 assert.equal(routes.public.careers(), '/trabalhe-conosco');
 assert.equal(routes.login.careers(), '/trabalhe-conosco/acesso');
@@ -36,6 +39,8 @@ for (const [name, source] of [
 }
 
 assert.match(landing, /gsa_public_submit_career_application/);
+assert.match(landing, /gsa_public_list_career_vacancies/);
+assert.match(landing, /vacancy_id/);
 assert.match(landing, /gsa_public_confirm_career_resume/);
 assert.match(landing, /gsa-careers-resumes/);
 assert.match(landing, /Nenhum protocolo foi gerado/);
@@ -54,6 +59,22 @@ assert.match(admin, /gsa_admin_update_career_application/);
 assert.match(admin, /gsa_admin_get_career_resume_reference/);
 assert.match(admin, /createSignedUrl/);
 assert.doesNotMatch(admin, /Status da candidatura atualizado com sucesso!/);
+assert.match(admin, /dispatchCareerStatusNotification/);
+
+assert.match(vacanciesAdmin, /gsa_admin_list_career_vacancies/);
+assert.match(vacanciesAdmin, /gsa_admin_upsert_career_vacancy/);
+assert.doesNotMatch(vacanciesAdmin, /\.from\('gsa_careers_vacancies'\)/);
+
+assert.match(evolutionMigration, /CREATE TABLE IF NOT EXISTS public\.gsa_careers_vacancies/);
+assert.match(evolutionMigration, /CREATE TABLE IF NOT EXISTS public\.gsa_careers_notification_outbox/);
+assert.match(evolutionMigration, /gsa_careers_status_notification_trigger/);
+assert.match(evolutionMigration, /gsa_public_list_career_vacancies/);
+assert.match(evolutionMigration, /gsa_admin_upsert_career_vacancy/);
+assert.match(evolutionMigration, /gsa_admin_confirm_career_notification/);
+assert.match(evolutionMigration, /REVOKE ALL ON public\.gsa_careers_notification_outbox/);
+assert.match(notifications, /RESEND_API_KEY/);
+assert.match(notifications, /delivery_status: 'sent'/);
+assert.match(notifications, /next_attempt_at/);
 
 assert.match(migration, /DROP POLICY IF EXISTS gsa_careers_public_select/);
 assert.match(migration, /REVOKE ALL ON TABLE public\.gsa_careers_applications FROM anon, authenticated/);

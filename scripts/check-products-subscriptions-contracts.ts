@@ -112,10 +112,10 @@ assertContains('src/components/client/store/FilterModal.tsx', [
   'O preço máximo precisa ser igual ou maior que o preço mínimo.',
 ]);
 
-assertContains('src/components/client/store/CheckoutModal.tsx', [
+assertContains('src/components/client/store/CheckoutPage.tsx', [
   'visivel_na_loja',
   'estoque_disponivel',
-  'Não foi possível validar preços e estoque',
+  'Remova os produtos excluídos ou esgotados do carrinho antes de finalizar.',
   'gsa_client_checkout_store',
   'request_id: checkoutRequestId.current',
 ]);

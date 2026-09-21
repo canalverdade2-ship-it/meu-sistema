@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-08-14T17:11:04.349Z",
+  "generated_at": "2026-09-16T11:59:38.675Z",
   "scope": [
     "src",
     "supabase/functions"
   ],
-  "scanned_files": 423,
+  "scanned_files": 528,
   "blocker_count": 0,
-  "review_count": 26,
+  "review_count": 35,
   "blockers": [],
   "review": [
     {
@@ -14,7 +14,7 @@
       "rule": "runtime-prompt",
       "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
       "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
-      "line": 202,
+      "line": 263,
       "excerpt": "const motivo = prompt('Informe o motivo da recusa:');"
     },
     {
@@ -22,7 +22,7 @@
       "rule": "runtime-prompt",
       "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
       "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
-      "line": 403,
+      "line": 446,
       "excerpt": "const motivo = prompt('Motivo para recusar a contraproposta do prestador:');"
     },
     {
@@ -30,8 +30,64 @@
       "rule": "runtime-prompt",
       "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
       "file": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
-      "line": 448,
+      "line": 492,
       "excerpt": "const motivo = prompt('Por que deseja cancelar esta demanda?');"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/admin/gsa-tv/GsaTvAiStudioTab.tsx",
+      "line": 571,
+      "excerpt": "<span className=\"text-[10px] font-bold uppercase text-slate-400 block mb-1\">Demonstração ao Vivo:</span>"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/admin/gsa-tv/GsaTvAiStudioTab.tsx",
+      "line": 608,
+      "excerpt": "<span className=\"text-[10px] font-bold uppercase text-slate-400 block mb-1\">Demonstração ao Vivo:</span>"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/admin/gsa-tv/GsaTvAiStudioTab.tsx",
+      "line": 645,
+      "excerpt": "<span className=\"text-[10px] font-bold uppercase text-slate-400 block mb-1\">Demonstração ao Vivo:</span>"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/admin/gsa-tv/GsaTvAiStudioTab.tsx",
+      "line": 682,
+      "excerpt": "<span className=\"text-[10px] font-bold uppercase text-slate-400 block mb-1\">Demonstração ao Vivo:</span>"
+    },
+    {
+      "severity": "review",
+      "rule": "runtime-prompt",
+      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
+      "file": "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+      "line": 255,
+      "excerpt": "const reason = prompt('Informe a justificativa da recusa de crédito:');"
+    },
+    {
+      "severity": "review",
+      "rule": "runtime-prompt",
+      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
+      "file": "src/components/admin/super-domains/pessoas/AfiliadosSection.tsx",
+      "line": 188,
+      "excerpt": "notes = window.prompt('Informe o motivo da rejeição do saque:')?.trim() || null;"
+    },
+    {
+      "severity": "review",
+      "rule": "runtime-prompt",
+      "description": "Uso de prompt no fluxo operacional; revisar se substitui formulário ou integração real",
+      "file": "src/components/admin/super-domains/pessoas/AfiliadosSection.tsx",
+      "line": 196,
+      "excerpt": "notes = window.prompt('Informe o ID E2E, a referência ou o comprovante do pagamento PIX:')?.trim() || null;"
     },
     {
       "severity": "review",
@@ -46,8 +102,24 @@
       "rule": "demo-reference",
       "description": "Referência a demonstração em código executável",
       "file": "src/components/client/store/BlogPostPage.tsx",
-      "line": 28,
+      "line": 29,
       "excerpt": "} else if (postId.startsWith('demo-')) {"
+    },
+    {
+      "severity": "review",
+      "rule": "demo-reference",
+      "description": "Referência a demonstração em código executável",
+      "file": "src/components/public/SystemsBudgetModal.tsx",
+      "line": 393,
+      "excerpt": "<strong>Apresentação executiva:</strong> demonstração da arquitetura proposta sem compromisso contratual."
+    },
+    {
+      "severity": "review",
+      "rule": "mock-reference",
+      "description": "Referência a mock em código executável",
+      "file": "src/components/public/SystemsShowcaseDialog.tsx",
+      "line": 340,
+      "excerpt": "{/* FRAME DO MOCKUP */}"
     },
     {
       "severity": "review",
@@ -211,11 +283,11 @@
     },
     {
       "severity": "review",
-      "rule": "demo-reference",
-      "description": "Referência a demonstração em código executável",
-      "file": "src/lib/r2Storage.ts",
-      "line": 107,
-      "excerpt": "// Filtra itens de demonstração para evitar disparo desnecessário ao Worker"
+      "rule": "mock-reference",
+      "description": "Referência a mock em código executável",
+      "file": "src/lib/wishlistStorage.ts",
+      "line": 86,
+      "excerpt": "// Se o effectiveId não for um UUID válido (ex: mock ou id não-uuid), mantém dados locais"
     }
   ]
 }

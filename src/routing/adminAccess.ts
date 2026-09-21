@@ -32,7 +32,11 @@ export type AdminModule =
   | 'promocoes'
   | 'area_vip'
   | 'afiliados'
-  | 'automacoes';
+  | 'automacoes'
+  | 'gsa-tv'
+  | 'pessoas'
+  | 'contratos'
+  | 'governanca';
 
 const VALID_MODULES = new Set<AdminModule>([
   'dashboard',
@@ -67,6 +71,10 @@ const VALID_MODULES = new Set<AdminModule>([
   'promocoes',
   'area_vip',
   'afiliados',
+  'gsa-tv',
+  'pessoas',
+  'contratos',
+  'governanca',
 ]);
 
 /**
@@ -86,8 +94,12 @@ export function normalizeAdminModule(module?: string | null): AdminModule {
   if (value === 'catalogo') return 'loja';
   if (['credito', 'credito-loja'].includes(value)) return 'credito_loja';
   if (['vendas', 'orcamentos', 'servicos', 'produtos', 'assinaturas', 'os'].includes(value)) return 'operacoes';
-  if (['vouchers', 'premios', 'indique-ganhe'].includes(value)) return 'fidelidade';
+  if (['vouchers', 'premios', 'indique-ganhe', 'cupons'].includes(value)) return 'fidelidade';
   if (['afiliados', 'gsa_afiliados', 'gsa-afiliados'].includes(value)) return 'afiliados';
+  if (['gsa-tv', 'gsatv', 'tv', 'gsa_tv'].includes(value)) return 'gsa-tv';
+  if (['pessoas', 'rh'].includes(value)) return 'pessoas';
+  if (['contratos', 'juridico'].includes(value)) return 'contratos';
+  if (['governanca', 'cockpit'].includes(value)) return 'governanca';
 
   return VALID_MODULES.has(value as AdminModule) ? value as AdminModule : 'dashboard';
 }
@@ -106,8 +118,9 @@ function normalizeGrantedModule(module: string): AdminModule | null {
   if (['credito', 'credito-loja'].includes(value)) return 'credito_loja';
   if (value === 'vendas') return 'operacoes';
   if (value === 'tickets' || value === 'suporte') return 'atendimento';
-  if (['vouchers', 'premios', 'indique-ganhe'].includes(value)) return 'fidelidade';
+  if (['vouchers', 'premios', 'indique-ganhe', 'cupons'].includes(value)) return 'fidelidade';
   if (['afiliados', 'gsa_afiliados', 'gsa-afiliados'].includes(value)) return 'afiliados';
+  if (['gsa-tv', 'gsatv', 'tv', 'gsa_tv'].includes(value)) return 'gsa-tv';
 
   return VALID_MODULES.has(value as AdminModule) ? value as AdminModule : null;
 }
@@ -132,6 +145,7 @@ export function canAccessAdminModule(
   const normalized = normalizeAdminModule(module);
   if (normalized === 'dashboard') return true;
   if (normalized === 'acessos') return false;
+  if (normalized === 'gsa-tv') return false;
 
   const granted = new Set(normalizeGrantedAdminModules(modules));
 
@@ -141,6 +155,38 @@ export function canAccessAdminModule(
   }
   if (normalized === 'prestadores') {
     return granted.has('prestadores') || granted.has('cadastro');
+  }
+
+  if (normalized === 'pessoas') {
+    return (
+      granted.has('prestadores') ||
+      granted.has('fornecedores') ||
+      granted.has('trabalhe-conosco') ||
+      granted.has('careers') ||
+      granted.has('afiliados') ||
+      granted.has('fidelidade') ||
+      granted.has('promocoes') ||
+      granted.has('cadastro')
+    );
+  }
+
+  if (normalized === 'contratos') {
+    return (
+      granted.has('cadastro') ||
+      granted.has('area_vip') ||
+      granted.has('saude') ||
+      granted.has('seguros') ||
+      granted.has('atendimento')
+    );
+  }
+
+  if (normalized === 'governanca') {
+    return (
+      granted.has('acessos') ||
+      granted.has('configuracoes') ||
+      granted.has('sistema') ||
+      granted.has('relatorios')
+    );
   }
 
   return granted.has(normalized);
@@ -162,6 +208,10 @@ export function adminModulePath(module: string, tab?: string, itemId?: string): 
   if (['trabalhe-conosco', 'trabalhe_conosco', 'careers'].includes(original)) return parts('admin', 'trabalhe-conosco', tab, itemId);
   if (original === 'vendas') return parts('admin', 'operacoes', tab || 'pedidos', itemId);
   if (['avisos-campanhas', 'avisos_campanhas', 'avisos', 'campanhas'].includes(original)) return parts('admin', 'avisos-campanhas', tab, itemId);
+  if (['gsa-tv', 'gsatv', 'tv', 'gsa_tv'].includes(original)) return parts('admin', 'gsa-tv', tab, itemId);
+  if (original === 'pessoas') return parts('admin', 'cadastros', 'prestadores', itemId);
+  if (original === 'contratos') return parts('admin', 'cadastros', 'clientes', itemId);
+  if (original === 'governanca') return '/admin/dashboard';
 
   switch (normalized) {
     case 'dashboard': return '/admin/dashboard';
@@ -193,9 +243,13 @@ export function adminModulePath(module: string, tab?: string, itemId?: string): 
     case 'acessos': return '/admin/acessos';
     case 'sistema': return '/admin/sistema';
     case 'automacoes': return '/admin/automacoes';
+    case 'gsa-tv': return parts('admin', 'gsa-tv', tab, itemId);
     case 'promocoes': return parts('admin', 'promocoes', tab, itemId);
     case 'area_vip': return parts('admin', 'area_vip', tab, itemId);
     case 'afiliados': return parts('admin', 'financeiro', 'afiliados', itemId);
+    case 'pessoas': return parts('admin', 'cadastros', 'prestadores', itemId);
+    case 'contratos': return parts('admin', 'cadastros', 'clientes', itemId);
+    case 'governanca': return '/admin/dashboard';
     default: return '/admin/dashboard';
   }
 }

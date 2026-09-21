@@ -1,0 +1,3361 @@
+{
+  "totalUniqueColumnErrors": 78,
+  "columnErrors": [
+    {
+      "file": "src/components/admin/DemandasColaboradorModule.tsx",
+      "table": "ordens_servico",
+      "column": "cliente",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "prestador_demandas -> ordens_servico.cliente"
+    },
+    {
+      "file": "src/components/admin/DemandasColaboradorModule.tsx",
+      "table": "ordens_servico",
+      "column": "nome)",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "prestador_demandas -> ordens_servico.nome)"
+    },
+    {
+      "file": "src/components/admin/relatorios/RelatorioGamificacao.tsx",
+      "table": "clientes",
+      "column": "created_at",
+      "type": "FILTER_ORDER_MISSING_COLUMN",
+      "snippet": ".from('clientes').select('saldo_pontos, pontos_totais, nivel_id'),\r\n        supa"
+    },
+    {
+      "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "table": "ordens_compra",
+      "column": "codigo_orcamento",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_compra.codigo_orcamento"
+    },
+    {
+      "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "table": "ordens_compra",
+      "column": "total",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_compra.total"
+    },
+    {
+      "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "table": "ordens_compra",
+      "column": "acrescimo",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_compra.acrescimo"
+    },
+    {
+      "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "table": "ordens_compra",
+      "column": "desconto",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_compra.desconto"
+    },
+    {
+      "file": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+      "table": "ordens_compra",
+      "column": "status )",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_compra.status )"
+    },
+    {
+      "file": "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+      "table": "tickets",
+      "column": "created_at",
+      "type": "FILTER_ORDER_MISSING_COLUMN",
+      "snippet": ".from('tickets')\r\n        .select('*')\r\n        .order('created_at'"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+      "table": "emprestimo_documentos",
+      "column": "arquivo_url",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "emprestimos -> emprestimo_documentos.arquivo_url"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "table": "ordens_servico",
+      "column": "total",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.total"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "table": "ordens_servico",
+      "column": "valor_servico",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.valor_servico"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "table": "ordens_servico",
+      "column": "valor_adicional",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.valor_adicional"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "table": "ordens_servico",
+      "column": "descricao_adicional",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.descricao_adicional"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "table": "ordens_servico",
+      "column": "acrescimo",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.acrescimo"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "table": "ordens_servico",
+      "column": "desconto",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.desconto"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "table": "ordens_compra",
+      "column": "valor)",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_compra.valor)"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "table": "ordens_assinatura",
+      "column": "valor)",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_assinatura.valor)"
+    },
+    {
+      "file": "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+      "table": "loja_reembolsos",
+      "column": "created_at",
+      "type": "FILTER_ORDER_MISSING_COLUMN",
+      "snippet": ".from('loja_reembolsos')\n        .select('*, clientes(id, nome, cpf, email, tele"
+    },
+    {
+      "file": "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+      "table": "prestador_demandas",
+      "column": "nome_razao",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "ordens_servico -> prestador_demandas.nome_razao"
+    },
+    {
+      "file": "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+      "table": "prestador_demandas",
+      "column": "telefone",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "ordens_servico -> prestador_demandas.telefone"
+    },
+    {
+      "file": "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+      "table": "prestador_demandas",
+      "column": "documento",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "ordens_servico -> prestador_demandas.documento"
+    },
+    {
+      "file": "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+      "table": "prestador_demandas",
+      "column": "tipo_cadastro\r\n            )",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "ordens_servico -> prestador_demandas.tipo_cadastro\r\n            )"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "table": "indicacoes",
+      "column": "created_at",
+      "type": "FILTER_ORDER_MISSING_COLUMN",
+      "snippet": ".from('indicacoes')\n        .select('*')\n        .order('created_at'"
+    },
+    {
+      "file": "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx",
+      "table": "saques",
+      "column": "created_at",
+      "type": "FILTER_ORDER_MISSING_COLUMN",
+      "snippet": ".from('saques')\n        .select(`\n          *,\n          cliente:clientes(nome, "
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_servico",
+      "column": "codigo_orcamento",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.codigo_orcamento"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_servico",
+      "column": "total",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.total"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_servico",
+      "column": "valor_servico",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.valor_servico"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_servico",
+      "column": "valor_adicional",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.valor_adicional"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_servico",
+      "column": "descricao_adicional",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.descricao_adicional"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_servico",
+      "column": "acrescimo",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.acrescimo"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_servico",
+      "column": "desconto",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.desconto"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_servico",
+      "column": "promocao_id",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.promocao_id"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_servico",
+      "column": "codigo_promocao",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.codigo_promocao"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_servico",
+      "column": "descricao)",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.descricao)"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_compra",
+      "column": "valor\r\n          )",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_compra.valor\r\n          )"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_compra",
+      "column": "codigo_orcamento",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_compra.codigo_orcamento"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_compra",
+      "column": "total",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_compra.total"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_compra",
+      "column": "desconto",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_compra.desconto"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_compra",
+      "column": "taxa_entrega",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_compra.taxa_entrega"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_compra",
+      "column": "cupom_desconto_id",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_compra.cupom_desconto_id"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_compra",
+      "column": "cupom_entrega_id\r\n          )",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_compra.cupom_entrega_id\r\n          )"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_assinatura",
+      "column": "valor\r\n          )",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_assinatura.valor\r\n          )"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_assinatura",
+      "column": "codigo_orcamento",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_assinatura.codigo_orcamento"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_assinatura",
+      "column": "total",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_assinatura.total"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_assinatura",
+      "column": "desconto",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_assinatura.desconto"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_assinatura",
+      "column": "taxa_entrega",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_assinatura.taxa_entrega"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_assinatura",
+      "column": "cupom_desconto_id",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_assinatura.cupom_desconto_id"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_assinatura",
+      "column": "cupom_entrega_id",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_assinatura.cupom_entrega_id"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_assinatura",
+      "column": "quantidade_meses",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_assinatura.quantidade_meses"
+    },
+    {
+      "file": "src/components/client/financeiro/FaturasList.tsx",
+      "table": "ordens_assinatura",
+      "column": "prazo_indeterminado\r\n          )",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_assinatura.prazo_indeterminado\r\n          )"
+    },
+    {
+      "file": "src/components/client/marketplace/classifieds/MyClassifiedCommissionsPage.tsx",
+      "table": "classificados_transacoes",
+      "column": "categoria)",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "classificados_comissoes -> classificados_transacoes.categoria)"
+    },
+    {
+      "file": "src/components/client/marketplace/travel/TravelReservationPage.tsx",
+      "table": "viagens_propostas",
+      "column": "nome_completo",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "viagens_transacoes -> viagens_propostas.nome_completo"
+    },
+    {
+      "file": "src/components/client/marketplace/travel/TravelReservationPage.tsx",
+      "table": "viagens_propostas",
+      "column": "data_nascimento",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "viagens_transacoes -> viagens_propostas.data_nascimento"
+    },
+    {
+      "file": "src/components/client/marketplace/travel/TravelReservationPage.tsx",
+      "table": "viagens_propostas",
+      "column": "tipo_documento",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "viagens_transacoes -> viagens_propostas.tipo_documento"
+    },
+    {
+      "file": "src/components/client/marketplace/travel/TravelReservationPage.tsx",
+      "table": "viagens_propostas",
+      "column": "numero_documento",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "viagens_transacoes -> viagens_propostas.numero_documento"
+    },
+    {
+      "file": "src/components/client/marketplace/travel/TravelReservationPage.tsx",
+      "table": "viagens_propostas",
+      "column": "tipo_passageiro",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "viagens_transacoes -> viagens_propostas.tipo_passageiro"
+    },
+    {
+      "file": "src/components/client/marketplace/travel/TravelReservationPage.tsx",
+      "table": "viagens_propostas",
+      "column": "verificado",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "viagens_transacoes -> viagens_propostas.verificado"
+    },
+    {
+      "file": "src/components/client/marketplace/travel/TravelReservationPage.tsx",
+      "table": "viagens_propostas",
+      "column": "storage_path",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "viagens_transacoes -> viagens_propostas.storage_path"
+    },
+    {
+      "file": "src/components/client/marketplace/travel/TravelReservationPage.tsx",
+      "table": "viagens_propostas",
+      "column": "file_name",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "viagens_transacoes -> viagens_propostas.file_name"
+    },
+    {
+      "file": "src/components/client/marketplace/travel/TravelReservationPage.tsx",
+      "table": "viagens_propostas",
+      "column": "file_type",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "viagens_transacoes -> viagens_propostas.file_type"
+    },
+    {
+      "file": "src/components/client/marketplace/travel/TravelReservationPage.tsx",
+      "table": "viagens_propostas",
+      "column": "file_size\r\n              )\r\n            )",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "viagens_transacoes -> viagens_propostas.file_size\r\n              )\r\n            )"
+    },
+    {
+      "file": "src/components/client/store/PurchasesPage.tsx",
+      "table": "ordens_compra",
+      "column": "created_at",
+      "type": "FILTER_ORDER_MISSING_COLUMN",
+      "snippet": ".from('ordens_compra').select('*, produtos(nome, imagem_url, codigo_produto, cod"
+    },
+    {
+      "file": "src/components/client/StoreHub.tsx",
+      "table": "ordens_compra",
+      "column": "created_at",
+      "type": "FILTER_ORDER_MISSING_COLUMN",
+      "snippet": ".from('ordens_compra').select('*, produtos(nome, imagem_url, codigo_produto, cod"
+    },
+    {
+      "file": "src/components/prestador/PrestadorDemandas.tsx",
+      "table": "ordens_servico",
+      "column": "orcamento",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "prestador_demandas -> ordens_servico.orcamento"
+    },
+    {
+      "file": "src/lib/pixService.ts",
+      "table": "loja_pedido_itens",
+      "column": "imagem_url",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "orcamentos -> loja_pedido_itens.imagem_url"
+    },
+    {
+      "file": "src/lib/pixService.ts",
+      "table": "loja_pedido_itens",
+      "column": "codigo_produto",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "orcamentos -> loja_pedido_itens.codigo_produto"
+    },
+    {
+      "file": "src/lib/pixService.ts",
+      "table": "loja_pedido_itens",
+      "column": "codigo_barras",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "orcamentos -> loja_pedido_itens.codigo_barras"
+    },
+    {
+      "file": "src/lib/pixService.ts",
+      "table": "loja_pedido_itens",
+      "column": "valor)",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "orcamentos -> loja_pedido_itens.valor)"
+    },
+    {
+      "file": "src/lib/pixService.ts",
+      "table": "ordens_compra",
+      "column": "nome",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "orcamentos -> ordens_compra.nome"
+    },
+    {
+      "file": "src/lib/pixService.ts",
+      "table": "ordens_compra",
+      "column": "imagem_url",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "orcamentos -> ordens_compra.imagem_url"
+    },
+    {
+      "file": "src/lib/pixService.ts",
+      "table": "ordens_compra",
+      "column": "codigo_produto",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "orcamentos -> ordens_compra.codigo_produto"
+    },
+    {
+      "file": "src/lib/pixService.ts",
+      "table": "ordens_compra",
+      "column": "codigo_barras",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "orcamentos -> ordens_compra.codigo_barras"
+    },
+    {
+      "file": "src/lib/pixService.ts",
+      "table": "ordens_compra",
+      "column": "valor)",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "orcamentos -> ordens_compra.valor)"
+    },
+    {
+      "file": "src/utils/referral.ts",
+      "table": "ordens_servico",
+      "column": "desconto)",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_servico.desconto)"
+    },
+    {
+      "file": "src/utils/referral.ts",
+      "table": "ordens_compra",
+      "column": "desconto)",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_compra.desconto)"
+    },
+    {
+      "file": "src/utils/referral.ts",
+      "table": "ordens_assinatura",
+      "column": "desconto)",
+      "type": "NESTED_RELATION_MISSING_COLUMN",
+      "snippet": "faturas -> ordens_assinatura.desconto)"
+    },
+    {
+      "file": "src/validation/step4_integrity_audit.ts",
+      "table": "solicitacoes_exclusao",
+      "column": "count",
+      "type": "SELECT_MISSING_COLUMN",
+      "snippet": "solicitacoes_exclusao.count in .from('solicitacoes_exclusao')\n      .select('count'"
+    }
+  ],
+  "totalUniqueRpcsScanned": 132,
+  "missingRpcs": [],
+  "rpcPermissionReport": [
+    {
+      "rpc": "gsa_supplier_session_access_state",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/App.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_save_function",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_id uuid DEFAULT NULL::uuid, p_nome text DEFAULT NULL::text, p_descricao text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 2,
+      "callers": [
+        "src/components/admin/AcessosModule.tsx",
+        "src/components/admin/super-domains/governanca/GovernancaAcessosView.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_set_collaborator_status",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_colaborador_id uuid DEFAULT NULL::uuid, p_status text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 2,
+      "callers": [
+        "src/components/admin/AcessosModule.tsx",
+        "src/components/admin/super-domains/governanca/GovernancaAcessosView.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_review_deletion_request",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_request_id uuid DEFAULT NULL::uuid, p_decision text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 2,
+      "callers": [
+        "src/components/admin/AcessosModule.tsx",
+        "src/components/admin/super-domains/governanca/GovernancaAcessosView.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_advertising_overview",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/AdvertisingAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_update_ad_request_status",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_request_id uuid, p_status text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/AdvertisingAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_create_ad_proposal",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_request_id uuid, p_payload jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/AdvertisingAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_review_ad_creative",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_creative_id uuid, p_approved boolean, p_reason text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/AdvertisingAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_mark_ad_payment",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_payment_id uuid, p_status text, p_provider_reference text DEFAULT NULL::text, p_payment_method text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/AdvertisingAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_update_ad_campaign_status",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_campaign_id uuid, p_status text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/AdvertisingAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_update_ad_placement",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_placement_id uuid, p_payload jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/AdvertisingAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_update_affiliate_details",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_affiliate_id uuid, p_nome_divulgacao text, p_codigo_publico text DEFAULT NULL::text, p_pix_tipo text DEFAULT NULL::text, p_pix_chave text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/AffiliateAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_set_affiliate_status",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_affiliate_id uuid, p_status text, p_reason text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 2,
+      "callers": [
+        "src/components/admin/AffiliateAdminModule.tsx",
+        "src/components/admin/super-domains/pessoas/AfiliadosSection.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_decide_affiliate_payout",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_payout_id uuid, p_action text, p_notes text DEFAULT NULL::text, p_paid_at timestamp with time zone DEFAULT NULL::timestamp with time zone",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 2,
+      "callers": [
+        "src/components/admin/AffiliateAdminModule.tsx",
+        "src/components/admin/super-domains/pessoas/AfiliadosSection.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_release_affiliate_commissions",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_afiliado_id uuid DEFAULT NULL::uuid",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/AffiliateAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_update_global_saque_minimo",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_valor numeric",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/AffiliateAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_update_affiliate_program",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_program_id uuid, p_patch jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/AffiliateAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_update_affiliate_points_settings",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_rate numeric, p_minimum integer, p_active boolean",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        },
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_rate numeric, p_minimum integer, p_active boolean, p_welcome_active boolean DEFAULT true, p_welcome_value numeric DEFAULT 100",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/AffiliateAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_adjust_affiliate_balance",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_afiliado_id uuid, p_tipo text, p_valor numeric, p_motivo text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 2,
+      "callers": [
+        "src/components/admin/AffiliateAdminModule.tsx",
+        "src/components/admin/super-domains/pessoas/AfiliadosSection.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_ensure_calculator_pro_products",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/CalculatorProAdminPanel.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_save_calculator_pro_product",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_tool_id text, p_payload jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/CalculatorProAdminPanel.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_set_calculator_pro_voucher_status",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_voucher_id uuid, p_status text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/CalculatorProAdminPanel.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_classified_action",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_entity text DEFAULT NULL::text, p_id uuid DEFAULT NULL::uuid, p_related_id uuid DEFAULT NULL::uuid, p_action text DEFAULT NULL::text, p_reason text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/ClassifiedsModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_update_settings_secure",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_settings jsonb DEFAULT '[]'::jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 2,
+      "callers": [
+        "src/components/admin/ConfiguracoesModule.tsx",
+        "src/components/admin/super-domains/governanca/GovernancaConfiguracoesView.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_save_company",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_payload jsonb DEFAULT '{}'::jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 2,
+      "callers": [
+        "src/components/admin/ConfiguracoesModule.tsx",
+        "src/components/admin/super-domains/governanca/GovernancaConfiguracoesView.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_save_payment_method",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_id uuid DEFAULT NULL::uuid, p_payload jsonb DEFAULT '{}'::jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 2,
+      "callers": [
+        "src/components/admin/ConfiguracoesModule.tsx",
+        "src/components/admin/super-domains/governanca/GovernancaConfiguracoesView.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "increment_comentarios",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "demanda_id_param uuid",
+          "ret": "void",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/demandas/DemandasComentarios.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_fiscal_update",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_ordem_id uuid DEFAULT NULL::uuid, p_action text DEFAULT NULL::text, p_payload jsonb DEFAULT '{}'::jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 2,
+      "callers": [
+        "src/components/admin/FiscalModule.tsx",
+        "src/components/admin/super-domains/financeiro/FiscalView.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_cancel_subscription",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_ordem_assinatura_id uuid, p_data_cancelamento date, p_motivo text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/OrdensAssinaturaModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_extend_subscription",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_ordem_assinatura_id uuid, p_meses integer",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/OrdensAssinaturaModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_import_products_batch_v2",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_items jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/products/BulkProductImportModal.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_check_product_barcode",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_codigo_barras text, p_produto_id uuid DEFAULT NULL::uuid",
+          "ret": "TABLE(is_duplicate boolean, produto_id uuid, codigo_produto text, nome text, status text)",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/ProdutosModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_update_resource_status",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_resource text DEFAULT NULL::text, p_id uuid DEFAULT NULL::uuid, p_status text DEFAULT NULL::text, p_reason text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/ProtectionAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_save_protection_entity",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_domain text DEFAULT NULL::text, p_kind text DEFAULT NULL::text, p_id uuid DEFAULT NULL::uuid, p_payload jsonb DEFAULT '{}'::jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/ProtectionAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_create_protection_proposal",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_domain text DEFAULT NULL::text, p_payload jsonb DEFAULT '{}'::jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/ProtectionAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_upsert_site_campaign",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_campaign_id uuid DEFAULT NULL::uuid, p_payload jsonb DEFAULT '{}'::jsonb, p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/SiteCampaignAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_set_site_campaign_status",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_campaign_id uuid, p_action text, p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/SiteCampaignAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_duplicate_site_campaign",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_campaign_id uuid, p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/SiteCampaignAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_delete_site_campaign",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_campaign_id uuid, p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/SiteCampaignDeletionPanel.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_set_site_campaign_permissions",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_collaborator_id uuid, p_enabled boolean, p_allowed_actions text[] DEFAULT ARRAY[]::text[], p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/SiteCampaignPermissionMatrix.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_alterar_status_cliente",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_cliente_id uuid, p_status text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/super-domains/contratos/CrmClientesView.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_ajustar_saldo_cliente",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_cliente_id uuid, p_tipo text, p_valor numeric, p_descricao text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/super-domains/contratos/CrmClientesView.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_desbloquear_pin_cliente",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_cliente_id uuid",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/super-domains/contratos/CrmClientesView.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "fn_marcar_faturas_vencidas",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "",
+          "ret": "void",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/super-domains/financeiro/FaturamentoView.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_adjust_points",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_cliente_id uuid, p_pontos integer, p_descricao text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_processar_saque_prestador",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_saque_id uuid, p_acao text, p_motivo text DEFAULT NULL::text, p_data_pagamento date DEFAULT NULL::date",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_processar_saque",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_saque_id uuid, p_acao text, p_motivo text DEFAULT NULL::text, p_data_pagamento date DEFAULT CURRENT_DATE",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 2,
+      "callers": [
+        "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx",
+        "src/tests/super-domains-adversarial-challenger.test.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_travel_link_lead",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_quote_id uuid DEFAULT NULL::uuid, p_client_id uuid DEFAULT NULL::uuid",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/TravelAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_travel_update_status",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_entity text DEFAULT NULL::text, p_id uuid DEFAULT NULL::uuid, p_status text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/TravelAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_travel_create_proposal",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_quote_id uuid DEFAULT NULL::uuid, p_title text DEFAULT NULL::text, p_total numeric DEFAULT NULL::numeric, p_max_installments integer DEFAULT 1, p_acceptance_hours integer DEFAULT 48, p_payment_days integer DEFAULT 2, p_conditions text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/TravelAdminModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_save_travel_category",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_payload jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        },
+        {
+          "args": "p_sessao_id text, p_session_token text, p_payload jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/admin/ViagensCategoriasModule.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_public_lookup_referral",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_token text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 2,
+      "callers": [
+        "src/components/auth/ClientAccessModal.tsx",
+        "src/pages/BusinessRegistrationPage.tsx"
+      ],
+      "isPublic": true,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_public_register_client",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_payload jsonb, p_referral_token text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        },
+        {
+          "args": "p_referral_token text, p_payload jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 2,
+      "callers": [
+        "src/components/auth/ClientAccessModal.tsx",
+        "src/pages/BusinessRegistrationPage.tsx"
+      ],
+      "isPublic": true,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_public_register_provider",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_payload jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 2,
+      "callers": [
+        "src/components/auth/RestrictedAccessModal.tsx",
+        "src/pages/ProviderAccessPage.tsx"
+      ],
+      "isPublic": true,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_solicitar_pin_whatsapp",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_telefone text",
+          "ret": "text",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/auth/WhatsAppPinVerification.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_validar_pin_whatsapp",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_telefone text, p_pin text",
+          "ret": "boolean",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/auth/WhatsAppPinVerification.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_verify_own_pin",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_pin text",
+          "ret": "boolean",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/client/ClientProfile.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "rpc_criar_anuncio_classificado",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_bairro text, p_categoria text, p_cidade text, p_cliente_id uuid, p_comissao_aceita numeric, p_descricao text, p_detalhes jsonb, p_estado text, p_midias jsonb, p_preco numeric, p_titulo text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/client/marketplace/classifieds/CreateListingWizard.tsx"
+      ],
+      "isPublic": true,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "rpc_reenviar_anuncio_classificado",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_anuncio_id uuid, p_titulo text, p_descricao text, p_preco numeric, p_cidade text, p_estado text, p_bairro text, p_detalhes jsonb, p_midias jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/client/marketplace/classifieds/EditClassifiedListingPage.tsx"
+      ],
+      "isPublic": true,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_public_affiliate_programs",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/components/public/AffiliatePublicPage.tsx"
+      ],
+      "isPublic": true,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_public_track_affiliate_click",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_codigo text, p_visitante_token text, p_landing_path text, p_referrer_host text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/features/affiliates/attribution.ts"
+      ],
+      "isPublic": true,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_public_resgatar_beneficio_parceiro",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_parceiro_id uuid DEFAULT NULL::uuid, p_parceiro_slug text DEFAULT NULL::text, p_nome_completo text DEFAULT NULL::text, p_telefone text DEFAULT NULL::text, p_cliente_id uuid DEFAULT NULL::uuid, p_email text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/features/partners/service.ts"
+      ],
+      "isPublic": true,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_set_partner_status",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_partner_id uuid DEFAULT NULL::uuid, p_status text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/features/partners/service.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_set_notification_state",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_notification_id text DEFAULT NULL::text, p_read boolean DEFAULT true, p_dismiss boolean DEFAULT false",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/hooks/useAdminNotifications.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_mark_all_notifications",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_dismiss boolean DEFAULT false",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/hooks/useAdminNotifications.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_ping_session",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text",
+          "ret": "boolean",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 2,
+      "callers": [
+        "src/hooks/useAutoLogout.ts",
+        "src/lib/sessionService.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "get_client_pendency_counts",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_cliente_id uuid",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/hooks/useClientNotifications.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_public_registration_settings",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/hooks/usePublicRegistrationSettings.ts"
+      ],
+      "isPublic": true,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_advertiser_portal_snapshot",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/advertiserAccess.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_client_operational_write",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_table text, p_action text, p_data jsonb DEFAULT '{}'::jsonb, p_filter jsonb DEFAULT '{}'::jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "postgres=X/postgres; authenticated=X/postgres; service_role=X/postgres"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/clientOperationalWrite.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_validate_session",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text",
+          "ret": "TABLE(is_valid boolean, ator_tipo text, ator_id uuid, ator_nome text, status text)",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 2,
+      "callers": [
+        "src/lib/deleteRequest.ts",
+        "src/lib/sessionService.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_log_action",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_ator_tipo text, p_ator_id text, p_ator_nome text, p_acao text, p_detalhes text DEFAULT NULL::text",
+          "ret": "uuid",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/logService.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_sync_product_variations",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_produto_id uuid, p_variacoes jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "postgres=X/postgres; authenticated=X/postgres; service_role=X/postgres"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/productVariations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_financial_snapshot",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_dashboard_snapshot",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_pendency_snapshot",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_request_withdrawal",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_valor numeric, p_tipo_chave_pix text, p_chave_pix text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_cancel_withdrawal",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_saque_id uuid, p_motivo text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_redeem_voucher",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_voucher_id uuid",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_redeem_prize",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_premio_id uuid",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_activate_promotion",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_promocao_id uuid",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_update_profile",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_telefone text, p_cep text, p_numero text, p_area_servico text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_create_schedule",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_demanda_id uuid, p_data_inicio timestamp with time zone, p_data_fim timestamp with time zone, p_observacoes text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_complete_schedule",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_agendamento_id uuid",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_delete_schedule",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_agendamento_id uuid",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_submit_document",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_documento_id uuid, p_urls text[]",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_transition_demand",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_demanda_id uuid, p_action text, p_payload jsonb DEFAULT '{}'::jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_create_ticket",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_subject text, p_description text, p_deduplicate boolean DEFAULT false",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_send_ticket_message",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_ticket_id uuid, p_message text DEFAULT NULL::text, p_attachment_reference text DEFAULT NULL::text, p_attachment_type text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_request_profile_change",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_field text, p_new_value text, p_reason text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_request_demand_support",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_demand_id uuid, p_message text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_mark_notification_read",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_notificacao_id uuid",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_mark_all_notifications_read",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_provider_session_access_state",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/providerSessionAccess.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_public_service_catalog",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_audience text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/serviceCatalog.ts"
+      ],
+      "isPublic": true,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_service_catalog_snapshot",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/serviceCatalog.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_end_session",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text",
+          "ret": "boolean",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/sessionService.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_get_client_session_access_state",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/sessionService.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_get_collaborator_session_access_state",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/sessionService.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_update_client_pin",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_new_pin text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/sessionService.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_public_site_campaigns",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_page text DEFAULT '/'::text, p_device text DEFAULT 'desktop'::text, p_audience text DEFAULT 'guests'::text, p_viewer_hash text DEFAULT NULL::text, p_session_hash text DEFAULT NULL::text, p_actor_id text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/siteCampaigns.ts"
+      ],
+      "isPublic": true,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_public_site_campaign_event",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_campaign_id uuid, p_event_type text, p_page text DEFAULT '/'::text, p_device text DEFAULT 'desktop'::text, p_audience text DEFAULT 'guests'::text, p_viewer_hash text DEFAULT NULL::text, p_session_hash text DEFAULT NULL::text, p_actor_id text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/siteCampaigns.ts"
+      ],
+      "isPublic": true,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_supplier_dashboard_snapshot",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/supplierOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_supplier_request_product",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_payload jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/supplierOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_supplier_update_profile",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_payload jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/supplierOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_supplier_mark_order_seen",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_order_id uuid",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/supplierOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_supplier_mark_notification_read",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_notification_id uuid",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/supplierOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_supplier_mark_notifications_read",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/supplierOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_supplier_submit_delivery",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_request_id uuid, p_order_id uuid, p_payload jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/supplierOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_supplier_set_status",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_supplier_id uuid, p_status text, p_reason text DEFAULT NULL::text, p_pin text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/supplierOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_review_supplier_product",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_action text, p_reason text DEFAULT NULL::text, p_product_payload jsonb DEFAULT '{}'::jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/supplierOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_create_supplier_order",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_supplier_id uuid, p_payload jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/supplierOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_review_supplier_delivery",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_delivery_id uuid, p_action text, p_reason text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/supplierOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_update_supplier_payable",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_payable_id uuid, p_action text, p_payload jsonb DEFAULT '{}'::jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/supplierOperations.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_criar_vaquinha",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_dados jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/vaquinhaService.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_obter_vaquinha",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_codigo_ou_id text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/vaquinhaService.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_confirmar_contribuicao_vaquinha",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_contribuicao_id uuid, p_transacao_id text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/lib/vaquinhaService.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_advertiser_save_creative",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_creative_id uuid, p_campaign_id uuid, p_kind text, p_storage_path text, p_target_url text, p_headline text, p_body text, p_alt_text text, p_width integer, p_height integer, p_duration_seconds numeric",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/pages/AdvertiserPortal.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_advertiser_submit_creative",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_creative_id uuid",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/pages/AdvertiserPortal.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_advertiser_update_profile",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_payload jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/pages/AdvertiserPortal.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_public_get_career_application",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_protocol text, p_document text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/pages/Careers/CareersAccessPage.tsx"
+      ],
+      "isPublic": true,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_public_submit_career_application",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_payload jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/pages/Careers/CareersLandingPage.tsx"
+      ],
+      "isPublic": true,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_public_confirm_career_resume",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_protocol text, p_document text, p_storage_path text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/pages/Careers/CareersLandingPage.tsx"
+      ],
+      "isPublic": true,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "processar_bonus_boas_vindas_seguro",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_cliente_id uuid",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/pages/ClientPortal.tsx"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_public_register_supplier",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_payload jsonb",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/pages/Fornecedor/FornecedorAccessPage.tsx"
+      ],
+      "isPublic": true,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_baixar_fatura",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_fatura_id uuid, p_metodo text DEFAULT 'manual'::text, p_data_pagamento timestamp with time zone DEFAULT now(), p_observacoes text DEFAULT NULL::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/tests/super-domains-adversarial-challenger.test.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_approve_budget",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_request_id uuid DEFAULT NULL::uuid, p_orcamento_id uuid DEFAULT NULL::uuid, p_approval_kind text DEFAULT 'standard'::text",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "supabase_admin=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/tests/super-domains-adversarial-challenger.test.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_admin_save_collaborator",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_id uuid DEFAULT NULL::uuid, p_payload jsonb DEFAULT '{}'::jsonb, p_modules text[] DEFAULT ARRAY[]::text[]",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/tests/super-domains-adversarial-challenger.test.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": true,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "check_file_references",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_file_url text",
+          "ret": "json",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/validation/step4_integrity_audit.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "get_database_details",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "",
+          "ret": "json",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/validation/step4_integrity_audit.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_client_extend_subscription",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_ordem_assinatura_id uuid, p_meses integer",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/validation/step6_subscriptions.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    },
+    {
+      "rpc": "gsa_client_cancel_subscription",
+      "exists": true,
+      "signatures": [
+        {
+          "args": "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_ordem_assinatura_id uuid, p_data_cancelamento date",
+          "ret": "jsonb",
+          "secdef": true,
+          "acl": "=X/supabase_admin; supabase_admin=X/supabase_admin; anon=X/supabase_admin; authenticated=X/supabase_admin; service_role=X/supabase_admin"
+        }
+      ],
+      "callersCount": 1,
+      "callers": [
+        "src/validation/step6_subscriptions.ts"
+      ],
+      "isPublic": false,
+      "isAdmin": false,
+      "hasAnon": true,
+      "hasAuth": true,
+      "hasService": true
+    }
+  ]
+}

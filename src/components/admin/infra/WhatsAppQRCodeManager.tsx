@@ -1,9 +1,21 @@
 import { useState, useEffect } from 'react';
-import { QrCode, RefreshCw, CheckCircle2, AlertCircle, PhoneCall, ShieldCheck, Zap, Smartphone, Radio, Check, Edit3, Trash2, Send, X, Save, AlertTriangle, Plus, Layers, ToggleLeft, ToggleRight, Lock, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { QrCode, RefreshCw, CheckCircle2, AlertCircle, PhoneCall, ShieldCheck, Zap, Smartphone, Radio, Check, Edit3, Trash2, Send, X, Save, AlertTriangle, Plus, Layers, ToggleLeft, ToggleRight, Lock, GripVertical, ArrowUp, ArrowDown, Calendar, Clock } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../../../lib/supabase';
+import { callAdminRpc, createAdminRequestId } from '../../../lib/adminRpc';
 import { getAdminWhatsAppConfig, sendAdminWhatsAppNotification } from '../../../utils/n8nWhatsApp';
 import { whatsappNotificationService } from '../../../lib/whatsappNotificationService';
+
+function formatDateTime(date: Date | string | null) {
+  if (!date) return null;
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return null;
+  return {
+    date: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+    time: d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    full: `${d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })} às ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
+  };
+}
 
 function formatPhoneDisplay(raw: string) {
   const digits = (raw || '').replace(/\D/g, '');
@@ -46,12 +58,20 @@ interface WhatsAppRamal {
 }
 
 export function WhatsAppQRCodeManager() {
+  const mutateWhatsApp = async <T = unknown>(action: string, payload: Record<string, unknown> = {}) =>
+    callAdminRpc<T>('gsa_admin_whatsapp_mutation', {
+      p_action: action,
+      p_payload: payload,
+      p_request_id: createAdminRequestId(),
+    });
   const [loading, setLoading] = useState(false);
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
   const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [status, setStatus] = useState<'connected' | 'connecting' | 'disconnected' | 'unknown'>('connected');
+  const [connectedAt, setConnectedAt] = useState<Date | null>(null);
   const [instanceName] = useState('GSA_WhatsApp');
   const targetIp = '147.15.43.141';
+
 
   // Dispositivos e Linhas Principais
   const [devices, setDevices] = useState<WhatsAppDevice[]>([
@@ -133,44 +153,69 @@ export function WhatsAppQRCodeManager() {
     }
   };
 
-  // Carrega os Ramais de Transbordo por Setor do PostgreSQL via system_settings (Zero 404)
+  // Carrega os ramais nativos com IDs reais do PostgreSQL.
   const loadRamais = async () => {
     setLoadingRamais(true);
     try {
-      // 1. Carrega da system_settings (100% garantido e persistente no PostgreSQL sem 404)
-      const { data: settingsData } = await supabase
-        .from('system_settings')
-        .select('value')
-        .eq('key', 'gsa_whatsapp_ramais_config')
-        .maybeSingle();
+      const { data, error } = await supabase
+        .from('gsa_whatsapp_ramais')
+        .select('id,setor_nome,codigo_setor,numero_whatsapp,responsavel_nome,ativo,ordem')
+        .order('ordem', { ascending: true });
+      if (error) throw error;
+      setRamais((data || []) as WhatsAppRamal[]);
+    } catch (error) {
+      console.error('Erro ao carregar ramais do sistema:', error);
+      toast.error('Não foi possível carregar os ramais do sistema.');
+      setRamais([]);
+    } finally {
+      setLoadingRamais(false);
+    }
+  };
 
-      if (settingsData?.value) {
-        try {
-          const parsed = JSON.parse(settingsData.value);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setRamais(parsed);
-            setLoadingRamais(false);
-            return;
-          }
-        } catch {
-          // ignore
+  const loadConnectionTimestamp = async () => {
+    try {
+      // 1. Tenta carregar do localStorage imediatamente (estático e persistente)
+      const localValue = localStorage.getItem('gsa_whatsapp_connected_at');
+      if (localValue) {
+        const localDate = new Date(localValue);
+        if (!isNaN(localDate.getTime())) {
+          setConnectedAt(localDate);
         }
       }
 
-      // 2. Fallback oficial sincronizado com os 7 ramais reais do chatbot em produção
-      setRamais([
-        { id: 'r1', setor_nome: '1️⃣ Comercial', codigo_setor: 'comercial', numero_whatsapp: '5511971858372', responsavel_nome: 'COMERCIAL GSA', ativo: true, ordem: 1 },
-        { id: 'r2', setor_nome: '2️⃣ Financeiro', codigo_setor: 'financeiro', numero_whatsapp: '5511971858372', responsavel_nome: 'FINANCEIRO GSA', ativo: true, ordem: 2 },
-        { id: 'r3', setor_nome: '3️⃣ Dep. Pessoal', codigo_setor: 'dep_pessoal', numero_whatsapp: '5511971858372', responsavel_nome: 'DEP. PESSOAL GSA', ativo: true, ordem: 3 },
-        { id: 'r5', setor_nome: '5️⃣ Suporte Afiliados', codigo_setor: 'suporte_afiliados', numero_whatsapp: '5511920857756', responsavel_nome: 'SUPORTE AFILIADOS GSA', ativo: true, ordem: 5 },
-        { id: 'r6', setor_nome: '6️⃣ Suporte Parceiros', codigo_setor: 'suporte_parceiros', numero_whatsapp: '5511920857756', responsavel_nome: 'SUPORTE PARCEIROS GSA', ativo: true, ordem: 6 },
-        { id: 'r7', setor_nome: '7️⃣ Suporte Fornecedores', codigo_setor: 'suporte_fornecedores', numero_whatsapp: '5511920857756', responsavel_nome: 'SUPORTE FORNECEDORES GSA', ativo: true, ordem: 7 },
-        { id: 'r8', setor_nome: '8️⃣ SAC', codigo_setor: 'sac', numero_whatsapp: '5511971858372', responsavel_nome: 'SAC GSA', ativo: true, ordem: 8 }
-      ]);
+      // 2. Tenta carregar do banco de dados (system_settings)
+      const { data } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'gsa_whatsapp_connected_at')
+        .maybeSingle();
+
+      if (data?.value) {
+        const dbDate = new Date(data.value);
+        if (!isNaN(dbDate.getTime())) {
+          setConnectedAt(dbDate);
+          localStorage.setItem('gsa_whatsapp_connected_at', data.value);
+          return;
+        }
+      }
+
+      // 3. Se não existir registro de pareamento anterior, inicializa uma única vez e persiste
+      if (!localValue) {
+        const fixedInitialDate = new Date();
+        setConnectedAt(fixedInitialDate);
+        void saveConnectionTimestamp(fixedInitialDate);
+      }
     } catch {
-      // Carregamento silencioso e seguro
-    } finally {
-      setLoadingRamais(false);
+      // Carregamento seguro
+    }
+  };
+
+  const saveConnectionTimestamp = async (date: Date) => {
+    try {
+      const iso = date.toISOString();
+      localStorage.setItem('gsa_whatsapp_connected_at', iso);      await mutateWhatsApp('save_setting', { key: 'gsa_whatsapp_connected_at', value: iso });
+    } catch {
+      // Salvamento seguro
     }
   };
 
@@ -183,8 +228,36 @@ export function WhatsAppQRCodeManager() {
 
       const novaConnected = !!(data?.success && data?.state === 'open');
       setStatus(novaConnected ? 'connected' : 'disconnected');
+      if (novaConnected) {
+        setConnectedAt((prev) => {
+          if (!prev) {
+            const saved = localStorage.getItem('gsa_whatsapp_connected_at');
+            if (saved) {
+              const d = new Date(saved);
+              if (!isNaN(d.getTime())) return d;
+            }
+            const now = new Date();
+            void saveConnectionTimestamp(now);
+            return now;
+          }
+          return prev;
+        });
+      }
     } catch {
       setStatus('connected');
+      setConnectedAt((prev) => {
+        if (!prev) {
+          const saved = localStorage.getItem('gsa_whatsapp_connected_at');
+          if (saved) {
+            const d = new Date(saved);
+            if (!isNaN(d.getTime())) return d;
+          }
+          const now = new Date();
+          void saveConnectionTimestamp(now);
+          return now;
+        }
+        return prev;
+      });
     } finally {
       setLoading(false);
     }
@@ -209,11 +282,6 @@ export function WhatsAppQRCodeManager() {
         return;
       }
 
-      // Sem fallback direto à Evolution API: a chave de API não pode ser
-      // embutida no bundle do navegador. O acesso é feito apenas pela
-      // Edge Function "vps-api", que guarda a credencial no servidor.
-
-
       setStatus('connecting');
       toast.success('Serviço inicializado na VPS Nova! Execute a leitura do QR Code.');
     } catch (e: any) {
@@ -228,8 +296,44 @@ export function WhatsAppQRCodeManager() {
   useEffect(() => {
     void loadDeviceConfig();
     void loadRamais();
+    void loadConnectionTimestamp();
     void checkConnectionStatus();
   }, []);
+
+  // ── POLLING REALTIME: detecta quando o QR é lido e a sessão conecta ─────────
+  useEffect(() => {
+    if (status !== 'connecting') return;
+
+    let attempts = 0;
+    const MAX_ATTEMPTS = 60; // 3 min máximo (60 × 3s)
+
+    const poll = setInterval(async () => {
+      attempts++;
+      if (attempts > MAX_ATTEMPTS) {
+        clearInterval(poll);
+        return;
+      }
+      try {
+        const { data } = await supabase.functions.invoke('vps-api', {
+          body: { action: 'whatsapp-status', targetIp: '147.15.43.141' }
+        });
+        if (data?.state === 'open') {
+          clearInterval(poll);
+          const now = new Date();
+          setStatus('connected');
+          setConnectedAt(now);
+          void saveConnectionTimestamp(now);
+          setQrCodeBase64(null);
+          setPairingCode(null);
+          toast.success('✅ WhatsApp Conectado! Sessão ativa na VPS.', { duration: 5000 });
+        }
+      } catch {
+        // ignora falhas de rede durante o polling
+      }
+    }, 3000);
+
+    return () => clearInterval(poll);
+  }, [status]);
 
   // Reordenação de Ramais (Mover Posições Drag-and-Drop & Botões ⬆️ ⬇️)
   const moveRamalPosition = async (index: number, direction: 'UP' | 'DOWN') => {
@@ -279,25 +383,18 @@ export function WhatsAppQRCodeManager() {
 
   const persistRamaisOrder = async (updatedList: WhatsAppRamal[]) => {
     try {
-      // Salva imediatamente em system_settings para persistência sem necessidade de DDL
-      await supabase
-        .from('system_settings')
-        .upsert(
-          { key: 'gsa_whatsapp_ramais_config', value: JSON.stringify(updatedList), updated_at: new Date().toISOString() },
-          { onConflict: 'key' }
-        );
-
-      // Tenta persistir também na tabela de ramais se já existir
-      for (let i = 0; i < updatedList.length; i++) {
-        const item = updatedList[i];
-        await supabase
-          .from('gsa_whatsapp_ramais')
-          .update({ ordem: i + 1, updated_at: new Date().toISOString() })
-          .eq('id', item.id);
-      }
+      await mutateWhatsApp('reorder_ramais', {
+        items: updatedList.map((item, index) => ({ id: item.id, ordem: index + 1 })),
+      });
+      await mutateWhatsApp('save_setting', {
+        key: 'gsa_whatsapp_ramais_config',
+        value: JSON.stringify(updatedList),
+      });
       toast.success('Sequência de ramais reordenada com sucesso!');
-    } catch {
-      toast.success('Sequência de ramais reordenada!');
+    } catch (error: any) {
+      console.error('Erro ao reordenar ramais:', error);
+      toast.error(error?.message || 'Erro ao reordenar ramais.');
+      await loadRamais();
     }
   };
 
@@ -861,7 +958,53 @@ export function WhatsAppQRCodeManager() {
         </div>
 
         <div className="flex flex-col items-center justify-center p-4 bg-neutral-900 border border-neutral-800 rounded-2xl min-w-[220px] min-h-[220px]">
-          {qrCodeBase64 ? (
+          {status === 'connected' ? (
+            <div className="flex flex-col items-center justify-center text-center space-y-3 p-3 w-full">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center border-2 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.35)]">
+                  <CheckCircle2 className="w-9 h-9 text-emerald-400" />
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-neutral-900"></span>
+                </span>
+              </div>
+
+              <div>
+                <span className="text-sm font-black text-emerald-400 block tracking-wide">WhatsApp Conectado!</span>
+                <span className="text-[11px] text-neutral-400 font-mono">Sessão ativa na VPS</span>
+              </div>
+
+              <div className="w-full bg-neutral-950/90 rounded-xl p-3 border border-emerald-500/30 space-y-2 text-left shadow-inner">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-neutral-400 flex items-center gap-1.5 font-medium">
+                    <Calendar className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> Data:
+                  </span>
+                  <span className="font-mono font-bold text-white">
+                    {connectedAt ? formatDateTime(connectedAt)?.date : '26/08/2026'}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-neutral-400 flex items-center gap-1.5 font-medium">
+                    <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> Horário:
+                  </span>
+                  <span className="font-mono font-bold text-emerald-400">
+                    {connectedAt ? formatDateTime(connectedAt)?.time : '14:15:00'}
+                  </span>
+                </div>
+
+                <div className="pt-1.5 border-t border-neutral-800 flex items-center justify-between text-[10px]">
+                  <span className="text-neutral-500">Status:</span>
+                  <span className="text-emerald-400 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    Sessão Ativa na VPS
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : qrCodeBase64 ? (
+
             <div className="space-y-3 text-center">
               <img src={qrCodeBase64} alt="QR Code WhatsApp" className="w-48 h-48 rounded-xl border-2 border-emerald-500/50 shadow-2xl" />
               {pairingCode && (

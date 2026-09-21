@@ -1,26 +1,29 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type React from 'react';
+import type { FormEvent } from 'react';
 import {
-  BarChart3,
-  CalendarClock,
-  CheckCircle2,
-  FileImage,
-  MailPlus,
   Megaphone,
   MessageSquareText,
-  Pause,
-  Play,
+  CalendarClock,
+  FileImage,
+  WalletCards,
+  BarChart3,
   RefreshCw,
   Search,
+  MailPlus,
+  Pause,
+  Play,
   Settings2,
-  WalletCards,
   XCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
+import { formatCurrency } from '../../lib/utils';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import type {
   AdvertisingAdminOverview,
   AdvertisingCampaign,
-  AdvertisingCampaignStatus,
   AdvertisingCreative,
   AdvertisingPayment,
   AdvertisingPaymentStatus,
@@ -30,34 +33,42 @@ import type {
   AdvertisingRequestStatus,
 } from '../../types/advertising';
 
-const EMPTY: AdvertisingAdminOverview = { requests: [], proposals: [], campaigns: [], placements: [] };
-type Tab = 'requests' | 'proposals' | 'campaigns' | 'creatives' | 'payments' | 'inventory';
+const ADVERTISER_ADMIN_FUNCTION = 'gsa-ads-admin'; // 'gsa-advertiser-admin'
 
-const REQUEST_LABELS: Record<AdvertisingRequestStatus, string> = {
+const EMPTY: AdvertisingAdminOverview = {
+  requests: [],
+  proposals: [],
+  campaigns: [],
+  placements: [],
+};
+
+const REQUEST_LABELS: Record<string, string> = {
   draft: 'Rascunho',
   submitted: 'Recebida',
   under_review: 'Em análise',
-  awaiting_information: 'Aguardando informações',
+  awaiting_information: 'Aguardando info',
   proposal_sent: 'Proposta enviada',
-  negotiation_requested: 'Em negociação',
+  negotiation_requested: 'Negociação',
   accepted: 'Aceita',
-  rejected: 'Recusada',
+  rejected: 'Rejeitada',
   cancelled: 'Cancelada',
 };
-const CAMPAIGN_LABELS: Record<AdvertisingCampaignStatus, string> = {
+
+const CAMPAIGN_LABELS: Record<string, string> = {
   draft: 'Rascunho',
-  payment_pending: 'Aguardando pagamento',
+  payment_pending: 'Pagamento pendente',
   payment_overdue: 'Pagamento vencido',
-  creative_review: 'Criativo em análise',
+  creative_review: 'Revisão de criativo',
   scheduled: 'Agendada',
   active: 'Ativa',
   paused: 'Pausada',
   completed: 'Concluída',
   cancelled: 'Cancelada',
 };
-const PAYMENT_LABELS: Record<AdvertisingPaymentStatus, string> = {
+
+const PAYMENT_LABELS: Record<string, string> = {
   pending: 'Pendente',
-  processing: 'Em processamento',
+  processing: 'Processando',
   paid: 'Pago',
   failed: 'Falhou',
   overdue: 'Vencido',
@@ -65,33 +76,28 @@ const PAYMENT_LABELS: Record<AdvertisingPaymentStatus, string> = {
   cancelled: 'Cancelado',
 };
 
-function money(value: unknown) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
-}
-function date(value?: string | null) {
-  if (!value) return 'A definir';
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? 'Data inválida' : new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' }).format(parsed);
-}
-function message(error: unknown, fallback: string) {
-  return error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' ? error.message : fallback;
-}
-function today(offset = 0) {
-  const value = new Date();
-  value.setDate(value.getDate() + offset);
-  return value.toISOString().slice(0, 10);
-}
+type Tab = 'requests' | 'proposals' | 'campaigns' | 'creatives' | 'payments' | 'inventory';
+
+const money = (v: number) => formatCurrency(v || 0);
+const date = (d?: string | null) => (d ? new Date(d).toLocaleDateString('pt-BR') : '—');
+const today = (plusDays = 0) => {
+  const d = new Date();
+  d.setDate(d.getDate() + plusDays);
+  return d.toISOString().split('T')[0];
+};
+const message = (err: any, fallback: string) => err?.message || fallback;
 
 export function AdvertisingAdminModule() {
-  const [overview, setOverview] = useState<AdvertisingAdminOverview>(EMPTY);
   const [tab, setTab] = useState<Tab>('requests');
+  const [overview, setOverview] = useState<AdvertisingAdminOverview>(EMPTY);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [actionId, setActionId] = useState<string | null>(null);
+
   const [proposalRequest, setProposalRequest] = useState<AdvertisingRequest | null>(null);
   const [amount, setAmount] = useState('');
   const [startsOn, setStartsOn] = useState(today(7));
-  const [endsOn, setEndsOn] = useState(today(36));
+  const [endsOn, setEndsOn] = useState(today(37));
   const [validUntil, setValidUntil] = useState(today(7));
   const [frequencyModel, setFrequencyModel] = useState('once_per_day');
   const [frequencyValue, setFrequencyValue] = useState('1');
@@ -132,6 +138,15 @@ export function AdvertisingAdminModule() {
   }, []);
 
   useEffect(() => { void load(); }, [load]);
+
+  useRealtimeSubscription([
+    { table: 'gsa_ad_requests', onChange: load, debounceMs: 300 },
+    { table: 'gsa_ad_proposals', onChange: load, debounceMs: 300 },
+    { table: 'gsa_ad_campaigns', onChange: load, debounceMs: 300 },
+    { table: 'gsa_ad_creatives', onChange: load, debounceMs: 300 },
+    { table: 'gsa_ad_payments', onChange: load, debounceMs: 300 },
+    { table: 'gsa_ad_placements', onChange: load, debounceMs: 300 },
+  ], [load]);
 
   const filteredRequests = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -201,7 +216,7 @@ export function AdvertisingAdminModule() {
           terms: terms.trim(),
         },
       }, 'Proposta gravada no sistema.');
-      const { data: invite, error: inviteError } = await supabase.functions.invoke('gsa-ads-admin', { body: { action: 'invite', request_id: proposalRequest.id } });
+      const { data: invite, error: inviteError } = await supabase.functions.invoke(ADVERTISER_ADMIN_FUNCTION, { body: { action: 'invite', request_id: proposalRequest.id } });
       if (inviteError || !invite?.success) toast.error('A proposta foi criada, mas o convite do portal não foi enviado. Reenvie o acesso.');
       else toast.success(data?.version ? `Proposta v${data.version} liberada no portal.` : 'Portal do anunciante liberado.');
       setProposalRequest(null);
@@ -214,7 +229,7 @@ export function AdvertisingAdminModule() {
   const invite = async (request: AdvertisingRequest) => {
     setActionId(request.id);
     try {
-      const { data, error } = await supabase.functions.invoke('gsa-ads-admin', { body: { action: 'invite', request_id: request.id } });
+      const { data, error } = await supabase.functions.invoke(ADVERTISER_ADMIN_FUNCTION, { body: { action: 'invite', request_id: request.id } });
       if (error || !data?.success) throw error || new Error('Convite recusado.');
       toast.success(data.already_linked ? 'Acesso reenviado ao anunciante.' : 'Convite enviado ao anunciante.');
       await load();
@@ -347,18 +362,18 @@ export function AdvertisingAdminModule() {
 
       {tab === 'inventory' && <div className="grid gap-3 lg:grid-cols-2">{overview.placements.map((item) => <article key={item.id} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"><div className="flex justify-between gap-3"><div><h2 className="font-black">{item.name}</h2><p className="font-mono text-xs text-neutral-500">{item.code}</p></div><span className={`h-fit rounded-full px-3 py-1 text-xs font-black ${item.active ? 'bg-emerald-100 text-emerald-700' : 'bg-neutral-100'}`}>{item.active ? 'Ativa' : 'Inativa'}</span></div><p className="mt-3 text-sm text-neutral-600">Capacidade: {item.capacity} · Preço diário: {money(item.base_daily_price)}</p><button onClick={() => openPlacement(item)} className="mt-4 flex items-center gap-1 rounded-lg border px-3 py-2 text-xs font-bold"><Settings2 className="h-3.5 w-3.5" />Configurar</button></article>)}</div>}
 
-      {proposalRequest && <Modal title={`Proposta para ${proposalRequest.company_name}`} onClose={() => setProposalRequest(null)}><form onSubmit={submitProposal} className="space-y-4"><div className="grid gap-3 sm:grid-cols-2"><Input label="Valor" value={amount} onChange={setAmount} type="number" /><Input label="Validade" value={validUntil} onChange={setValidUntil} type="date" /><Input label="Início" value={startsOn} onChange={setStartsOn} type="date" /><Input label="Término" value={endsOn} onChange={setEndsOn} type="date" /></div><select value={frequencyModel} onChange={(event) => setFrequencyModel(event.target.value)} className="w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-amber-400"><option value="once_per_session">Uma vez por sessão</option><option value="once_per_day">Uma vez por dia</option><option value="interval_hours">Intervalo em horas</option><option value="daily_limit">Limite diário</option><option value="unlimited">Sem limite individual</option></select>{['interval_hours', 'daily_limit'].includes(frequencyModel) && <Input label="Valor da frequência" value={frequencyValue} onChange={setFrequencyValue} type="number" />}<Input label="Limite total de impressões (opcional)" value={impressionLimit} onChange={setImpressionLimit} type="number" /><textarea value={terms} onChange={(event) => setTerms(event.target.value)} rows={4} className="w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-amber-400" /><Submit busy={actionId === proposalRequest.id} text="Gravar proposta e liberar portal" /></form></Modal>}
+      {proposalRequest && <Modal title={`Proposta para ${proposalRequest.company_name}`} onClose={() => setProposalRequest(null)}><form onSubmit={submitProposal} className="space-y-4"><div className="grid gap-3 sm:grid-cols-2"><Input  label="Valor" value={amount} onChange={setAmount} type="number" inputMode="numeric"/><Input label="Validade" value={validUntil} onChange={setValidUntil} type="date" /><Input label="Início" value={startsOn} onChange={setStartsOn} type="date" /><Input label="Término" value={endsOn} onChange={setEndsOn} type="date" /></div><select value={frequencyModel} onChange={(event) => setFrequencyModel(event.target.value)} className="w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-amber-400"><option value="once_per_session">Uma vez por sessão</option><option value="once_per_day">Uma vez por dia</option><option value="interval_hours">Intervalo em horas</option><option value="daily_limit">Limite diário</option><option value="unlimited">Sem limite individual</option></select>{['interval_hours', 'daily_limit'].includes(frequencyModel) && <Input  label="Valor da frequência" value={frequencyValue} onChange={setFrequencyValue} type="number" inputMode="numeric"/>}<Input  label="Limite total de impressões (opcional)" value={impressionLimit} onChange={setImpressionLimit} type="number" inputMode="numeric"/><textarea value={terms} onChange={(event) => setTerms(event.target.value)} rows={4} className="w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-amber-400" /><Submit busy={actionId === proposalRequest.id} text="Gravar proposta e liberar portal" /></form></Modal>}
       {reviewCreative && <Modal title={reviewApproved ? 'Aprovar criativo' : 'Solicitar correção'} onClose={() => setReviewCreative(null)}><form onSubmit={submitReview} className="space-y-4">{!reviewApproved && <textarea required value={reviewReason} onChange={(event) => setReviewReason(event.target.value)} placeholder="Explique o ajuste necessário" rows={4} className="w-full rounded-xl border border-neutral-200 px-3 py-2 outline-none focus:border-amber-400" />}<Submit busy={actionId === reviewCreative.id} text={reviewApproved ? 'Confirmar aprovação' : 'Devolver para correção'} /></form></Modal>}
       {paymentAction && <Modal title={`Atualizar pagamento para ${PAYMENT_LABELS[paymentAction.status]}`} onClose={() => setPaymentAction(null)}><form onSubmit={submitPayment} className="space-y-4"><Input label="Referência" value={paymentReference} onChange={setPaymentReference} /><Input label="Método" value={paymentMethod} onChange={setPaymentMethod} /><Submit busy={actionId === paymentAction.payment.id} text="Confirmar atualização" /></form></Modal>}
-      {placement && <Modal title={`Configurar ${placement.name}`} onClose={() => setPlacement(null)}><form onSubmit={submitPlacement} className="space-y-4"><Input label="Capacidade" value={capacity} onChange={setCapacity} type="number" /><Input label="Preço diário" value={basePrice} onChange={setBasePrice} type="number" /><label className="flex gap-2"><input type="checkbox" checked={placementActive} onChange={(event) => setPlacementActive(event.target.checked)} />Posição ativa</label><label className="flex gap-2"><input type="checkbox" checked={placementExclusive} onChange={(event) => setPlacementExclusive(event.target.checked)} />Exclusiva</label><div className="flex gap-3">{['desktop', 'tablet', 'mobile'].map((device) => <label key={device} className="flex gap-1"><input type="checkbox" checked={placementDevices.includes(device)} onChange={() => setPlacementDevices((current) => current.includes(device) ? current.filter((item) => item !== device) : [...current, device])} />{device}</label>)}</div><Submit busy={actionId === placement.id} text="Salvar inventário" /></form></Modal>}
+      {placement && <Modal title={`Configurar ${placement.name}`} onClose={() => setPlacement(null)}><form onSubmit={submitPlacement} className="space-y-4"><Input  label="Capacidade" value={capacity} onChange={setCapacity} type="number" inputMode="numeric"/><Input  label="Preço diário" value={basePrice} onChange={setBasePrice} type="number" inputMode="numeric"/><label className="flex gap-2"><input type="checkbox" checked={placementActive} onChange={(event) => setPlacementActive(event.target.checked)} />Posição ativa</label><label className="flex gap-2"><input type="checkbox" checked={placementExclusive} onChange={(event) => setPlacementExclusive(event.target.checked)} />Exclusiva</label><div className="flex gap-3">{['desktop', 'tablet', 'mobile'].map((device) => <label key={device} className="flex gap-1"><input type="checkbox" checked={placementDevices.includes(device)} onChange={() => setPlacementDevices((current) => current.includes(device) ? current.filter((item) => item !== device) : [...current, device])} />{device}</label>)}</div><Submit busy={actionId === placement.id} text="Salvar inventário" /></form></Modal>}
     </section>
   );
 }
 
 function ProposalCard({ proposal }: { proposal: AdvertisingProposal; key?: string }) {
-  return <article className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"><div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-black">{proposal.company_name || `Proposta ${proposal.id.slice(0, 8)}`}</h2><p className="text-sm text-neutral-500">Versão {proposal.current_version} · válida até {date(proposal.valid_until)}</p></div><div className="text-right"><p className="text-lg font-black">{money(proposal.total_amount)}</p><p className="text-xs font-bold uppercase text-neutral-500">{proposal.status}</p></div></div>{proposal.negotiations?.length ? <div className="mt-4 space-y-2 border-t pt-4">{proposal.negotiations.map((item) => <p key={item.id} className="rounded-xl bg-neutral-50 p-3 text-sm"><strong>{item.actor_type === 'admin' ? 'GSA' : 'Anunciante'}:</strong> {item.message}{item.proposed_amount ? ` — ${money(item.proposed_amount)}` : ''}</p>)}</div> : null}</article>;
+  return <article className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"><div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-black">{proposal.company_name || `Proposta ${proposal.id.slice(0, 8)}`}</h2><p className="text-sm text-neutral-500">Versão {proposal.current_version} · válida até {date(proposal.valid_until)}</p></div><div className="text-right"><p className="text-lg font-black">{money(proposal.total_amount)}</p><p className="text-xs font-bold uppercase text-neutral-500">{proposal.status}</p></div></div>{proposal.negotiations?.length ? <div className="mt-4 space-y-2 border-t pt-4">{proposal.negotiations.map((item) => <p key={item.id} className="rounded-xl bg-neutral-50 p-3 text-sm"><strong>{item.actor_type === 'admin' ? 'GSA' : 'Anunciante'}:</strong> {item.message}{item.proposed_amount ? ` — ${money(item.proposed_amount)}` : ''}</p>)}</div> : null}</article>;
 }
 function Empty({ text }: { text: string }) { return <div className="rounded-2xl border border-dashed border-neutral-200 bg-white p-10 text-center text-sm font-bold text-neutral-400">{text}</div>; }
-function Input({ label, value, onChange, type = 'text' }: { label: string; value: string; onChange: (value: string) => void; type?: string }) { return <label className="block text-sm font-bold">{label}<input required={label !== 'Limite total de impressões (opcional)'} type={type} value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2 font-normal outline-none focus:border-amber-400" /></label>; }
+function Input({ label, value, onChange, type = 'text', inputMode }: { label: string; value: string; onChange: (value: string) => void; type?: string; inputMode?: "search" | "text" | "email" | "tel" | "url" | "none" | "numeric" | "decimal" }) { return <label className="block text-sm font-bold">{label}<input required={label !== 'Limite total de impressões (opcional)'} type={type} inputMode={inputMode} value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2 font-normal outline-none focus:border-amber-400" /></label>; }
 function Submit({ busy, text }: { busy: boolean; text: string }) { return <button disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-950 px-4 py-3 font-black text-white disabled:opacity-50">{busy ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}{text}</button>; }
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) { return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"><div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-3xl bg-white p-6 shadow-2xl"><div className="mb-5 flex items-center justify-between"><h2 className="text-xl font-black">{title}</h2><button type="button" onClick={onClose}><XCircle className="h-6 w-6" /></button></div>{children}</div></div>; }

@@ -1,0 +1,20 @@
+{
+  "valid": true,
+  "timestamp": "2026-09-16T14:42:54.870Z",
+  "details": {
+    "tablesChecked": 8,
+    "columnsChecked": 113,
+    "rpcsChecked": 24,
+    "permissionsChecked": 24,
+    "rlsPoliciesChecked": 8
+  },
+  "blockers": [],
+  "warnings": [],
+  "summary": {
+    "status": "PASSED",
+    "totalIssues": 0,
+    "blockerCount": 0,
+    "warningCount": 0
+  },
+  "dataSource": "local_migrations_snapshot"
+}

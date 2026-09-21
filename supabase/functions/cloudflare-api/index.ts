@@ -30,7 +30,7 @@ async function handleRequest(request: Request) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(origin) });
 
   // Autenticação básica
-  const authHeader = request.headers.get('authorization');
+  const authHeader = request.headers.get('authorization') || (request.headers.get('apikey') ? `Bearer ${request.headers.get('apikey')}` : null);
   if (!authHeader) return json(401, { error: 'Missing authorization header' }, origin);
   
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -44,8 +44,20 @@ async function handleRequest(request: Request) {
     global: { headers: { Authorization: authHeader } }
   });
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) return json(401, { error: 'Unauthorized user' }, origin);
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const token = authHeader.replace(/^bearer\s+/i, '').trim();
+  const isServiceRole = Boolean(serviceRoleKey && token === serviceRoleKey);
+
+  if (!isServiceRole) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) return json(401, { error: 'Unauthorized user' }, origin);
+
+    const actorType = user.app_metadata?.gsa_actor_type || user.app_metadata?.role || user.user_metadata?.role || user.role;
+    const isPrivileged = actorType === 'admin' || actorType === 'colaborador' || user.role === 'service_role';
+    if (!isPrivileged) {
+      return json(403, { error: 'Forbidden: requires admin or colaborador role' }, origin);
+    }
+  }
 
   const cfToken = Deno.env.get('CLOUDFLARE_API_TOKEN');
   const cfZoneId = Deno.env.get('CLOUDFLARE_ZONE_ID');

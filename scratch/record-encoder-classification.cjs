@@ -1,0 +1,11 @@
+const fs=require('fs');
+const file='/home/opc/gsa-ai/GSA_TV_MEMORY_CHANGELOG.md';
+const marker='encoder-process-classification-20260909-1948';
+if(fs.readFileSync(file,'utf8').includes(marker))process.exit(0);
+const now=new Date();
+const entry=`\n## ${now.toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})} BRT — Identificação segura dos processos de vídeo\n\n- Inspeção de argumentos feita sem expor URLs/chaves: PID 2639753, anteriormente observado com 277% CPU, produz saída HLS e tem como pai node PID 1495730. PID 2628702 compartilha esse pai e tem saída de rede RTMP/SRT/UDP e opção copy. São evidências de caminho de transmissão, não de render de master MP4; não foram interrompidos. A opção copy pode referir-se a um fluxo apenas e não significa ausência de codificação.\n- Um terceiro ffmpeg transitório apareceu na amostra inicial, mas já não existia na classificação; finalidade não determinada. Não atribuir sua carga ao produtor legado sem evidência.\n- Controlador e worker permanecem com as mesmas datas de alteração. Disco 92%, 17GiB livres. Nenhum master novo aprovado ou ciclo noturno concluído foi comprovado nesta rodada.\n- Criado utilitário de diagnóstico /home/opc/gsa-ai/work/classify-gsa-ffmpeg.cjs: somente leitura de processos e saída categorizada, sem argumentos sensíveis.\n- Identificador: ${marker}\n`;
+const backup=file+'.bak-process-audit-'+now.toISOString().replace(/[:.]/g,'-');
+fs.copyFileSync(file,backup,fs.constants.COPYFILE_EXCL);
+fs.appendFileSync(file,entry);
+if(!fs.readFileSync(file,'utf8').endsWith(entry))throw Error('Verification failed');
+console.log(JSON.stringify({registered:true,backup}));

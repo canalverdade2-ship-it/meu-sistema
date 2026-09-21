@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type React from 'react';
 import {
   AlertCircle,
+  ArrowRight,
   Banknote,
   CheckCircle2,
   Clock,
@@ -18,6 +19,7 @@ import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
 import { formatCurrency, formatDate } from '../../lib/utils';
 import { useAdminNotifications } from '../../hooks/useAdminNotifications';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 interface DashboardProps {
   onNavigate?: (module: string, tab?: string) => void;
@@ -155,6 +157,34 @@ function Row({
   );
 }
 
+function PriorityCard({
+  label, detail, count, icon: Icon, urgency, onClick,
+}: {
+  label: string;
+  detail: string;
+  count: number;
+  icon: React.ElementType;
+  urgency: 'critical' | 'attention' | 'normal';
+  onClick: () => void;
+}) {
+  const styles = urgency === 'critical'
+    ? 'border-rose-200 bg-rose-50/70 text-rose-700'
+    : urgency === 'attention'
+      ? 'border-amber-200 bg-amber-50/70 text-amber-700'
+      : 'border-indigo-100 bg-indigo-50/60 text-indigo-700';
+  return (
+    <button type="button" onClick={onClick} className={`group flex min-h-28 items-center gap-4 rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${styles}`}>
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/80 shadow-sm"><Icon className="h-5 w-5" /></span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-2xl font-black tabular-nums text-neutral-950">{count}</span>
+        <span className="block text-sm font-black text-neutral-900">{label}</span>
+        <span className="mt-0.5 block text-xs font-medium text-neutral-500">{detail}</span>
+      </span>
+      <ArrowRight className="h-4 w-4 shrink-0 opacity-40 transition group-hover:translate-x-0.5 group-hover:opacity-100" />
+    </button>
+  );
+}
+
 export function Dashboard({
   onNavigate,
   adminType = 'admin',
@@ -177,8 +207,17 @@ export function Dashboard({
         lists: data?.lists || {},
       });
     } catch (error: any) {
-      console.error('Erro ao carregar dashboard administrativo:', error);
-      toast.error(error?.message || 'Não foi possível carregar o dashboard.');
+      const errorMsg = String(error?.message || '').toLowerCase();
+      const isAuthError =
+        error?.code === '42501' ||
+        error?.status === 401 ||
+        errorMsg.includes('sessão administrativa') ||
+        errorMsg.includes('sessao administrativa') ||
+        errorMsg.includes('expirada');
+      if (!isAuthError) {
+        console.error('Erro ao carregar dashboard administrativo:', error);
+        toast.error(error?.message || 'Não foi possível carregar o dashboard.');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -187,17 +226,27 @@ export function Dashboard({
 
   useEffect(() => {
     void load();
-    const interval = window.setInterval(() => {
-      if (document.visibilityState === 'visible') void load(true);
-    }, 60_000);
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') void load(true);
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-    return () => {
-      window.clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
+  }, [load]);
+
+  useRealtimeSubscription([
+    { table: 'faturas', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'cobrancas', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'saques', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'emprestimos', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'orcamentos', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'ordens_servico', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'ordens_fiscais', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'tickets', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'clientes', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'ordens_compra', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'vouchers', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'prestador_demandas', onChange: () => void load(true), debounceMs: 500 },
+    { table: 'promocoes', onChange: () => void load(true), debounceMs: 500 },
+  ]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => void load(true), 60_000);
+    return () => window.clearInterval(interval);
   }, [load]);
 
   const trend = useMemo(() => {
@@ -313,18 +362,32 @@ export function Dashboard({
     onClick: () => void;
   }>;
 
+  const providerPendencies = pendencies.cadastro_prestadores_pendentes + pendencies.cadastro_prestadores_analise;
+  const supportPendencies = Math.max(pendencies.suporte_tickets_abertos, pendencies.suporte_mensagens_nao_lidas);
+  const priorityItems = [
+    snapshot.permissions.financeiro && pendencies.financeiro_faturas_vencidas > 0 && { label: 'Faturas vencidas', detail: 'Cobrança ou baixa necessária', count: pendencies.financeiro_faturas_vencidas, icon: AlertCircle, urgency: 'critical' as const, onClick: () => onNavigate?.('financeiro', 'faturas') },
+    snapshot.permissions.financeiro && pendencies.cobrancas_criticas > 0 && { label: 'Cobranças críticas', detail: 'Casos que exigem ação imediata', count: pendencies.cobrancas_criticas, icon: Landmark, urgency: 'critical' as const, onClick: () => onNavigate?.('cobranca', 'fila') },
+    snapshot.permissions.operacoes && pendencies.vendas_orcamentos_pendentes > 0 && { label: 'Orçamentos para analisar', detail: 'Aguardando decisão da operação', count: pendencies.vendas_orcamentos_pendentes, icon: FileText, urgency: 'attention' as const, onClick: () => onNavigate?.('operacoes', 'orcamentos') },
+    snapshot.permissions.operacoes && pendencies.moduleDemandas > 0 && { label: 'Demandas aguardando ação', detail: 'Triagem, responsável ou andamento', count: pendencies.moduleDemandas, icon: Clock, urgency: 'attention' as const, onClick: () => onNavigate?.('demandas') },
+    snapshot.permissions.cadastro && providerPendencies > 0 && { label: 'Prestadores para revisar', detail: 'Cadastro ou análise pendente', count: providerPendencies, icon: Users, urgency: 'attention' as const, onClick: () => onNavigate?.('cadastro', 'prestadores') },
+    snapshot.permissions.atendimento && supportPendencies > 0 && { label: 'Atendimentos pendentes', detail: 'Tickets ou mensagens aguardando retorno', count: supportPendencies, icon: MessageSquare, urgency: 'normal' as const, onClick: () => onNavigate?.('atendimento') },
+    snapshot.permissions.financeiro && pendencies.fiscal_pendencias > 0 && { label: 'Pendências fiscais', detail: 'Documentos fiscais aguardando tratamento', count: pendencies.fiscal_pendencias, icon: FileText, urgency: 'normal' as const, onClick: () => onNavigate?.('fiscal') },
+  ].filter(Boolean) as Array<{ label: string; detail: string; count: number; icon: React.ElementType; urgency: 'critical' | 'attention' | 'normal'; onClick: () => void }>;
+
+  const priorityTotal = priorityItems.reduce((total, item) => total + item.count, 0);
+
   return (
     <div className="space-y-8 pb-12">
-      <header className="relative overflow-hidden rounded-[2.5rem] bg-[#0F0F0F] p-8 text-white shadow-xl md:p-10">
+      <header className="relative overflow-hidden rounded-[2rem] bg-[#0F0F0F] p-6 text-white shadow-xl md:p-7">
         <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl" />
         <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-white/40">Painel administrativo seguro</p>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-white/40">Central de trabalho</p>
             <h1 className="mt-2 text-3xl font-black tracking-tight">
               Olá, {adminType === 'admin' ? 'Administrador' : colaboradorNome || 'Colaborador'}
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-white/55">
-              Os indicadores abaixo são calculados no servidor e limitados aos módulos autorizados para sua sessão.
+              {priorityTotal > 0 ? `Você tem ${priorityTotal} item${priorityTotal === 1 ? '' : 's'} priorizado${priorityTotal === 1 ? '' : 's'} para resolver agora.` : 'Nenhuma pendência prioritária foi identificada agora.'}
             </p>
           </div>
           <button
@@ -337,6 +400,27 @@ export function Dashboard({
           </button>
         </div>
       </header>
+
+      <section className="rounded-[2rem] border border-neutral-200 bg-neutral-50/70 p-5 sm:p-6">
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-600">Prioridade operacional</p>
+            <h2 className="mt-1 text-xl font-black text-neutral-950">Minha fila</h2>
+            <p className="mt-1 text-sm text-neutral-500">Entre, resolva o que importa e só depois navegue pelos módulos.</p>
+          </div>
+          {priorityTotal > 0 && <span className="w-fit rounded-full bg-neutral-950 px-3 py-1.5 text-xs font-black text-white">{priorityTotal} para resolver</span>}
+        </div>
+        {priorityItems.length > 0 ? (
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {priorityItems.map((item) => <PriorityCard key={item.label} {...item} />)}
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-emerald-800">
+            <CheckCircle2 className="h-5 w-5 shrink-0" />
+            <div><p className="text-sm font-black">Fila prioritária em dia</p><p className="text-xs text-emerald-700/70">Use os indicadores e atalhos abaixo para acompanhar a operação.</p></div>
+          </div>
+        )}
+      </section>
 
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {cards.map((card) => <KpiCard key={card.label} {...card} />)}

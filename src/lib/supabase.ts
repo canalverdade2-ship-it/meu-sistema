@@ -326,7 +326,7 @@ export const getSupabase = (): SupabaseClient => {
       auth: {
         persistSession: true,
         storage: sessionStorageAdapter,
-        autoRefreshToken: true,
+        autoRefreshToken: false,
         detectSessionInUrl: true,
         flowType: 'pkce',
       },

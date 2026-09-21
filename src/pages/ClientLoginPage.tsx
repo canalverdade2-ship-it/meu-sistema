@@ -452,7 +452,7 @@ export function ClientLoginPage({
               ? 'rounded-[2rem] border-white/10 bg-[#0b1726]/90 shadow-black/40'
               : 'rounded-[2rem] border-[#d8bd73]/30 bg-white/85 shadow-[#142030]/15'
           }`}>
-            <section className={`relative overflow-hidden p-7 sm:p-10 lg:p-14 ${
+            <section className={`hidden lg:block relative overflow-hidden p-7 sm:p-10 lg:p-14 ${
               isBusiness
                 ? 'bg-[linear-gradient(145deg,#0d1d2f_0%,#07111f_74%)]'
                 : 'bg-[linear-gradient(145deg,#142030_0%,#0b111a_78%)] text-white'

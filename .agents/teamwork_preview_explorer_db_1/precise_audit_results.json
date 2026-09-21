@@ -1,0 +1,618 @@
+{
+  "timestamp": "2026-08-26T23:17:25.729Z",
+  "missingTables": [
+    {
+      "table": "gsa_tv_channels",
+      "locations": [
+        "src\\components\\admin\\GsaTvModule.tsx:238",
+        "src\\components\\admin\\GsaTvModule.tsx:578"
+      ]
+    },
+    {
+      "table": "gsa_tv_media_items",
+      "locations": [
+        "src\\components\\admin\\GsaTvModule.tsx:256",
+        "src\\components\\admin\\GsaTvModule.tsx:502"
+      ]
+    },
+    {
+      "table": "gsa_tv_schedule_slots",
+      "locations": [
+        "src\\components\\admin\\GsaTvModule.tsx:278",
+        "src\\components\\admin\\GsaTvModule.tsx:547",
+        "src\\components\\admin\\GsaTvModule.tsx:565"
+      ]
+    },
+    {
+      "table": "gsa_tv_playlists",
+      "locations": [
+        "src\\components\\admin\\GsaTvModule.tsx:297"
+      ]
+    },
+    {
+      "table": "gsa_tv_incidents",
+      "locations": [
+        "src\\components\\admin\\GsaTvModule.tsx:307"
+      ]
+    },
+    {
+      "table": "gsa_tv_audit_log",
+      "locations": [
+        "src\\components\\admin\\GsaTvModule.tsx:317",
+        "src\\components\\admin\\GsaTvModule.tsx:447"
+      ]
+    },
+    {
+      "table": "gsa_tv_jobs",
+      "locations": [
+        "src\\components\\admin\\GsaTvModule.tsx:334"
+      ]
+    },
+    {
+      "table": "documentos_prestador",
+      "locations": [
+        "src\\components\\admin\\prestadores\\AdminPrestadorDocumentos.tsx:230",
+        "src\\lib\\pdfSharingService.ts:17",
+        "src\\lib\\pdfSharingService.ts:23",
+        "src\\lib\\pdfSharingService.ts:42"
+      ]
+    },
+    {
+      "table": "documentos_cliente",
+      "locations": [
+        "src\\components\\client\\ClientOrcamentos.tsx:295",
+        "src\\components\\client\\ClientOrcamentos.tsx:301",
+        "src\\components\\client\\ClientOrcamentos.tsx:1704",
+        "src\\components\\client\\ClientOrcamentos.tsx:1710",
+        "src\\components\\client\\ClientProfile.tsx:385",
+        "src\\components\\client\\ClientProfile.tsx:391",
+        "src\\components\\client\\ClientProfile.tsx:441"
+      ]
+    },
+    {
+      "table": "gsa-ad-creatives",
+      "locations": [
+        "src\\pages\\AdvertiserPortal.tsx:805",
+        "src\\pages\\AdvertiserPortal.tsx:840"
+      ]
+    }
+  ],
+  "missingColumns": [
+    {
+      "key": "tickets.created_at",
+      "table": "tickets",
+      "col": "created_at",
+      "type": "ORDER",
+      "locations": [
+        "src\\components\\admin\\super-domains\\contratos\\AtendimentoTicketsView.tsx:52 (ORDER)"
+      ]
+    },
+    {
+      "key": "loja_reembolsos.created_at",
+      "table": "loja_reembolsos",
+      "col": "created_at",
+      "type": "ORDER",
+      "locations": [
+        "src\\components\\admin\\super-domains\\financeiro\\RentabilidadeReembolsosView.tsx:51 (ORDER)"
+      ]
+    },
+    {
+      "key": "indicacoes.created_at",
+      "table": "indicacoes",
+      "col": "created_at",
+      "type": "ORDER",
+      "locations": [
+        "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx:152 (ORDER)"
+      ]
+    },
+    {
+      "key": "saques.created_at",
+      "table": "saques",
+      "col": "created_at",
+      "type": "ORDER",
+      "locations": [
+        "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx:52 (ORDER)"
+      ]
+    },
+    {
+      "key": "transferencias.cliente_id",
+      "table": "transferencias",
+      "col": "cliente_id",
+      "type": "FILTER_EQ",
+      "locations": [
+        "src\\components\\client\\ClientFinanceiro.tsx:122 (FILTER_EQ)"
+      ]
+    },
+    {
+      "key": "cliente_promocoes.promocoes.status",
+      "table": "cliente_promocoes",
+      "col": "promocoes.status",
+      "type": "FILTER_EQ",
+      "locations": [
+        "src\\components\\client\\ClientOrcamentos.tsx:1533 (FILTER_EQ)"
+      ]
+    },
+    {
+      "key": "pagamentos.faturas.cliente_id",
+      "table": "pagamentos",
+      "col": "faturas.cliente_id",
+      "type": "FILTER_EQ",
+      "locations": [
+        "src\\components\\client\\ClientVouchers.tsx:101 (FILTER_EQ)"
+      ]
+    },
+    {
+      "key": "solicitacoes_exclusao.count",
+      "table": "solicitacoes_exclusao",
+      "col": "count",
+      "type": "SELECT",
+      "locations": [
+        "src\\validation\\step4_integrity_audit.ts:62 (SELECT)"
+      ]
+    }
+  ],
+  "missingRpcs": [],
+  "rpcArgumentIssues": [
+    {
+      "key": "gsa_admin_update_affiliate_points_settings.p_welcome_active",
+      "rpc": "gsa_admin_update_affiliate_points_settings",
+      "passedKey": "p_welcome_active",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_rate",
+        "p_minimum",
+        "p_active"
+      ],
+      "file": "src\\components\\admin\\AffiliateAdminModule.tsx",
+      "line": 1372,
+      "locations": [
+        "src\\components\\admin\\AffiliateAdminModule.tsx:1372"
+      ]
+    },
+    {
+      "key": "gsa_admin_update_affiliate_points_settings.p_welcome_value",
+      "rpc": "gsa_admin_update_affiliate_points_settings",
+      "passedKey": "p_welcome_value",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_rate",
+        "p_minimum",
+        "p_active"
+      ],
+      "file": "src\\components\\admin\\AffiliateAdminModule.tsx",
+      "line": 1372,
+      "locations": [
+        "src\\components\\admin\\AffiliateAdminModule.tsx:1372"
+      ]
+    },
+    {
+      "key": "gsa_admin_alterar_status_cliente.p_bloqueado",
+      "rpc": "gsa_admin_alterar_status_cliente",
+      "passedKey": "p_bloqueado",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_cliente_id",
+        "p_status"
+      ],
+      "file": "src\\components\\admin\\super-domains\\contratos\\CrmClientesView.tsx",
+      "line": 204,
+      "locations": [
+        "src\\components\\admin\\super-domains\\contratos\\CrmClientesView.tsx:204"
+      ]
+    },
+    {
+      "key": "gsa_admin_alterar_status_cliente.p_motivo",
+      "rpc": "gsa_admin_alterar_status_cliente",
+      "passedKey": "p_motivo",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_cliente_id",
+        "p_status"
+      ],
+      "file": "src\\components\\admin\\super-domains\\contratos\\CrmClientesView.tsx",
+      "line": 204,
+      "locations": [
+        "src\\components\\admin\\super-domains\\contratos\\CrmClientesView.tsx:204"
+      ]
+    },
+    {
+      "key": "gsa_admin_ajustar_saldo_cliente.p_motivo",
+      "rpc": "gsa_admin_ajustar_saldo_cliente",
+      "passedKey": "p_motivo",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_cliente_id",
+        "p_tipo",
+        "p_valor",
+        "p_descricao"
+      ],
+      "file": "src\\components\\admin\\super-domains\\contratos\\CrmClientesView.tsx",
+      "line": 246,
+      "locations": [
+        "src\\components\\admin\\super-domains\\contratos\\CrmClientesView.tsx:246"
+      ]
+    },
+    {
+      "key": "gsa_admin_save_calculator_pro_product.p_nome",
+      "rpc": "gsa_admin_save_calculator_pro_product",
+      "passedKey": "p_nome",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_tool_id",
+        "p_payload"
+      ],
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx",
+      "line": 101,
+      "locations": [
+        "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx:101"
+      ]
+    },
+    {
+      "key": "gsa_admin_save_calculator_pro_product.p_ativo",
+      "rpc": "gsa_admin_save_calculator_pro_product",
+      "passedKey": "p_ativo",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_tool_id",
+        "p_payload"
+      ],
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx",
+      "line": 101,
+      "locations": [
+        "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx:101"
+      ]
+    },
+    {
+      "key": "gsa_admin_save_calculator_pro_product.p_preco_centavos",
+      "rpc": "gsa_admin_save_calculator_pro_product",
+      "passedKey": "p_preco_centavos",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_tool_id",
+        "p_payload"
+      ],
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx",
+      "line": 101,
+      "locations": [
+        "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx:101"
+      ]
+    },
+    {
+      "key": "gsa_admin_save_calculator_pro_product.p_duracao_acesso_minutos",
+      "rpc": "gsa_admin_save_calculator_pro_product",
+      "passedKey": "p_duracao_acesso_minutos",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_tool_id",
+        "p_payload"
+      ],
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx",
+      "line": 101,
+      "locations": [
+        "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx:101"
+      ]
+    },
+    {
+      "key": "gsa_admin_create_calculator_pro_voucher.p_phone",
+      "rpc": "gsa_admin_create_calculator_pro_voucher",
+      "passedKey": "p_phone",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_tool_id",
+        "p_expires_at",
+        "p_observacoes"
+      ],
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx",
+      "line": 124,
+      "locations": [
+        "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx:124"
+      ]
+    },
+    {
+      "key": "gsa_admin_create_calculator_pro_voucher.p_validade_dias",
+      "rpc": "gsa_admin_create_calculator_pro_voucher",
+      "passedKey": "p_validade_dias",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_tool_id",
+        "p_expires_at",
+        "p_observacoes"
+      ],
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx",
+      "line": 124,
+      "locations": [
+        "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx:124"
+      ]
+    },
+    {
+      "key": "gsa_admin_gerar_acordo_cobranca.p_primeiro_vencimento",
+      "rpc": "gsa_admin_gerar_acordo_cobranca",
+      "passedKey": "p_primeiro_vencimento",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_cobranca_id",
+        "p_parcelas",
+        "p_dt_primeiro_venc",
+        "p_desconto",
+        "p_tipo_desconto",
+        "p_observacoes"
+      ],
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx",
+      "line": 203,
+      "locations": [
+        "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx:203"
+      ]
+    },
+    {
+      "key": "gsa_admin_gerar_acordo_cobranca.p_desconto_valor",
+      "rpc": "gsa_admin_gerar_acordo_cobranca",
+      "passedKey": "p_desconto_valor",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_cobranca_id",
+        "p_parcelas",
+        "p_dt_primeiro_venc",
+        "p_desconto",
+        "p_tipo_desconto",
+        "p_observacoes"
+      ],
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx",
+      "line": 203,
+      "locations": [
+        "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx:203"
+      ]
+    },
+    {
+      "key": "gsa_admin_protestar_cobranca.p_cartorio",
+      "rpc": "gsa_admin_protestar_cobranca",
+      "passedKey": "p_cartorio",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_cobranca_id",
+        "p_data_protesto",
+        "p_nome_cartorio"
+      ],
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx",
+      "line": 299,
+      "locations": [
+        "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx:299"
+      ]
+    },
+    {
+      "key": "gsa_admin_registrar_cobranca_historico.p_tipo",
+      "rpc": "gsa_admin_registrar_cobranca_historico",
+      "passedKey": "p_tipo",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_cobranca_id",
+        "p_tipo_acao",
+        "p_descricao",
+        "p_canal",
+        "p_promessa_pagamento",
+        "p_data_promessa",
+        "p_valor_envolvido",
+        "p_atualizar_ultimo_contato"
+      ],
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx",
+      "line": 329,
+      "locations": [
+        "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx:329"
+      ]
+    },
+    {
+      "key": "gsa_admin_cancelar_acordo_cobranca.p_motivo",
+      "rpc": "gsa_admin_cancelar_acordo_cobranca",
+      "passedKey": "p_motivo",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_cobranca_id"
+      ],
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx",
+      "line": 355,
+      "locations": [
+        "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx:355"
+      ]
+    },
+    {
+      "key": "gsa_admin_emprestimo_enviar_proposta.p_taxa_juros",
+      "rpc": "gsa_admin_emprestimo_enviar_proposta",
+      "passedKey": "p_taxa_juros",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_emprestimo_id",
+        "p_valor_aprovado",
+        "p_juros_total_percentual",
+        "p_max_parcelas_liberado",
+        "p_taxa_servico",
+        "p_proposta_mensagem",
+        "p_validade_dias"
+      ],
+      "file": "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx",
+      "line": 151,
+      "locations": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx:151"
+      ]
+    },
+    {
+      "key": "gsa_admin_emprestimo_enviar_proposta.p_prazo_meses",
+      "rpc": "gsa_admin_emprestimo_enviar_proposta",
+      "passedKey": "p_prazo_meses",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_emprestimo_id",
+        "p_valor_aprovado",
+        "p_juros_total_percentual",
+        "p_max_parcelas_liberado",
+        "p_taxa_servico",
+        "p_proposta_mensagem",
+        "p_validade_dias"
+      ],
+      "file": "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx",
+      "line": 151,
+      "locations": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx:151"
+      ]
+    },
+    {
+      "key": "gsa_admin_emprestimo_enviar_proposta.p_mensagem",
+      "rpc": "gsa_admin_emprestimo_enviar_proposta",
+      "passedKey": "p_mensagem",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_emprestimo_id",
+        "p_valor_aprovado",
+        "p_juros_total_percentual",
+        "p_max_parcelas_liberado",
+        "p_taxa_servico",
+        "p_proposta_mensagem",
+        "p_validade_dias"
+      ],
+      "file": "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx",
+      "line": 151,
+      "locations": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx:151"
+      ]
+    },
+    {
+      "key": "gsa_admin_emprestimo_enviar_oferta_quitacao.p_valor_oferta",
+      "rpc": "gsa_admin_emprestimo_enviar_oferta_quitacao",
+      "passedKey": "p_valor_oferta",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_emprestimo_id",
+        "p_valor_quitacao_acordo"
+      ],
+      "file": "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx",
+      "line": 198,
+      "locations": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx:198"
+      ]
+    },
+    {
+      "key": "gsa_admin_release_affiliate_commissions.p_affiliate_ids",
+      "rpc": "gsa_admin_release_affiliate_commissions",
+      "passedKey": "p_affiliate_ids",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_afiliado_id"
+      ],
+      "file": "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx",
+      "line": 166,
+      "locations": [
+        "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx:166"
+      ]
+    },
+    {
+      "key": "gsa_admin_decide_affiliate_payout.p_decision",
+      "rpc": "gsa_admin_decide_affiliate_payout",
+      "passedKey": "p_decision",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_payout_id",
+        "p_action",
+        "p_notes",
+        "p_paid_at"
+      ],
+      "file": "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx",
+      "line": 183,
+      "locations": [
+        "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx:183"
+      ]
+    },
+    {
+      "key": "gsa_admin_adjust_affiliate_balance.p_affiliate_id",
+      "rpc": "gsa_admin_adjust_affiliate_balance",
+      "passedKey": "p_affiliate_id",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_afiliado_id",
+        "p_tipo",
+        "p_valor",
+        "p_motivo"
+      ],
+      "file": "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx",
+      "line": 212,
+      "locations": [
+        "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx:212"
+      ]
+    },
+    {
+      "key": "gsa_admin_adjust_affiliate_balance.p_delta",
+      "rpc": "gsa_admin_adjust_affiliate_balance",
+      "passedKey": "p_delta",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_afiliado_id",
+        "p_tipo",
+        "p_valor",
+        "p_motivo"
+      ],
+      "file": "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx",
+      "line": 212,
+      "locations": [
+        "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx:212"
+      ]
+    },
+    {
+      "key": "gsa_admin_adjust_points.p_motivo",
+      "rpc": "gsa_admin_adjust_points",
+      "passedKey": "p_motivo",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_cliente_id",
+        "p_pontos",
+        "p_descricao"
+      ],
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+      "line": 386,
+      "locations": [
+        "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx:386"
+      ]
+    },
+    {
+      "key": "gsa_admin_update_career_application.p_public_message",
+      "rpc": "gsa_admin_update_career_application",
+      "passedKey": "p_public_message",
+      "funcParams": [
+        "p_sessao_id",
+        "p_session_token",
+        "p_application_id",
+        "p_status",
+        "p_internal_notes",
+        "p_interview_at",
+        "p_interview_location"
+      ],
+      "file": "src\\components\\admin\\super-domains\\pessoas\\TrabalheConoscoSection.tsx",
+      "line": 141,
+      "locations": [
+        "src\\components\\admin\\super-domains\\pessoas\\TrabalheConoscoSection.tsx:141"
+      ]
+    }
+  ],
+  "rpcPermissionIssues": []
+}

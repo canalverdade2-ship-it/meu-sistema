@@ -1,0 +1,4 @@
+import { runSshScript } from './ssh2-run.mjs';
+const x=Number(process.argv[2]),y=Number(process.argv[3]);
+const js=String.raw`const puppeteer=require('/usr/lib/node_modules/@wonderwhy-er/desktop-commander/node_modules/puppeteer');(async()=>{const b=await puppeteer.connect({browserURL:'http://127.0.0.1:9228'});const p=(await b.pages()).find(x=>x.url().includes('/videos/d/1NoUuv9KmksylGMfxKdbcXCvXHYZ9k89XvcwAhwKErjo/'));await p.mouse.click(Number(process.argv[2]),Number(process.argv[3]));await new Promise(r=>setTimeout(r,1000));console.log((await p.evaluate(()=>document.body.innerText)).slice(-900));await b.disconnect()})().catch(e=>{console.error(e.stack||e);process.exit(1)});`;
+const e=Buffer.from(js).toString('base64');const r=await runSshScript(`printf '%s' '${e}'|base64 -d >/tmp/vc.js\nnode /tmp/vc.js ${x} ${y}\nrm /tmp/vc.js`);process.stdout.write(r.stdout);

@@ -64,7 +64,7 @@ export function ScrapingAdminModule() {
   const [categorias, setCategorias] = useState<any[]>([]);
   const [viagensCategorias, setViagensCategorias] = useState<any[]>([]);
   const [novoHorario, setNovoHorario] = useState('');
-  const [n8nBaseUrl, setN8nBaseUrl] = useState('https://counted-brief-hay-promoting.trycloudflare.com');
+  const [n8nBaseUrl, setN8nBaseUrl] = useState('http://127.0.0.1:5680');
   const [showN8nConfig, setShowN8nConfig] = useState(false);
   const [monitorItem, setMonitorItem] = useState<any>(null);
   const [showMonitor, setShowMonitor] = useState(false);
@@ -269,13 +269,38 @@ export function ScrapingAdminModule() {
   };
 
   const triggerNow = async (item: any) => {
-    setMonitorItem(item);
-    setShowMonitor(true);
     const toastId = toast.loading(`Disparando "${item.nome}" no N8N...`);
     try {
+      // 1. Chama a RPC que insere os logs iniciais de progresso (10%, 30%, 60%)
       await callAdminRpc<any>('gsa_admin_trigger_scraping_now', { p_automacao_id: item.id });
+      
+      setMonitorItem(item);
+      setShowMonitor(true);
+      
       toast.success('Execução disparada com sucesso!', { id: toastId });
       loadData();
+
+      // 2. Usar a Edge Function para fazer proxy do Webhook
+      const webhookUrl = item.n8n_webhook_url;
+      if (webhookUrl) {
+        try {
+          const { error: invokeError } = await supabase.functions.invoke('gsa-trigger-webhook', {
+            body: { 
+              webhookUrl, 
+              payload: { id: item.id, nome: item.nome, target_url: item.target_url, margem_lucro: item.margem_lucro }
+            }
+          });
+          if (invokeError) throw invokeError;
+        } catch (webhookErr: any) {
+          await supabase.from('automacao_scraping_logs').insert({
+            automacao_id: item.id,
+            passo: 'erro',
+            status: 'erro',
+            mensagem: `Falha ao conectar com Servidor Python: ${webhookErr.message}`,
+            progresso: 0,
+          });
+        }
+      }
     } catch (err: any) {
       toast.error('Erro ao disparar: ' + err.message, { id: toastId });
     }
@@ -345,7 +370,7 @@ export function ScrapingAdminModule() {
           <p className="text-sm font-bold text-neutral-500">Carregando automações...</p>
         </div>
       ) : items.length === 0 ? (
-        <EmptyState icon={Webhook} title="Nenhuma automação" description="Nenhuma configuração de scraping foi criada." />
+        <EmptyState icon={Webhook} title="Nenhuma automação" message="Nenhuma configuração de scraping foi criada." />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           {items.map((item) => (

@@ -1,0 +1,4 @@
+set -eu
+dburl=$(sudo docker inspect gsa-tv-control-plane --format '{{range .Config.Env}}{{println .}}{{end}}' | awk -F= '$1=="DATABASE_URL"{sub(/^DATABASE_URL=/,"");print;exit}')
+sudo docker run --rm --network host postgres:15-alpine psql "$dburl" -X -qAt -c "SELECT job_type,status,count(*),max(created_at) FROM public.gsa_tv_jobs WHERE created_at > now()-interval '12 hours' GROUP BY job_type,status ORDER BY job_type,status;"
+sudo docker run --rm --network host postgres:15-alpine psql "$dburl" -X -qAt -c "SELECT id,job_type,status,created_at,started_at,finished_at FROM public.gsa_tv_jobs WHERE job_type IN ('compile_playlist','stream_start','stream_stop') ORDER BY created_at DESC LIMIT 12; SELECT status,count(*) FROM public.gsa_tv_jobs WHERE status IN ('running','queued','pending') GROUP BY status;"

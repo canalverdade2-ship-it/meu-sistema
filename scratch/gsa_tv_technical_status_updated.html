@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>GSA TV — Documentação Técnica Atualizada</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm 14mm 14mm 14mm;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #1F2933;
+      background: #ffffff;
+      font-size: 9.5pt;
+      line-height: 1.45;
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background: #071A2F;
+      color: #ffffff;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid #D6AE52;
+      border-radius: 4px;
+      margin-bottom: 14px;
+    }
+    .header-title {
+      font-size: 11pt;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+    .header-date {
+      font-size: 8.5pt;
+      color: #D6AE52;
+    }
+    h1 {
+      color: #071A2F;
+      font-size: 18pt;
+      font-weight: 900;
+      margin: 0 0 4px 0;
+    }
+    .subtitle {
+      color: #56616D;
+      font-size: 10pt;
+      margin-bottom: 14px;
+    }
+    .h1-section {
+      color: #071A2F;
+      font-size: 13pt;
+      font-weight: 800;
+      border-bottom: 2px solid #0D4F8B;
+      padding-bottom: 4px;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+    .h2-section {
+      color: #0D4F8B;
+      font-size: 10.5pt;
+      font-weight: 700;
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+    .callout {
+      background: #EAF3F8;
+      border-left: 4px solid #D6AE52;
+      padding: 10px 14px;
+      margin: 12px 0;
+      border-radius: 0 4px 4px 0;
+    }
+    .callout-title {
+      font-weight: 800;
+      color: #071A2F;
+      margin-bottom: 4px;
+      font-size: 10pt;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 14px 0;
+      font-size: 8.5pt;
+    }
+    th, td {
+      border: 1px solid #C8D3DD;
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #071A2F;
+      color: #ffffff;
+      font-weight: 700;
+    }
+    tr:nth-child(even) {
+      background: #F5F7FA;
+    }
+    .badge-ok {
+      background: #e6f4ea;
+      color: #137333;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 800;
+      font-size: 7.5pt;
+      display: inline-block;
+    }
+    .badge-pending {
+      background: #fef7e0;
+      color: #b06000;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 800;
+      font-size: 7.5pt;
+      display: inline-block;
+    }
+    .badge-risk {
+      background: #fce8e6;
+      color: #c5221f;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 800;
+      font-size: 7.5pt;
+      display: inline-block;
+    }
+    .flow-box {
+      background: #EAF3F8;
+      border: 1.5px solid #19A7CE;
+      padding: 10px;
+      text-align: center;
+      font-weight: 700;
+      color: #071A2F;
+      border-radius: 4px;
+      margin: 12px 0;
+      font-size: 9.5pt;
+    }
+    ul {
+      margin: 6px 0;
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 3px;
+    }
+    .page-break {
+      page-break-before: always;
+    }
+    .footer {
+      font-size: 7.5pt;
+      color: #56616D;
+      text-align: center;
+      border-top: 1px solid #C8D3DD;
+      padding-top: 8px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-title">GSA TV | DOCUMENTAÇÃO TÉCNICA OFICIAL</div>
+    <div class="header-date">Estado Consolidado • 04/09/2026</div>
+  </div>
+
+  <h1>GSA TV</h1>
+  <div class="subtitle">Documentação técnica atualizada da transmissão, Control Plane 1.7.0 e Encoder Independente</div>
+
+  <table>
+    <tr><th style="width: 25%;">PARÂMETRO</th><th>VALOR OPERACIONAL</th></tr>
+    <tr><td><strong>DATA DE CORTE</strong></td><td>04/09/2026 (Horário de Brasília)</td></tr>
+    <tr><td><strong>AMBIENTE</strong></td><td>VPS de Produção Oracle Cloud • Canal Principal <code>ch-main</code></td></tr>
+    <tr><td><strong>ESCOPO</strong></td><td>Arquitetura de playout, composição gráfica ZMQ, encoder RTMP desacoplado, YouTube e operação 24x7</td></tr>
+    <tr><td><strong>CLASSIFICAÇÃO</strong></td><td>Relatório Técnico de Estado — Inclui validações concluídas, arquitetura e pendências ativas</td></tr>
+  </table>
+
+  <div class="callout">
+    <div class="callout-title">Conclusão Executiva</div>
+    A separação entre o Control Plane e o Encoder foi implantada com sucesso. Comprovou-se que o painel pode ser reiniciado sem trocar o PID do transporte RTMP nem desconectar do YouTube. A atualização gráfica por socket ZMQ também manteve os PIDs intactos através de 52 comandos dinâmicos. A transmissão atual encontra-se ativa e conectada (<code>signal_state: sending</code>) no canal do YouTube.
+  </div>
+
+  <div class="h1-section">Status Geral dos Componentes</div>
+  <table>
+    <tr><th>Área</th><th>Estado</th><th>Observação Técnica</th></tr>
+    <tr>
+      <td><strong>Control Plane 1.7.0</strong></td>
+      <td><span class="badge-ok">IMPLANTADO</span></td>
+      <td>Saudável e estável; atua estritamente como cliente de comandos do engine.</td>
+    </tr>
+    <tr>
+      <td><strong>Encoder Engine 1.0.0</strong></td>
+      <td><span class="badge-ok">IMPLANTADO</span></td>
+      <td>Transporte (outer) e produtor (inner) desacoplados em processos independentes via UDP 12345.</td>
+    </tr>
+    <tr>
+      <td><strong>Atualização Gráfica sem RTMP Restart</strong></td>
+      <td><span class="badge-ok">COMPROVADO</span></td>
+      <td>52 comandos aceitos via ZMQ; PIDs do transporte e do produtor rigorosamente mantidos.</td>
+    </tr>
+    <tr>
+      <td><strong>Troca Isolada de Fontes</strong></td>
+      <td><span class="badge-ok">COMPROVADO</span></td>
+      <td>O produtor interno reinicia com a nova fonte, enquanto o transporte RTMP mantém o mesmo PID e conexão.</td>
+    </tr>
+    <tr>
+      <td><strong>Fallback Automático 24x7</strong></td>
+      <td><span class="badge-pending">EM REFINO</span></td>
+      <td>Mídia e rotina construídas; tempo de subida em teste forçado sendo ajustado para menos de 1 segundo.</td>
+    </tr>
+    <tr>
+      <td><strong>Conexão RTMP com o YouTube</strong></td>
+      <td><span class="badge-ok">ESTABLISHED</span></td>
+      <td>Conexão TCP estabelecida na porta 1935 com <code>Send-Q = 0</code>, transmitindo 1080p30 / 6 Mbps contínuo.</td>
+    </tr>
+  </table>
+
+  <div class="page-break"></div>
+
+  <div class="h1-section">1. Arquitetura Desacoplada de Playout 1.7.0</div>
+  <p>
+    O principal gargalo histórico da GSA TV era o acoplamento do encoder FFmpeg ao processo do Control Plane. Qualquer manutenção no painel encerrava o encoder e derrubava a live no YouTube. A versão 1.7.0 resolveu esse problema estrutural separando em dois serviços distintos:
+  </p>
+
+  <table>
+    <tr><th>Camada</th><th>Responsabilidade</th><th>Tecnologia / Porta</th></tr>
+    <tr>
+      <td><strong>Fontes & Grade</strong></td>
+      <td>Mídias normalizadas, grade e HLS institucional.</td>
+      <td><code>ffplayout</code> + arquivos locais na VPS</td>
+    </tr>
+    <tr>
+      <td><strong>Control Plane 1.7.0</strong></td>
+      <td>API REST, jobs, PostgreSQL, comandos operacionais e painel.</td>
+      <td>Node.js 20 / PostgreSQL (Porta 9202)</td>
+    </tr>
+    <tr>
+      <td><strong>Produtor Interno</strong></td>
+      <td>Decodifica a fonte ativa, compõe os cards gráficos via ZMQ e entrega MPEG-TS local.</td>
+      <td>FFmpeg + ZMQ (Porta 5577) + UDP 12345</td>
+    </tr>
+    <tr>
+      <td><strong>Transporte Externo</strong></td>
+      <td>Mantém a sessão RTMP persistente e envia os pacotes ao YouTube. Não cai nas trocas comuns.</td>
+      <td>FFmpeg persistente (Porta 1935 RTMP)</td>
+    </tr>
+    <tr>
+      <td><strong>Automação</strong></td>
+      <td>Feeds em tempo real, meteorologia, cotações e orquestração.</td>
+      <td>n8n + APIs oficiais (Bacen, Agência Brasil)</td>
+    </tr>
+  </table>
+
+  <div class="h2-section">Fluxo de Sinal Desacoplado</div>
+  <div class="flow-box">
+    Mídia / Grade / Câmera &rarr; Produtor Interno (ZMQ) &rarr; UDP 12345 &rarr; Transporte RTMP Persistente &rarr; YouTube Live
+  </div>
+
+  <div class="h1-section">2. Histórico e Marcos de Evolução Técnica</div>
+  <table>
+    <tr><th>Versão</th><th>Marco Operacional</th><th>Resultado e Aprendizado</th></tr>
+    <tr>
+      <td><strong>1.6.37</strong></td>
+      <td>Estado acoplado inicial</td>
+      <td>Um único FFmpeg gerenciava tudo. Manutenção de containers derrubava a transmissão.</td>
+    </tr>
+    <tr>
+      <td><strong>1.6.38</strong></td>
+      <td>Candidata dinâmica ZMQ</td>
+      <td>Implementação do socket ZMQ; houve regressão de escopo que foi prontamente revertida.</td>
+    </tr>
+    <tr>
+      <td><strong>1.6.39</strong></td>
+      <td>Correção intermediária</td>
+      <td>Correção do drawtext com ZMQ e persistência de <code>media:id</code>. Feeds dinâmicos validados.</td>
+    </tr>
+    <tr>
+      <td><strong>1.7.0</strong></td>
+      <td>Separação definitiva</td>
+      <td>Control Plane migrado para cliente de comandos; encoder isolado no container <code>encoder-engine</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>Engine 1.0.0</strong></td>
+      <td>Arquitetura de dois estágios</td>
+      <td>Produtor interno entrega MPEG-TS local via UDP; transportador externo mantém RTMP ininterrupto.</td>
+    </tr>
+  </table>
+
+  <div class="h2-section">Correções Críticas Aplicadas</div>
+  <ul>
+    <li><strong>Avatar Mismatch Corrigido:</strong> Identificado que arquivos antigos continham avatares invertidos; corrigido para o Holt e Nyla oficiais.</li>
+    <li><strong>ZMQ Escape no Relógio:</strong> O drawtext dinâmico com relógio ao vivo exigiu escape específico de caracteres especiais.</li>
+    <li><strong>Drawtext Reload:</strong> Substituída a reinicialização de filtros pela diretiva <code>reload=1</code> com arquivos de texto dinâmicos.</li>
+    <li><strong>Trava Exclusiva PostgreSQL:</strong> Implementado advisory lock no banco para impedir matematicamente que dois encoders transmitam na mesma chave.</li>
+  </ul>
+
+  <div class="page-break"></div>
+
+  <div class="h1-section">3. Evidências de Validação Comprovadas</div>
+  <table>
+    <tr><th>Teste Executado</th><th>Evidência Técnica Registrada</th><th>Resultado</th></tr>
+    <tr>
+      <td><strong>Reinício do Control Plane</strong></td>
+      <td>PID do transporte permaneceu inalterado após reiniciar o container do painel.</td>
+      <td><span class="badge-ok">APROVADO</span></td>
+    </tr>
+    <tr>
+      <td><strong>Graphics Reload (ZMQ)</strong></td>
+      <td>52 comandos gráficos aceitos; zero reinicialização de FFmpeg; YouTube estável.</td>
+      <td><span class="badge-ok">APROVADO</span></td>
+    </tr>
+    <tr>
+      <td><strong>Troca Isolada de Fontes</strong></td>
+      <td>Produtor interno trocou de fonte; transportador RTMP manteve o handshake no YouTube.</td>
+      <td><span class="badge-ok">APROVADO</span></td>
+    </tr>
+    <tr>
+      <td><strong>Conexão com Feeds Oficiais</strong></td>
+      <td>API Banco Central (PTAX) e RSS Agência Brasil respondendo em menos de 0.3s.</td>
+      <td><span class="badge-ok">APROVADO</span></td>
+    </tr>
+    <tr>
+      <td><strong>Alinhamento Multiagente</strong></td>
+      <td>Registro compartilhado <code>GSA_TV_MEMORY_CHANGELOG.md</code> sincronizado na VPS e localmente.</td>
+      <td><span class="badge-ok">APROVADO</span></td>
+    </tr>
+  </table>
+
+  <div class="h1-section">4. Procedimentos Operacionais & Regras de Estabilidade</div>
+  <div class="h2-section">Operações Instantâneas (Sem Queda de Sinal)</div>
+  <ul>
+    <li>Atualização de notícias, loterias, cotações e clima nos cards em tempo real.</li>
+    <li>Alteração de cores, dimensões e textos dos lower thirds via socket ZMQ.</li>
+    <li>Reinício, build ou atualização de código no container do Control Plane.</li>
+    <li>Troca interna de programas pela grade ou produtor local.</li>
+  </ul>
+
+  <div class="h2-section">Operações que Exigem Janela de Manutenção</div>
+  <ul>
+    <li>Alteração física de resolução (ex: mudar de 1080p para 4K), framerate ou codec de vídeo.</li>
+    <li>Troca da stream key do YouTube ou atualização do binário do <code>encoder-engine</code>.</li>
+  </ul>
+
+  <div class="footer">
+    GSA TV • Manual de Estado Técnico Atualizado • Emitido em 04/09/2026 • Grupo GSA
+  </div>
+
+</body>
+</html>

@@ -28,8 +28,15 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Ignora requisições que não sejam GET ou que sejam para APIs externas
-  if (event.request.method !== 'GET' || !event.request.url.startsWith(self.location.origin)) {
+  // Ignora requisições que não sejam GET ou que sejam para APIs externas ou rotas internas do Vite/HMR
+  const url = new URL(event.request.url);
+  if (
+    event.request.method !== 'GET' ||
+    !event.request.url.startsWith(self.location.origin) ||
+    url.pathname.startsWith('/@') ||
+    url.pathname.startsWith('/src/') ||
+    url.pathname.startsWith('/node_modules/')
+  ) {
     return;
   }
 

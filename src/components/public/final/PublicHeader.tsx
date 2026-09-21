@@ -37,7 +37,7 @@ const NAV_LINKS: HeaderNavLink[] = [
   { id: 'services', label: 'Serviços e Assinaturas', href: '/servicos-e-assinaturas', icon: BriefcaseBusiness },
   { id: 'marketplace', label: 'Marketplace GSA', href: '/marketplace', icon: ShoppingBag },
   { id: 'systems', label: 'Sites e Sistemas', href: '/criacao-de-site-e-sistemas', icon: Code2 },
-  { id: 'brand-journey', label: 'Construção de Marca', href: '/empresa-do-zero-ao-digital', icon: Palette },
+  { id: 'brand-journey', label: 'Identidade e Web Design', href: '/identidade-e-web-design', icon: Palette },
   { id: 'free-tools', label: 'Serviços Gratuitos', href: '/servicos-gratuitos', icon: Calculator },
 ];
 
@@ -399,7 +399,7 @@ export function PublicHeader({
     }
 
     if (link.id === 'brand-journey') {
-      navigate('/empresa-do-zero-ao-digital');
+      navigate('/identidade-e-web-design');
       return;
     }
 
@@ -416,7 +416,7 @@ export function PublicHeader({
     <>
       {(currentPage === 'systems' || currentPage === 'brand-journey') && <style>{PUBLIC_MOBILE_STYLES}</style>}
       <header
-        className={`fixed inset-x-0 top-0 z-[90] transition-all duration-300 ${
+        className={`${currentPage === 'home' ? 'gsa-home-header' : ''} fixed inset-x-0 top-0 z-[90] transition-all duration-300 ${
           isSolidBar
             ? 'border-b border-white/10 bg-[#080c12]/95 py-2.5 shadow-xl backdrop-blur-xl sm:py-3'
             : 'border-transparent bg-transparent py-4 sm:py-5'
@@ -448,6 +448,13 @@ export function PublicHeader({
           </div>
 
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            {currentPage === 'home' && (
+              <nav aria-label="Navegação da home" className="hidden items-center gap-6 text-sm font-semibold text-white/85 md:flex md:mr-5">
+                <a href="#gsa-navigator" className="rounded hover:text-[#d8bd73] focus-visible:ring-2 focus-visible:ring-[#d8bd73]">Soluções</a>
+                <a href="#sobre-gsa" className="rounded hover:text-[#d8bd73] focus-visible:ring-2 focus-visible:ring-[#d8bd73]">Sobre a GSA</a>
+                <a href="#contato-gsa" className="rounded hover:text-[#d8bd73] focus-visible:ring-2 focus-visible:ring-[#d8bd73]">Contato</a>
+              </nav>
+            )}
             <button
               type="button"
               onClick={onClientLogin}
@@ -457,8 +464,18 @@ export function PublicHeader({
               <LockKeyhole className="h-4 w-4 text-[#d8bd73]" />
               <span className="gsa-public-header-login-label">Área do Cliente</span>
             </button>
+            {currentPage === 'home' && (
+              <button type="button" aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'} aria-expanded={mobileMenuOpen} aria-controls="home-mobile-nav" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-[#d8bd73] focus-visible:ring-2 focus-visible:ring-[#d8bd73] md:hidden">
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+            )}
           </div>
         </div>
+        {currentPage === 'home' && mobileMenuOpen && (
+          <nav id="home-mobile-nav" aria-label="Navegação móvel da home" onKeyDown={(event) => { if (event.key === 'Escape') { setMobileMenuOpen(false); document.querySelector<HTMLButtonElement>('[aria-controls="home-mobile-nav"]')?.focus(); } }} className="mt-3 grid border-t border-white/10 bg-[#080c12] px-5 py-3 text-base text-white md:hidden">
+            {[['#gsa-navigator', 'Soluções'], ['#sobre-gsa', 'Sobre a GSA'], ['#contato-gsa', 'Contato']].map(([href, label]) => <a key={href} href={href} onClick={() => setMobileMenuOpen(false)} className="rounded px-3 py-3 hover:text-[#d8bd73] focus-visible:ring-2 focus-visible:ring-[#d8bd73]">{label}</a>)}
+          </nav>
+        )}
       </header>
     </>
   );

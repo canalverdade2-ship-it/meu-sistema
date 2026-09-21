@@ -1,0 +1,1 @@
+docker inspect gotrue | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const e=JSON.parse(s)[0].Config.Env;for(const v of e)if(/^(GOTRUE_API_PORT|API_PORT|PORT)=/.test(v))console.log(v)})'

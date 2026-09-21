@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Voucher, Cliente } from '../../types';
 import { formatCurrency, formatDate, formatDateTime, copyToClipboard } from '../../lib/utils';
@@ -8,6 +8,7 @@ import { Modal } from '../ui/Modal';
 import { useClientNotifications } from '../../hooks/useClientNotifications';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
 import { callClientRpc } from '../../lib/clientRpc';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 export function ClientVouchers({ clientId, initialItemId }: { clientId: string, initialItemId?: string }) {
   const { containerRef: vouchersTabsRef, setButtonRef: setVouchersTabButtonRef } = useAutoFitTabs(16, 10);
@@ -44,28 +45,38 @@ export function ClientVouchers({ clientId, initialItemId }: { clientId: string, 
 
   useEffect(() => {
     fetchVouchers();
+  }, [activeTab, clientId]);
 
-    const channel = supabase
-      .channel('vouchers-updates')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
+  useRealtimeSubscription(
+    [
+      {
         table: 'vouchers',
-        filter: `cliente_id=eq.${clientId}`
-      }, (payload) => {
-        fetchVouchers();
-        if (payload.new && selectedVoucher && (payload.new as any).id === selectedVoucher.id) {
-          setSelectedVoucher(prev => prev ? { ...prev, ...payload.new } as Voucher : null);
-        }
-      })
-      .subscribe();
+        onChange: fetchVouchers,
+        onPayload: (payload) => {
+          fetchVouchers();
+          if (payload.new && selectedVoucher && (payload.new as any).id === selectedVoucher.id) {
+            setSelectedVoucher((prev) => (prev ? ({ ...prev, ...payload.new } as Voucher) : null));
+          }
+        },
+      },
+      {
+        table: 'cupons_loja',
+        onChange: fetchVouchers,
+      },
+      {
+        table: 'cupons_ativados',
+        onChange: fetchVouchers,
+      },
+      {
+        table: 'clientes',
+        filter: clientId ? `id=eq.${clientId}` : undefined,
+        onChange: fetchVouchers,
+      },
+    ],
+    [activeTab, clientId, selectedVoucher?.id]
+  );
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeTab, clientId, selectedVoucher?.id]);
-
-  const fetchVouchers = async () => {
+  async function fetchVouchers() {
     let query = supabase
       .from('vouchers')
       .select('*')

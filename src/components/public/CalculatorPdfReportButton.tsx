@@ -5,25 +5,29 @@ import {
   downloadCalculatorPdf,
   type CalculatorPdfReport,
 } from '../../lib/freeToolsPdfReport';
-import type { ProAccessStatus } from '../../lib/freeToolsProAccess';
+import { freeToolsProAccess, type ProAccessStatus, type ProToolId } from '../../lib/freeToolsProAccess';
 
 interface CalculatorPdfReportButtonProps {
   report: CalculatorPdfReport;
   mode: 'free' | 'pro';
+  tool?: ProToolId;
   status?: ProAccessStatus | null;
   onUnlockRequired?: () => void;
+  onPdfGenerated?: () => void;
 }
 
 export function CalculatorPdfReportButton({
   report,
   mode,
+  tool,
   status,
   onUnlockRequired,
+  onPdfGenerated,
 }: CalculatorPdfReportButtonProps) {
   const [generating, setGenerating] = useState(false);
   const isLockedForReport = mode === 'pro' && status && !status.access;
 
-  const generate = () => {
+  const generate = async () => {
     if (generating) return;
 
     if (isLockedForReport) {
@@ -37,7 +41,24 @@ export function CalculatorPdfReportButton({
     setGenerating(true);
     try {
       downloadCalculatorPdf(report);
-      toast.success('Relatório PDF gerado e baixado.');
+      
+      const targetTool = tool || ((report as any).tool as ProToolId);
+
+      if (mode === 'pro') {
+        toast.success('Relatório PDF gerado com sucesso! Uso único do voucher concluído.');
+        if (targetTool) {
+          try {
+            await freeToolsProAccess.consumeSession(targetTool);
+          } catch {
+            // sessão consumida localmente
+          }
+        }
+        if (onPdfGenerated) {
+          onPdfGenerated();
+        }
+      } else {
+        toast.success('Relatório PDF gerado e baixado.');
+      }
     } catch (error) {
       console.error('Falha ao gerar relatório PDF da calculadora:', error);
       toast.error('Não foi possível gerar o relatório PDF. Tente novamente.');

@@ -225,7 +225,8 @@ export function AdminPrestadorVouchers({
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Valor (R$)</label>
-            <input required type="number" step="0.01" value={formData.valor} onChange={e=>setFormData({...formData, valor: e.target.value})} className="input-field" placeholder="Ex: 50.00" />
+            <input  required type="number" step="0.01" value={formData.valor} inputMode="numeric"
+onChange={(e) => setFormData({...formData, valor: e.target.value})} className="input-field" placeholder="Ex: 50.00" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Motivo / Descrição</label>

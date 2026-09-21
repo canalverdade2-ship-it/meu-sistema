@@ -24,6 +24,44 @@ serve(async (req: Request) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // Validação de autorização para prevenir open relay abuse
+  const authHeader = req.headers.get("authorization") || "";
+  const apiKeyHeader = req.headers.get("apikey") || "";
+  const bearerToken = authHeader.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7).trim()
+    : apiKeyHeader;
+  const webhookSecretHeader = req.headers.get("x-webhook-secret") || "";
+
+  const expectedServiceRoleKey = SUPABASE_SERVICE_ROLE_KEY || "";
+  const expectedWebhookSecret = Deno.env.get("WEBHOOK_SECRET") || Deno.env.get("TRANSACTIONAL_EMAIL_SECRET") || "";
+
+  let isAuthorized =
+    (Boolean(expectedServiceRoleKey) && bearerToken === expectedServiceRoleKey) ||
+    (Boolean(expectedWebhookSecret) && (bearerToken === expectedWebhookSecret || webhookSecretHeader === expectedWebhookSecret));
+
+  // Fallback: se bearerToken for um JWT de usuário autenticado, verificar se possui papel administrativo
+  if (!isAuthorized && bearerToken && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      const authClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const { data: { user }, error: userErr } = await authClient.auth.getUser(bearerToken);
+      if (!userErr && user) {
+        const actorType = user.app_metadata?.gsa_actor_type || user.app_metadata?.role || user.user_metadata?.role || user.role;
+        if (actorType === "admin" || actorType === "colaborador" || user.role === "service_role") {
+          isAuthorized = true;
+        }
+      }
+    } catch {
+      isAuthorized = false;
+    }
+  }
+
+  if (!isAuthorized) {
+    return new Response(JSON.stringify({ error: "Unauthorized: valid service_role key or webhook secret required" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 401,
+    });
+  }
+
   try {
     const payload: WebhookPayload = await req.json();
 
@@ -40,7 +78,7 @@ serve(async (req: Request) => {
       
       // Obter dados do cliente
       const { data: cliente } = await supabase
-        .from("clientes_pf")
+        .from("clientes")
         .select("nome, email")
         .eq("id", orcamento.cliente_id)
         .maybeSingle();

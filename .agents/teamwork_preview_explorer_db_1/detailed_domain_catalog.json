@@ -1,0 +1,8671 @@
+{
+  "1. Autenticação, Sessões & Governança de Segurança": [
+    {
+      "name": "system_settings",
+      "columnCount": 7,
+      "columns": [
+        "id",
+        "key",
+        "value",
+        "must_change_code",
+        "created_at",
+        "updated_at",
+        "value_hash"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 4
+    },
+    {
+      "name": "empresa",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "nome",
+        "razao_social",
+        "cnpj",
+        "telefone",
+        "responsavel",
+        "taxa_conversao_pontos",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "level_history",
+      "columnCount": 5,
+      "columns": [
+        "id",
+        "cliente_id",
+        "nivel_anterior_id",
+        "nivel_novo_id",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "nivel_anterior_id",
+          "refTable": "client_levels",
+          "refColumn": "id"
+        },
+        {
+          "column": "nivel_novo_id",
+          "refTable": "client_levels",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "assinaturas",
+      "columnCount": 8,
+      "columns": [
+        "id",
+        "codigo_assinatura",
+        "nome",
+        "descricao",
+        "valor",
+        "status",
+        "created_at",
+        "visivel_na_loja"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "formas_pagamento",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "nome",
+        "slug",
+        "ativo",
+        "instrucoes",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "points_transactions",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "cliente_id",
+        "tipo",
+        "pontos",
+        "descricao",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "public",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 14
+    },
+    {
+      "name": "inventario_produtos",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "sistema_sessoes",
+      "columnCount": 1,
+      "columns": [
+        "token_hash"
+      ],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "sistema_logs",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 2
+    },
+    {
+      "name": "gsa_auth_attempts",
+      "columnCount": 5,
+      "columns": [
+        "id",
+        "escopo",
+        "chave_hash",
+        "sucesso",
+        "criado_em"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "debug_admin_rpc",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_auth_identities",
+      "columnCount": 6,
+      "columns": [
+        "ator_tipo",
+        "ator_id",
+        "auth_user_id",
+        "auth_email",
+        "criado_em",
+        "atualizado_em"
+      ],
+      "primaryKeys": [
+        "ator_tipo",
+        "ator_id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_public_rate_limits",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "escopo",
+        "chave_hash",
+        "criado_em"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_client_operation_requests",
+      "columnCount": 6,
+      "columns": [
+        "request_id",
+        "cliente_id",
+        "operacao",
+        "resultado",
+        "created_at",
+        "completed_at"
+      ],
+      "primaryKeys": [
+        "request_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_voucher_resgates",
+      "columnCount": 5,
+      "columns": [
+        "id",
+        "voucher_id",
+        "cliente_id",
+        "valor",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "voucher_id",
+          "refTable": "vouchers",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "storage",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 69
+    },
+    {
+      "name": "gsa_admin_operation_requests",
+      "columnCount": 12,
+      "columns": [
+        "request_id",
+        "ator_tipo",
+        "ator_id",
+        "operacao",
+        "resultado",
+        "created_at",
+        "completed_at",
+        "actor_id",
+        "actor_type",
+        "operation",
+        "resource_id",
+        "result"
+      ],
+      "primaryKeys": [
+        "request_id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_admin_audit_events",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "actor_type",
+        "actor_id",
+        "module",
+        "action",
+        "target_type",
+        "target_id",
+        "details",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_admin_notification_state",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "actor_type",
+        "actor_id",
+        "source_table",
+        "notification_id",
+        "read_at",
+        "dismissed_at",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_auth_rate_limits",
+      "columnCount": 5,
+      "columns": [
+        "bucket_key",
+        "window_started_at",
+        "attempt_count",
+        "blocked_until",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "bucket_key"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "admin_notificacoes",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 5
+    },
+    {
+      "name": "gsa_client_recovery_challenges",
+      "columnCount": 7,
+      "columns": [
+        "id",
+        "cliente_id",
+        "documento",
+        "auth_email",
+        "created_at",
+        "expires_at",
+        "consumed_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_public_budget_rate_limits",
+      "columnCount": 5,
+      "columns": [
+        "fingerprint",
+        "window_started_at",
+        "attempts",
+        "blocked_until",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "fingerprint"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_provider_audit_events",
+      "columnCount": 7,
+      "columns": [
+        "id",
+        "provider_id",
+        "action",
+        "target_type",
+        "target_id",
+        "details",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "provider_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_travel_operation_requests",
+      "columnCount": 8,
+      "columns": [
+        "request_id",
+        "actor_type",
+        "actor_id",
+        "operation",
+        "target_id",
+        "result",
+        "created_at",
+        "completed_at"
+      ],
+      "primaryKeys": [
+        "request_id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_advertisers",
+      "columnCount": 17,
+      "columns": [
+        "id",
+        "auth_user_id",
+        "legal_name",
+        "trade_name",
+        "document",
+        "company_size",
+        "segment",
+        "website",
+        "responsible_name",
+        "responsible_email",
+        "responsible_phone",
+        "city",
+        "state",
+        "status",
+        "created_at",
+        "updated_at",
+        "invited_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "pedido_compra_fornecedor_itens",
+      "columnCount": 11,
+      "columns": [
+        "id",
+        "pedido_id",
+        "fornecedor_produto_id",
+        "produto_id",
+        "produto_nome_snapshot",
+        "codigo_produto_snapshot",
+        "quantidade_pedida",
+        "quantidade_aprovada",
+        "custo_unitario",
+        "valor_total",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "pedido_id",
+          "refTable": "pedidos_compra_fornecedor",
+          "refColumn": "id"
+        },
+        {
+          "column": "fornecedor_produto_id",
+          "refTable": "fornecedor_produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "contas_pagar",
+      "columnCount": 18,
+      "columns": [
+        "id",
+        "codigo",
+        "fornecedor_id",
+        "pedido_id",
+        "entrega_id",
+        "numero_documento",
+        "descricao",
+        "valor_original",
+        "valor_pendente",
+        "data_emissao",
+        "data_vencimento",
+        "status",
+        "data_pagamento",
+        "forma_pagamento",
+        "comprovante",
+        "observacoes",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "fornecedor_id",
+          "refTable": "fornecedores",
+          "refColumn": "id"
+        },
+        {
+          "column": "pedido_id",
+          "refTable": "pedidos_compra_fornecedor",
+          "refColumn": "id"
+        },
+        {
+          "column": "entrega_id",
+          "refTable": "fornecedor_entregas",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_afiliados",
+      "columnCount": 13,
+      "columns": [
+        "id",
+        "cliente_id",
+        "codigo_publico",
+        "nome_divulgacao",
+        "status",
+        "status_motivo",
+        "pix_tipo",
+        "pix_chave",
+        "termos_versao",
+        "termos_aceitos_em",
+        "created_at",
+        "updated_at",
+        "saldo_operacional"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_service_packages",
+      "columnCount": 12,
+      "columns": [
+        "id",
+        "codigo",
+        "titulo",
+        "subtitulo",
+        "descricao",
+        "publico",
+        "status",
+        "visivel_publico",
+        "orcamento_disponivel",
+        "ordem_exibicao",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_service_package_items",
+      "columnCount": 5,
+      "columns": [
+        "pacote_id",
+        "servico_id",
+        "nome_snapshot",
+        "descricao_snapshot",
+        "ordem_exibicao"
+      ],
+      "primaryKeys": [
+        "pacote_id",
+        "servico_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "pacote_id",
+          "refTable": "gsa_service_packages",
+          "refColumn": "id"
+        },
+        {
+          "column": "servico_id",
+          "refTable": "servicos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_calculator_pro_products",
+      "columnCount": 9,
+      "columns": [
+        "tool_id",
+        "nome",
+        "ativo",
+        "preco_centavos",
+        "duracao_acesso_minutos",
+        "liberar_cliente_com_fatura_paga",
+        "gratuito_inicio",
+        "gratuito_fim",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "tool_id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_calculator_pro_payments",
+      "columnCount": 19,
+      "columns": [
+        "id",
+        "order_nsu",
+        "tool_id",
+        "cliente_id",
+        "visitor_token_hash",
+        "valor_centavos",
+        "status",
+        "checkout_url",
+        "transaction_nsu",
+        "invoice_slug",
+        "receipt_url",
+        "capture_method",
+        "paid_amount_centavos",
+        "paid_at",
+        "expires_at",
+        "raw_payload",
+        "created_at",
+        "updated_at",
+        "duracao_acesso_minutos"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "tool_id",
+          "refTable": "gsa_calculator_pro_products",
+          "refColumn": "tool_id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_calculator_pro_vouchers",
+      "columnCount": 12,
+      "columns": [
+        "id",
+        "code_hash",
+        "code_hint",
+        "tool_id",
+        "status",
+        "expires_at",
+        "used_at",
+        "used_by_cliente_id",
+        "used_by_visitor_hash",
+        "observacoes",
+        "created_by",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "tool_id",
+          "refTable": "gsa_calculator_pro_products",
+          "refColumn": "tool_id"
+        },
+        {
+          "column": "used_by_cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_calculator_pro_grants",
+      "columnCount": 14,
+      "columns": [
+        "id",
+        "tool_id",
+        "source",
+        "cliente_id",
+        "visitor_token_hash",
+        "reference_id",
+        "valid_from",
+        "valid_until",
+        "max_uses",
+        "used_count",
+        "status",
+        "observacoes",
+        "created_by",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "tool_id",
+          "refTable": "gsa_calculator_pro_products",
+          "refColumn": "tool_id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_calculator_pro_sessions",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "token_hash",
+        "tool_id",
+        "source",
+        "grant_id",
+        "cliente_id",
+        "visitor_token_hash",
+        "expires_at",
+        "revoked_at",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "tool_id",
+          "refTable": "gsa_calculator_pro_products",
+          "refColumn": "tool_id"
+        },
+        {
+          "column": "grant_id",
+          "refTable": "gsa_calculator_pro_grants",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_calculator_pro_events",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "event_type",
+        "tool_id",
+        "payment_id",
+        "grant_id",
+        "cliente_id",
+        "visitor_token_hash",
+        "details",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "payment_id",
+          "refTable": "gsa_calculator_pro_payments",
+          "refColumn": "id"
+        },
+        {
+          "column": "grant_id",
+          "refTable": "gsa_calculator_pro_grants",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_calculator_pro_runtime_config",
+      "columnCount": 5,
+      "columns": [
+        "config_key",
+        "infinitepay_handle",
+        "updated_by",
+        "updated_at",
+        "or"
+      ],
+      "primaryKeys": [
+        "config_key"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_catalogo_legado_arquivo",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "dominio",
+        "tabela_origem",
+        "registro_hash",
+        "dados",
+        "arquivado_em"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_site_campaigns",
+      "columnCount": 43,
+      "columns": [
+        "id",
+        "internal_name",
+        "title",
+        "subtitle",
+        "body",
+        "category",
+        "format",
+        "template",
+        "status",
+        "priority",
+        "cta_label",
+        "cta_url",
+        "cta_target",
+        "secondary_cta_label",
+        "secondary_cta_url",
+        "image_desktop_url",
+        "image_mobile_url",
+        "image_alt",
+        "target_pages",
+        "audience",
+        "devices",
+        "starts_at",
+        "ends_at",
+        "frequency_model",
+        "frequency_value",
+        "dismissible",
+        "dismiss_on_backdrop",
+        "dismiss_on_escape",
+        "auto_close_seconds",
+        "created_by_type",
+        "created_by_id",
+        "created_by_name",
+        "updated_by_type",
+        "updated_by_id",
+        "updated_by_name",
+        "published_at",
+        "published_by_type",
+        "published_by_id",
+        "published_by_name",
+        "ended_at",
+        "archived_at",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_site_campaign_events",
+      "columnCount": 11,
+      "columns": [
+        "id",
+        "campaign_id",
+        "event_type",
+        "page",
+        "device",
+        "audience",
+        "viewer_hash",
+        "session_hash",
+        "actor_id",
+        "metadata",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "campaign_id",
+          "refTable": "gsa_site_campaigns",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_site_campaign_history",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "campaign_id",
+        "campaign_name",
+        "action",
+        "actor_type",
+        "actor_id",
+        "actor_name",
+        "details",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "campaign_id",
+          "refTable": "gsa_site_campaigns",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_site_campaign_permissions",
+      "columnCount": 6,
+      "columns": [
+        "collaborator_id",
+        "allowed_actions",
+        "updated_by_id",
+        "updated_by_name",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "collaborator_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "collaborator_id",
+          "refTable": "colaboradores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_whatsapp_ramais",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "setor_nome",
+        "codigo_setor",
+        "numero_whatsapp",
+        "responsavel_nome",
+        "ativo",
+        "ordem",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "shopee_automation_workers",
+      "columnCount": 11,
+      "columns": [
+        "id",
+        "nome",
+        "token_hash",
+        "status",
+        "modo",
+        "capabilities",
+        "last_seen_at",
+        "last_ip",
+        "created_at",
+        "updated_at",
+        "revoked_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "shopee_fulfillment_jobs",
+      "columnCount": 25,
+      "columns": [
+        "id",
+        "orcamento_id",
+        "cliente_id",
+        "status",
+        "prioridade",
+        "tentativas",
+        "max_tentativas",
+        "worker_id",
+        "reserved_at",
+        "lease_expires_at",
+        "next_attempt_at",
+        "divergencias",
+        "last_error_code",
+        "last_error_message",
+        "checkout_snapshot",
+        "shopee_order_sn",
+        "shopee_checkout_url",
+        "shopee_status",
+        "tracking_code",
+        "carrier",
+        "purchased_at",
+        "last_synced_at",
+        "completed_at",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "orcamento_id",
+          "refTable": "orcamentos",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "worker_id",
+          "refTable": "shopee_automation_workers",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "shopee_fulfillment_job_items",
+      "columnCount": 19,
+      "columns": [
+        "id",
+        "job_id",
+        "ordem_compra_id",
+        "produto_id",
+        "produto_variante_id",
+        "produto_nome",
+        "produto_codigo",
+        "sku",
+        "quantidade",
+        "source_url",
+        "variacao_selecionada",
+        "valor_venda_unitario",
+        "valor_custo_esperado",
+        "imagem_url",
+        "status",
+        "supplier_snapshot",
+        "validation_snapshot",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "job_id",
+          "refTable": "shopee_fulfillment_jobs",
+          "refColumn": "id"
+        },
+        {
+          "column": "ordem_compra_id",
+          "refTable": "ordens_compra",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_variante_id",
+          "refTable": "produto_variantes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "shopee_fulfillment_events",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "job_id",
+        "event_type",
+        "from_status",
+        "to_status",
+        "actor_type",
+        "actor_id",
+        "actor_name",
+        "details",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "job_id",
+          "refTable": "shopee_fulfillment_jobs",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "cupons_loja",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "cupons_ativados",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "payment_webhook_events",
+      "columnCount": 8,
+      "columns": [
+        "id",
+        "provider",
+        "transaction_nsu",
+        "order_nsu",
+        "fatura_id",
+        "paid_amount",
+        "payload",
+        "processed_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "fatura_id",
+          "refTable": "faturas",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_admin_mutation_requests",
+      "columnCount": 8,
+      "columns": [
+        "request_id",
+        "actor_type",
+        "actor_id",
+        "operation",
+        "resource",
+        "result",
+        "created_at",
+        "completed_at"
+      ],
+      "primaryKeys": [
+        "request_id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_provider_registration_challenges",
+      "columnCount": 11,
+      "columns": [
+        "id",
+        "telefone",
+        "code_hash",
+        "attempts",
+        "expires_at",
+        "verified_at",
+        "verification_token_hash",
+        "verification_expires_at",
+        "consumed_at",
+        "created_at",
+        "documento"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_calculator_pro_whatsapp_requests",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 1
+    }
+  ],
+  "2. CRM & Clientes (Identidade, VIP, Indicações, Bloqueios)": [
+    {
+      "name": "client_levels",
+      "columnCount": 8,
+      "columns": [
+        "id",
+        "nome_nivel",
+        "pontos_minimos",
+        "pontos_por_real",
+        "cor",
+        "taxa_saque_transferencia",
+        "created_at",
+        "desconto_porcentagem"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "clientes",
+      "columnCount": 40,
+      "columns": [
+        "id",
+        "codigo_cliente",
+        "nome",
+        "email",
+        "cpf",
+        "cnpj",
+        "tipo_pessoa",
+        "telefone",
+        "data_nascimento",
+        "cep",
+        "endereco",
+        "numero",
+        "bairro",
+        "cidade",
+        "estado",
+        "observacoes",
+        "status",
+        "saldo_carteira",
+        "saldo_pontos",
+        "pontos_totais",
+        "carteira_bloqueada",
+        "pontos_bloqueados",
+        "cadastro_aprovado",
+        "bonus_boas_vindas_pendente",
+        "saque_liberado_manual",
+        "indicacao_origem_id",
+        "nivel_id",
+        "nivel_manual_id",
+        "nivel_manual_info",
+        "data_cadastro",
+        "updated_at",
+        "pontos",
+        "perfil_cliente_ativo",
+        "limite_credito_bloqueado",
+        "inativado_pelo_cliente_em",
+        "reativado_em",
+        "exclusao_definitiva_em",
+        "inelegivel_novo_cliente",
+        "inelegivel_nova_indicacao",
+        "credito_pre_aprovado_valor"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "nivel_id",
+          "refTable": "client_levels",
+          "refColumn": "id"
+        },
+        {
+          "column": "nivel_manual_id",
+          "refTable": "client_levels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 2
+    },
+    {
+      "name": "vouchers",
+      "columnCount": 18,
+      "columns": [
+        "id",
+        "codigo_voucher",
+        "nome",
+        "tipo",
+        "valor",
+        "cliente_id",
+        "prestador_id",
+        "ordem_servico_id",
+        "validade",
+        "usage_limit",
+        "usage_count",
+        "status",
+        "categoria",
+        "data_uso",
+        "tipo_uso",
+        "motivo_cancelamento",
+        "data_cancelamento",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "ordem_servico_id",
+          "refTable": "ordens_servico",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "cliente_promocoes",
+      "columnCount": 12,
+      "columns": [
+        "id",
+        "cliente_id",
+        "promocao_id",
+        "orcamento_id",
+        "data_ativacao",
+        "data_expiracao",
+        "status",
+        "data_uso",
+        "motivo_cancelamento",
+        "data_cancelamento",
+        "created_at",
+        "visualizado"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "promocao_id",
+          "refTable": "promocoes",
+          "refColumn": "id"
+        },
+        {
+          "column": "orcamento_id",
+          "refTable": "orcamentos",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "promocao_id",
+          "refTable": "promocoes",
+          "refColumn": "id"
+        },
+        {
+          "column": "orcamento_id",
+          "refTable": "orcamentos",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "cliente_premios",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "cliente_id",
+        "titulo",
+        "descricao",
+        "pontos_custo",
+        "status",
+        "data_resgate",
+        "created_at",
+        "nome"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "indicacoes",
+      "columnCount": 13,
+      "columns": [
+        "id",
+        "codigo_indicacao",
+        "indicador_id",
+        "indicado_nome",
+        "whatsapp_indicado",
+        "data_indicacao",
+        "voucher_id",
+        "status",
+        "data_cadastro_indicado",
+        "data_conclusao",
+        "bonus_indicador",
+        "bonus_indicado",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "indicador_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "voucher_id",
+          "refTable": "vouchers",
+          "refColumn": "id"
+        },
+        {
+          "column": "indicador_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "cliente_notas_admin",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "cliente_id",
+        "autor_id",
+        "autor_nome",
+        "conteudo",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "clientes_identidades_historicas",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "cliente_origem_id",
+        "documento",
+        "telefone",
+        "tipo_pessoa",
+        "exclusao_definitiva_em",
+        "inelegivel_novo_cliente",
+        "inelegivel_nova_indicacao",
+        "motivo",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "cliente_documentos",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 1
+    }
+  ],
+  "3. Financeiro & Fintech (Faturas, Pagamentos, Carteira, Saques, Empréstimos, Cobranças)": [
+    {
+      "name": "faturas",
+      "columnCount": 25,
+      "columns": [
+        "id",
+        "codigo_fatura",
+        "os_id",
+        "ordem_compra_id",
+        "ordem_assinatura_id",
+        "cliente_id",
+        "valor_total",
+        "valor_pago",
+        "valor_final_pendente",
+        "status",
+        "tipo",
+        "data_vencimento",
+        "data_pagamento",
+        "forma_pagamento_escolhida",
+        "mes_referencia",
+        "created_at",
+        "gerada_automaticamente",
+        "pacote_nivel_id",
+        "itens_faturados",
+        "historico_pagamentos",
+        "quitacao_fatura_id",
+        "orcamento_id",
+        "metadata",
+        "cobranca_suspensa",
+        "affiliate_attribution_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "os_id",
+          "refTable": "ordens_servico",
+          "refColumn": "id"
+        },
+        {
+          "column": "ordem_compra_id",
+          "refTable": "ordens_compra",
+          "refColumn": "id"
+        },
+        {
+          "column": "ordem_assinatura_id",
+          "refTable": "ordens_assinatura",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "os_id",
+          "refTable": "ordens_servico",
+          "refColumn": "id"
+        },
+        {
+          "column": "quitacao_fatura_id",
+          "refTable": "faturas",
+          "refColumn": "id"
+        },
+        {
+          "column": "orcamento_id",
+          "refTable": "orcamentos",
+          "refColumn": "id"
+        },
+        {
+          "column": "affiliate_attribution_id",
+          "refTable": "gsa_afiliado_atribuicoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 3
+    },
+    {
+      "name": "pagamentos",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "fatura_id",
+        "voucher_id",
+        "metodo",
+        "valor",
+        "data_pagamento"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "fatura_id",
+          "refTable": "faturas",
+          "refColumn": "id"
+        },
+        {
+          "column": "voucher_id",
+          "refTable": "vouchers",
+          "refColumn": "id"
+        },
+        {
+          "column": "fatura_id",
+          "refTable": "faturas",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 2
+    },
+    {
+      "name": "carteira_lancamentos",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "cliente_id",
+        "valor",
+        "tipo",
+        "descricao",
+        "data_lancamento"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 2
+    },
+    {
+      "name": "extrato_financeiro",
+      "columnCount": 7,
+      "columns": [
+        "id",
+        "cliente_id",
+        "tipo",
+        "valor",
+        "saldo_resultante",
+        "descricao",
+        "data"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 2
+    },
+    {
+      "name": "saques",
+      "columnCount": 13,
+      "columns": [
+        "id",
+        "cliente_id",
+        "valor",
+        "taxa_aplicada",
+        "valor_liquido",
+        "tipo_chave_pix",
+        "chave_pix",
+        "status",
+        "data_solicitacao",
+        "data_vencimento",
+        "data_pagamento",
+        "request_id",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 2
+    },
+    {
+      "name": "transferencias",
+      "columnCount": 12,
+      "columns": [
+        "id",
+        "cliente_origem_id",
+        "cliente_destino_id",
+        "tipo",
+        "valor",
+        "taxa_aplicada",
+        "valor_liquido",
+        "status",
+        "motivo",
+        "data_solicitacao",
+        "request_id",
+        "data_estorno"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_origem_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_destino_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_origem_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_destino_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 2
+    },
+    {
+      "name": "pontos_movimentacoes",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "cliente_id",
+        "fatura_id",
+        "tipo",
+        "pontos",
+        "saldo_apos",
+        "descricao",
+        "valor_convertido",
+        "data_movimentacao"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "fatura_id",
+          "refTable": "faturas",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "transferencias_produtos",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [
+        {
+          "column": "remetente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "destinatario_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "emprestimos",
+      "columnCount": 1,
+      "columns": [
+        "valor_quitacao_acordo"
+      ],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "emprestimo_parcelas",
+      "columnCount": 1,
+      "columns": [
+        "quitacao_fatura_id"
+      ],
+      "primaryKeys": [],
+      "foreignKeys": [
+        {
+          "column": "quitacao_fatura_id",
+          "refTable": "faturas",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "contratos",
+      "columnCount": 19,
+      "columns": [
+        "id",
+        "codigo_contrato",
+        "titulo",
+        "tipo",
+        "cliente_id",
+        "cliente_nome",
+        "cliente_documento",
+        "status",
+        "valor_mensal",
+        "valor_total",
+        "data_inicio",
+        "data_fim",
+        "renovacao_automatica",
+        "dias_para_vencimento",
+        "signatarios",
+        "termos_aditivos_count",
+        "clausulas_resumo",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 3
+    },
+    {
+      "name": "cobrancas",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 2
+    },
+    {
+      "name": "cobranca_historico",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 2
+    },
+    {
+      "name": "emprestimo_documentos",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "emprestimo_comentarios",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "emprestimo_historico",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "fatura_contestacoes",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 3
+    }
+  ],
+  "4. Marketplace & E-commerce (Produtos, Variantes, Pedidos, Carrinhos, Solicitacoes, Devoluções)": [
+    {
+      "name": "produtos",
+      "columnCount": 16,
+      "columns": [
+        "id",
+        "codigo_produto",
+        "nome",
+        "descricao",
+        "valor",
+        "estoque",
+        "status",
+        "created_at",
+        "codigo_barras",
+        "desconto_ativo",
+        "desconto_prazo_tipo",
+        "desconto_limite_quantidade_ativo",
+        "avaliacao_media",
+        "total_avaliacoes",
+        "comentarios_importados",
+        "possui_variacoes"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "promocoes",
+      "columnCount": 11,
+      "columns": [
+        "id",
+        "codigo_promocao",
+        "titulo",
+        "descricao",
+        "tipo",
+        "data_inicio_divulgacao",
+        "data_fim_divulgacao",
+        "prazo_validade_meses",
+        "status",
+        "created_at",
+        "tipo_desconto"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "promocoes_quantidade",
+      "columnCount": 24,
+      "columns": [
+        "id",
+        "nome",
+        "descricao",
+        "tipo_promocao",
+        "escopo_gatilho",
+        "produto_gatilho_id",
+        "categoria_gatilho_id",
+        "valor_minimo_compra",
+        "produtos_combo",
+        "quantidade_minima",
+        "desconto_tipo",
+        "desconto_valor",
+        "produto_brinde_id",
+        "quantidade_brinde",
+        "niveis",
+        "nivel_minimo_id",
+        "niveis_vip",
+        "uso_maximo_por_cliente",
+        "prioridade",
+        "data_inicio",
+        "data_fim",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "produto_gatilho_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "categoria_gatilho_id",
+          "refTable": "loja_categorias",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_brinde_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "nivel_minimo_id",
+          "refTable": "client_levels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "promocoes_quantidade_uso",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "promocao_id",
+        "cliente_id",
+        "orcamento_id",
+        "quantidade_usada",
+        "nivel_aplicado",
+        "economia_gerada",
+        "detalhes",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "promocao_id",
+          "refTable": "promocoes_quantidade",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "orcamento_id",
+          "refTable": "orcamentos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "loja_solicitacoes",
+      "columnCount": 3,
+      "columns": [
+        "imagens_anexo",
+        "descricao_detalhada",
+        "itens_devolvidos"
+      ],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "loja_carrinhos",
+      "columnCount": 2,
+      "columns": [
+        "prazo_meses",
+        "produto_variante_id"
+      ],
+      "primaryKeys": [],
+      "foreignKeys": [
+        {
+          "column": "produto_variante_id",
+          "refTable": "produto_variantes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "promocoes_quantidade_ativadas",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "cliente_id",
+        "promocao_quantidade_id",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "promocao_quantidade_id",
+          "refTable": "promocoes_quantidade",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "loja_reembolsos",
+      "columnCount": 4,
+      "columns": [
+        "ordem_assinatura_id",
+        "created_at",
+        "metodo_reembolso",
+        "orcamento_id"
+      ],
+      "primaryKeys": [],
+      "foreignKeys": [
+        {
+          "column": "ordem_assinatura_id",
+          "refTable": "ordens_assinatura",
+          "refColumn": "id"
+        },
+        {
+          "column": "orcamento_id",
+          "refTable": "orcamentos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "loja_pedido_itens",
+      "columnCount": 23,
+      "columns": [
+        "id",
+        "orcamento_id",
+        "cliente_id",
+        "tipo",
+        "item_id",
+        "produto_id",
+        "servico_id",
+        "assinatura_id",
+        "codigo",
+        "nome",
+        "valor_unitario",
+        "quantidade",
+        "prazo_meses",
+        "subtotal",
+        "is_brinde",
+        "promocao_id",
+        "metadata",
+        "created_at",
+        "or",
+        "valor_original",
+        "desconto_prazo_tipo",
+        "desconto_campanha_id",
+        "produto_variante_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "orcamento_id",
+          "refTable": "orcamentos",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "servico_id",
+          "refTable": "servicos",
+          "refColumn": "id"
+        },
+        {
+          "column": "assinatura_id",
+          "refTable": "assinaturas",
+          "refColumn": "id"
+        },
+        {
+          "column": "promocao_id",
+          "refTable": "promocoes_quantidade",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_variante_id",
+          "refTable": "produto_variantes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "produto_fornecedor_config",
+      "columnCount": 16,
+      "columns": [
+        "produto_id",
+        "fornecimento_externo_ativo",
+        "tipo_fornecedor",
+        "nome_fornecedor",
+        "url_produto",
+        "cidade",
+        "estado",
+        "endereco",
+        "telefone",
+        "observacoes",
+        "created_at",
+        "updated_at",
+        "atualizado_por_tipo",
+        "atualizado_por_id",
+        "atualizado_por_nome",
+        "fornecedor_id"
+      ],
+      "primaryKeys": [
+        "produto_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "fornecedor_id",
+          "refTable": "fornecedores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "produto_importacao_origem",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "produto_id",
+        "source_type",
+        "source_fingerprint",
+        "source_reference",
+        "original_filename",
+        "imported_at",
+        "imported_by_type",
+        "imported_by_id",
+        "imported_by_name"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "produto_desconto_cota_movimentos",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "produto_id",
+        "desconto_campanha_id",
+        "orcamento_id",
+        "loja_pedido_item_id",
+        "checkout_request_id",
+        "tipo_movimento",
+        "quantidade",
+        "created_at",
+        "metadata"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "orcamento_id",
+          "refTable": "orcamentos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "loja_estoque_historico",
+      "columnCount": 1,
+      "columns": [
+        "fornecedor_id"
+      ],
+      "primaryKeys": [],
+      "foreignKeys": [
+        {
+          "column": "fornecedor_id",
+          "refTable": "fornecedores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "loja_categorias",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "loja_avaliacoes",
+      "columnCount": 17,
+      "columns": [
+        "id",
+        "produto_id",
+        "cliente_id",
+        "nome_autor",
+        "cidade",
+        "estado",
+        "nota",
+        "titulo",
+        "comentario",
+        "recomenda",
+        "fotos",
+        "origem",
+        "curtidas_uteis",
+        "verificado",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "loja_vaquinhas",
+      "columnCount": 19,
+      "columns": [
+        "id",
+        "codigo",
+        "produto_id",
+        "produto_snapshot",
+        "organizador_nome",
+        "organizador_telefone",
+        "organizador_email",
+        "organizador_id",
+        "presenteado_nome",
+        "data_evento",
+        "mensagem",
+        "meta_valor",
+        "valor_arrecadado",
+        "quantidade_contribuicoes",
+        "status",
+        "endereco_entrega",
+        "pedido_gerado_id",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 4
+    },
+    {
+      "name": "loja_vaquinha_contribuicoes",
+      "columnCount": 13,
+      "columns": [
+        "id",
+        "vaquinha_id",
+        "contribuinte_nome",
+        "contribuinte_telefone",
+        "contribuinte_email",
+        "valor",
+        "mensagem",
+        "pix_copia_cola",
+        "pix_qr_code_url",
+        "status",
+        "transacao_id",
+        "pago_em",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "vaquinha_id",
+          "refTable": "loja_vaquinhas",
+          "refColumn": "id"
+        },
+        {
+          "column": "vaquinha_id",
+          "refTable": "loja_vaquinhas",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 4
+    },
+    {
+      "name": "loja_favoritos",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "produto_id",
+        "cliente_id",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 4
+    },
+    {
+      "name": "produto_variacao_grupos",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "produto_id",
+        "chave",
+        "nome",
+        "tipo",
+        "ordem",
+        "origem_externa_id",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "produto_variacao_opcoes",
+      "columnCount": 11,
+      "columns": [
+        "id",
+        "grupo_id",
+        "chave",
+        "nome",
+        "valor",
+        "cor_hex",
+        "imagem_url",
+        "ordem",
+        "origem_externa_id",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "grupo_id",
+          "refTable": "produto_variacao_grupos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "produto_variantes",
+      "columnCount": 17,
+      "columns": [
+        "id",
+        "produto_id",
+        "chave",
+        "nome",
+        "sku",
+        "codigo_barras",
+        "valor",
+        "valor_custo",
+        "controle_estoque",
+        "estoque_disponivel",
+        "imagem_url",
+        "ativo",
+        "combinacao",
+        "combinacao_hash",
+        "origem_externa_id",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "produto_variante_opcoes",
+      "columnCount": 4,
+      "columns": [
+        "variante_id",
+        "grupo_id",
+        "opcao_id",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "variante_id",
+        "grupo_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "variante_id",
+          "refTable": "produto_variantes",
+          "refColumn": "id"
+        },
+        {
+          "column": "grupo_id",
+          "refTable": "produto_variacao_grupos",
+          "refColumn": "id"
+        },
+        {
+          "column": "opcao_id",
+          "refTable": "produto_variacao_opcoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "loja_credito_solicitacoes",
+      "columnCount": 1,
+      "columns": [
+        "origem_pre_aprovado"
+      ],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 2
+    },
+    {
+      "name": "loja_credito_movimentacoes",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 2
+    },
+    {
+      "name": "loja_credito_documentos",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 2
+    },
+    {
+      "name": "loja_credito_contestacoes",
+      "columnCount": 25,
+      "columns": [
+        "id",
+        "protocolo",
+        "cliente_id",
+        "movimentacao_id",
+        "orcamento_id",
+        "codigo_compra",
+        "descricao_compra",
+        "valor_compra",
+        "valor_contestado",
+        "motivo",
+        "descricao",
+        "anexos",
+        "status",
+        "prazo_limite",
+        "valor_deferido",
+        "motivo_decisao",
+        "analisada_por",
+        "analisada_por_tipo",
+        "analisada_por_nome",
+        "analisada_em",
+        "estorno_movimentacao_id",
+        "reembolso_id",
+        "created_at",
+        "updated_at",
+        "valor_bloqueado"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "movimentacao_id",
+          "refTable": "loja_credito_movimentacoes",
+          "refColumn": "id"
+        },
+        {
+          "column": "orcamento_id",
+          "refTable": "orcamentos",
+          "refColumn": "id"
+        },
+        {
+          "column": "estorno_movimentacao_id",
+          "refTable": "loja_credito_movimentacoes",
+          "refColumn": "id"
+        },
+        {
+          "column": "reembolso_id",
+          "refTable": "loja_reembolsos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "loja_credito_contestacao_eventos",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "contestacao_id",
+        "tipo",
+        "titulo",
+        "descricao",
+        "ator_tipo",
+        "ator_id",
+        "ator_nome",
+        "metadata",
+        "ocorrido_em"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "contestacao_id",
+          "refTable": "loja_credito_contestacoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "loja_credito_cancelamentos_limite",
+      "columnCount": 15,
+      "columns": [
+        "id",
+        "protocolo",
+        "cliente_id",
+        "limite_total_snapshot",
+        "limite_disponivel_snapshot",
+        "limite_usado_snapshot",
+        "status",
+        "motivo_decisao",
+        "analisado_por",
+        "analisado_por_tipo",
+        "analisado_por_nome",
+        "analisado_em",
+        "created_at",
+        "updated_at",
+        "valor_bloqueado"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "loja_credito_saques",
+      "columnCount": 31,
+      "columns": [
+        "id",
+        "protocolo",
+        "cliente_id",
+        "valor_solicitado",
+        "taxa_tipo",
+        "taxa_config_valor",
+        "taxa_calculada",
+        "valor_total_fatura",
+        "limite_disponivel_snapshot",
+        "valor_bloqueado",
+        "criterio_cadastro_30d_ok",
+        "criterio_credito_100_ok",
+        "analise_reforcada",
+        "pix_tipo",
+        "pix_chave",
+        "documento_foto",
+        "comprovante_endereco",
+        "status",
+        "prazo_analise",
+        "motivo_decisao",
+        "analisado_por",
+        "analisado_por_tipo",
+        "analisado_por_nome",
+        "analisado_em",
+        "aprovado_em",
+        "liberado_em",
+        "referencia_pagamento",
+        "fatura_id",
+        "movimentacao_id",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "fatura_id",
+          "refTable": "faturas",
+          "refColumn": "id"
+        },
+        {
+          "column": "movimentacao_id",
+          "refTable": "loja_credito_movimentacoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "loja_credito_saque_eventos",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "saque_id",
+        "tipo",
+        "titulo",
+        "descricao",
+        "ator_tipo",
+        "ator_id",
+        "ator_nome",
+        "metadata",
+        "ocorrido_em"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "saque_id",
+          "refTable": "loja_credito_saques",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "produtos_fornecedores_config",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    }
+  ],
+  "5. Programa de Parceiros & Resgates de Benefícios (Appeals/Recursos, Outbox)": [
+    {
+      "name": "parceiros",
+      "columnCount": 40,
+      "columns": [
+        "id",
+        "slug",
+        "name",
+        "legal_name",
+        "category",
+        "short_description",
+        "description",
+        "logo_url",
+        "cover_url",
+        "phone",
+        "whatsapp",
+        "email",
+        "website",
+        "instagram",
+        "facebook",
+        "linkedin",
+        "street",
+        "number",
+        "complement",
+        "neighborhood",
+        "city",
+        "state",
+        "zip_code",
+        "maps_url",
+        "business_hours",
+        "service_mode",
+        "service_regions",
+        "services",
+        "products",
+        "benefits",
+        "contact_person",
+        "internal_notes",
+        "featured",
+        "display_order",
+        "status",
+        "created_at",
+        "updated_at",
+        "redemption_has_coupon",
+        "tax_document",
+        "redemption_delay_24h"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 4
+    },
+    {
+      "name": "parceiros_resgates",
+      "columnCount": 14,
+      "columns": [
+        "id",
+        "parceiro_id",
+        "cliente_id",
+        "nome_completo",
+        "telefone",
+        "codigo_gerado",
+        "tipo_resgate",
+        "link_destino",
+        "auto_redirecionado",
+        "created_at",
+        "email",
+        "data_cancelamento",
+        "updated_at",
+        "motivo_cancelamento"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "parceiro_id",
+          "refTable": "parceiros",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "parceiros_resgates_recursos",
+      "columnCount": 13,
+      "columns": [
+        "id",
+        "resgate_id",
+        "protocolo_recurso",
+        "contestacao_cliente",
+        "status",
+        "aberto_em",
+        "prazo_analise_em",
+        "analisado_em",
+        "motivo_decisao",
+        "analisado_por",
+        "idempotency_key",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "resgate_id",
+          "refTable": "parceiros_resgates",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "parceiros_resgates_eventos",
+      "columnCount": 12,
+      "columns": [
+        "id",
+        "resgate_id",
+        "recurso_id",
+        "tipo",
+        "titulo",
+        "descricao_publica",
+        "detalhes_privados",
+        "ator_tipo",
+        "ator_id",
+        "idempotency_key",
+        "ocorrido_em",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "resgate_id",
+          "refTable": "parceiros_resgates",
+          "refColumn": "id"
+        },
+        {
+          "column": "recurso_id",
+          "refTable": "parceiros_resgates_recursos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "parceiros_resgates_public_status",
+      "columnCount": 4,
+      "columns": [
+        "resgate_id",
+        "tracking_key",
+        "revision",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "resgate_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "resgate_id",
+          "refTable": "parceiros_resgates",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "parceiros_resgates_recurso_desafios",
+      "columnCount": 7,
+      "columns": [
+        "id",
+        "resgate_id",
+        "code_hash",
+        "attempts",
+        "expires_at",
+        "consumed_at",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "resgate_id",
+          "refTable": "parceiros_resgates",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "parceiros_resgates_notificacoes",
+      "columnCount": 16,
+      "columns": [
+        "id",
+        "resgate_id",
+        "recurso_id",
+        "tipo",
+        "telefone",
+        "mensagem",
+        "idempotency_key",
+        "status",
+        "attempts",
+        "available_at",
+        "claimed_at",
+        "sent_at",
+        "last_error",
+        "provider_message_id",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "resgate_id",
+          "refTable": "parceiros_resgates",
+          "refColumn": "id"
+        },
+        {
+          "column": "recurso_id",
+          "refTable": "parceiros_resgates_recursos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    }
+  ],
+  "6. Programa de Afiliados (Links, Conversões, Comissões, Saques, Transferências)": [
+    {
+      "name": "gsa_afiliado_programas",
+      "columnCount": 15,
+      "columns": [
+        "id",
+        "codigo",
+        "nome",
+        "descricao",
+        "caminho_padrao",
+        "prefixos_permitidos",
+        "base_tipo",
+        "percentual",
+        "janela_atribuicao_dias",
+        "carencia_dias",
+        "saque_minimo",
+        "ativo",
+        "created_at",
+        "updated_at",
+        "pontos_por_real"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_afiliado_links",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "afiliado_id",
+        "programa_id",
+        "codigo",
+        "destino",
+        "titulo",
+        "ativo",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "afiliado_id",
+          "refTable": "gsa_afiliados",
+          "refColumn": "id"
+        },
+        {
+          "column": "programa_id",
+          "refTable": "gsa_afiliado_programas",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_afiliado_cliques",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "link_id",
+        "token_hash",
+        "visitante_hash",
+        "landing_path",
+        "referrer_host",
+        "expires_at",
+        "cliente_id",
+        "vinculado_em",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "link_id",
+          "refTable": "gsa_afiliado_links",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_afiliado_atribuicoes",
+      "columnCount": 11,
+      "columns": [
+        "id",
+        "cliente_id",
+        "afiliado_id",
+        "programa_id",
+        "link_id",
+        "clique_id",
+        "modelo",
+        "atribuida_em",
+        "expires_at",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "afiliado_id",
+          "refTable": "gsa_afiliados",
+          "refColumn": "id"
+        },
+        {
+          "column": "programa_id",
+          "refTable": "gsa_afiliado_programas",
+          "refColumn": "id"
+        },
+        {
+          "column": "link_id",
+          "refTable": "gsa_afiliado_links",
+          "refColumn": "id"
+        },
+        {
+          "column": "clique_id",
+          "refTable": "gsa_afiliado_cliques",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_afiliado_conversoes",
+      "columnCount": 17,
+      "columns": [
+        "id",
+        "atribuicao_id",
+        "afiliado_id",
+        "programa_id",
+        "comprador_id",
+        "origem_tipo",
+        "origem_id",
+        "evento",
+        "valor_bruto",
+        "base_elegivel",
+        "base_tipo_snapshot",
+        "status",
+        "ocorreu_em",
+        "revertida_em",
+        "metadata",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "atribuicao_id",
+          "refTable": "gsa_afiliado_atribuicoes",
+          "refColumn": "id"
+        },
+        {
+          "column": "afiliado_id",
+          "refTable": "gsa_afiliados",
+          "refColumn": "id"
+        },
+        {
+          "column": "programa_id",
+          "refTable": "gsa_afiliado_programas",
+          "refColumn": "id"
+        },
+        {
+          "column": "comprador_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_afiliado_comissoes",
+      "columnCount": 14,
+      "columns": [
+        "id",
+        "conversao_id",
+        "afiliado_id",
+        "programa_id",
+        "percentual_snapshot",
+        "base_elegivel_snapshot",
+        "valor",
+        "status",
+        "disponivel_em",
+        "pago_valor",
+        "paga_em",
+        "revertida_em",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "conversao_id",
+          "refTable": "gsa_afiliado_conversoes",
+          "refColumn": "id"
+        },
+        {
+          "column": "afiliado_id",
+          "refTable": "gsa_afiliados",
+          "refColumn": "id"
+        },
+        {
+          "column": "programa_id",
+          "refTable": "gsa_afiliado_programas",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_afiliado_saques",
+      "columnCount": 16,
+      "columns": [
+        "id",
+        "afiliado_id",
+        "request_id",
+        "valor",
+        "status",
+        "pix_tipo_snapshot",
+        "pix_chave_snapshot",
+        "solicitado_em",
+        "aprovado_em",
+        "pago_em",
+        "rejeitado_em",
+        "cancelado_em",
+        "notas",
+        "decidido_por",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "afiliado_id",
+          "refTable": "gsa_afiliados",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_afiliado_comissao_eventos",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "afiliado_id",
+        "comissao_id",
+        "saque_id",
+        "tipo",
+        "valor_assinado",
+        "efetivo_em",
+        "metadata",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "afiliado_id",
+          "refTable": "gsa_afiliados",
+          "refColumn": "id"
+        },
+        {
+          "column": "comissao_id",
+          "refTable": "gsa_afiliado_comissoes",
+          "refColumn": "id"
+        },
+        {
+          "column": "saque_id",
+          "refTable": "gsa_afiliado_saques",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_afiliado_pontos_eventos",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "cliente_id",
+        "afiliado_id",
+        "conversao_id",
+        "tipo",
+        "pontos_assinados",
+        "valor_carteira",
+        "request_id",
+        "metadata",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "afiliado_id",
+          "refTable": "gsa_afiliados",
+          "refColumn": "id"
+        },
+        {
+          "column": "conversao_id",
+          "refTable": "gsa_afiliado_conversoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_afiliado_transferencias",
+      "columnCount": 16,
+      "columns": [
+        "id",
+        "request_id",
+        "remetente_afiliado_id",
+        "destinatario_afiliado_id",
+        "valor",
+        "status",
+        "codigo",
+        "observacao",
+        "remetente_saldo_antes",
+        "remetente_saldo_depois",
+        "destinatario_saldo_antes",
+        "destinatario_saldo_depois",
+        "concluida_em",
+        "created_at",
+        "updated_at",
+        "estornada_em"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "remetente_afiliado_id",
+          "refTable": "gsa_afiliados",
+          "refColumn": "id"
+        },
+        {
+          "column": "destinatario_afiliado_id",
+          "refTable": "gsa_afiliados",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    }
+  ],
+  "7. Prestadores de Serviços & Workstation (Demandas, Ordens de Serviço, Repasses)": [
+    {
+      "name": "servicos",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "codigo_servico",
+        "nome",
+        "descricao",
+        "valor",
+        "status",
+        "created_at",
+        "tipo_cliente",
+        "ordem_exibicao"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "orcamentos",
+      "columnCount": 34,
+      "columns": [
+        "id",
+        "codigo_orcamento",
+        "cliente_id",
+        "servico_id",
+        "produto_id",
+        "assinatura_id",
+        "promocao_id",
+        "categoria",
+        "valor_servico",
+        "valor_produto",
+        "valor_assinatura",
+        "valor_adicional",
+        "descricao_adicional",
+        "acrescimo",
+        "desconto",
+        "promocao_desconto_manual",
+        "total",
+        "status",
+        "fase_negociacao",
+        "quantidade",
+        "data_criacao",
+        "origem_renovacao_id",
+        "tipo_renovacao",
+        "comprovante_concorrente",
+        "status_quitacao_credito",
+        "valor_quitacao_acordo",
+        "contato_publico",
+        "public_request_hash",
+        "checkout_request_id",
+        "subtotal_preco_tabela",
+        "pacote_servico_id",
+        "affiliate_attribution_id",
+        "anexos",
+        "comprovante_concorrente_urls"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "servico_id",
+          "refTable": "servicos",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "assinatura_id",
+          "refTable": "assinaturas",
+          "refColumn": "id"
+        },
+        {
+          "column": "promocao_id",
+          "refTable": "promocoes",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "pacote_servico_id",
+          "refTable": "servicos_pacotes",
+          "refColumn": "id"
+        },
+        {
+          "column": "affiliate_attribution_id",
+          "refTable": "gsa_afiliado_atribuicoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 3
+    },
+    {
+      "name": "ordens_servico",
+      "columnCount": 12,
+      "columns": [
+        "id",
+        "codigo_os",
+        "orcamento_id",
+        "cliente_id",
+        "status",
+        "data_inicio",
+        "data_fim",
+        "tipo_entrega",
+        "link_documento",
+        "created_at",
+        "servico_id",
+        "anexos_os"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "orcamento_id",
+          "refTable": "orcamentos",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "orcamento_id",
+          "refTable": "orcamentos",
+          "refColumn": "id"
+        },
+        {
+          "column": "servico_id",
+          "refTable": "servicos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 2
+    },
+    {
+      "name": "ordens_compra",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "codigo_ordem",
+        "produto_id",
+        "cliente_id",
+        "status",
+        "quantidade",
+        "data_criacao",
+        "nome_produto_contratado",
+        "produto_variante_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_variante_id",
+          "refTable": "produto_variantes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 3
+    },
+    {
+      "name": "ordens_assinatura",
+      "columnCount": 13,
+      "columns": [
+        "id",
+        "codigo_ordem",
+        "assinatura_id",
+        "cliente_id",
+        "status",
+        "quantidade",
+        "prazo_meses",
+        "renovacao_automatica",
+        "data_vencimento",
+        "data_criacao",
+        "data_cancelamento",
+        "valor_proporcional_cancelamento",
+        "nome_assinatura_contratada"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "assinatura_id",
+          "refTable": "assinaturas",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "prestadores",
+      "columnCount": 17,
+      "columns": [
+        "id",
+        "usuario_id",
+        "tipo_cadastro",
+        "nome_razao",
+        "documento",
+        "email",
+        "telefone",
+        "cep",
+        "area_servico",
+        "credencial_acesso",
+        "status",
+        "created_at",
+        "updated_at",
+        "nome_responsavel",
+        "observacoes",
+        "numero",
+        "nome_completo"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 3
+    },
+    {
+      "name": "prestador_demandas",
+      "columnCount": 23,
+      "columns": [
+        "id",
+        "prestador_id",
+        "os_id",
+        "titulo",
+        "descricao",
+        "detalhes",
+        "valor_proposto_admin",
+        "valor_proposto_prestador",
+        "valor_final",
+        "status",
+        "data_inicio",
+        "data_conclusao",
+        "prazo_entrega",
+        "link_entrega",
+        "created_at",
+        "updated_at",
+        "data_entrega_prestador",
+        "observacao_entrega",
+        "motivo_negociacao",
+        "is_contraproposta_final",
+        "ajuste_solicitado",
+        "prazo_ajuste",
+        "status_ajuste"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "os_id",
+          "refTable": "ordens_servico",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "os_id",
+          "refTable": "ordens_servico",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 4
+    },
+    {
+      "name": "prestador_faturas",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "prestador_id",
+        "demanda_id",
+        "valor",
+        "status",
+        "data_vencimento",
+        "data_pagamento",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "demanda_id",
+          "refTable": "prestador_demandas",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "demanda_id",
+          "refTable": "prestador_demandas",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "prestador_saques",
+      "columnCount": 7,
+      "columns": [
+        "id",
+        "prestador_id",
+        "valor",
+        "status",
+        "dados_bancarios",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "prestador_transacoes",
+      "columnCount": 8,
+      "columns": [
+        "id",
+        "prestador_id",
+        "demanda_id",
+        "tipo",
+        "valor",
+        "descricao",
+        "status",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "demanda_id",
+          "refTable": "prestador_demandas",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "demanda_id",
+          "refTable": "prestador_demandas",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "prestador_agendamentos",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "prestador_id",
+        "demanda_id",
+        "data_inicio",
+        "data_fim",
+        "status",
+        "observacoes",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "demanda_id",
+          "refTable": "prestador_demandas",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "demanda_id",
+          "refTable": "prestador_demandas",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "prestador_documentos",
+      "columnCount": 8,
+      "columns": [
+        "id",
+        "prestador_id",
+        "nome",
+        "tipo",
+        "url",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "prestador_historico",
+      "columnCount": 5,
+      "columns": [
+        "id",
+        "prestador_id",
+        "acao",
+        "descricao",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "prestador_suporte_demandas",
+      "columnCount": 8,
+      "columns": [
+        "id",
+        "demanda_id",
+        "prestador_id",
+        "mensagem",
+        "resposta_admin",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "demanda_id",
+          "refTable": "prestador_demandas",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "demanda_id",
+          "refTable": "prestador_demandas",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 3
+    },
+    {
+      "name": "prestador_demandas_historico",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "orcamento_timeline",
+      "columnCount": 14,
+      "columns": [
+        "id",
+        "orcamento_id",
+        "cliente_id",
+        "ator_id",
+        "ator_tipo",
+        "tipo",
+        "acao",
+        "status",
+        "titulo",
+        "descricao",
+        "detalhes",
+        "metadata",
+        "created_by",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 6
+    },
+    {
+      "name": "servicos_pacotes",
+      "columnCount": 13,
+      "columns": [
+        "id",
+        "codigo_pacote",
+        "titulo",
+        "subtitulo",
+        "descricao",
+        "publico",
+        "servico_ids",
+        "status",
+        "visivel_catalogo_publico",
+        "disponivel_orcamento",
+        "ordem",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "prestador_promocoes",
+      "columnCount": 1,
+      "columns": [
+        "data_inicio"
+      ],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "prestador_premios",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "prestador_promocoes_ativacoes",
+      "columnCount": 0,
+      "columns": [],
+      "primaryKeys": [],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 1
+    }
+  ],
+  "8. Fornecedores & Procurement (Cotações, Pedidos de Compra, Homologação)": [
+    {
+      "name": "fornecedores",
+      "columnCount": 29,
+      "columns": [
+        "id",
+        "codigo",
+        "tipo_pessoa",
+        "documento",
+        "razao_social",
+        "nome_fantasia",
+        "inscricao_estadual",
+        "responsavel_nome",
+        "email",
+        "telefone",
+        "cep",
+        "endereco",
+        "numero",
+        "complemento",
+        "bairro",
+        "cidade",
+        "estado",
+        "dados_bancarios",
+        "observacoes",
+        "status",
+        "pin_hash",
+        "pin_tentativas",
+        "pin_bloqueado",
+        "aprovado_em",
+        "aprovado_por",
+        "motivo_status",
+        "created_at",
+        "updated_at",
+        "dados_bancarios_pendentes"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "fornecedor_produtos",
+      "columnCount": 12,
+      "columns": [
+        "id",
+        "fornecedor_id",
+        "produto_id",
+        "codigo_fornecedor",
+        "custo_unitario",
+        "quantidade_minima",
+        "prazo_entrega_dias",
+        "status",
+        "aprovado_em",
+        "aprovado_por",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "fornecedor_id",
+          "refTable": "fornecedores",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "fornecedor_produto_solicitacoes",
+      "columnCount": 21,
+      "columns": [
+        "id",
+        "fornecedor_id",
+        "produto_id",
+        "tipo",
+        "nome",
+        "descricao",
+        "categoria_id",
+        "codigo_barras",
+        "imagem_url",
+        "custo_unitario",
+        "quantidade_minima",
+        "prazo_entrega_dias",
+        "observacoes",
+        "status",
+        "motivo_analise",
+        "produto_aprovado_id",
+        "analisado_em",
+        "analisado_por",
+        "created_at",
+        "updated_at",
+        "or"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "fornecedor_id",
+          "refTable": "fornecedores",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "categoria_id",
+          "refTable": "loja_categorias",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_aprovado_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "pedidos_compra_fornecedor",
+      "columnCount": 19,
+      "columns": [
+        "id",
+        "codigo",
+        "fornecedor_id",
+        "status",
+        "previsao_entrega",
+        "condicao_pagamento",
+        "vencimento_previsto",
+        "observacoes",
+        "valor_total_previsto",
+        "criado_por_tipo",
+        "criado_por_id",
+        "criado_por_nome",
+        "enviado_em",
+        "visualizado_em",
+        "concluido_em",
+        "cancelado_em",
+        "motivo_cancelamento",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "fornecedor_id",
+          "refTable": "fornecedores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "fornecedor_entregas",
+      "columnCount": 22,
+      "columns": [
+        "id",
+        "codigo",
+        "pedido_id",
+        "fornecedor_id",
+        "status",
+        "numero_nota",
+        "serie_nota",
+        "chave_nfe",
+        "data_emissao",
+        "valor_total_nota",
+        "vencimento",
+        "arquivo_xml",
+        "arquivo_pdf",
+        "observacoes",
+        "motivo_analise",
+        "analisado_em",
+        "analisado_por_tipo",
+        "analisado_por_id",
+        "analisado_por_nome",
+        "request_id",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "pedido_id",
+          "refTable": "pedidos_compra_fornecedor",
+          "refColumn": "id"
+        },
+        {
+          "column": "fornecedor_id",
+          "refTable": "fornecedores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "fornecedor_entrega_itens",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "entrega_id",
+        "pedido_item_id",
+        "produto_id",
+        "quantidade_entregue",
+        "custo_unitario_nota",
+        "lote",
+        "validade",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "entrega_id",
+          "refTable": "fornecedor_entregas",
+          "refColumn": "id"
+        },
+        {
+          "column": "pedido_item_id",
+          "refTable": "pedido_compra_fornecedor_itens",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_id",
+          "refTable": "produtos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "fornecedor_auditoria",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "fornecedor_id",
+        "ator_tipo",
+        "ator_id",
+        "ator_nome",
+        "acao",
+        "entidade",
+        "entidade_id",
+        "detalhes",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "fornecedor_id",
+          "refTable": "fornecedores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "fornecedor_notificacoes",
+      "columnCount": 8,
+      "columns": [
+        "id",
+        "fornecedor_id",
+        "titulo",
+        "mensagem",
+        "modulo",
+        "item_id",
+        "lida",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "fornecedor_id",
+          "refTable": "fornecedores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    }
+  ],
+  "9. Colaboradores & Perfis Administrativos (Auditoria, Módulos, Permissões RBAC)": [
+    {
+      "name": "funcoes",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "nome",
+        "descricao",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "colaboradores",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "nome",
+        "email",
+        "telefone",
+        "credencial_acesso",
+        "funcao_id",
+        "status",
+        "created_at",
+        "updated_at",
+        "credencial_hash"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "funcao_id",
+          "refTable": "funcoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 5
+    },
+    {
+      "name": "colaborador_modulos",
+      "columnCount": 2,
+      "columns": [
+        "colaborador_id",
+        "modulo_id"
+      ],
+      "primaryKeys": [
+        "colaborador_id",
+        "modulo_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "colaborador_id",
+          "refTable": "colaboradores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 5
+    },
+    {
+      "name": "solicitacoes_exclusao",
+      "columnCount": 8,
+      "columns": [
+        "id",
+        "colaborador_id",
+        "tabela",
+        "registro_id",
+        "motivo",
+        "status",
+        "data_decisao",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "colaborador_id",
+          "refTable": "colaboradores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    }
+  ],
+  "10. GSA Viagens (Pacotes, Cotações, Reservas, Propostas, Parcelamentos)": [
+    {
+      "name": "viagens_configuracoes",
+      "columnCount": 15,
+      "columns": [
+        "id",
+        "nome_comercial",
+        "email_atendimento",
+        "telefone_atendimento",
+        "whatsapp_atendimento",
+        "cadastur_numero",
+        "cadastur_validade",
+        "responsavel_nome",
+        "responsavel_documento",
+        "termos_servico",
+        "politica_privacidade",
+        "politica_cancelamento",
+        "prazo_padrao_proposta_horas",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "viagens_fornecedores",
+      "columnCount": 13,
+      "columns": [
+        "id",
+        "tipo",
+        "nome_interno",
+        "url_original",
+        "cidade",
+        "telefone",
+        "contato_nome",
+        "autorizacao_revenda",
+        "autorizacao_imagens",
+        "observacoes",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "viagens_pacotes",
+      "columnCount": 41,
+      "columns": [
+        "id",
+        "titulo",
+        "slug",
+        "categoria",
+        "origem",
+        "destino",
+        "data_ida",
+        "data_volta",
+        "dias",
+        "noites",
+        "hotel_nome",
+        "hotel_categoria",
+        "acomodacao_tipo",
+        "alimentacao",
+        "transporte_tipo",
+        "companhia_executor",
+        "bagagem_inclusa",
+        "traslado_incluso",
+        "itinerario",
+        "inclusoes",
+        "exclusoes",
+        "regras",
+        "documentacao_necessaria",
+        "fornecedor_id",
+        "codigo_oferta_fornecedor",
+        "preco_custo",
+        "taxas_fornecedor",
+        "margem_porcentagem",
+        "margem_valor",
+        "preco_venda",
+        "preco_crianca",
+        "preco_bebe",
+        "parcelamento_maximo",
+        "limite_vendas",
+        "vendas_realizadas",
+        "prazo_promocao",
+        "data_ultima_verificacao",
+        "status",
+        "created_at",
+        "updated_at",
+        "url_fornecedor"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "fornecedor_id",
+          "refTable": "viagens_fornecedores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "viagens_pacote_imagens",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "pacote_id",
+        "url",
+        "is_capa",
+        "ordem",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "pacote_id",
+          "refTable": "viagens_pacotes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "viagens_orcamentos",
+      "columnCount": 27,
+      "columns": [
+        "id",
+        "cliente_id",
+        "nome",
+        "email",
+        "telefone",
+        "origem",
+        "destino",
+        "aceita_sugestoes",
+        "tipo",
+        "data_ida",
+        "data_volta",
+        "flexibilidade",
+        "adultos",
+        "criancas",
+        "idades_criancas",
+        "bebes",
+        "dias",
+        "preferencia_hospedagem",
+        "preferencia_voo",
+        "necessidades_acessibilidade",
+        "observacoes",
+        "status",
+        "protocolo",
+        "created_at",
+        "updated_at",
+        "pacote_id",
+        "affiliate_attribution_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "pacote_id",
+          "refTable": "viagens_pacotes",
+          "refColumn": "id"
+        },
+        {
+          "column": "affiliate_attribution_id",
+          "refTable": "gsa_afiliado_atribuicoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 7
+    },
+    {
+      "name": "viagens_solicitacoes_reserva",
+      "columnCount": 14,
+      "columns": [
+        "id",
+        "pacote_id",
+        "cliente_id",
+        "protocolo",
+        "adultos",
+        "criancas",
+        "bebes",
+        "snapshot_pacote",
+        "status",
+        "observacoes_cliente",
+        "observacoes_admin",
+        "created_at",
+        "updated_at",
+        "affiliate_attribution_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "pacote_id",
+          "refTable": "viagens_pacotes",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "affiliate_attribution_id",
+          "refTable": "gsa_afiliado_atribuicoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 6
+    },
+    {
+      "name": "viagens_propostas",
+      "columnCount": 19,
+      "columns": [
+        "id",
+        "reserva_id",
+        "cliente_id",
+        "snapshot_completo",
+        "valor_por_adulto",
+        "valor_por_crianca",
+        "valor_por_bebe",
+        "taxas",
+        "valor_total",
+        "parcelamento_permitido",
+        "condicoes",
+        "prazo_aceitacao",
+        "prazo_pagamento",
+        "status",
+        "created_at",
+        "updated_at",
+        "aceito_em",
+        "quantidade_passageiros",
+        "affiliate_attribution_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "reserva_id",
+          "refTable": "viagens_solicitacoes_reserva",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "affiliate_attribution_id",
+          "refTable": "gsa_afiliado_atribuicoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 3
+    },
+    {
+      "name": "viagens_passageiros",
+      "columnCount": 20,
+      "columns": [
+        "id",
+        "proposta_id",
+        "cliente_id",
+        "nome_completo",
+        "data_nascimento",
+        "nacionalidade",
+        "cpf",
+        "tipo_documento",
+        "numero_documento",
+        "orgao_emissor",
+        "data_emissao",
+        "data_validade",
+        "passaporte",
+        "pais_emissor",
+        "visto",
+        "contato_emergencia",
+        "necessidade_assistencia",
+        "tipo_passageiro",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "proposta_id",
+          "refTable": "viagens_propostas",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 13
+    },
+    {
+      "name": "viagens_passageiro_documentos",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "passageiro_id",
+        "tipo_documento",
+        "storage_path",
+        "file_name",
+        "file_type",
+        "file_size",
+        "verificado",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "passageiro_id",
+          "refTable": "viagens_passageiros",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 8
+    },
+    {
+      "name": "viagens_transacoes",
+      "columnCount": 15,
+      "columns": [
+        "id",
+        "proposta_id",
+        "cliente_id",
+        "fatura_id",
+        "valor_pago",
+        "status",
+        "codigo_reserva_fornecedor",
+        "comprovante_compra_storage",
+        "created_at",
+        "updated_at",
+        "forma_pagamento",
+        "parcelas",
+        "valor_total_contrato",
+        "resposta_admin",
+        "affiliate_attribution_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "proposta_id",
+          "refTable": "viagens_propostas",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "fatura_id",
+          "refTable": "faturas",
+          "refColumn": "id"
+        },
+        {
+          "column": "affiliate_attribution_id",
+          "refTable": "gsa_afiliado_atribuicoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "viagens_vouchers",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "transacao_id",
+        "storage_path",
+        "file_name",
+        "descricao",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "transacao_id",
+          "refTable": "viagens_transacoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "viagens_cancelamentos",
+      "columnCount": 12,
+      "columns": [
+        "id",
+        "transacao_id",
+        "cliente_id",
+        "motivo",
+        "valor_solicitado",
+        "taxas_aplicaveis",
+        "valor_reembolsado",
+        "status",
+        "resposta_gsa",
+        "created_at",
+        "updated_at",
+        "request_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "transacao_id",
+          "refTable": "viagens_transacoes",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 3
+    },
+    {
+      "name": "viagens_transacao_parcelas",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "transacao_id",
+        "fatura_id",
+        "numero",
+        "total_parcelas",
+        "valor",
+        "data_vencimento",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "transacao_id",
+          "refTable": "viagens_transacoes",
+          "refColumn": "id"
+        },
+        {
+          "column": "fatura_id",
+          "refTable": "faturas",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    }
+  ],
+  "11. GSA Saúde (Planos, Cotações, Propostas, Vidas, Contratos)": [
+    {
+      "name": "saude_configuracoes",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "taxa_assessoria_habilitada",
+        "termos_assessoria",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "saude_parceiros",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "site",
+        "comissao_valor",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "saude_produtos",
+      "columnCount": 7,
+      "columns": [
+        "id",
+        "nome",
+        "resumo",
+        "detalhes",
+        "elegibilidade",
+        "status",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "saude_produto_redes",
+      "columnCount": 2,
+      "columns": [
+        "id",
+        "nome"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "saude_cotacoes",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "produto_id",
+        "categoria",
+        "consentimento_em",
+        "status",
+        "created_at",
+        "cliente_id",
+        "protocolo",
+        "updated_at",
+        "affiliate_attribution_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "produto_id",
+          "refTable": "saude_produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "affiliate_attribution_id",
+          "refTable": "gsa_afiliado_atribuicoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "saude_cotacao_beneficiarios",
+      "columnCount": 3,
+      "columns": [
+        "id",
+        "tipo",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "saude_propostas",
+      "columnCount": 14,
+      "columns": [
+        "id",
+        "cliente_id",
+        "produto_id",
+        "mensalidade_operadora",
+        "validade_ate",
+        "status",
+        "created_at",
+        "cotacao_id",
+        "parceiro_id",
+        "protocolo",
+        "titulo",
+        "taxa_assessoria_gsa",
+        "updated_at",
+        "affiliate_attribution_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_id",
+          "refTable": "saude_produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "affiliate_attribution_id",
+          "refTable": "gsa_afiliado_atribuicoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "saude_aceites",
+      "columnCount": 3,
+      "columns": [
+        "id",
+        "cliente_id",
+        "snapshot"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "saude_contratos",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "parceiro_id",
+        "numero",
+        "status",
+        "created_at",
+        "affiliate_attribution_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "parceiro_id",
+          "refTable": "saude_parceiros",
+          "refColumn": "id"
+        },
+        {
+          "column": "affiliate_attribution_id",
+          "refTable": "gsa_afiliado_atribuicoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "saude_dependentes",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "contrato_id",
+        "data_nascimento",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "contrato_id",
+          "refTable": "saude_contratos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "saude_documentos",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "proposta_id",
+        "titulo",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "proposta_id",
+          "refTable": "saude_propostas",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "saude_assessorias",
+      "columnCount": 5,
+      "columns": [
+        "id",
+        "proposta_id",
+        "termos",
+        "status",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "proposta_id",
+          "refTable": "saude_propostas",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "saude_comissoes",
+      "columnCount": 5,
+      "columns": [
+        "id",
+        "contrato_id",
+        "base_calculo",
+        "status",
+        "competencia"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "contrato_id",
+          "refTable": "saude_contratos",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "saude_atendimentos",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "protocolo",
+        "status",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "saude_atendimento_mensagens",
+      "columnCount": 2,
+      "columns": [
+        "id",
+        "autor_tipo"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "saude_auditoria",
+      "columnCount": 2,
+      "columns": [
+        "id",
+        "entidade"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    }
+  ],
+  "12. GSA Seguros (Apólices, Sinistros, Cotações, Ramos)": [
+    {
+      "name": "seguros_configuracoes",
+      "columnCount": 3,
+      "columns": [
+        "id",
+        "taxa_assessoria_habilitada",
+        "canais_atendimento"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_parceiros",
+      "columnCount": 12,
+      "columns": [
+        "id",
+        "comissao_tipo",
+        "comissao_valor",
+        "created_at",
+        "nome",
+        "documento",
+        "registro_susep",
+        "site",
+        "contato",
+        "observacoes",
+        "status",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_produtos",
+      "columnCount": 16,
+      "columns": [
+        "id",
+        "nome",
+        "resumo",
+        "coberturas",
+        "elegibilidade",
+        "status",
+        "created_at",
+        "parceiro_id",
+        "slug",
+        "categoria",
+        "imagem_url",
+        "preco_referencia",
+        "detalhes",
+        "exclusoes",
+        "destaque",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "parceiro_id",
+          "refTable": "seguros_parceiros",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_ofertas",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "titulo",
+        "status",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_cotacoes",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "produto_id",
+        "categoria",
+        "dados",
+        "status",
+        "created_at",
+        "cliente_id",
+        "protocolo",
+        "updated_at",
+        "affiliate_attribution_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "produto_id",
+          "refTable": "seguros_produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_id",
+          "refTable": "seguros_produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "affiliate_attribution_id",
+          "refTable": "gsa_afiliado_atribuicoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_cotacao_dados",
+      "columnCount": 2,
+      "columns": [
+        "id",
+        "grupo"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_propostas",
+      "columnCount": 15,
+      "columns": [
+        "id",
+        "cliente_id",
+        "produto_id",
+        "premio_seguradora",
+        "validade_ate",
+        "status",
+        "created_at",
+        "cotacao_id",
+        "parceiro_id",
+        "protocolo",
+        "titulo",
+        "franquia",
+        "taxa_assessoria_gsa",
+        "updated_at",
+        "affiliate_attribution_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_id",
+          "refTable": "seguros_produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "cotacao_id",
+          "refTable": "seguros_cotacoes",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "parceiro_id",
+          "refTable": "seguros_parceiros",
+          "refColumn": "id"
+        },
+        {
+          "column": "produto_id",
+          "refTable": "seguros_produtos",
+          "refColumn": "id"
+        },
+        {
+          "column": "affiliate_attribution_id",
+          "refTable": "gsa_afiliado_atribuicoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_aceites",
+      "columnCount": 3,
+      "columns": [
+        "id",
+        "cliente_id",
+        "ip"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_apolices",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "parceiro_id",
+        "numero",
+        "status",
+        "created_at",
+        "affiliate_attribution_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "parceiro_id",
+          "refTable": "seguros_parceiros",
+          "refColumn": "id"
+        },
+        {
+          "column": "affiliate_attribution_id",
+          "refTable": "gsa_afiliado_atribuicoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_documentos",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "proposta_id",
+        "titulo",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "proposta_id",
+          "refTable": "seguros_propostas",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_assessorias",
+      "columnCount": 5,
+      "columns": [
+        "id",
+        "proposta_id",
+        "termos",
+        "status",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "proposta_id",
+          "refTable": "seguros_propostas",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_comissoes",
+      "columnCount": 5,
+      "columns": [
+        "id",
+        "apolice_id",
+        "porcentagem",
+        "status",
+        "recebida_em"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "apolice_id",
+          "refTable": "seguros_apolices",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_assistencias",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "apolice_id",
+        "status",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "apolice_id",
+          "refTable": "seguros_apolices",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_sinistros",
+      "columnCount": 5,
+      "columns": [
+        "id",
+        "apolice_id",
+        "descricao",
+        "status",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "apolice_id",
+          "refTable": "seguros_apolices",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_sinistro_mensagens",
+      "columnCount": 2,
+      "columns": [
+        "id",
+        "autor_tipo"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_atendimentos",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "protocolo",
+        "status",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_atendimento_mensagens",
+      "columnCount": 2,
+      "columns": [
+        "id",
+        "autor_tipo"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "seguros_auditoria",
+      "columnCount": 2,
+      "columns": [
+        "id",
+        "entidade"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    }
+  ],
+  "13. Hub Classificados (Anúncios, Categorias, Propostas, Moderação, Comissões)": [
+    {
+      "name": "classificados_configuracoes",
+      "columnCount": 8,
+      "columns": [
+        "id",
+        "modulo_ativo",
+        "imoveis_habilitado",
+        "imoveis_responsavel_tecnico",
+        "imoveis_numero_registro",
+        "imoveis_regiao",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "classificados_comissoes_config",
+      "columnCount": 5,
+      "columns": [
+        "categoria",
+        "percentual",
+        "created_at",
+        "updated_at",
+        "ativo"
+      ],
+      "primaryKeys": [
+        "categoria"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "classificados_anuncios",
+      "columnCount": 17,
+      "columns": [
+        "id",
+        "cliente_id",
+        "categoria",
+        "slug",
+        "titulo",
+        "descricao",
+        "preco",
+        "cidade",
+        "estado",
+        "bairro",
+        "detalhes",
+        "status",
+        "comissao_aceita_percentual",
+        "motivo_rejeicao",
+        "created_at",
+        "updated_at",
+        "comissao_percentual"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 3
+    },
+    {
+      "name": "classificados_anuncio_midias",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "anuncio_id",
+        "url",
+        "tipo",
+        "ordem",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "anuncio_id",
+          "refTable": "classificados_anuncios",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "classificados_propostas",
+      "columnCount": 13,
+      "columns": [
+        "id",
+        "anuncio_id",
+        "comprador_id",
+        "vendedor_id",
+        "valor_proposta",
+        "mensagem_inicial",
+        "status",
+        "created_at",
+        "updated_at",
+        "valor_contraproposta",
+        "motivo_rejeicao",
+        "expires_at",
+        "affiliate_attribution_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "anuncio_id",
+          "refTable": "classificados_anuncios",
+          "refColumn": "id"
+        },
+        {
+          "column": "comprador_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "vendedor_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "anuncio_id",
+          "refTable": "classificados_anuncios",
+          "refColumn": "id"
+        },
+        {
+          "column": "anuncio_id",
+          "refTable": "classificados_anuncios",
+          "refColumn": "id"
+        },
+        {
+          "column": "anuncio_id",
+          "refTable": "classificados_anuncios",
+          "refColumn": "id"
+        },
+        {
+          "column": "affiliate_attribution_id",
+          "refTable": "gsa_afiliado_atribuicoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "classificados_transacoes",
+      "columnCount": 19,
+      "columns": [
+        "id",
+        "proposta_id",
+        "anuncio_id",
+        "comprador_id",
+        "vendedor_id",
+        "valor_final",
+        "status",
+        "instrucoes_pagamento_vendedor",
+        "comissao_snapshot_percentual",
+        "created_at",
+        "updated_at",
+        "valor_total",
+        "valor_comissao",
+        "comprovante_url",
+        "pagamento_confirmado_em",
+        "entrega_confirmada_em",
+        "concluida_em",
+        "cancelada_em",
+        "affiliate_attribution_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "proposta_id",
+          "refTable": "classificados_propostas",
+          "refColumn": "id"
+        },
+        {
+          "column": "anuncio_id",
+          "refTable": "classificados_anuncios",
+          "refColumn": "id"
+        },
+        {
+          "column": "comprador_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "vendedor_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "anuncio_id",
+          "refTable": "classificados_anuncios",
+          "refColumn": "id"
+        },
+        {
+          "column": "proposta_id",
+          "refTable": "classificados_propostas",
+          "refColumn": "id"
+        },
+        {
+          "column": "anuncio_id",
+          "refTable": "classificados_anuncios",
+          "refColumn": "id"
+        },
+        {
+          "column": "proposta_id",
+          "refTable": "classificados_propostas",
+          "refColumn": "id"
+        },
+        {
+          "column": "anuncio_id",
+          "refTable": "classificados_anuncios",
+          "refColumn": "id"
+        },
+        {
+          "column": "affiliate_attribution_id",
+          "refTable": "gsa_afiliado_atribuicoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "classificados_comprovantes",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "transacao_id",
+        "enviado_por",
+        "url",
+        "analisado",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "transacao_id",
+          "refTable": "classificados_transacoes",
+          "refColumn": "id"
+        },
+        {
+          "column": "enviado_por",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "classificados_mensagens",
+      "columnCount": 13,
+      "columns": [
+        "id",
+        "proposta_id",
+        "remetente_id",
+        "destinatario_id",
+        "conteudo",
+        "status",
+        "motivo_rejeicao",
+        "created_at",
+        "moderated_at",
+        "status_moderacao",
+        "updated_at",
+        "moderada_por",
+        "moderada_em"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "proposta_id",
+          "refTable": "classificados_propostas",
+          "refColumn": "id"
+        },
+        {
+          "column": "remetente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "destinatario_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "proposta_id",
+          "refTable": "classificados_propostas",
+          "refColumn": "id"
+        },
+        {
+          "column": "proposta_id",
+          "refTable": "classificados_propostas",
+          "refColumn": "id"
+        },
+        {
+          "column": "proposta_id",
+          "refTable": "classificados_propostas",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "classificados_comissoes",
+      "columnCount": 11,
+      "columns": [
+        "id",
+        "transacao_id",
+        "vendedor_id",
+        "valor_comissao",
+        "status",
+        "fatura_id",
+        "data_vencimento",
+        "created_at",
+        "updated_at",
+        "percentual",
+        "paga_em"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "transacao_id",
+          "refTable": "classificados_transacoes",
+          "refColumn": "id"
+        },
+        {
+          "column": "vendedor_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "fatura_id",
+          "refTable": "faturas",
+          "refColumn": "id"
+        },
+        {
+          "column": "transacao_id",
+          "refTable": "classificados_transacoes",
+          "refColumn": "id"
+        },
+        {
+          "column": "transacao_id",
+          "refTable": "classificados_transacoes",
+          "refColumn": "id"
+        },
+        {
+          "column": "transacao_id",
+          "refTable": "classificados_transacoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "classificados_midias",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "anuncio_id",
+        "url",
+        "tipo",
+        "ordem",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "anuncio_id",
+          "refTable": "classificados_anuncios",
+          "refColumn": "id"
+        },
+        {
+          "column": "anuncio_id",
+          "refTable": "classificados_anuncios",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "classificados_ajustes",
+      "columnCount": 8,
+      "columns": [
+        "id",
+        "anuncio_id",
+        "campos",
+        "observacao",
+        "status",
+        "solicitado_por",
+        "created_at",
+        "resolvido_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "anuncio_id",
+          "refTable": "classificados_anuncios",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    }
+  ],
+  "14. Plataforma de Publicidade & Ads (Campanhas, Criativos, Métricas, Faturamento)": [
+    {
+      "name": "gsa_ad_placements",
+      "columnCount": 16,
+      "columns": [
+        "id",
+        "code",
+        "name",
+        "description",
+        "route_pattern",
+        "module",
+        "format",
+        "position",
+        "devices",
+        "capacity",
+        "exclusive",
+        "base_daily_price",
+        "active",
+        "metadata",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_ad_requests",
+      "columnCount": 24,
+      "columns": [
+        "id",
+        "advertiser_id",
+        "protocol",
+        "company_name",
+        "document",
+        "company_size",
+        "segment",
+        "contact_name",
+        "contact_email",
+        "contact_phone",
+        "website",
+        "objective",
+        "desired_formats",
+        "desired_pages",
+        "devices",
+        "desired_start_date",
+        "desired_end_date",
+        "intended_budget",
+        "needs_creative_service",
+        "notes",
+        "status",
+        "source_metadata",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "advertiser_id",
+          "refTable": "gsa_advertisers",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_ad_request_placements",
+      "columnCount": 2,
+      "columns": [
+        "request_id",
+        "placement_id"
+      ],
+      "primaryKeys": [
+        "request_id",
+        "placement_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "request_id",
+          "refTable": "gsa_ad_requests",
+          "refColumn": "id"
+        },
+        {
+          "column": "placement_id",
+          "refTable": "gsa_ad_placements",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_ad_proposals",
+      "columnCount": 11,
+      "columns": [
+        "id",
+        "request_id",
+        "current_version",
+        "status",
+        "total_amount",
+        "valid_until",
+        "accepted_at",
+        "created_by",
+        "created_at",
+        "updated_at",
+        "accepted_version"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "request_id",
+          "refTable": "gsa_ad_requests",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_ad_proposal_versions",
+      "columnCount": 17,
+      "columns": [
+        "id",
+        "proposal_id",
+        "version",
+        "amount",
+        "duration_days",
+        "starts_on",
+        "ends_on",
+        "formats",
+        "placement_codes",
+        "frequency_model",
+        "frequency_value",
+        "impression_limit",
+        "terms",
+        "created_by_type",
+        "created_by",
+        "created_at",
+        "placement_shares"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "proposal_id",
+          "refTable": "gsa_ad_proposals",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_ad_negotiations",
+      "columnCount": 7,
+      "columns": [
+        "id",
+        "proposal_id",
+        "actor_type",
+        "actor_id",
+        "proposed_amount",
+        "message",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "proposal_id",
+          "refTable": "gsa_ad_proposals",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_ad_campaigns",
+      "columnCount": 17,
+      "columns": [
+        "id",
+        "advertiser_id",
+        "proposal_id",
+        "name",
+        "slug",
+        "status",
+        "starts_at",
+        "ends_at",
+        "frequency_model",
+        "frequency_value",
+        "impression_limit",
+        "paid_at",
+        "activated_at",
+        "paused_at",
+        "created_at",
+        "updated_at",
+        "devices"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "advertiser_id",
+          "refTable": "gsa_advertisers",
+          "refColumn": "id"
+        },
+        {
+          "column": "proposal_id",
+          "refTable": "gsa_ad_proposals",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_ad_creatives",
+      "columnCount": 17,
+      "columns": [
+        "id",
+        "campaign_id",
+        "kind",
+        "status",
+        "storage_path",
+        "target_url",
+        "headline",
+        "body",
+        "alt_text",
+        "width",
+        "height",
+        "duration_seconds",
+        "metadata",
+        "rejection_reason",
+        "approved_at",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "campaign_id",
+          "refTable": "gsa_ad_campaigns",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_ad_campaign_placements",
+      "columnCount": 4,
+      "columns": [
+        "campaign_id",
+        "placement_id",
+        "priority",
+        "share_percent"
+      ],
+      "primaryKeys": [
+        "campaign_id",
+        "placement_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "campaign_id",
+          "refTable": "gsa_ad_campaigns",
+          "refColumn": "id"
+        },
+        {
+          "column": "placement_id",
+          "refTable": "gsa_ad_placements",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_ad_daily_metrics",
+      "columnCount": 9,
+      "columns": [
+        "campaign_id",
+        "placement_id",
+        "metric_date",
+        "requests",
+        "served",
+        "viewable_impressions",
+        "clicks",
+        "video_starts",
+        "video_completions"
+      ],
+      "primaryKeys": [
+        "campaign_id",
+        "placement_id",
+        "metric_date"
+      ],
+      "foreignKeys": [
+        {
+          "column": "campaign_id",
+          "refTable": "gsa_ad_campaigns",
+          "refColumn": "id"
+        },
+        {
+          "column": "placement_id",
+          "refTable": "gsa_ad_placements",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_ad_audit_logs",
+      "columnCount": 8,
+      "columns": [
+        "id",
+        "actor_type",
+        "actor_id",
+        "action",
+        "entity_type",
+        "entity_id",
+        "details",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_ad_payments",
+      "columnCount": 17,
+      "columns": [
+        "id",
+        "campaign_id",
+        "proposal_id",
+        "provider",
+        "provider_reference",
+        "amount",
+        "currency",
+        "status",
+        "payment_method",
+        "checkout_url",
+        "pix_code",
+        "due_at",
+        "paid_at",
+        "raw_payload",
+        "created_at",
+        "updated_at",
+        "overdue_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "campaign_id",
+          "refTable": "gsa_ad_campaigns",
+          "refColumn": "id"
+        },
+        {
+          "column": "proposal_id",
+          "refTable": "gsa_ad_proposals",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_ad_payment_events",
+      "columnCount": 7,
+      "columns": [
+        "id",
+        "payment_id",
+        "provider",
+        "provider_event_id",
+        "status",
+        "payload",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "payment_id",
+          "refTable": "gsa_ad_payments",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_ad_delivery_events",
+      "columnCount": 16,
+      "columns": [
+        "id",
+        "event_token",
+        "campaign_id",
+        "placement_id",
+        "creative_id",
+        "viewer_hash",
+        "session_hash",
+        "route",
+        "device",
+        "requested_at",
+        "served_at",
+        "viewable_at",
+        "clicked_at",
+        "video_started_at",
+        "video_completed_at",
+        "request_hash"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "campaign_id",
+          "refTable": "gsa_ad_campaigns",
+          "refColumn": "id"
+        },
+        {
+          "column": "placement_id",
+          "refTable": "gsa_ad_placements",
+          "refColumn": "id"
+        },
+        {
+          "column": "creative_id",
+          "refTable": "gsa_ad_creatives",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_ad_rate_limit_buckets",
+      "columnCount": 5,
+      "columns": [
+        "scope_hash",
+        "action",
+        "bucket_start",
+        "hit_count",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "scope_hash",
+        "action",
+        "bucket_start"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_ad_maintenance_state",
+      "columnCount": 3,
+      "columns": [
+        "task_name",
+        "last_run_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "task_name"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    }
+  ],
+  "15. GSA TV (Grade de Programação, Canais, Mídias, IA Editorial, Logs de Transmissão)": [
+    {
+      "name": "gsa_tv_channels",
+      "columnCount": 12,
+      "columns": [
+        "id",
+        "name",
+        "slug",
+        "status",
+        "stream_url",
+        "stream_key",
+        "quality_profile",
+        "config",
+        "created_at",
+        "updated_at",
+        "last_heartbeat_at",
+        "desired_state"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "gsa_tv_media_items",
+      "columnCount": 21,
+      "columns": [
+        "id",
+        "channel_id",
+        "title",
+        "original_filename",
+        "duration_s",
+        "video_codec",
+        "video_width",
+        "video_height",
+        "video_fps",
+        "video_bitrate_kbps",
+        "audio_codec",
+        "audio_sample_rate",
+        "audio_channels",
+        "audio_bitrate_kbps",
+        "state",
+        "rights_ok",
+        "rights_expires_at",
+        "drive_path",
+        "created_at",
+        "updated_at",
+        "media_kind"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "gsa_tv_schedule_slots",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "channel_id",
+        "media_item_id",
+        "scheduled_start",
+        "scheduled_end",
+        "slot_type",
+        "title_override",
+        "state",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        },
+        {
+          "column": "media_item_id",
+          "refTable": "gsa_tv_media_items",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "gsa_tv_playlists",
+      "columnCount": 7,
+      "columns": [
+        "id",
+        "channel_id",
+        "name",
+        "items",
+        "is_active",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_tv_incidents",
+      "columnCount": 8,
+      "columns": [
+        "id",
+        "channel_id",
+        "severity",
+        "message",
+        "details",
+        "resolved",
+        "created_at",
+        "resolved_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_tv_audit_log",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "channel_id",
+        "actor",
+        "action",
+        "resource_type",
+        "resource_id",
+        "ip_address",
+        "details",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_tv_jobs",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "channel_id",
+        "job_type",
+        "status",
+        "progress",
+        "payload",
+        "created_at",
+        "updated_at",
+        "started_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_tv_channel_secrets",
+      "columnCount": 7,
+      "columns": [
+        "channel_id",
+        "provider",
+        "rtmp_server",
+        "stream_key_ciphertext",
+        "encryption_version",
+        "updated_by",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "channel_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "gsa_tv_programs",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "name",
+        "status",
+        "clock_template"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_series",
+      "columnCount": 3,
+      "columns": [
+        "id",
+        "program_id",
+        "status"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "program_id",
+          "refTable": "gsa_tv_programs",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_episodes",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "media_item_id",
+        "episode_number",
+        "run_count"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "media_item_id",
+          "refTable": "gsa_tv_media_items",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_schedule_versions",
+      "columnCount": 5,
+      "columns": [
+        "id",
+        "broadcast_date",
+        "state",
+        "title",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_program_blocks",
+      "columnCount": 7,
+      "columns": [
+        "id",
+        "program_id",
+        "block_type",
+        "position",
+        "planned_duration_s",
+        "safe_cut_points",
+        "media_item_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "program_id",
+          "refTable": "gsa_tv_programs",
+          "refColumn": "id"
+        },
+        {
+          "column": "media_item_id",
+          "refTable": "gsa_tv_media_items",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_rights_records",
+      "columnCount": 5,
+      "columns": [
+        "id",
+        "media_item_id",
+        "license_type",
+        "justification",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "media_item_id",
+          "refTable": "gsa_tv_media_items",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_comments",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "resource_type",
+        "comment_type",
+        "priority",
+        "author_id",
+        "attachments"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_ad_campaigns",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "advertiser_name",
+        "contracted_runs",
+        "allowed_hours",
+        "competitor_group",
+        "metadata"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_ad_assets",
+      "columnCount": 2,
+      "columns": [
+        "campaign_id",
+        "media_item_id"
+      ],
+      "primaryKeys": [
+        "campaign_id",
+        "media_item_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "campaign_id",
+          "refTable": "gsa_tv_ad_campaigns",
+          "refColumn": "id"
+        },
+        {
+          "column": "media_item_id",
+          "refTable": "gsa_tv_media_items",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_live_sources",
+      "columnCount": 15,
+      "columns": [
+        "id",
+        "name",
+        "status",
+        "fallback_media_item_id",
+        "last_tested_at",
+        "channel_id",
+        "protocol",
+        "enabled",
+        "connection_configured",
+        "state",
+        "last_seen_at",
+        "public_notes",
+        "config",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "fallback_media_item_id",
+          "refTable": "gsa_tv_media_items",
+          "refColumn": "id"
+        },
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_identity_assets",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "asset_type",
+        "media_item_id",
+        "settings"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "media_item_id",
+          "refTable": "gsa_tv_media_items",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_graphic_templates",
+      "columnCount": 3,
+      "columns": [
+        "id",
+        "name",
+        "template"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_on_air_graphics",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "template_id",
+        "state",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "template_id",
+          "refTable": "gsa_tv_graphic_templates",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_as_run",
+      "columnCount": 5,
+      "columns": [
+        "id",
+        "schedule_slot_id",
+        "started_at",
+        "actual_duration_s",
+        "channel_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "schedule_slot_id",
+          "refTable": "gsa_tv_schedule_slots",
+          "refColumn": "id"
+        },
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_ai_presenters",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "name",
+        "identity_version",
+        "visual_profile",
+        "reference_assets",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_ai_projects",
+      "columnCount": 15,
+      "columns": [
+        "id",
+        "name",
+        "autonomy_mode",
+        "state",
+        "estimated_cost",
+        "metadata",
+        "channel_id",
+        "project_type",
+        "title",
+        "brief",
+        "created_by",
+        "output_media_item_id",
+        "config",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        },
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        },
+        {
+          "column": "output_media_item_id",
+          "refTable": "gsa_tv_media_items",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_ai_jobs",
+      "columnCount": 16,
+      "columns": [
+        "id",
+        "job_type",
+        "priority",
+        "input",
+        "estimated_cost",
+        "created_at",
+        "project_id",
+        "agent_type",
+        "provider",
+        "model",
+        "state",
+        "output",
+        "actual_cost",
+        "error_message",
+        "started_at",
+        "finished_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "project_id",
+          "refTable": "gsa_tv_ai_projects",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_ai_assets",
+      "columnCount": 5,
+      "columns": [
+        "id",
+        "job_id",
+        "provider_metadata",
+        "published_media_item_id",
+        "mime_type"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "job_id",
+          "refTable": "gsa_tv_ai_jobs",
+          "refColumn": "id"
+        },
+        {
+          "column": "published_media_item_id",
+          "refTable": "gsa_tv_media_items",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_execution_log",
+      "columnCount": 13,
+      "columns": [
+        "id",
+        "channel_id",
+        "media_item_id",
+        "schedule_slot_id",
+        "title",
+        "source",
+        "started_at",
+        "ended_at",
+        "duration_s",
+        "outcome",
+        "metrics",
+        "created_at",
+        "schedule_version_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        },
+        {
+          "column": "media_item_id",
+          "refTable": "gsa_tv_media_items",
+          "refColumn": "id"
+        },
+        {
+          "column": "schedule_slot_id",
+          "refTable": "gsa_tv_schedule_slots",
+          "refColumn": "id"
+        },
+        {
+          "column": "schedule_version_id",
+          "refTable": "gsa_tv_schedule_versions",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_watchdog_samples",
+      "columnCount": 14,
+      "columns": [
+        "id",
+        "channel_id",
+        "control_plane_ok",
+        "ffplayout_ok",
+        "hls_ok",
+        "hls_age_s",
+        "signal_expected",
+        "signal_state",
+        "current_title",
+        "black_detected",
+        "silence_detected",
+        "freeze_detected",
+        "metrics",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_graphics",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "channel_id",
+        "layer_type",
+        "name",
+        "enabled",
+        "text_content",
+        "media_item_id",
+        "config",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        },
+        {
+          "column": "media_item_id",
+          "refTable": "gsa_tv_media_items",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_live_source_secrets",
+      "columnCount": 4,
+      "columns": [
+        "source_id",
+        "connection_ciphertext",
+        "encryption_version",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "source_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "source_id",
+          "refTable": "gsa_tv_live_sources",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_rights_documents",
+      "columnCount": 12,
+      "columns": [
+        "id",
+        "media_item_id",
+        "document_name",
+        "document_type",
+        "storage_path",
+        "valid_from",
+        "valid_until",
+        "verified",
+        "verified_by",
+        "verified_at",
+        "metadata",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "media_item_id",
+          "refTable": "gsa_tv_media_items",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_campaigns",
+      "columnCount": 13,
+      "columns": [
+        "id",
+        "channel_id",
+        "advertiser_name",
+        "name",
+        "starts_at",
+        "ends_at",
+        "state",
+        "target_spots",
+        "delivered_spots",
+        "budget",
+        "config",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_virtual_presenters",
+      "columnCount": 12,
+      "columns": [
+        "id",
+        "channel_id",
+        "name",
+        "status",
+        "identity_locked",
+        "visual_profile",
+        "voice_profile",
+        "personality_profile",
+        "pronunciation_lexicon",
+        "provider_config",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_editorial_policies",
+      "columnCount": 7,
+      "columns": [
+        "id",
+        "channel_id",
+        "version",
+        "active",
+        "policy",
+        "created_by",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_ai_provider_secrets",
+      "columnCount": 7,
+      "columns": [
+        "channel_id",
+        "provider",
+        "api_key_ciphertext",
+        "default_model",
+        "configured_by",
+        "updated_at",
+        "image_model"
+      ],
+      "primaryKeys": [
+        "channel_id",
+        "provider"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 1
+    },
+    {
+      "name": "gsa_tv_live_recordings",
+      "columnCount": 11,
+      "columns": [
+        "id",
+        "channel_id",
+        "live_source_id",
+        "media_item_id",
+        "state",
+        "started_at",
+        "ended_at",
+        "file_path",
+        "error_message",
+        "metadata",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        },
+        {
+          "column": "live_source_id",
+          "refTable": "gsa_tv_live_sources",
+          "refColumn": "id"
+        },
+        {
+          "column": "media_item_id",
+          "refTable": "gsa_tv_media_items",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_alert_settings",
+      "columnCount": 7,
+      "columns": [
+        "channel_id",
+        "enabled",
+        "whatsapp_number",
+        "min_severity",
+        "cooldown_minutes",
+        "updated_by",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "channel_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_alert_deliveries",
+      "columnCount": 11,
+      "columns": [
+        "id",
+        "channel_id",
+        "incident_id",
+        "severity",
+        "destination_hash",
+        "state",
+        "message",
+        "response_status",
+        "error_message",
+        "created_at",
+        "sent_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        },
+        {
+          "column": "incident_id",
+          "refTable": "gsa_tv_incidents",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_backup_runs",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "channel_id",
+        "backup_type",
+        "state",
+        "archive_path",
+        "sha256",
+        "size_bytes",
+        "details",
+        "started_at",
+        "finished_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_ai_usage",
+      "columnCount": 13,
+      "columns": [
+        "id",
+        "channel_id",
+        "project_id",
+        "job_id",
+        "provider",
+        "model",
+        "operation",
+        "input_units",
+        "output_units",
+        "cost_estimate",
+        "cost_actual",
+        "metadata",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        },
+        {
+          "column": "project_id",
+          "refTable": "gsa_tv_ai_projects",
+          "refColumn": "id"
+        },
+        {
+          "column": "job_id",
+          "refTable": "gsa_tv_ai_jobs",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_ai_memory",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "channel_id",
+        "memory_type",
+        "key",
+        "value",
+        "active",
+        "source",
+        "updated_by",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_weekly_grid_slots",
+      "columnCount": 12,
+      "columns": [
+        "id",
+        "channel_id",
+        "weekday",
+        "start_time",
+        "end_time",
+        "program_id",
+        "segment_variant",
+        "content_mode",
+        "enabled",
+        "metadata",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        },
+        {
+          "column": "program_id",
+          "refTable": "gsa_tv_programs",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_editorial_sources",
+      "columnCount": 19,
+      "columns": [
+        "id",
+        "channel_id",
+        "name",
+        "provider",
+        "source_type",
+        "base_url",
+        "category",
+        "free_only",
+        "official_source",
+        "enabled",
+        "polling_minutes",
+        "attribution",
+        "terms_url",
+        "metadata",
+        "last_status",
+        "last_collected_at",
+        "last_error",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "channel_id",
+          "refTable": "gsa_tv_channels",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_program_source_links",
+      "columnCount": 7,
+      "columns": [
+        "program_id",
+        "source_id",
+        "priority",
+        "purpose",
+        "required_for_generation",
+        "metadata",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "program_id",
+        "source_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "program_id",
+          "refTable": "gsa_tv_programs",
+          "refColumn": "id"
+        },
+        {
+          "column": "source_id",
+          "refTable": "gsa_tv_editorial_sources",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_tv_editorial_items",
+      "columnCount": 14,
+      "columns": [
+        "id",
+        "source_id",
+        "program_id",
+        "external_id",
+        "title",
+        "summary",
+        "canonical_url",
+        "published_at",
+        "raw_payload",
+        "validation_state",
+        "rights_classification",
+        "dedupe_hash",
+        "fetched_at",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "source_id",
+          "refTable": "gsa_tv_editorial_sources",
+          "refColumn": "id"
+        },
+        {
+          "column": "program_id",
+          "refTable": "gsa_tv_programs",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 0
+    }
+  ],
+  "16. Marketing, Campanhas & Vaquinhas Coletivas (Banners Hero, Vaquinhas, Site Campaigns)": [
+    {
+      "name": "blog_posts",
+      "columnCount": 9,
+      "columns": [
+        "id",
+        "title",
+        "excerpt",
+        "content",
+        "image",
+        "category",
+        "author",
+        "published_at",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "gsa_hero_banners",
+      "columnCount": 14,
+      "columns": [
+        "id",
+        "title",
+        "subtitle",
+        "image_url",
+        "image_mobile_url",
+        "link_url",
+        "button_text",
+        "background_color",
+        "display_order",
+        "is_active",
+        "starts_at",
+        "ends_at",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 4
+    }
+  ],
+  "17. Comunicação, Suporte & RH (Tickets, Mensagens, WhatsApp Outbox, Notificações, Carreiras)": [
+    {
+      "name": "os_notas",
+      "columnCount": 4,
+      "columns": [
+        "id",
+        "os_id",
+        "nota",
+        "data_criacao"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "os_id",
+          "refTable": "ordens_servico",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "tickets",
+      "columnCount": 10,
+      "columns": [
+        "id",
+        "cliente_id",
+        "prestador_id",
+        "assunto",
+        "descricao",
+        "status",
+        "data_abertura",
+        "data_fechamento",
+        "updated_at",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 2
+    },
+    {
+      "name": "ticket_mensagens",
+      "columnCount": 8,
+      "columns": [
+        "id",
+        "ticket_id",
+        "autor_id",
+        "autor_nome",
+        "mensagem",
+        "tipo",
+        "data_envio",
+        "anexo_nome"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "ticket_id",
+          "refTable": "tickets",
+          "refColumn": "id"
+        },
+        {
+          "column": "ticket_id",
+          "refTable": "tickets",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": false,
+      "policyCount": 1
+    },
+    {
+      "name": "notificacoes",
+      "columnCount": 12,
+      "columns": [
+        "id",
+        "cliente_id",
+        "prestador_id",
+        "titulo",
+        "mensagem",
+        "modulo",
+        "tab",
+        "item_id",
+        "lida",
+        "tipo",
+        "data_criacao",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "prestador_id",
+          "refTable": "prestadores",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 6
+    },
+    {
+      "name": "suporte_mensagens",
+      "columnCount": 6,
+      "columns": [
+        "id",
+        "suporte_id",
+        "autor_id",
+        "autor_tipo",
+        "mensagem",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "suporte_id",
+          "refTable": "prestador_suporte_demandas",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 3
+    },
+    {
+      "name": "os_suporte_mensagens",
+      "columnCount": 8,
+      "columns": [
+        "id",
+        "os_id",
+        "remetente_tipo",
+        "remetente_id",
+        "remetente_nome",
+        "mensagem",
+        "lida",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "os_id",
+          "refTable": "ordens_servico",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 4
+    },
+    {
+      "name": "notificacao_leituras",
+      "columnCount": 4,
+      "columns": [
+        "notificacao_id",
+        "ator_tipo",
+        "ator_id",
+        "lida_em"
+      ],
+      "primaryKeys": [
+        "notificacao_id",
+        "ator_tipo",
+        "ator_id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "notificacao_id",
+          "refTable": "notificacoes",
+          "refColumn": "id"
+        },
+        {
+          "column": "notificacao_id",
+          "refTable": "notificacoes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "gsa_careers_applications",
+      "columnCount": 19,
+      "columns": [
+        "id",
+        "protocol",
+        "candidate_name",
+        "document",
+        "email",
+        "phone",
+        "desired_area",
+        "employment_type",
+        "salary_expectation",
+        "resume_url",
+        "linkedin_url",
+        "notes",
+        "status",
+        "internal_notes",
+        "created_at",
+        "updated_at",
+        "resume_storage_path",
+        "privacy_consent_at",
+        "vacancy_id"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "vacancy_id",
+          "refTable": "gsa_careers_vacancies",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 2
+    },
+    {
+      "name": "gsa_careers_application_history",
+      "columnCount": 11,
+      "columns": [
+        "id",
+        "application_id",
+        "from_status",
+        "to_status",
+        "actor_type",
+        "actor_id",
+        "actor_name",
+        "note",
+        "interview_at",
+        "interview_location",
+        "created_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "application_id",
+          "refTable": "gsa_careers_applications",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "whatsapp_pendencias_ativas",
+      "columnCount": 11,
+      "columns": [
+        "id",
+        "cliente_id",
+        "telefone",
+        "modulo",
+        "registro_id",
+        "tipo_esperado",
+        "status",
+        "mensagem_contexto",
+        "created_at",
+        "updated_at",
+        "expires_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        },
+        {
+          "column": "cliente_id",
+          "refTable": "clientes",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 3
+    },
+    {
+      "name": "gsa_careers_vacancies",
+      "columnCount": 18,
+      "columns": [
+        "id",
+        "code",
+        "title",
+        "area",
+        "employment_type",
+        "work_mode",
+        "location",
+        "description",
+        "requirements",
+        "salary_min",
+        "salary_max",
+        "status",
+        "published_at",
+        "closes_at",
+        "created_by",
+        "updated_by",
+        "created_at",
+        "updated_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [],
+      "rlsEnabled": true,
+      "policyCount": 0
+    },
+    {
+      "name": "gsa_careers_notification_outbox",
+      "columnCount": 14,
+      "columns": [
+        "id",
+        "application_id",
+        "status",
+        "recipient_email",
+        "recipient_phone",
+        "payload",
+        "delivery_status",
+        "attempts",
+        "next_attempt_at",
+        "provider_message_id",
+        "delivery_channel",
+        "last_error",
+        "created_at",
+        "processed_at"
+      ],
+      "primaryKeys": [
+        "id"
+      ],
+      "foreignKeys": [
+        {
+          "column": "application_id",
+          "refTable": "gsa_careers_applications",
+          "refColumn": "id"
+        }
+      ],
+      "rlsEnabled": true,
+      "policyCount": 0
+    }
+  ]
+}

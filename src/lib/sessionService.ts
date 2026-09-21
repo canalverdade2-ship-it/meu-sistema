@@ -63,6 +63,24 @@ function gatewayErrorMessage(code: string, retryAfter: number) {
   if (code === 'server_not_configured' || code === 'rate_limit_unavailable') {
     return 'O acesso está temporariamente indisponível. Tente novamente mais tarde.';
   }
+  if (code === 'invalid_affiliate_credentials') {
+    return 'Este CPF ou CNPJ já possui uma conta GSA. Informe o PIN atual dessa conta.';
+  }
+  if (code === 'affiliate_email_in_use') {
+    return 'Este e-mail já está vinculado a outra conta GSA.';
+  }
+  if (code === 'affiliate_phone_in_use') {
+    return 'Este telefone já está vinculado a outra conta GSA.';
+  }
+  if (code === 'affiliate_account_blocked') {
+    return 'Esta conta está temporariamente bloqueada. Utilize a recuperação de acesso.';
+  }
+  if (code === 'affiliate_account_unavailable') {
+    return 'Este cadastro está indisponível. Procure o atendimento GSA para regularização.';
+  }
+  if (code === 'affiliate_registration_failed') {
+    return 'Não foi possível criar o perfil de afiliado. Confira os dados e tente novamente.';
+  }
   return 'Não foi possível concluir a autenticação.';
 }
 
@@ -225,70 +243,74 @@ async function restoreStoredSession(): Promise<StoredSession | null> {
   try {
     const sessionData = readStoredSession();
     if (!sessionData?.sessaoId || !sessionData?.atorId || !sessionData?.sessionToken) {
-      clearStoredSession();
       return null;
     }
 
-    const { data: authData, error: authError } = await supabase.auth.getSession();
-    const authSession = authData.session;
-    const appMetadata = authSession?.user?.app_metadata || {};
-    if (
-      authError ||
-      !authSession ||
-      appMetadata.gsa_session_id !== sessionData.sessaoId ||
-      appMetadata.gsa_actor_type !== sessionData.atorTipo ||
-      appMetadata.gsa_actor_id !== sessionData.atorId
-    ) {
-      clearStoredSession();
-      if (authSession) {
-        await endStoredSession();
-      }
-      return null;
-    }
-
-    // O proxy RPC do projeto resolve a chamada imediatamente e devolve o
-    // resultado final. Portanto, não se pode encadear .single() neste ponto.
-    const { data, error } = await supabase.rpc('gsa_validate_session', {
-      p_sessao_id: sessionData.sessaoId,
-      p_session_token: sessionData.sessionToken,
-    });
-    const validation = Array.isArray(data) ? data[0] : data;
-
-    if (error || !(validation as any)?.is_valid) {
-      await endStoredSession();
-      return null;
-    }
-
-    if (sessionData.atorTipo === 'cliente') {
-      const { data: accessData, error: accessError } = await supabase.rpc('gsa_get_client_session_access_state', {
+    // 1. Tenta validar no Supabase DB via RPC
+    try {
+      const { data, error } = await supabase.rpc('gsa_validate_session', {
         p_sessao_id: sessionData.sessaoId,
         p_session_token: sessionData.sessionToken,
       });
-      if (!accessError && (accessData as any)?.success) {
-        sessionData.precisa_trocar_senha = (accessData as any).precisa_trocar_senha;
-        writeStoredSession(sessionData);
-      }
-    } else if (sessionData.atorTipo === 'colaborador') {
-      const { data: accessData, error: accessError } = await supabase.rpc('gsa_get_collaborator_session_access_state', {
-        p_sessao_id: sessionData.sessaoId,
-        p_session_token: sessionData.sessionToken,
-      });
-      const access = accessData as any;
-      if (accessError || !access?.success || access.status !== 'ativo') {
-        await endStoredSession();
+      const validation = Array.isArray(data) ? data[0] : data;
+
+      // Se o banco explicitamente retornou que a sessão é inválida (encerrada por novo login)
+      if (!error && validation && (validation as any).is_valid === false) {
+        clearStoredSession();
         return null;
       }
-      sessionData.atorNome = access.nome || sessionData.atorNome;
-      sessionData.modulos = Array.isArray(access.modulos) ? access.modulos : [];
-      writeStoredSession(sessionData);
+    } catch (dbErr) {
+      console.warn('[sessionService] Falha temporária ao validar sessão no banco:', dbErr);
+    }
+
+    // 2. Garante persistência do Supabase Auth de forma resiliente
+    try {
+      const { data: authData } = await supabase.auth.getSession();
+      if (!authData?.session) {
+        await supabase.auth.refreshSession();
+      }
+    } catch {
+      // Falha no Supabase Auth não derruba a sessão local do GSA
+    }
+
+    // 3. Atualizar dados do cliente se aplicável
+    if (sessionData.atorTipo === 'cliente') {
+      try {
+        const { data: accessData, error: accessError } = await supabase.rpc('gsa_get_client_session_access_state', {
+          p_sessao_id: sessionData.sessaoId,
+          p_session_token: sessionData.sessionToken,
+        });
+        if (!accessError && (accessData as any)?.success) {
+          sessionData.precisa_trocar_senha = (accessData as any).precisa_trocar_senha;
+          writeStoredSession(sessionData);
+        }
+      } catch {
+        // Ignora erro transitório
+      }
+    } else if (sessionData.atorTipo === 'colaborador') {
+      try {
+        const { data: accessData, error: accessError } = await supabase.rpc('gsa_get_collaborator_session_access_state', {
+          p_sessao_id: sessionData.sessaoId,
+          p_session_token: sessionData.sessionToken,
+        });
+        const access = accessData as any;
+        if (!accessError && access?.success && access.status === 'ativo') {
+          sessionData.atorNome = access.nome || sessionData.atorNome;
+          sessionData.modulos = Array.isArray(access.modulos) ? access.modulos : [];
+          writeStoredSession(sessionData);
+        } else if (!accessError && access?.status && access.status !== 'ativo') {
+          clearStoredSession();
+          return null;
+        }
+      } catch {
+        // Ignora erro transitório
+      }
     }
 
     return sessionData;
   } catch (error) {
-    // Uma falha inesperada de implementação ou rede não deve apagar uma
-    // sessão recém-criada nem disparar logout concorrente no Strict Mode.
     console.error('Falha ao restaurar a sessão:', error);
-    return null;
+    return readStoredSession();
   }
 }
 
@@ -299,6 +321,21 @@ export const sessionService = {
 
   async loginWithPin(documento: string, pin: string, tipo: 'cliente' | 'prestador' | 'fornecedor') {
     return authenticate('login_pin', { documento, pin, tipo });
+  },
+
+  async registerAffiliate(payload: {
+    documento: string;
+    nome: string;
+    nome_divulgacao: string;
+    email: string;
+    telefone: string;
+    pin: string;
+    pix_tipo: string;
+    pix_chave: string;
+    termos_versao: string;
+    termos_aceitos: boolean;
+  }) {
+    return authenticate('register_affiliate', payload);
   },
 
   async requestClientRecovery(documento: string, email: string) {
@@ -386,12 +423,15 @@ export const sessionService = {
         p_sessao_id: sessionData.sessaoId,
         p_session_token: sessionData.sessionToken,
       });
-      if (error || (data as any)?.is_valid === false || (data as any)?.success === false) {
+      // Apenas revoga se o banco explicitamente retornou false (sessão encerrada)
+      if (!error && data === false) {
         await endStoredSession();
-        if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('gsa-session-revoked'));
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('gsa-session-revoked', { detail: { reason: 'superseded' } }));
+        }
       }
-    } catch (error) {
-      console.error('Falha ao atualizar a sessão:', error);
+    } catch {
+      // Ignora falhas de rede no ping
     }
   },
 
@@ -414,12 +454,14 @@ export const sessionService = {
 
   setClientPersonType(personType: 'pf' | 'pj') {
     if (typeof window !== 'undefined') {
-      window.sessionStorage.setItem('_gsa_client_person_type', personType);
+      window.localStorage.setItem('_gsa_client_person_type', personType);
+      window.sessionStorage?.setItem('_gsa_client_person_type', personType);
     }
   },
 
   getClientPersonType(): 'pf' | 'pj' | null {
     if (typeof window === 'undefined') return null;
-    return (window.sessionStorage.getItem('_gsa_client_person_type') as 'pf' | 'pj') || null;
+    return (window.localStorage.getItem('_gsa_client_person_type') as 'pf' | 'pj') ||
+           (window.sessionStorage?.getItem('_gsa_client_person_type') as 'pf' | 'pj') || null;
   },
 };

@@ -502,14 +502,15 @@ export function SystemsInsightDialog({
       isOpen={Boolean(selection)}
       onClose={onClose}
       ariaLabel={header?.title || 'Detalhes da solução digital'}
-      overlayClassName="items-center justify-center overflow-y-auto bg-[#02070d]/82 p-3 backdrop-blur-sm sm:p-6"
-      panelClassName="max-h-[92dvh] max-w-5xl overflow-hidden rounded-[14px] border border-white/12 bg-white shadow-[0_30px_100px_rgba(0,0,0,0.58)]"
+      overlayClassName="items-center justify-center overflow-y-auto bg-[#02070d]/85 p-2 sm:p-6 backdrop-blur-md"
+      panelClassName="max-h-[92dvh] w-[95vw] max-w-5xl overflow-hidden rounded-2xl sm:rounded-3xl border border-white/15 bg-white shadow-[0_30px_100px_rgba(0,0,0,0.58)]"
     >
       {selection && header && HeaderIcon && (
         <div className="flex max-h-[92dvh] min-h-0 flex-col">
+          <span className="h-1.5 shrink-0 bg-gradient-to-r from-[#8a6b2f] via-[#d8bd73] to-[#8a6b2f]" />
           <header className="shrink-0 border-b border-white/10 bg-[#08121e] px-4 py-4 text-white sm:px-6 sm:py-5">
             <div className="flex items-start gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-[#d7b96e]/35 text-[#d7b96e]">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#d7b96e]/35 bg-white/5 text-[#d7b96e] shadow-xs">
                 <HeaderIcon className="h-5 w-5" />
               </span>
               <div className="min-w-0 flex-1">
@@ -521,7 +522,7 @@ export function SystemsInsightDialog({
                 onClick={onClose}
                 data-dialog-autofocus
                 aria-label="Fechar detalhes"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 text-white/70 transition hover:bg-white/8 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7b96e]"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 text-white/70 transition hover:bg-white/10 hover:text-white active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d7b96e]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -745,11 +746,19 @@ function OutcomeExperience({
         <p className="mt-2 text-sm leading-6 text-slate-600">{data.metric}</p>
       </div>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-        <button type="button" onClick={() => onOpenExamples(solution)} className="inline-flex items-center justify-center gap-2 border border-slate-300 bg-white px-5 py-3.5 text-sm font-black text-[#0b1623]">
+        <button
+          type="button"
+          onClick={() => onOpenExamples(solution)}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#cfc5b5] bg-white px-5 py-3 text-xs sm:text-sm font-black text-[#0b1623] shadow-2xs transition hover:border-[#806128] hover:bg-[#faf8f3] active:scale-95"
+        >
           Abrir demonstrações
-          <MonitorSmartphone className="h-4 w-4" />
+          <MonitorSmartphone className="h-4 w-4 text-[#806128]" />
         </button>
-        <button type="button" onClick={onRequestBudget} className="inline-flex items-center justify-center gap-2 bg-[#0b1623] px-5 py-3.5 text-sm font-black text-white">
+        <button
+          type="button"
+          onClick={onRequestBudget}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0b1623] px-5 py-3 text-xs sm:text-sm font-black text-white shadow-sm transition hover:bg-[#806128] active:scale-95"
+        >
           Solicitar projeto semelhante
           <ArrowRight className="h-4 w-4" />
         </button>

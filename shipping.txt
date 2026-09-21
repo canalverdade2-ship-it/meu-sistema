@@ -1,0 +1,284 @@
+                  {etapaCheckout === 1 && (
+                    <div className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-200/90 shadow-sm space-y-6 animate-in fade-in duration-300">
+                      
+                      {/* Seção de Endereço */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between border-b border-neutral-100 pb-3.5">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                              <MapPin className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <h2 className="text-base font-black text-neutral-900 uppercase tracking-wide">
+                                Endereço de Entrega
+                              </h2>
+                              <p className="text-xs text-neutral-500 font-medium">
+                                {temProdutos ? 'Informe onde deseja receber seus produtos' : 'Itens digitais (não requerem entrega física)'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {!temProdutos ? (
+                          <div className="rounded-2xl bg-blue-50/60 p-4 border border-blue-100 flex items-start gap-3">
+                            <Package className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+                            <div className="space-y-0.5">
+                              <h4 className="text-xs font-extrabold text-blue-900">Itens Digitais e Serviços</h4>
+                              <p className="text-xs text-blue-800/80 font-medium leading-relaxed">
+                                Seu carrinho contém apenas serviços ou assinaturas digitais com liberação imediata. Não é cobrado frete.
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {enderecoCompletoValido && !isEditingEndereco ? (
+                              <div className="rounded-2xl border border-emerald-200/90 bg-emerald-50/40 p-5 space-y-3">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-white">
+                                      <Check className="h-3.5 w-3.5" />
+                                    </span>
+                                    <span className="text-xs font-black text-emerald-900 uppercase tracking-wider">Endereço Confirmado</span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsEditingEndereco(true)}
+                                    className="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline cursor-pointer"
+                                  >
+                                    Alterar endereço
+                                  </button>
+                                </div>
+                                <div className="text-xs text-neutral-700 font-medium space-y-0.5 pl-8">
+                                  <p className="font-bold text-neutral-900">{endereco.logradouro}, {endereco.numero} {endereco.complemento ? `(${endereco.complemento})` : ''}</p>
+                                  <p>{endereco.bairro} — {endereco.cidade}/{endereco.uf}</p>
+                                  <p className="font-mono text-neutral-500">CEP: {endereco.cep}</p>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="space-y-4 pt-1">
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                  <div className="w-full sm:w-1/2 space-y-1.5">
+                                    <label className="text-xs font-bold text-neutral-700 uppercase">CEP *</label>
+                                    <div className="relative">
+                                      <input 
+                                        type="text" 
+                                        placeholder="00000-000" 
+                                        value={endereco.cep} 
+                                        onChange={e => {
+                                          const val = e.target.value;
+                                          setEndereco(p => ({ ...p, cep: val }));
+                                          if (val.replace(/\D/g, '').length === 8) buscarCep(val);
+                                        }}
+                                        maxLength={9}
+                                        className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-mono font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
+                                      />
+                                      {buscandoCep && (
+                                        <Loader2 className="w-4 h-4 text-blue-600 animate-spin absolute right-3 top-3" />
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="w-full sm:w-1/2 space-y-1.5">
+                                    <label className="text-xs font-bold text-neutral-700 uppercase">Número *</label>
+                                    <input 
+                                      type="text" 
+                                      placeholder="Ex: 123" 
+                                      value={endereco.numero} 
+                                      onChange={e => setEndereco(p => ({ ...p, numero: e.target.value }))}
+                                      className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                  <label className="text-xs font-bold text-neutral-700 uppercase">Logradouro (Rua / Av) *</label>
+                                  <input 
+                                    type="text" 
+                                    placeholder="Nome da rua ou avenida" 
+                                    value={endereco.logradouro} 
+                                    onChange={e => setEndereco(p => ({ ...p, logradouro: e.target.value }))}
+                                    className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
+                                  />
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                  <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-neutral-700 uppercase">Complemento</label>
+                                    <input 
+                                      type="text" 
+                                      placeholder="Apto, Bloco, etc." 
+                                      value={endereco.complemento} 
+                                      onChange={e => setEndereco(p => ({ ...p, complemento: e.target.value }))}
+                                      className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
+                                    />
+                                  </div>
+
+                                  <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-neutral-700 uppercase">Bairro *</label>
+                                    <input 
+                                      type="text" 
+                                      placeholder="Bairro" 
+                                      value={endereco.bairro} 
+                                      onChange={e => setEndereco(p => ({ ...p, bairro: e.target.value }))}
+                                      className="w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
+                                    />
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-1.5">
+                                      <label className="text-xs font-bold text-neutral-700 uppercase">Cidade *</label>
+                                      <input 
+                                        type="text" 
+                                        placeholder="Cidade" 
+                                        value={endereco.cidade} 
+                                        onChange={e => setEndereco(p => ({ ...p, cidade: e.target.value }))}
+                                        className="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all" 
+                                      />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      <label className="text-xs font-bold text-neutral-700 uppercase">UF *</label>
+                                      <input 
+                                        type="text" 
+                                        placeholder="SP" 
+                                        maxLength={2}
+                                        value={endereco.uf} 
+                                        onChange={e => setEndereco(p => ({ ...p, uf: e.target.value.toUpperCase() }))}
+                                        className="w-full px-3 py-2.5 bg-neutral-50 border border-neutral-300 rounded-xl text-xs font-mono font-bold uppercase focus:ring-2 focus:ring-[#17345f] focus:outline-none focus:bg-white transition-all text-center" 
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+
+                      {/* Seção de Cupons da Loja */}
+                      <div className="space-y-4 pt-4 border-t border-neutral-100">
+                        <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <Tag className="h-5 w-5 text-indigo-600" />
+                            <div>
+                              <h3 className="text-sm font-black text-neutral-900 uppercase tracking-wide">
+                                Cupons da Loja
+                              </h3>
+                              <p className="text-[11px] text-neutral-500 font-medium">
+                                Aplique cupons de desconto e benefícios de frete
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Cupom Desconto */}
+                          <div className="rounded-2xl border border-blue-200/80 bg-blue-50/40 p-4 space-y-2.5">
+                            <label className="text-xs font-bold text-blue-900 uppercase flex items-center gap-1.5">
+                              <Tag className="h-3.5 w-3.5 text-blue-600" /> Cupom de Desconto
+                            </label>
+                            {cupomDesconto ? (
+                              <div className="flex items-center justify-between bg-white border border-blue-200 px-3.5 py-2.5 rounded-xl text-xs">
+                                <span className="font-mono font-black text-blue-700">
+                                  {cupomDesconto.codigo_cupom} — {cupomDesconto.tipo_desconto === 'porcentagem' ? `${cupomDesconto.valor_desconto}% OFF` : `R$ ${cupomDesconto.valor_desconto} OFF`}
+                                </span>
+                                <button 
+                                  onClick={() => setCupomDesconto(null)} 
+                                  className="text-xs font-bold text-red-600 hover:text-red-800 cursor-pointer"
+                                >
+                                  Remover
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                <div className="flex gap-2">
+                                  <input 
+                                    type="text" 
+                                    value={cupomDescInput} 
+                                    onChange={e => setCupomDescInput(e.target.value.toUpperCase())} 
+                                    placeholder="CÓDIGO DO CUPOM" 
+                                    className="flex-1 px-3.5 py-2 bg-white border border-blue-200 rounded-xl text-xs font-mono uppercase font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none" 
+                                  />
+                                  <button 
+                                    onClick={() => aplicarCupom(cupomDescInput, 'desconto')} 
+                                    className="px-4 py-2 bg-blue-600 text-white font-black rounded-xl text-xs hover:bg-blue-700 cursor-pointer shadow-xs transition-all"
+                                  >
+                                    Aplicar
+                                  </button>
+                                </div>
+                                <button 
+                                  onClick={() => handleOpenSelector('desconto')}
+                                  className="text-[10px] font-black text-blue-600 uppercase tracking-wider hover:text-blue-800 cursor-pointer block pt-0.5"
+                                >
+                                  Ver Cupons Disponíveis
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Cupom Entrega */}
+                          {temProdutos && (
+                            <div className="rounded-2xl border border-emerald-200/80 bg-emerald-50/40 p-4 space-y-2.5">
+                              <label className="text-xs font-bold text-emerald-900 uppercase flex items-center gap-1.5">
+                                <Package className="h-3.5 w-3.5 text-emerald-600" /> Benefício de Frete
+                              </label>
+                              {cupomEntrega ? (
+                                <div className="flex items-center justify-between bg-white border border-emerald-200 px-3.5 py-2.5 rounded-xl text-xs">
+                                  <span className="font-mono font-black text-emerald-700">
+                                    {cupomEntrega.codigo_cupom} — {cupomEntrega.tipo_entrega === 'frete_gratis' ? 'Frete Grátis' : 'Frete Fixo'}
+                                  </span>
+                                  <button 
+                                    onClick={() => setCupomEntrega(null)} 
+                                    className="text-xs font-bold text-red-600 hover:text-red-800 cursor-pointer"
+                                  >
+                                    Remover
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  <div className="flex gap-2">
+                                    <input 
+                                      type="text" 
+                                      value={cupomEntInput} 
+                                      onChange={e => setCupomEntInput(e.target.value.toUpperCase())} 
+                                      placeholder="CÓDIGO DE FRETE" 
+                                      className="flex-1 px-3.5 py-2 bg-white border border-emerald-200 rounded-xl text-xs font-mono uppercase font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none" 
+                                    />
+                                    <button 
+                                      onClick={() => aplicarCupom(cupomEntInput, 'entrega')} 
+                                      className="px-4 py-2 bg-emerald-600 text-white font-black rounded-xl text-xs hover:bg-emerald-700 cursor-pointer shadow-xs transition-all"
+                                    >
+                                      Aplicar
+                                    </button>
+                                  </div>
+                                  <button 
+                                    onClick={() => handleOpenSelector('entrega')}
+                                    className="text-[10px] font-black text-emerald-700 uppercase tracking-wider hover:text-emerald-900 cursor-pointer block pt-0.5"
+                                  >
+                                    Ver Benefícios de Frete
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Botão de Avanço da Etapa 1 */}
+                      <div className="flex items-center justify-end pt-4 border-t border-neutral-100">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (temProdutos && !enderecoCompletoValido) {
+                              toast.error('Preencha todo o endereço de entrega antes de prosseguir.');
+                              return;
+                            }
+                            setEtapaCheckout(2);
+                          }}
+                          className="inline-flex items-center gap-2 rounded-2xl bg-[#17345f] px-8 py-3.5 text-xs font-black text-white shadow-md shadow-[#17345f]/20 transition-all hover:bg-[#102746] cursor-pointer"
+                        >
+                          <span>Avançar para Benefícios & Pagamento</span>
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}

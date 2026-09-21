@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useSEO } from '../../../hooks/useSEO';
 import { BlogPost } from '../../../types';
+import DOMPurify from 'dompurify';
 
 export function BlogPostPage({ postId, clientId }: { postId: string, clientId?: string }) {
   const [post, setPost] = useState<BlogPost | null>(null);
@@ -137,7 +138,11 @@ export function BlogPostPage({ postId, clientId }: { postId: string, clientId?: 
 
         <div 
           className="prose prose-lg prose-indigo max-w-none text-neutral-700 leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: post.content || '' }}
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(post.content || '', {
+              USE_PROFILES: { html: true },
+            }),
+          }}
         />
 
         <div className="mt-16 pt-8 border-t border-neutral-100 flex flex-col sm:flex-row items-center justify-between gap-4">

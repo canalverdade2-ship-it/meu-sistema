@@ -1,0 +1,1 @@
+sudo docker exec -e PGPASSWORD='evopass' evo-postgres psql -U evo -d n8n -c "UPDATE workflow_entity SET active=true WHERE id='gsa-scraping-base';"

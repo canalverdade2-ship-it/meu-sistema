@@ -1,0 +1,3550 @@
+{
+  "colaboradores": [
+    {
+      "file": "src\\components\\admin\\AcessosModule.tsx",
+      "line": 155,
+      "table": "colaboradores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'colaboradores', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\demandas\\DemandasDashboard.tsx",
+      "line": 86,
+      "table": "colaboradores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'colaboradores', onChange: carregar, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\demandas\\NovaDemandaModal.tsx",
+      "line": 70,
+      "table": "colaboradores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'colaboradores', onChange: fetchData, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\DemandasColaboradorModule.tsx",
+      "line": 164,
+      "table": "colaboradores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'colaboradores', onChange: fetchAuxiliares, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaAcessosView.tsx",
+      "line": 119,
+      "table": "colaboradores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'colaboradores', onChange: () => void load(true) },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+      "line": 112,
+      "table": "colaboradores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'colaboradores', onChange: () => void load(true) },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaInfraView.tsx",
+      "line": 150,
+      "table": "colaboradores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'colaboradores', onChange: () => void load(true) },"
+    },
+    {
+      "file": "src\\components\\admin\\SystemMonitorModule.tsx",
+      "line": 259,
+      "table": "colaboradores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'colaboradores', onChange: () => { void load(true); void fetchFallbackUsers(); }, debounceMs: 500 },"
+    },
+    {
+      "file": "src\\pages\\SecureAdminPanel.tsx",
+      "line": 116,
+      "table": "colaboradores",
+      "hasFilter": true,
+      "filterVal": "`id=eq.${props.colaboradorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'colaboradores', filter: `id=eq.${props.colaboradorId}` }, refresh)"
+    }
+  ],
+  "solicitacoes_exclusao": [
+    {
+      "file": "src\\components\\admin\\AcessosModule.tsx",
+      "line": 156,
+      "table": "solicitacoes_exclusao",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'solicitacoes_exclusao', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaAcessosView.tsx",
+      "line": 121,
+      "table": "solicitacoes_exclusao",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'solicitacoes_exclusao', onChange: () => void load(true) },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaAuditoriaView.tsx",
+      "line": 126,
+      "table": "solicitacoes_exclusao",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'solicitacoes_exclusao', onChange: () => void fetchAuditLogs() },"
+    }
+  ],
+  "sistema_logs": [
+    {
+      "file": "src\\components\\admin\\AcessosModule.tsx",
+      "line": 157,
+      "table": "sistema_logs",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'sistema_logs', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaAuditoriaView.tsx",
+      "line": 79,
+      "table": "sistema_logs",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "id: `log-${sess.id}`,\n            created_at: sess.created_at || sess.criado_em || new Date().toISOString(),\n            actor_id: sess.ator_id || sess.usuario_id,\n            actor_name: sess.ator_nome || sess.usuario_nome || 'Operador',\n            actor_type: sess.ator_tipo || sess.usuario_tipo || 'colaborador',\n            action: sess.acao || (sess.status === 'ativo' ? 'Autenticação de Sessão Administrativa' : 'Ação Administrativa'),\n            target_table: 'sistema_logs',\n            target_id: sess.id,\n            ip_address: sess.ip_address || '127.0.0.1',\n            details: sess.detalhes || `Registro de governança no sistema. Status: ${sess.status || 'ativo'}.`,"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaAuditoriaView.tsx",
+      "line": 125,
+      "table": "sistema_logs",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'sistema_logs', onChange: () => void fetchAuditLogs() },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+      "line": 113,
+      "table": "sistema_logs",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'sistema_logs', onChange: () => void load(true) }"
+    },
+    {
+      "file": "src\\components\\admin\\SystemMonitorModule.tsx",
+      "line": 264,
+      "table": "sistema_logs",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'sistema_logs', onChange: () => void load(true), debounceMs: 500 },"
+    }
+  ],
+  "advertising_requests": [
+    {
+      "file": "src\\components\\admin\\AdvertisingAdminModule.tsx",
+      "line": 143,
+      "table": "advertising_requests",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'advertising_requests', onChange: load, debounceMs: 300 },"
+    }
+  ],
+  "advertising_proposals": [
+    {
+      "file": "src\\components\\admin\\AdvertisingAdminModule.tsx",
+      "line": 144,
+      "table": "advertising_proposals",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'advertising_proposals', onChange: load, debounceMs: 300 },"
+    }
+  ],
+  "advertising_campaigns": [
+    {
+      "file": "src\\components\\admin\\AdvertisingAdminModule.tsx",
+      "line": 145,
+      "table": "advertising_campaigns",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'advertising_campaigns', onChange: load, debounceMs: 300 },"
+    }
+  ],
+  "advertising_creatives": [
+    {
+      "file": "src\\components\\admin\\AdvertisingAdminModule.tsx",
+      "line": 146,
+      "table": "advertising_creatives",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'advertising_creatives', onChange: load, debounceMs: 300 },"
+    }
+  ],
+  "advertising_payments": [
+    {
+      "file": "src\\components\\admin\\AdvertisingAdminModule.tsx",
+      "line": 147,
+      "table": "advertising_payments",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'advertising_payments', onChange: load, debounceMs: 300 },"
+    }
+  ],
+  "advertising_placements": [
+    {
+      "file": "src\\components\\admin\\AdvertisingAdminModule.tsx",
+      "line": 148,
+      "table": "advertising_placements",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'advertising_placements', onChange: load, debounceMs: 300 },"
+    }
+  ],
+  "gsa_afiliados": [
+    {
+      "file": "src\\components\\admin\\AffiliateAdminModule.tsx",
+      "line": 234,
+      "table": "gsa_afiliados",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_afiliados', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx",
+      "line": 134,
+      "table": "gsa_afiliados",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_afiliados', onChange: fetchAffiliateSnapshot },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+      "line": 126,
+      "table": "gsa_afiliados",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_afiliados', onChange: fetchDomainMetrics },"
+    },
+    {
+      "file": "src\\components\\admin\\SystemMonitorModule.tsx",
+      "line": 263,
+      "table": "gsa_afiliados",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_afiliados', onChange: () => { void load(true); void fetchFallbackUsers(); }, debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\client\\ClientAffiliatePanel.tsx",
+      "line": 146,
+      "table": "gsa_afiliados",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_afiliados', onChange: () => void load(true) },"
+    },
+    {
+      "file": "src\\pages\\Afiliado\\AfiliadoDashboard.tsx",
+      "line": 392,
+      "table": "gsa_afiliados",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_afiliados', onChange: () => void load(true), debounceMs: 500 },"
+    }
+  ],
+  "gsa_afiliado_programas": [
+    {
+      "file": "src\\components\\admin\\AffiliateAdminModule.tsx",
+      "line": 235,
+      "table": "gsa_afiliado_programas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_afiliado_programas', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\pages\\Afiliado\\AfiliadoDashboard.tsx",
+      "line": 396,
+      "table": "gsa_afiliado_programas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_afiliado_programas', onChange: () => void load(true), debounceMs: 500 },"
+    }
+  ],
+  "gsa_afiliado_comissoes": [
+    {
+      "file": "src\\components\\admin\\AffiliateAdminModule.tsx",
+      "line": 236,
+      "table": "gsa_afiliado_comissoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_afiliado_comissoes', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\pages\\Afiliado\\AfiliadoDashboard.tsx",
+      "line": 394,
+      "table": "gsa_afiliado_comissoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_afiliado_comissoes', onChange: () => void load(true), debounceMs: 500 },"
+    }
+  ],
+  "gsa_afiliado_saques": [
+    {
+      "file": "src\\components\\admin\\AffiliateAdminModule.tsx",
+      "line": 237,
+      "table": "gsa_afiliado_saques",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_afiliado_saques', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\pages\\Afiliado\\AfiliadoDashboard.tsx",
+      "line": 395,
+      "table": "gsa_afiliado_saques",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_afiliado_saques', onChange: () => void load(true), debounceMs: 500 },"
+    }
+  ],
+  "gsa_afiliado_links": [
+    {
+      "file": "src\\components\\admin\\AffiliateAdminModule.tsx",
+      "line": 238,
+      "table": "gsa_afiliado_links",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_afiliado_links', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\pages\\Afiliado\\AfiliadoDashboard.tsx",
+      "line": 393,
+      "table": "gsa_afiliado_links",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_afiliado_links', onChange: () => void load(true), debounceMs: 500 },"
+    }
+  ],
+  "indicacoes": [
+    {
+      "file": "src\\components\\admin\\AffiliateAdminModule.tsx",
+      "line": 239,
+      "table": "indicacoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'indicacoes', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx",
+      "line": 135,
+      "table": "indicacoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'indicacoes', onChange: fetchAffiliateSnapshot },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+      "line": 179,
+      "table": "indicacoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'indicacoes', onChange: () => fetchIndicacoes() }"
+    },
+    {
+      "file": "src\\components\\client\\ClientAffiliatePanel.tsx",
+      "line": 149,
+      "table": "indicacoes",
+      "hasFilter": true,
+      "filterVal": "_clientId ? `indicador_id=eq.${_clientId",
+      "snippet": "{ table: 'indicacoes', filter: _clientId ? `indicador_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },"
+    },
+    {
+      "file": "src\\components\\client\\ClientFidelidade.tsx",
+      "line": 57,
+      "table": "indicacoes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `indicador_id=eq.${clientId",
+      "snippet": "{ table: 'indicacoes', filter: clientId ? `indicador_id=eq.${clientId}` : undefined },"
+    },
+    {
+      "file": "src\\components\\client\\ClientIndiqueGanhe.tsx",
+      "line": 105,
+      "table": "indicacoes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `indicador_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'indicacoes',\r\n        filter: clientId ? `indicador_id=eq.${clientId}` : undefined,"
+    }
+  ],
+  "assinaturas": [
+    {
+      "file": "src\\components\\admin\\AssinaturasModule.tsx",
+      "line": 108,
+      "table": "assinaturas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'assinaturas', onChange: () => void fetchAssinaturas(), debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensAssinaturaModule.tsx",
+      "line": 110,
+      "table": "assinaturas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'assinaturas', onChange: fetchOrdens, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\client\\ClientAreaVIP.tsx",
+      "line": 180,
+      "table": "assinaturas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'assinaturas', onChange: fetchLevels },"
+    },
+    {
+      "file": "src\\components\\client\\ClientAssinaturas.tsx",
+      "line": 107,
+      "table": "assinaturas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'assinaturas', onChange: fetchMinhasAssinaturas },"
+    },
+    {
+      "file": "src\\components\\client\\ClientGSAStore.tsx",
+      "line": 624,
+      "table": "assinaturas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'assinaturas' }, () => { fetchStoreData(true); fetchCart(); })"
+    }
+  ],
+  "ordens_assinatura": [
+    {
+      "file": "src\\components\\admin\\AssinaturasModule.tsx",
+      "line": 109,
+      "table": "ordens_assinatura",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_assinatura', onChange: () => void fetchAssinaturas(), debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensAssinaturaModule.tsx",
+      "line": 109,
+      "table": "ordens_assinatura",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_assinatura', onChange: fetchOrdens, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\VendasModule.tsx",
+      "line": 123,
+      "table": "ordens_assinatura",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_assinatura', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\client\\ClientAssinaturas.tsx",
+      "line": 105,
+      "table": "ordens_assinatura",
+      "hasFilter": true,
+      "filterVal": "`cliente_id=eq.${clientId",
+      "snippet": "{ table: 'ordens_assinatura', filter: `cliente_id=eq.${clientId}`, onChange: fetchMinhasAssinaturas },"
+    },
+    {
+      "file": "src\\components\\client\\store\\PurchasesPage.tsx",
+      "line": 323,
+      "table": "ordens_assinatura",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'ordens_assinatura',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    }
+  ],
+  "loja_categorias": [
+    {
+      "file": "src\\components\\admin\\AssinaturasModule.tsx",
+      "line": 110,
+      "table": "loja_categorias",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'loja_categorias', onChange: () => void fetchCats(), debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\LojaCategoriasModule.tsx",
+      "line": 31,
+      "table": "loja_categorias",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'loja_categorias' }, () => {"
+    },
+    {
+      "file": "src\\components\\admin\\ProdutosModule.tsx",
+      "line": 265,
+      "table": "loja_categorias",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'loja_categorias', onChange: fetchProdutos, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\ServicosModule.tsx",
+      "line": 94,
+      "table": "loja_categorias",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'loja_categorias', onChange: fetchServicos, debounceMs: 300 },"
+    }
+  ],
+  "gsa_careers_applications": [
+    {
+      "file": "src\\components\\admin\\CareersAdminModule.tsx",
+      "line": 128,
+      "table": "gsa_careers_applications",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_careers_applications', onChange: () => void fetchApplications(true), debounceMs: 500 },"
+    }
+  ],
+  "trabalhe_conosco": [
+    {
+      "file": "src\\components\\admin\\CareersAdminModule.tsx",
+      "line": 129,
+      "table": "trabalhe_conosco",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'trabalhe_conosco', onChange: () => void fetchApplications(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\TrabalheConoscoSection.tsx",
+      "line": 93,
+      "table": "trabalhe_conosco",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'trabalhe_conosco', onChange: () => fetchApplications(true) }"
+    }
+  ],
+  "classificados_anuncios": [
+    {
+      "file": "src\\components\\admin\\ClassifiedsModule.tsx",
+      "line": 122,
+      "table": "classificados_anuncios",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'classificados_anuncios', onChange: load, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\client\\marketplace\\classifieds\\EditClassifiedListingPage.tsx",
+      "line": 87,
+      "table": "classificados_anuncios",
+      "hasFilter": true,
+      "filterVal": "anuncioId ? `id=eq.${anuncioId",
+      "snippet": "{\r\n        table: 'classificados_anuncios',\r\n        filter: anuncioId ? `id=eq.${anuncioId}` : undefined,"
+    }
+  ],
+  "classificados_propostas": [
+    {
+      "file": "src\\components\\admin\\ClassifiedsModule.tsx",
+      "line": 123,
+      "table": "classificados_propostas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'classificados_propostas', onChange: load, debounceMs: 300 },"
+    }
+  ],
+  "classificados_mensagens": [
+    {
+      "file": "src\\components\\admin\\ClassifiedsModule.tsx",
+      "line": 124,
+      "table": "classificados_mensagens",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'classificados_mensagens', onChange: load, debounceMs: 300 },"
+    }
+  ],
+  "classificados_transacoes": [
+    {
+      "file": "src\\components\\admin\\ClassifiedsModule.tsx",
+      "line": 125,
+      "table": "classificados_transacoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'classificados_transacoes', onChange: load, debounceMs: 300 },"
+    }
+  ],
+  "classificados_midias": [
+    {
+      "file": "src\\components\\admin\\ClassifiedsModule.tsx",
+      "line": 126,
+      "table": "classificados_midias",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'classificados_midias', onChange: load, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\client\\marketplace\\classifieds\\EditClassifiedListingPage.tsx",
+      "line": 93,
+      "table": "classificados_midias",
+      "hasFilter": true,
+      "filterVal": "anuncioId ? `anuncio_id=eq.${anuncioId",
+      "snippet": "{\r\n        table: 'classificados_midias',\r\n        filter: anuncioId ? `anuncio_id=eq.${anuncioId}` : undefined,"
+    }
+  ],
+  "faturas": [
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "line": 212,
+      "table": "faturas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'faturas', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\FiscalModule.tsx",
+      "line": 84,
+      "table": "faturas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'faturas', onChange: load, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensAssinaturaModule.tsx",
+      "line": 111,
+      "table": "faturas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'faturas', onChange: fetchOrdens, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+      "line": 107,
+      "table": "faturas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'faturas', onChange: fetchOrdens, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\PainelRentabilidade.tsx",
+      "line": 58,
+      "table": "faturas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'faturas' }, debouncedFetch)"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+      "line": 170,
+      "table": "faturas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'faturas', onChange: fetchFaturas },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+      "line": 116,
+      "table": "faturas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'faturas', onChange: fetchTelemetry },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+      "line": 108,
+      "table": "faturas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'faturas', onChange: () => void load(true) },"
+    },
+    {
+      "file": "src\\components\\client\\ClientAssinaturas.tsx",
+      "line": 106,
+      "table": "faturas",
+      "hasFilter": true,
+      "filterVal": "`cliente_id=eq.${clientId",
+      "snippet": "{ table: 'faturas', filter: `cliente_id=eq.${clientId}`, onChange: fetchMinhasAssinaturas },"
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "line": 204,
+      "table": "faturas",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'faturas',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\ClientMeuCredito.tsx",
+      "line": 389,
+      "table": "faturas",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'faturas',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\ClientProdutos.tsx",
+      "line": 100,
+      "table": "faturas",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'faturas',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\financeiro\\FaturasList.tsx",
+      "line": 200,
+      "table": "faturas",
+      "hasFilter": true,
+      "filterVal": "`cliente_id=eq.${clientId",
+      "snippet": ".on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'faturas',\r\n        filter: `cliente_id=eq.${clientId}`"
+    },
+    {
+      "file": "src\\components\\client\\store\\CheckoutPixModal.tsx",
+      "line": 184,
+      "table": "faturas",
+      "hasFilter": true,
+      "filterVal": "`orcamento_id=eq.${orderId",
+      "snippet": "event: 'UPDATE', schema: 'public', table: 'faturas', filter: `orcamento_id=eq.${orderId}`,"
+    },
+    {
+      "file": "src\\hooks\\useRealtime.ts",
+      "line": 244,
+      "table": "faturas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "*   useRealtime([{ table: 'faturas' }, { table: 'saques' }])"
+    }
+  ],
+  "cobrancas": [
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "line": 213,
+      "table": "cobrancas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'cobrancas', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx",
+      "line": 182,
+      "table": "cobrancas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'cobrancas', onChange: fetchCobrancas },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+      "line": 171,
+      "table": "cobrancas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'cobrancas', onChange: fetchFaturas },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+      "line": 118,
+      "table": "cobrancas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'cobrancas', onChange: fetchTelemetry },"
+    }
+  ],
+  "saques": [
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "line": 214,
+      "table": "saques",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'saques', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+      "line": 117,
+      "table": "saques",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'saques', onChange: fetchTelemetry },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx",
+      "line": 118,
+      "table": "saques",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'saques', onChange: fetchSaques },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+      "line": 109,
+      "table": "saques",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'saques', onChange: () => void load(true) },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx",
+      "line": 136,
+      "table": "saques",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'saques', onChange: fetchAffiliateSnapshot }"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PayoutClearanceDrawer.tsx",
+      "line": 63,
+      "table": "saques",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'saques', enabled: isOpen }"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+      "line": 124,
+      "table": "saques",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'saques', onChange: fetchDomainMetrics },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx",
+      "line": 135,
+      "table": "saques",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'saques', onChange: fetchAllSaques }"
+    },
+    {
+      "file": "src\\components\\client\\ClientAffiliatePanel.tsx",
+      "line": 147,
+      "table": "saques",
+      "hasFilter": true,
+      "filterVal": "_clientId ? `cliente_id=eq.${_clientId",
+      "snippet": "{ table: 'saques', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },"
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "line": 212,
+      "table": "saques",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'saques',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\ClientTransferencias.tsx",
+      "line": 87,
+      "table": "saques",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'saques',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\financeiro\\SaquesList.tsx",
+      "line": 97,
+      "table": "saques",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'saques',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\pages\\Afiliado\\AfiliadoDashboard.tsx",
+      "line": 397,
+      "table": "saques",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'saques', onChange: () => void load(true), debounceMs: 500 },"
+    }
+  ],
+  "emprestimos": [
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "line": 215,
+      "table": "emprestimos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'emprestimos', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx",
+      "line": 135,
+      "table": "emprestimos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'emprestimos', onChange: fetchEmprestimos },"
+    },
+    {
+      "file": "src\\components\\client\\ClientEmprestimos.tsx",
+      "line": 97,
+      "table": "emprestimos",
+      "hasFilter": true,
+      "filterVal": "`cliente_id=eq.${clientId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimos', filter: `cliente_id=eq.${clientId}` }, () => {"
+    }
+  ],
+  "orcamentos": [
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "line": 216,
+      "table": "orcamentos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'orcamentos', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensAssinaturaModule.tsx",
+      "line": 112,
+      "table": "orcamentos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'orcamentos', onChange: fetchOrdens, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+      "line": 109,
+      "table": "orcamentos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'orcamentos', onChange: fetchOrdens, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\PainelRentabilidade.tsx",
+      "line": 61,
+      "table": "orcamentos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'orcamentos' }, debouncedFetch)"
+    },
+    {
+      "file": "src\\components\\admin\\ShopeeOperationsModule.tsx",
+      "line": 120,
+      "table": "orcamentos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'orcamentos', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+      "line": 118,
+      "table": "orcamentos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'orcamentos', onChange: fetchLiveMetrics, debounceMs: 400 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx",
+      "line": 163,
+      "table": "orcamentos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'orcamentos' }, () => {"
+    },
+    {
+      "file": "src\\components\\admin\\VendasModule.tsx",
+      "line": 120,
+      "table": "orcamentos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'orcamentos', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\client\\ClientOrcamentos.tsx",
+      "line": 201,
+      "table": "orcamentos",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'orcamentos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\ClientServicos.tsx",
+      "line": 110,
+      "table": "orcamentos",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'orcamentos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\store\\CheckoutPixModal.tsx",
+      "line": 173,
+      "table": "orcamentos",
+      "hasFilter": true,
+      "filterVal": "`id=eq.${orderId",
+      "snippet": "event: 'UPDATE', schema: 'public', table: 'orcamentos', filter: `id=eq.${orderId}`,"
+    },
+    {
+      "file": "src\\components\\client\\store\\PurchasesPage.tsx",
+      "line": 311,
+      "table": "orcamentos",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'orcamentos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\StoreHub.tsx",
+      "line": 640,
+      "table": "orcamentos",
+      "hasFilter": true,
+      "filterVal": "`cliente_id=eq.${clientId",
+      "snippet": ".on('postgres_changes', { \r\n        event: '*', \r\n        schema: 'public', \r\n        table: 'orcamentos',\r\n        filter: `cliente_id=eq.${clientId}`"
+    }
+  ],
+  "ordens_servico": [
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "line": 217,
+      "table": "ordens_servico",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_servico', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\demandas\\NovaDemandaModal.tsx",
+      "line": 69,
+      "table": "ordens_servico",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_servico', onChange: fetchData, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\PainelRentabilidade.tsx",
+      "line": 59,
+      "table": "ordens_servico",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'ordens_servico' }, debouncedFetch)"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+      "line": 111,
+      "table": "ordens_servico",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_servico', onChange: () => void load(true) },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+      "line": 119,
+      "table": "ordens_servico",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_servico', onChange: fetchLiveMetrics, debounceMs: 400 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx",
+      "line": 152,
+      "table": "ordens_servico",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'ordens_servico' }, () => {"
+    },
+    {
+      "file": "src\\components\\admin\\VendasModule.tsx",
+      "line": 121,
+      "table": "ordens_servico",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_servico', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\client\\ClientServicos.tsx",
+      "line": 99,
+      "table": "ordens_servico",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'ordens_servico',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    }
+  ],
+  "ordens_fiscais": [
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "line": 218,
+      "table": "ordens_fiscais",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_fiscais', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\FiscalModule.tsx",
+      "line": 83,
+      "table": "ordens_fiscais",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_fiscais', onChange: load, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+      "line": 172,
+      "table": "ordens_fiscais",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_fiscais', onChange: fetchFaturas }"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+      "line": 119,
+      "table": "ordens_fiscais",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_fiscais', onChange: fetchTelemetry }"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FiscalView.tsx",
+      "line": 87,
+      "table": "ordens_fiscais",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "useRealtimeSubscription({ table: 'ordens_fiscais', onChange: loadData }, [loadData]);"
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "line": 226,
+      "table": "ordens_fiscais",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'ordens_fiscais',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\financeiro\\NotasFiscaisList.tsx",
+      "line": 173,
+      "table": "ordens_fiscais",
+      "hasFilter": true,
+      "filterVal": "`cliente_id=eq.${clientId",
+      "snippet": ".on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'ordens_fiscais',\r\n        filter: `cliente_id=eq.${clientId}`"
+    }
+  ],
+  "tickets": [
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "line": 219,
+      "table": "tickets",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'tickets', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\contratos\\AtendimentoTicketsView.tsx",
+      "line": 154,
+      "table": "tickets",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'tickets', onChange: fetchTickets },"
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "line": 231,
+      "table": "tickets",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'tickets',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\ClientSuporte.tsx",
+      "line": 85,
+      "table": "tickets",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'tickets',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\ClientSuporte.tsx",
+      "line": 115,
+      "table": "tickets",
+      "hasFilter": true,
+      "filterVal": "selectedTicket?.id ? `id=eq.${selectedTicket.id",
+      "snippet": "{\r\n        table: 'tickets',\r\n        filter: selectedTicket?.id ? `id=eq.${selectedTicket.id}` : undefined,"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+      "line": 98,
+      "table": "tickets",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, () => void loadTickets(() => isMounted))"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+      "line": 111,
+      "table": "tickets",
+      "hasFilter": true,
+      "filterVal": "`id=eq.${selectedTicket.id",
+      "snippet": ".on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tickets', filter: `id=eq.${selectedTicket.id}` }, (payload) => {"
+    },
+    {
+      "file": "src\\hooks\\useProviderNotifications.tsx",
+      "line": 225,
+      "table": "tickets",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)"
+    }
+  ],
+  "clientes": [
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "line": 220,
+      "table": "clientes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'clientes', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensAssinaturaModule.tsx",
+      "line": 113,
+      "table": "clientes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'clientes', onChange: fetchOrdens, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+      "line": 110,
+      "table": "clientes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'clientes', onChange: fetchOrdens, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\contratos\\AreaVipView.tsx",
+      "line": 151,
+      "table": "clientes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "useRealtimeSubscription({ table: 'clientes', onChange: fetchMembers });"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\contratos\\CrmClientesView.tsx",
+      "line": 149,
+      "table": "clientes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "useRealtimeSubscription({ table: 'clientes', onChange: fetchClientes });"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\contratos\\HubEmpresasView.tsx",
+      "line": 97,
+      "table": "clientes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "useRealtimeSubscription({ table: 'clientes', onChange: fetchEmpresas });"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+      "line": 107,
+      "table": "clientes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'clientes', onChange: () => void load(true) },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaInfraView.tsx",
+      "line": 151,
+      "table": "clientes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'clientes', onChange: () => void load(true) },"
+    },
+    {
+      "file": "src\\components\\admin\\SystemMonitorModule.tsx",
+      "line": 260,
+      "table": "clientes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'clientes', onChange: () => { void load(true); void fetchFallbackUsers(); }, debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\TravelAdminModule.tsx",
+      "line": 263,
+      "table": "clientes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'clientes', onChange: load, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\client\\ClientFidelidade.tsx",
+      "line": 55,
+      "table": "clientes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `id=eq.${clientId",
+      "snippet": "{ table: 'clientes', filter: clientId ? `id=eq.${clientId}` : undefined },"
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "line": 199,
+      "table": "clientes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `id=eq.${clientId",
+      "snippet": "{\r\n        table: 'clientes',\r\n        filter: clientId ? `id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\ClientIndiqueGanhe.tsx",
+      "line": 122,
+      "table": "clientes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `id=eq.${clientId",
+      "snippet": "{\r\n        table: 'clientes',\r\n        filter: clientId ? `id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\ClientMeuCredito.tsx",
+      "line": 397,
+      "table": "clientes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `id=eq.${clientId",
+      "snippet": "{\r\n        table: 'clientes',\r\n        filter: clientId ? `id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\ClientPontos.tsx",
+      "line": 90,
+      "table": "clientes",
+      "hasFilter": true,
+      "filterVal": "clienteId ? `id=eq.${clienteId",
+      "snippet": "{\r\n        table: 'clientes',\r\n        filter: clienteId ? `id=eq.${clienteId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\ClientProfile.tsx",
+      "line": 163,
+      "table": "clientes",
+      "hasFilter": true,
+      "filterVal": "cliente?.id ? `id=eq.${cliente.id",
+      "snippet": "{\r\n        table: 'clientes',\r\n        filter: cliente?.id ? `id=eq.${cliente.id}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\ClientTransferencias.tsx",
+      "line": 77,
+      "table": "clientes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `id=eq.${clientId",
+      "snippet": "{\r\n        table: 'clientes',\r\n        filter: clientId ? `id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\ClientVouchers.tsx",
+      "line": 71,
+      "table": "clientes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `id=eq.${clientId",
+      "snippet": "{\n        table: 'clientes',\n        filter: clientId ? `id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\financeiro\\PaymentModal.tsx",
+      "line": 88,
+      "table": "clientes",
+      "hasFilter": true,
+      "filterVal": "fatura?.cliente_id ? `id=eq.${fatura.cliente_id",
+      "snippet": "{\r\n        table: 'clientes',\r\n        filter: fatura?.cliente_id ? `id=eq.${fatura.cliente_id}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\store\\CheckoutModal.tsx",
+      "line": 326,
+      "table": "clientes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `id=eq.${clientId",
+      "snippet": "{\r\n        table: 'clientes',\r\n        filter: clientId ? `id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\store\\CheckoutPage.tsx",
+      "line": 461,
+      "table": "clientes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `id=eq.${clientId",
+      "snippet": "{\r\n        table: 'clientes',\r\n        filter: clientId ? `id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\store\\EcommerceHeader.tsx",
+      "line": 253,
+      "table": "clientes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `id=eq.${clientId",
+      "snippet": "{\r\n        table: 'clientes',\r\n        filter: clientId ? `id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\hooks\\useClientNotifications.tsx",
+      "line": 339,
+      "table": "clientes",
+      "hasFilter": true,
+      "filterVal": "`id=eq.${clientId",
+      "snippet": "securityChannel.on('postgres_changes', { \r\n      event: '*', \r\n      schema: 'public', \r\n      table: 'clientes',\r\n      filter: `id=eq.${clientId}`"
+    },
+    {
+      "file": "src\\pages\\ClientPortal.tsx",
+      "line": 512,
+      "table": "clientes",
+      "hasFilter": true,
+      "filterVal": "`id=eq.${clientId",
+      "snippet": ".on('postgres_changes', {\n        event: 'UPDATE',\n        schema: 'public',\n        table: 'clientes',\n        filter: `id=eq.${clientId}`"
+    }
+  ],
+  "ordens_compra": [
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "line": 221,
+      "table": "ordens_compra",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_compra', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\FornecedoresModule.tsx",
+      "line": 114,
+      "table": "ordens_compra",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_compra', onChange: load, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+      "line": 105,
+      "table": "ordens_compra",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_compra', onChange: fetchOrdens, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\ShopeeOperationsModule.tsx",
+      "line": 119,
+      "table": "ordens_compra",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_compra', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+      "line": 121,
+      "table": "ordens_compra",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_compra', onChange: fetchLiveMetrics, debounceMs: 400 },"
+    },
+    {
+      "file": "src\\components\\admin\\VendasModule.tsx",
+      "line": 122,
+      "table": "ordens_compra",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ordens_compra', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\client\\ClientProdutos.tsx",
+      "line": 91,
+      "table": "ordens_compra",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'ordens_compra',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\store\\PurchasesPage.tsx",
+      "line": 317,
+      "table": "ordens_compra",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'ordens_compra',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    }
+  ],
+  "vouchers": [
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "line": 222,
+      "table": "vouchers",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'vouchers', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx",
+      "line": 92,
+      "table": "vouchers",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'vouchers', onChange: loadSnapshot },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+      "line": 174,
+      "table": "vouchers",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'vouchers', onChange: () => { fetchVouchers(); fetchPremios(); } },"
+    },
+    {
+      "file": "src\\components\\client\\ClientFidelidade.tsx",
+      "line": 56,
+      "table": "vouchers",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{ table: 'vouchers', filter: clientId ? `cliente_id=eq.${clientId}` : undefined },"
+    },
+    {
+      "file": "src\\components\\client\\ClientIndiqueGanhe.tsx",
+      "line": 117,
+      "table": "vouchers",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'vouchers',\r\n        debounceMs: 150,\r\n        onChange: fetchIndicacoes,\r\n      },"
+    },
+    {
+      "file": "src\\components\\client\\ClientVouchers.tsx",
+      "line": 53,
+      "table": "vouchers",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\n        table: 'vouchers',\n        onChange: fetchVouchers,\n        onPayload: (payload) => {\n          fetchVouchers();\n          if (payload.new && selectedVoucher && (payload.new as any).id === selectedVoucher.id) {\n            setSelectedVoucher((prev) => (prev ? ({ ...prev, ...payload.new } as Voucher) : null));"
+    },
+    {
+      "file": "src\\components\\client\\financeiro\\PaymentModal.tsx",
+      "line": 94,
+      "table": "vouchers",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'vouchers',\r\n        enabled: isOpen && Boolean(fatura?.cliente_id),\r\n        onChange: () => {\r\n          if (showVouchersList) {\r\n            fetchAvailableVouchers();\r\n          }"
+    }
+  ],
+  "prestador_demandas": [
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "line": 223,
+      "table": "prestador_demandas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'prestador_demandas', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\admin\\demandas\\DemandasDashboard.tsx",
+      "line": 85,
+      "table": "prestador_demandas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'prestador_demandas', onChange: carregar, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\demandas\\DemandasDetalhesModal.tsx",
+      "line": 132,
+      "table": "prestador_demandas",
+      "hasFilter": true,
+      "filterVal": "`id=eq.${demanda.id",
+      "snippet": "{\r\n      table: 'prestador_demandas',\r\n      filter: `id=eq.${demanda.id}`,"
+    },
+    {
+      "file": "src\\components\\admin\\DemandasColaboradorModule.tsx",
+      "line": 150,
+      "table": "prestador_demandas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'prestador_demandas', onChange: fetchDemandas, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\PainelRentabilidade.tsx",
+      "line": 60,
+      "table": "prestador_demandas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas' }, debouncedFetch)"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+      "line": 110,
+      "table": "prestador_demandas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'prestador_demandas', onChange: () => void load(true) },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+      "line": 120,
+      "table": "prestador_demandas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'prestador_demandas', onChange: fetchLiveMetrics, debounceMs: 400 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PrestadorDetailDrawer.tsx",
+      "line": 66,
+      "table": "prestador_demandas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'prestador_demandas', enabled: isOpen, onChange: () => { if (prestador?.id) fetchDemandas(prestador.id); } }"
+    },
+    {
+      "file": "src\\components\\admin\\VendasModule.tsx",
+      "line": 124,
+      "table": "prestador_demandas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'prestador_demandas', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorAgenda.tsx",
+      "line": 69,
+      "table": "prestador_demandas",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void load())"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorDemandas.tsx",
+      "line": 147,
+      "table": "prestador_demandas",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void loadDemands())"
+    },
+    {
+      "file": "src\\hooks\\useProviderNotifications.tsx",
+      "line": 219,
+      "table": "prestador_demandas",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)"
+    }
+  ],
+  "promocoes": [
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "line": 224,
+      "table": "promocoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'promocoes', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\client\\ClientPromocoes.tsx",
+      "line": 92,
+      "table": "promocoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', {\n        event: '*',\n        schema: 'public',\n        table: 'promocoes'\n      }, () => {"
+    },
+    {
+      "file": "src\\hooks\\useClientNotifications.tsx",
+      "line": 286,
+      "table": "promocoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "channel.on('postgres_changes', {\r\n      event: '*',\r\n      schema: 'public',\r\n      table: 'promocoes',\r\n    }, () => debouncedFetch());"
+    }
+  ],
+  "demanda_comentarios": [
+    {
+      "file": "src\\components\\admin\\demandas\\DemandasComentarios.tsx",
+      "line": 40,
+      "table": "demanda_comentarios",
+      "hasFilter": true,
+      "filterVal": "`demanda_id=eq.${demandaId",
+      "snippet": "useRealtimeSubscription({\r\n    table: 'demanda_comentarios',\r\n    filter: `demanda_id=eq.${demandaId}`,"
+    },
+    {
+      "file": "src\\components\\admin\\DemandasColaboradorModule.tsx",
+      "line": 161,
+      "table": "demanda_comentarios",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'demanda_comentarios', onChange: fetchDemandas, debounceMs: 300 },"
+    }
+  ],
+  "prestadores": [
+    {
+      "file": "src\\components\\admin\\demandas\\DemandasDashboard.tsx",
+      "line": 87,
+      "table": "prestadores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'prestadores', onChange: carregar, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\demandas\\NovaDemandaModal.tsx",
+      "line": 71,
+      "table": "prestadores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'prestadores', onChange: fetchData, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\DemandasColaboradorModule.tsx",
+      "line": 165,
+      "table": "prestadores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'prestadores', onChange: fetchAuxiliares, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\NovoPrestadorDrawer.tsx",
+      "line": 27,
+      "table": "prestadores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "useRealtimeSubscription({ table: 'prestadores', enabled: isOpen });"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+      "line": 122,
+      "table": "prestadores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'prestadores', onChange: fetchDomainMetrics },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PrestadorDetailDrawer.tsx",
+      "line": 65,
+      "table": "prestadores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'prestadores', enabled: isOpen },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PrestadoresSection.tsx",
+      "line": 55,
+      "table": "prestadores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "useRealtimeSubscription({ table: 'prestadores', onChange: fetchPrestadores });"
+    },
+    {
+      "file": "src\\components\\admin\\SystemMonitorModule.tsx",
+      "line": 262,
+      "table": "prestadores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'prestadores', onChange: () => { void load(true); void fetchFallbackUsers(); }, debounceMs: 500 },"
+    },
+    {
+      "file": "src\\hooks\\useProviderNotifications.tsx",
+      "line": 238,
+      "table": "prestadores",
+      "hasFilter": true,
+      "filterVal": "`id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestadores', filter: `id=eq.${prestadorId}` }, (payload) => {"
+    }
+  ],
+  "prestador_demandas_historico": [
+    {
+      "file": "src\\components\\admin\\demandas\\DemandasDetalhesModal.tsx",
+      "line": 140,
+      "table": "prestador_demandas_historico",
+      "hasFilter": true,
+      "filterVal": "`demanda_id=eq.${demanda.id",
+      "snippet": "{\r\n      table: 'prestador_demandas_historico',\r\n      filter: `demanda_id=eq.${demanda.id}`,"
+    },
+    {
+      "file": "src\\components\\admin\\DemandasColaboradorModule.tsx",
+      "line": 152,
+      "table": "prestador_demandas_historico",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n      table: 'prestador_demandas_historico',\r\n      onChange: fetchDemandas,\r\n      onPayload: (payload) => {\r\n        if (selectedDemanda && payload.new && (payload.new as any).demanda_id === selectedDemanda.id) {\r\n          void refreshHistorico(selectedDemanda.id);\r\n        }"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorDemandas.tsx",
+      "line": 160,
+      "table": "prestador_demandas_historico",
+      "hasFilter": true,
+      "filterVal": "`demanda_id=eq.${selected.id",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas_historico', filter: `demanda_id=eq.${selected.id}` }, () => void loadHistory(selected.id))"
+    }
+  ],
+  "os_suporte_mensagens": [
+    {
+      "file": "src\\components\\admin\\demandas\\DemandasDetalhesModal.tsx",
+      "line": 1475,
+      "table": "os_suporte_mensagens",
+      "hasFilter": true,
+      "filterVal": "`os_id=eq.${osId",
+      "snippet": "useRealtimeSubscription({\r\n    table: 'os_suporte_mensagens',\r\n    filter: `os_id=eq.${osId}`,"
+    },
+    {
+      "file": "src\\components\\admin\\DemandasColaboradorModule.tsx",
+      "line": 163,
+      "table": "os_suporte_mensagens",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'os_suporte_mensagens', onChange: fetchDemandas, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\client\\ClientServicos.tsx",
+      "line": 120,
+      "table": "os_suporte_mensagens",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'os_suporte_mensagens',\r\n        onChange: fetchServicos,\r\n      },"
+    },
+    {
+      "file": "src\\components\\client\\ClientServicos.tsx",
+      "line": 696,
+      "table": "os_suporte_mensagens",
+      "hasFilter": true,
+      "filterVal": "`os_id=eq.${osId",
+      "snippet": ".on('postgres_changes', {\r\n        event: 'INSERT',\r\n        schema: 'public',\r\n        table: 'os_suporte_mensagens',\r\n        filter: `os_id=eq.${osId}`"
+    }
+  ],
+  "os_notas": [
+    {
+      "file": "src\\components\\admin\\DemandasColaboradorModule.tsx",
+      "line": 162,
+      "table": "os_notas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'os_notas', onChange: fetchDemandas, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\client\\ClientServicos.tsx",
+      "line": 116,
+      "table": "os_notas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'os_notas',\r\n        onChange: fetchServicos,\r\n      },"
+    },
+    {
+      "file": "src\\components\\client\\ClientServicos.tsx",
+      "line": 641,
+      "table": "os_notas",
+      "hasFilter": true,
+      "filterVal": "`os_id=eq.${osId",
+      "snippet": ".on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'os_notas',\r\n        filter: `os_id=eq.${osId}`"
+    }
+  ],
+  "fornecedores": [
+    {
+      "file": "src\\components\\admin\\FornecedoresModule.tsx",
+      "line": 113,
+      "table": "fornecedores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'fornecedores', onChange: load, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FornecedoresSection.tsx",
+      "line": 309,
+      "table": "fornecedores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'fornecedores', onChange: loadSupplierData, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+      "line": 125,
+      "table": "fornecedores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'fornecedores', onChange: fetchDomainMetrics },"
+    },
+    {
+      "file": "src\\components\\admin\\SystemMonitorModule.tsx",
+      "line": 261,
+      "table": "fornecedores",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'fornecedores', onChange: () => { void load(true); void fetchFallbackUsers(); }, debounceMs: 500 },"
+    }
+  ],
+  "produto_fornecedor_config": [
+    {
+      "file": "src\\components\\admin\\FornecedoresModule.tsx",
+      "line": 115,
+      "table": "produto_fornecedor_config",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'produto_fornecedor_config', onChange: load, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\ProdutosModule.tsx",
+      "line": 267,
+      "table": "produto_fornecedor_config",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'produto_fornecedor_config', onChange: fetchProdutos, debounceMs: 300 },"
+    }
+  ],
+  "produtos": [
+    {
+      "file": "src\\components\\admin\\FornecedoresModule.tsx",
+      "line": 116,
+      "table": "produtos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'produtos', onChange: load, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+      "line": 106,
+      "table": "produtos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'produtos', onChange: fetchOrdens, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\ProdutosModule.tsx",
+      "line": 256,
+      "table": "produtos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\n      table: 'produtos',\n      onChange: fetchProdutos,\n      onPayload: (payload) => {\n        if (payload.new && selectedProduto && (payload.new as any).id === selectedProduto.id) {\n          setSelectedProduto(prev => prev ? { ...prev, ...payload.new } as Produto : null);"
+    },
+    {
+      "file": "src\\components\\client\\ClientGSAStore.tsx",
+      "line": 622,
+      "table": "produtos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => { fetchStoreData(true); fetchCart(); })"
+    },
+    {
+      "file": "src\\components\\client\\ClientProdutos.tsx",
+      "line": 96,
+      "table": "produtos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'produtos',\r\n        onChange: fetchMeusProdutos,\r\n      },"
+    },
+    {
+      "file": "src\\components\\client\\store\\CheckoutPage.tsx",
+      "line": 466,
+      "table": "produtos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'produtos',\r\n        onChange: fetchCartItems,\r\n      },"
+    },
+    {
+      "file": "src\\components\\client\\store\\EcommerceHome.tsx",
+      "line": 419,
+      "table": "produtos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'produtos',\r\n        debounceMs: 300,\r\n        onChange: fetchHomeData,\r\n      },"
+    },
+    {
+      "file": "src\\components\\client\\StoreHub.tsx",
+      "line": 153,
+      "table": "produtos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'produtos', onChange: () => setRtRefreshKey(k => k + 1) },"
+    }
+  ],
+  "fornecedor_produtos": [
+    {
+      "file": "src\\components\\admin\\FornecedoresModule.tsx",
+      "line": 117,
+      "table": "fornecedor_produtos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'fornecedor_produtos', onChange: load, debounceMs: 300 },"
+    }
+  ],
+  "fornecedor_pedidos": [
+    {
+      "file": "src\\components\\admin\\FornecedoresModule.tsx",
+      "line": 118,
+      "table": "fornecedor_pedidos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'fornecedor_pedidos', onChange: load, debounceMs: 300 },"
+    }
+  ],
+  "fornecedor_entregas": [
+    {
+      "file": "src\\components\\admin\\FornecedoresModule.tsx",
+      "line": 119,
+      "table": "fornecedor_entregas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'fornecedor_entregas', onChange: load, debounceMs: 300 },"
+    }
+  ],
+  "fornecedor_documentos": [
+    {
+      "file": "src\\components\\admin\\FornecedoresModule.tsx",
+      "line": 120,
+      "table": "fornecedor_documentos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'fornecedor_documentos', onChange: load, debounceMs: 300 },"
+    }
+  ],
+  "gsa_tv_channels": [
+    {
+      "file": "src\\components\\admin\\GsaTvModule.tsx",
+      "line": 353,
+      "table": "gsa_tv_channels",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_tv_channels', onChange: loadRealData, debounceMs: 500 },"
+    }
+  ],
+  "gsa_tv_media_items": [
+    {
+      "file": "src\\components\\admin\\GsaTvModule.tsx",
+      "line": 354,
+      "table": "gsa_tv_media_items",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_tv_media_items', onChange: loadRealData, debounceMs: 500 },"
+    }
+  ],
+  "gsa_tv_schedule_slots": [
+    {
+      "file": "src\\components\\admin\\GsaTvModule.tsx",
+      "line": 355,
+      "table": "gsa_tv_schedule_slots",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_tv_schedule_slots', onChange: loadRealData, debounceMs: 500 },"
+    }
+  ],
+  "gsa_tv_playlists": [
+    {
+      "file": "src\\components\\admin\\GsaTvModule.tsx",
+      "line": 356,
+      "table": "gsa_tv_playlists",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_tv_playlists', onChange: loadRealData, debounceMs: 500 },"
+    }
+  ],
+  "gsa_tv_incidents": [
+    {
+      "file": "src\\components\\admin\\GsaTvModule.tsx",
+      "line": 357,
+      "table": "gsa_tv_incidents",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_tv_incidents', onChange: loadRealData, debounceMs: 500 },"
+    }
+  ],
+  "gsa_tv_audit_log": [
+    {
+      "file": "src\\components\\admin\\GsaTvModule.tsx",
+      "line": 358,
+      "table": "gsa_tv_audit_log",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_tv_audit_log', onChange: loadRealData, debounceMs: 500 },"
+    }
+  ],
+  "gsa_tv_jobs": [
+    {
+      "file": "src\\components\\admin\\GsaTvModule.tsx",
+      "line": 359,
+      "table": "gsa_tv_jobs",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_tv_jobs', onChange: loadRealData, debounceMs: 500 },"
+    }
+  ],
+  "cupons_loja": [
+    {
+      "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+      "line": 108,
+      "table": "cupons_loja",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'cupons_loja', onChange: fetchOrdens, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+      "line": 177,
+      "table": "cupons_loja",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'cupons_loja', onChange: () => fetchCupons() },"
+    },
+    {
+      "file": "src\\components\\client\\ClientGSAStore.tsx",
+      "line": 630,
+      "table": "cupons_loja",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'cupons_loja' }, () => {"
+    },
+    {
+      "file": "src\\components\\client\\ClientVouchers.tsx",
+      "line": 63,
+      "table": "cupons_loja",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\n        table: 'cupons_loja',\n        onChange: fetchVouchers,\n      },"
+    },
+    {
+      "file": "src\\components\\client\\store\\CheckoutModal.tsx",
+      "line": 347,
+      "table": "cupons_loja",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'cupons_loja',\r\n        enabled: isOpen,\r\n        debounceMs: 150,\r\n        onChange: () => {\r\n          if (isSelectorOpen) {\r\n            fetchCoupons(selectorCategory);\r\n          }"
+    },
+    {
+      "file": "src\\components\\client\\store\\CheckoutPage.tsx",
+      "line": 470,
+      "table": "cupons_loja",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'cupons_loja',\r\n        onChange: () => {\r\n          if (isSelectorOpen && selectorCategory) {\r\n            fetchCoupons(selectorCategory);\r\n          }"
+    },
+    {
+      "file": "src\\components\\client\\store\\CouponsPage.tsx",
+      "line": 171,
+      "table": "cupons_loja",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'cupons_loja' }, () => {"
+    }
+  ],
+  "pagamentos": [
+    {
+      "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+      "line": 111,
+      "table": "pagamentos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'pagamentos', onChange: fetchOrdens, debounceMs: 300 },"
+    }
+  ],
+  "parceiros": [
+    {
+      "file": "src\\components\\admin\\PartnersAdminModule.tsx",
+      "line": 131,
+      "table": "parceiros",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "useRealtimeSubscription({\r\n    table: 'parceiros',\r\n    onChange: () => void load(),\r\n    debounceMs: 300,\r\n  });"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FornecedoresSection.tsx",
+      "line": 301,
+      "table": "parceiros",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'parceiros', onChange: loadPartnerData, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\public\\PartnersPage.tsx",
+      "line": 140,
+      "table": "parceiros",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "useRealtimeSubscription({\r\n    table: 'parceiros',\r\n    onChange: () => setReloadKey((k) => k + 1),\r\n    debounceMs: 300,\r\n  });"
+    },
+    {
+      "file": "src\\hooks\\useRealtime.ts",
+      "line": 243,
+      "table": "parceiros",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "*   useRealtime({ table: 'parceiros', onChange: fetchPartners })"
+    }
+  ],
+  "prestador_documentos": [
+    {
+      "file": "src\\components\\admin\\prestadores\\AdminPrestadorDocumentos.tsx",
+      "line": 76,
+      "table": "prestador_documentos",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": "{\r\n      table: 'prestador_documentos',\r\n      filter: `prestador_id=eq.${prestadorId}`,"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorDocumentos.tsx",
+      "line": 58,
+      "table": "prestador_documentos",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))"
+    },
+    {
+      "file": "src\\hooks\\useProviderNotifications.tsx",
+      "line": 224,
+      "table": "prestador_documentos",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_documentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)"
+    }
+  ],
+  "documentos_prestador": [
+    {
+      "file": "src\\components\\admin\\prestadores\\AdminPrestadorDocumentos.tsx",
+      "line": 82,
+      "table": "documentos_prestador",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n      table: 'documentos_prestador',\r\n      onChange: fetchDocumentosLocal,\r\n      debounceMs: 300,\r\n    },"
+    }
+  ],
+  "prestador_premios": [
+    {
+      "file": "src\\components\\admin\\prestadores\\AdminPrestadorPremios.tsx",
+      "line": 47,
+      "table": "prestador_premios",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_premios', filter: `prestador_id=eq.${prestadorId}` }, fetchPremiosLocal)"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorPremios.tsx",
+      "line": 49,
+      "table": "prestador_premios",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_premios', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))"
+    }
+  ],
+  "prestador_promocoes": [
+    {
+      "file": "src\\components\\admin\\prestadores\\AdminPrestadorPromocoes.tsx",
+      "line": 68,
+      "table": "prestador_promocoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, fetchPromocoesLocal)"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorPromocoes.tsx",
+      "line": 55,
+      "table": "prestador_promocoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes' }, () => void load(() => isMounted))"
+    }
+  ],
+  "prestador_vouchers": [
+    {
+      "file": "src\\components\\admin\\prestadores\\AdminPrestadorVouchers.tsx",
+      "line": 47,
+      "table": "prestador_vouchers",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers' }, fetchVouchersLocal)"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorVouchers.tsx",
+      "line": 50,
+      "table": "prestador_vouchers",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))"
+    },
+    {
+      "file": "src\\hooks\\useProviderNotifications.tsx",
+      "line": 222,
+      "table": "prestador_vouchers",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_vouchers', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)"
+    }
+  ],
+  "loja_estoque_historico": [
+    {
+      "file": "src\\components\\admin\\ProdutosModule.tsx",
+      "line": 266,
+      "table": "loja_estoque_historico",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'loja_estoque_historico', onChange: fetchProdutos, debounceMs: 300 },"
+    }
+  ],
+  "produto_variantes": [
+    {
+      "file": "src\\components\\admin\\ProdutosModule.tsx",
+      "line": 268,
+      "table": "produto_variantes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'produto_variantes', onChange: fetchProdutos, debounceMs: 300 },"
+    }
+  ],
+  "produto_variacao_grupos": [
+    {
+      "file": "src\\components\\admin\\ProdutosModule.tsx",
+      "line": 269,
+      "table": "produto_variacao_grupos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'produto_variacao_grupos', onChange: fetchProdutos, debounceMs: 300 },"
+    }
+  ],
+  "produto_variacao_opcoes": [
+    {
+      "file": "src\\components\\admin\\ProdutosModule.tsx",
+      "line": 270,
+      "table": "produto_variacao_opcoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'produto_variacao_opcoes', onChange: fetchProdutos, debounceMs: 300 },"
+    }
+  ],
+  "automacao_scraping_configs": [
+    {
+      "file": "src\\components\\admin\\ScrapingAdminModule.tsx",
+      "line": 80,
+      "table": "automacao_scraping_configs",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'automacao_scraping_configs', onChange: loadData, debounceMs: 300 },"
+    }
+  ],
+  "system_settings": [
+    {
+      "file": "src\\components\\admin\\ScrapingAdminModule.tsx",
+      "line": 81,
+      "table": "system_settings",
+      "hasFilter": true,
+      "filterVal": "'key=eq.n8n_base_url'",
+      "snippet": "{ table: 'system_settings', filter: 'key=eq.n8n_base_url', onChange: loadN8nBaseUrl, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\SiteCampaignAdminModule.tsx",
+      "line": 120,
+      "table": "system_settings",
+      "hasFilter": true,
+      "filterVal": "'key=eq.site_campaigns'",
+      "snippet": "{ table: 'system_settings', filter: 'key=eq.site_campaigns', onChange: () => void load(true), debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx",
+      "line": 93,
+      "table": "system_settings",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'system_settings', onChange: loadSnapshot }"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaAuditoriaView.tsx",
+      "line": 127,
+      "table": "system_settings",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'system_settings', onChange: () => void fetchAuditLogs() }"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaConfiguracoesView.tsx",
+      "line": 79,
+      "table": "system_settings",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'system_settings', onChange: () => void load() },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaInfraView.tsx",
+      "line": 152,
+      "table": "system_settings",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'system_settings', onChange: () => void load(true) },"
+    },
+    {
+      "file": "src\\components\\admin\\SystemMonitorModule.tsx",
+      "line": 265,
+      "table": "system_settings",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'system_settings', onChange: () => void load(true), debounceMs: 500 },"
+    },
+    {
+      "file": "src\\components\\client\\ClientFidelidade.tsx",
+      "line": 59,
+      "table": "system_settings",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'system_settings' },"
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "line": 239,
+      "table": "system_settings",
+      "hasFilter": true,
+      "filterVal": "'key=eq.valor_minimo_saque'",
+      "snippet": "{\r\n        table: 'system_settings',\r\n        filter: 'key=eq.valor_minimo_saque',\r\n        onChange: fetchMinSaque,\r\n      },"
+    },
+    {
+      "file": "src\\components\\client\\ClientGSAStore.tsx",
+      "line": 653,
+      "table": "system_settings",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, () => {"
+    },
+    {
+      "file": "src\\components\\ui\\WhatsAppButton.tsx",
+      "line": 50,
+      "table": "system_settings",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, () => {"
+    },
+    {
+      "file": "src\\hooks\\usePublicRegistrationSettings.ts",
+      "line": 65,
+      "table": "system_settings",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\n      table: 'system_settings',\n      debounceMs: 300,\n      enabled,\n      onChange: refresh,\n    },"
+    },
+    {
+      "file": "src\\pages\\ClientPortal.tsx",
+      "line": 660,
+      "table": "system_settings",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', {\n        event: '*',\n        schema: 'public',\n        table: 'system_settings',\n      }, () => {"
+    }
+  ],
+  "automacao_scraping_logs": [
+    {
+      "file": "src\\components\\admin\\ScrapingExecutionMonitorModal.tsx",
+      "line": 79,
+      "table": "automacao_scraping_logs",
+      "hasFilter": true,
+      "filterVal": "`automacao_id=eq.${automacao.id",
+      "snippet": "{\r\n          event: '*',\r\n          schema: 'public',\r\n          table: 'automacao_scraping_logs',\r\n          filter: `automacao_id=eq.${automacao.id}`,"
+    }
+  ],
+  "servicos": [
+    {
+      "file": "src\\components\\admin\\ServicePackagesModule.tsx",
+      "line": 81,
+      "table": "servicos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'servicos', onChange: load, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\ServicosModule.tsx",
+      "line": 85,
+      "table": "servicos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n      table: 'servicos',\r\n      onChange: fetchServicos,\r\n      onPayload: (payload) => {\r\n        if (payload.new && selectedServico && (payload.new as any).id === selectedServico.id) {\r\n          setSelectedServico(prev => prev ? { ...prev, ...payload.new } as Servico : null);"
+    },
+    {
+      "file": "src\\components\\client\\ClientGSAStore.tsx",
+      "line": 623,
+      "table": "servicos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'servicos' }, () => { fetchStoreData(true); fetchCart(); })"
+    }
+  ],
+  "catalog_packages": [
+    {
+      "file": "src\\components\\admin\\ServicePackagesModule.tsx",
+      "line": 82,
+      "table": "catalog_packages",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'catalog_packages', onChange: load, debounceMs: 300 },"
+    }
+  ],
+  "catalog_services": [
+    {
+      "file": "src\\components\\admin\\ServicePackagesModule.tsx",
+      "line": 83,
+      "table": "catalog_services",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'catalog_services', onChange: load, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\ServicosModule.tsx",
+      "line": 95,
+      "table": "catalog_services",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'catalog_services', onChange: fetchServicos, debounceMs: 300 },"
+    }
+  ],
+  "shopee_fulfillment_jobs": [
+    {
+      "file": "src\\components\\admin\\ShopeeOperationsModule.tsx",
+      "line": 117,
+      "table": "shopee_fulfillment_jobs",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'shopee_fulfillment_jobs', onChange: () => void load(true), debounceMs: 500 },"
+    }
+  ],
+  "shopee_automation_workers": [
+    {
+      "file": "src\\components\\admin\\ShopeeOperationsModule.tsx",
+      "line": 118,
+      "table": "shopee_automation_workers",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'shopee_automation_workers', onChange: () => void load(true), debounceMs: 500 },"
+    }
+  ],
+  "site_campaigns": [
+    {
+      "file": "src\\components\\admin\\SiteCampaignAdminModule.tsx",
+      "line": 121,
+      "table": "site_campaigns",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'site_campaigns', onChange: () => void load(true), debounceMs: 300 },"
+    }
+  ],
+  "site_campaign_events": [
+    {
+      "file": "src\\components\\admin\\SiteCampaignAdminModule.tsx",
+      "line": 122,
+      "table": "site_campaign_events",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'site_campaign_events', onChange: () => void load(true), debounceMs: 300 },"
+    }
+  ],
+  "ticket_mensagens": [
+    {
+      "file": "src\\components\\admin\\super-domains\\contratos\\AtendimentoTicketsView.tsx",
+      "line": 155,
+      "table": "ticket_mensagens",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'ticket_mensagens', onChange: fetchTickets }"
+    },
+    {
+      "file": "src\\components\\client\\ClientSuporte.tsx",
+      "line": 102,
+      "table": "ticket_mensagens",
+      "hasFilter": true,
+      "filterVal": "selectedTicket?.id ? `ticket_id=eq.${selectedTicket.id",
+      "snippet": "{\r\n        table: 'ticket_mensagens',\r\n        filter: selectedTicket?.id ? `ticket_id=eq.${selectedTicket.id}` : undefined,"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+      "line": 110,
+      "table": "ticket_mensagens",
+      "hasFilter": true,
+      "filterVal": "`ticket_id=eq.${selectedTicket.id",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_mensagens', filter: `ticket_id=eq.${selectedTicket.id}` }, () => void loadMessages(selectedTicket.id))"
+    }
+  ],
+  "contratos": [
+    {
+      "file": "src\\components\\admin\\super-domains\\contratos\\ContratosDocumentosView.tsx",
+      "line": 103,
+      "table": "contratos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "useRealtimeSubscription({ table: 'contratos', onChange: fetchContratos });"
+    }
+  ],
+  "saude_contratos": [
+    {
+      "file": "src\\components\\admin\\super-domains\\contratos\\GsaSaudeView.tsx",
+      "line": 75,
+      "table": "saude_contratos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "useRealtimeSubscription({ table: 'saude_contratos', onChange: fetchSaude });"
+    }
+  ],
+  "seguros_apolices": [
+    {
+      "file": "src\\components\\admin\\super-domains\\contratos\\GsaSegurosView.tsx",
+      "line": 73,
+      "table": "seguros_apolices",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "useRealtimeSubscription({ table: 'seguros_apolices', onChange: fetchSeguros });"
+    }
+  ],
+  "cobranca_historico": [
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx",
+      "line": 183,
+      "table": "cobranca_historico",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'cobranca_historico', onChange: fetchCobrancas },"
+    }
+  ],
+  "cobranca_acordo_parcelas": [
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx",
+      "line": 184,
+      "table": "cobranca_acordo_parcelas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'cobranca_acordo_parcelas', onChange: fetchCobrancas }"
+    }
+  ],
+  "emprestimo_parcelas": [
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx",
+      "line": 136,
+      "table": "emprestimo_parcelas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'emprestimo_parcelas', onChange: fetchEmprestimos },"
+    },
+    {
+      "file": "src\\components\\client\\ClientEmprestimos.tsx",
+      "line": 101,
+      "table": "emprestimo_parcelas",
+      "hasFilter": true,
+      "filterVal": "`cliente_id=eq.${clientId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_parcelas', filter: `cliente_id=eq.${clientId}` }, () => {"
+    }
+  ],
+  "loja_credito_solicitacoes": [
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx",
+      "line": 137,
+      "table": "loja_credito_solicitacoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'loja_credito_solicitacoes', onChange: fetchCredito }"
+    },
+    {
+      "file": "src\\components\\client\\ClientMeuCredito.tsx",
+      "line": 373,
+      "table": "loja_credito_solicitacoes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'loja_credito_solicitacoes',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    }
+  ],
+  "transferencias": [
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx",
+      "line": 119,
+      "table": "transferencias",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'transferencias', onChange: fetchTransferencias }"
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "line": 217,
+      "table": "transferencias",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'transferencias',\r\n        onChange: fetchSaldo,\r\n      },"
+    },
+    {
+      "file": "src\\components\\client\\ClientTransferencias.tsx",
+      "line": 70,
+      "table": "transferencias",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'transferencias',\r\n        onChange: () => {\r\n          fetchClienteData();\r\n          fetchTransferencias();\r\n        },"
+    }
+  ],
+  "loja_reembolsos": [
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\RentabilidadeReembolsosView.tsx",
+      "line": 68,
+      "table": "loja_reembolsos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "useRealtimeSubscription({ table: 'loja_reembolsos', onChange: fetchReembolsos });"
+    },
+    {
+      "file": "src\\components\\client\\StoreHub.tsx",
+      "line": 654,
+      "table": "loja_reembolsos",
+      "hasFilter": true,
+      "filterVal": "`cliente_id=eq.${clientId",
+      "snippet": ".on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'loja_reembolsos',\r\n        filter: `cliente_id=eq.${clientId}`"
+    }
+  ],
+  "funcoes": [
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaAcessosView.tsx",
+      "line": 120,
+      "table": "funcoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'funcoes', onChange: () => void load(true) },"
+    }
+  ],
+  "admin_sessoes": [
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaAcessosView.tsx",
+      "line": 122,
+      "table": "admin_sessoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'admin_sessoes', onChange: () => void load(true) }"
+    }
+  ],
+  "audit_trail": [
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaAuditoriaView.tsx",
+      "line": 101,
+      "table": "audit_trail",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "auditEntries.push({\n          id: 'audit-baseline',\n          created_at: new Date().toISOString(),\n          actor_name: 'Sistema GSA OS',\n          actor_type: 'system',\n          action: 'Verificação de Integridade de Governança',\n          target_table: 'audit_trail',\n          details: 'Subsistema de auditoria imutável ativo e sincronizado.',\n          severity: 'info',\n        });"
+    }
+  ],
+  "payment_methods": [
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaConfiguracoesView.tsx",
+      "line": 80,
+      "table": "payment_methods",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'payment_methods', onChange: () => void load() },"
+    }
+  ],
+  "configuracoes": [
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaConfiguracoesView.tsx",
+      "line": 81,
+      "table": "configuracoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'configuracoes', onChange: () => void load() }"
+    }
+  ],
+  "gsa_whatsapp_ramais": [
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaInfraView.tsx",
+      "line": 153,
+      "table": "gsa_whatsapp_ramais",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_whatsapp_ramais', onChange: () => void load(true) }"
+    }
+  ],
+  "cliente_premios": [
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+      "line": 175,
+      "table": "cliente_premios",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'cliente_premios', onChange: () => fetchPremios() },"
+    },
+    {
+      "file": "src\\components\\client\\ClientPremios.tsx",
+      "line": 106,
+      "table": "cliente_premios",
+      "hasFilter": true,
+      "filterVal": "`cliente_id=eq.${clientId",
+      "snippet": ".on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'cliente_premios',\r\n        filter: `cliente_id=eq.${clientId}`"
+    }
+  ],
+  "pontos_movimentacoes": [
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+      "line": 176,
+      "table": "pontos_movimentacoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'pontos_movimentacoes', onChange: () => { fetchPremios(); fetchIndicacoes(); } },"
+    },
+    {
+      "file": "src\\components\\client\\ClientAffiliatePanel.tsx",
+      "line": 151,
+      "table": "pontos_movimentacoes",
+      "hasFilter": true,
+      "filterVal": "_clientId ? `cliente_id=eq.${_clientId",
+      "snippet": "{ table: 'pontos_movimentacoes', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },"
+    },
+    {
+      "file": "src\\components\\client\\ClientFidelidade.tsx",
+      "line": 58,
+      "table": "pontos_movimentacoes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{ table: 'pontos_movimentacoes', filter: clientId ? `cliente_id=eq.${clientId}` : undefined },"
+    },
+    {
+      "file": "src\\components\\client\\ClientPontos.tsx",
+      "line": 96,
+      "table": "pontos_movimentacoes",
+      "hasFilter": true,
+      "filterVal": "clienteId ? `cliente_id=eq.${clienteId",
+      "snippet": "{\r\n        table: 'pontos_movimentacoes',\r\n        filter: clienteId ? `cliente_id=eq.${clienteId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\ClientTransferencias.tsx",
+      "line": 82,
+      "table": "pontos_movimentacoes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'pontos_movimentacoes',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    }
+  ],
+  "loja_solicitacoes": [
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+      "line": 178,
+      "table": "loja_solicitacoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'loja_solicitacoes', onChange: () => fetchTrocas() },"
+    },
+    {
+      "file": "src\\components\\client\\ClientOrcamentos.tsx",
+      "line": 228,
+      "table": "loja_solicitacoes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'loja_solicitacoes',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\StoreHub.tsx",
+      "line": 680,
+      "table": "loja_solicitacoes",
+      "hasFilter": true,
+      "filterVal": "`cliente_id=eq.${clientId",
+      "snippet": ".on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'loja_solicitacoes',\r\n        filter: `cliente_id=eq.${clientId}`"
+    }
+  ],
+  "parceiros_resgates": [
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FornecedoresSection.tsx",
+      "line": 303,
+      "table": "parceiros_resgates",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\n      table: 'parceiros_resgates',\n      onChange: () => {\n        if (selectedPartner?.id) void loadRedemptions(selectedPartner.id);\n      },"
+    },
+    {
+      "file": "src\\components\\public\\ProtocolConsultPage.tsx",
+      "line": 240,
+      "table": "parceiros_resgates",
+      "hasFilter": true,
+      "filterVal": "result?.protocolo ? `protocolo=eq.${result.protocolo",
+      "snippet": "useRealtimeSubscription({\n    table: 'parceiros_resgates',\n    filter: result?.protocolo ? `protocolo=eq.${result.protocolo}` : undefined,"
+    }
+  ],
+  "prestador_saques": [
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PayoutClearanceDrawer.tsx",
+      "line": 62,
+      "table": "prestador_saques",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'prestador_saques', enabled: isOpen },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+      "line": 123,
+      "table": "prestador_saques",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'prestador_saques', onChange: fetchDomainMetrics },"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx",
+      "line": 134,
+      "table": "prestador_saques",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'prestador_saques', onChange: fetchAllSaques },"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorFinanceiro.tsx",
+      "line": 91,
+      "table": "prestador_saques",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, () => void loadData())"
+    },
+    {
+      "file": "src\\hooks\\useProviderNotifications.tsx",
+      "line": 221,
+      "table": "prestador_saques",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)"
+    }
+  ],
+  "career_applications": [
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+      "line": 127,
+      "table": "career_applications",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'career_applications', onChange: fetchDomainMetrics }"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\TrabalheConoscoSection.tsx",
+      "line": 92,
+      "table": "career_applications",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'career_applications', onChange: () => fetchApplications(true) },"
+    }
+  ],
+  "viagens_pacotes": [
+    {
+      "file": "src\\components\\admin\\TravelAdminModule.tsx",
+      "line": 256,
+      "table": "viagens_pacotes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'viagens_pacotes', onChange: load, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\client\\marketplace\\travel\\TravelQuoteRequestPage.tsx",
+      "line": 177,
+      "table": "viagens_pacotes",
+      "hasFilter": true,
+      "filterVal": "packageId ? `id=eq.${packageId",
+      "snippet": "{\r\n        table: 'viagens_pacotes',\r\n        filter: packageId ? `id=eq.${packageId}` : undefined,"
+    }
+  ],
+  "viagens_propostas": [
+    {
+      "file": "src\\components\\admin\\TravelAdminModule.tsx",
+      "line": 257,
+      "table": "viagens_propostas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'viagens_propostas', onChange: load, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\client\\marketplace\\travel\\TravelProposalsPage.tsx",
+      "line": 44,
+      "table": "viagens_propostas",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'viagens_propostas',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    }
+  ],
+  "viagens_transacoes": [
+    {
+      "file": "src\\components\\admin\\TravelAdminModule.tsx",
+      "line": 258,
+      "table": "viagens_transacoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'viagens_transacoes', onChange: load, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\client\\marketplace\\travel\\TravelCancellationsPage.tsx",
+      "line": 112,
+      "table": "viagens_transacoes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'viagens_transacoes',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx",
+      "line": 155,
+      "table": "viagens_transacoes",
+      "hasFilter": true,
+      "filterVal": "transacaoId ? `id=eq.${transacaoId",
+      "snippet": "{\r\n        table: 'viagens_transacoes',\r\n        filter: transacaoId ? `id=eq.${transacaoId}` : undefined,"
+    }
+  ],
+  "viagens_orcamentos": [
+    {
+      "file": "src\\components\\admin\\TravelAdminModule.tsx",
+      "line": 259,
+      "table": "viagens_orcamentos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'viagens_orcamentos', onChange: load, debounceMs: 300 },"
+    }
+  ],
+  "viagens_categorias": [
+    {
+      "file": "src\\components\\admin\\TravelAdminModule.tsx",
+      "line": 260,
+      "table": "viagens_categorias",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'viagens_categorias', onChange: load, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\admin\\ViagensCategoriasModule.tsx",
+      "line": 31,
+      "table": "viagens_categorias",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "useRealtimeSubscription({\r\n    table: 'viagens_categorias',\r\n    onChange: loadData,\r\n    debounceMs: 300,\r\n  });"
+    }
+  ],
+  "viagens_passageiros": [
+    {
+      "file": "src\\components\\admin\\TravelAdminModule.tsx",
+      "line": 261,
+      "table": "viagens_passageiros",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'viagens_passageiros', onChange: load, debounceMs: 300 },"
+    },
+    {
+      "file": "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx",
+      "line": 161,
+      "table": "viagens_passageiros",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'viagens_passageiros',\r\n        debounceMs: 300,\r\n        onChange: fetchTripDetails,\r\n      },"
+    }
+  ],
+  "viagens_pacote_imagens": [
+    {
+      "file": "src\\components\\admin\\TravelAdminModule.tsx",
+      "line": 262,
+      "table": "viagens_pacote_imagens",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'viagens_pacote_imagens', onChange: load, debounceMs: 300 },"
+    }
+  ],
+  "carteira_lancamentos": [
+    {
+      "file": "src\\components\\client\\ClientAffiliatePanel.tsx",
+      "line": 148,
+      "table": "carteira_lancamentos",
+      "hasFilter": true,
+      "filterVal": "_clientId ? `cliente_id=eq.${_clientId",
+      "snippet": "{ table: 'carteira_lancamentos', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },"
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "line": 221,
+      "table": "carteira_lancamentos",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'carteira_lancamentos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    }
+  ],
+  "points_transactions": [
+    {
+      "file": "src\\components\\client\\ClientAffiliatePanel.tsx",
+      "line": 150,
+      "table": "points_transactions",
+      "hasFilter": true,
+      "filterVal": "_clientId ? `client_id=eq.${_clientId",
+      "snippet": "{ table: 'points_transactions', filter: _clientId ? `client_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },"
+    }
+  ],
+  "client_levels": [
+    {
+      "file": "src\\components\\client\\ClientAreaVIP.tsx",
+      "line": 83,
+      "table": "client_levels",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'client_levels' }, () => {"
+    },
+    {
+      "file": "src\\components\\client\\ClientAreaVIP.tsx",
+      "line": 179,
+      "table": "client_levels",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'client_levels', onChange: fetchLevels },"
+    },
+    {
+      "file": "src\\hooks\\useVipLevels.ts",
+      "line": 50,
+      "table": "client_levels",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'client_levels' }, () => {"
+    }
+  ],
+  "level_history": [
+    {
+      "file": "src\\components\\client\\ClientAreaVIP.tsx",
+      "line": 86,
+      "table": "level_history",
+      "hasFilter": true,
+      "filterVal": "`cliente_id=eq.${cliente.id",
+      "snippet": ".on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'level_history', filter: `cliente_id=eq.${cliente.id}` }, () => {"
+    },
+    {
+      "file": "src\\pages\\ClientPortal.tsx",
+      "line": 553,
+      "table": "level_history",
+      "hasFilter": true,
+      "filterVal": "`cliente_id=eq.${clientId",
+      "snippet": ".on('postgres_changes', {\n        event: 'INSERT',\n        schema: 'public',\n        table: 'level_history',\n        filter: `cliente_id=eq.${clientId}`"
+    }
+  ],
+  "emprestimo_comentarios": [
+    {
+      "file": "src\\components\\client\\ClientEmprestimos.tsx",
+      "line": 104,
+      "table": "emprestimo_comentarios",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_comentarios' }, () => {"
+    }
+  ],
+  "emprestimo_historico": [
+    {
+      "file": "src\\components\\client\\ClientEmprestimos.tsx",
+      "line": 107,
+      "table": "emprestimo_historico",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_historico' }, () => {"
+    }
+  ],
+  "emprestimo_documentos": [
+    {
+      "file": "src\\components\\client\\ClientEmprestimos.tsx",
+      "line": 110,
+      "table": "emprestimo_documentos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'emprestimo_documentos' }, () => {"
+    }
+  ],
+  "promocoes_quantidade": [
+    {
+      "file": "src\\components\\client\\ClientGSAStore.tsx",
+      "line": 638,
+      "table": "promocoes_quantidade",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'promocoes_quantidade' }, async () => {"
+    },
+    {
+      "file": "src\\components\\client\\store\\PromotionsPage.tsx",
+      "line": 207,
+      "table": "promocoes_quantidade",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'promocoes_quantidade' }, () => {"
+    }
+  ],
+  "loja_carrinhos": [
+    {
+      "file": "src\\components\\client\\ClientGSAStore.tsx",
+      "line": 648,
+      "table": "loja_carrinhos",
+      "hasFilter": true,
+      "filterVal": "`cliente_id=eq.${clientId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'loja_carrinhos', filter: `cliente_id=eq.${clientId}` }, () => {"
+    },
+    {
+      "file": "src\\components\\client\\store\\CheckoutPage.tsx",
+      "line": 456,
+      "table": "loja_carrinhos",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'loja_carrinhos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\store\\EcommerceHeader.tsx",
+      "line": 237,
+      "table": "loja_carrinhos",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'loja_carrinhos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\store\\EcommerceHome.tsx",
+      "line": 424,
+      "table": "loja_carrinhos",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'loja_carrinhos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\StoreHub.tsx",
+      "line": 154,
+      "table": "loja_carrinhos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'loja_carrinhos', onChange: () => setRtRefreshKey(k => k + 1) },"
+    }
+  ],
+  "loja_credito_movimentacoes": [
+    {
+      "file": "src\\components\\client\\ClientMeuCredito.tsx",
+      "line": 381,
+      "table": "loja_credito_movimentacoes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'loja_credito_movimentacoes',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    }
+  ],
+  "loja_credito_documentos": [
+    {
+      "file": "src\\components\\client\\ClientMeuCredito.tsx",
+      "line": 402,
+      "table": "loja_credito_documentos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'loja_credito_documentos',\r\n        onChange: loadData,\r\n      },"
+    }
+  ],
+  "loja_avaliacoes": [
+    {
+      "file": "src\\components\\client\\ClientOrcamentos.tsx",
+      "line": 223,
+      "table": "loja_avaliacoes",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'loja_avaliacoes',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    }
+  ],
+  "cliente_documentos": [
+    {
+      "file": "src\\components\\client\\ClientProfile.tsx",
+      "line": 153,
+      "table": "cliente_documentos",
+      "hasFilter": true,
+      "filterVal": "cliente?.id ? `cliente_id=eq.${cliente.id",
+      "snippet": "{\r\n        table: 'cliente_documentos',\r\n        filter: cliente?.id ? `cliente_id=eq.${cliente.id}` : undefined,"
+    }
+  ],
+  "documentos_cliente": [
+    {
+      "file": "src\\components\\client\\ClientProfile.tsx",
+      "line": 158,
+      "table": "documentos_cliente",
+      "hasFilter": true,
+      "filterVal": "cliente?.id ? `cliente_id=eq.${cliente.id",
+      "snippet": "{\r\n        table: 'documentos_cliente',\r\n        filter: cliente?.id ? `cliente_id=eq.${cliente.id}` : undefined,"
+    }
+  ],
+  "cliente_promocoes": [
+    {
+      "file": "src\\components\\client\\ClientPromocoes.tsx",
+      "line": 103,
+      "table": "cliente_promocoes",
+      "hasFilter": true,
+      "filterVal": "`cliente_id=eq.${clientId",
+      "snippet": ".on('postgres_changes', {\n        event: '*',\n        schema: 'public',\n        table: 'cliente_promocoes',\n        filter: `cliente_id=eq.${clientId}`"
+    },
+    {
+      "file": "src\\components\\client\\store\\PromotionsPage.tsx",
+      "line": 210,
+      "table": "cliente_promocoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'cliente_promocoes' }, () => {"
+    },
+    {
+      "file": "src\\components\\client\\StoreHub.tsx",
+      "line": 667,
+      "table": "cliente_promocoes",
+      "hasFilter": true,
+      "filterVal": "`cliente_id=eq.${clientId",
+      "snippet": ".on('postgres_changes', {\r\n        event: '*',\r\n        schema: 'public',\r\n        table: 'cliente_promocoes',\r\n        filter: `cliente_id=eq.${clientId}`"
+    }
+  ],
+  "cupons_ativados": [
+    {
+      "file": "src\\components\\client\\ClientVouchers.tsx",
+      "line": 67,
+      "table": "cupons_ativados",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\n        table: 'cupons_ativados',\n        onChange: fetchVouchers,\n      },"
+    },
+    {
+      "file": "src\\components\\client\\store\\CheckoutModal.tsx",
+      "line": 336,
+      "table": "cupons_ativados",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'cupons_ativados',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    },
+    {
+      "file": "src\\components\\client\\store\\CouponsPage.tsx",
+      "line": 174,
+      "table": "cupons_ativados",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'cupons_ativados' }, () => {"
+    }
+  ],
+  "extrato_financeiro": [
+    {
+      "file": "src\\components\\client\\financeiro\\ExtratoList.tsx",
+      "line": 43,
+      "table": "extrato_financeiro",
+      "hasFilter": true,
+      "filterVal": "`cliente_id=eq.${clientId",
+      "snippet": "const channel = supabase.channel('extrato-upd').on('postgres_changes', { event: '*', schema: 'public', table: 'extrato_financeiro', filter: `cliente_id=eq.${clientId}` }, () => fetchExtrato()).subscribe();"
+    }
+  ],
+  "classificados_comissoes_config": [
+    {
+      "file": "src\\components\\client\\marketplace\\classifieds\\CreateListingWizard.tsx",
+      "line": 80,
+      "table": "classificados_comissoes_config",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'classificados_comissoes_config',\r\n        debounceMs: 300,\r\n        onChange: () => { void fetchCommissions(); },"
+    }
+  ],
+  "viagens_cancelamentos": [
+    {
+      "file": "src\\components\\client\\marketplace\\travel\\TravelCancellationsPage.tsx",
+      "line": 118,
+      "table": "viagens_cancelamentos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'viagens_cancelamentos',\r\n        debounceMs: 300,\r\n        onChange: () => { void fetchTrips(); },"
+    }
+  ],
+  "viagens_passageiro_documentos": [
+    {
+      "file": "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx",
+      "line": 166,
+      "table": "viagens_passageiro_documentos",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'viagens_passageiro_documentos',\r\n        debounceMs: 300,\r\n        onChange: fetchTripDetails,\r\n      },"
+    }
+  ],
+  "viagens_vouchers": [
+    {
+      "file": "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx",
+      "line": 171,
+      "table": "viagens_vouchers",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'viagens_vouchers',\r\n        debounceMs: 300,\r\n        onChange: fetchTripDetails,\r\n      },"
+    }
+  ],
+  "promocoes_quantidade_ativadas": [
+    {
+      "file": "src\\components\\client\\store\\PromotionsPage.tsx",
+      "line": 213,
+      "table": "promocoes_quantidade_ativadas",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'promocoes_quantidade_ativadas' }, () => {"
+    }
+  ],
+  "loja_pedido_itens": [
+    {
+      "file": "src\\components\\client\\store\\PurchasesPage.tsx",
+      "line": 329,
+      "table": "loja_pedido_itens",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{\r\n        table: 'loja_pedido_itens',\r\n        debounceMs: 300,\r\n        onChange: fetchPurchases,\r\n      },"
+    }
+  ],
+  "loja_pedidos": [
+    {
+      "file": "src\\components\\client\\store\\PurchasesPage.tsx",
+      "line": 334,
+      "table": "loja_pedidos",
+      "hasFilter": true,
+      "filterVal": "clientId ? `cliente_id=eq.${clientId",
+      "snippet": "{\r\n        table: 'loja_pedidos',\r\n        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,"
+    }
+  ],
+  "loja_vaquinha_contribuicoes": [
+    {
+      "file": "src\\components\\client\\store\\VaquinhaPublicPage.tsx",
+      "line": 86,
+      "table": "loja_vaquinha_contribuicoes",
+      "hasFilter": true,
+      "filterVal": "`vaquinha_id=eq.${vaquinha.id",
+      "snippet": "{ event: '*', schema: 'public', table: 'loja_vaquinha_contribuicoes', filter: `vaquinha_id=eq.${vaquinha.id}` },"
+    }
+  ],
+  "loja_vaquinhas": [
+    {
+      "file": "src\\components\\client\\store\\VaquinhaPublicPage.tsx",
+      "line": 93,
+      "table": "loja_vaquinhas",
+      "hasFilter": true,
+      "filterVal": "`id=eq.${vaquinha.id",
+      "snippet": "{ event: '*', schema: 'public', table: 'loja_vaquinhas', filter: `id=eq.${vaquinha.id}` },"
+    }
+  ],
+  "suporte_mensagens": [
+    {
+      "file": "src\\components\\common\\SupportConversationModal.tsx",
+      "line": 54,
+      "table": "suporte_mensagens",
+      "hasFilter": true,
+      "filterVal": "currentSuporte?.id ? `suporte_id=eq.${currentSuporte.id",
+      "snippet": "{\r\n        table: 'suporte_mensagens',\r\n        event: 'INSERT',\r\n        filter: currentSuporte?.id ? `suporte_id=eq.${currentSuporte.id}` : undefined,"
+    }
+  ],
+  "prestador_suporte_demandas": [
+    {
+      "file": "src\\components\\common\\SupportConversationModal.tsx",
+      "line": 68,
+      "table": "prestador_suporte_demandas",
+      "hasFilter": true,
+      "filterVal": "currentSuporte?.id ? `id=eq.${currentSuporte.id",
+      "snippet": "{\r\n        table: 'prestador_suporte_demandas',\r\n        event: 'UPDATE',\r\n        filter: currentSuporte?.id ? `id=eq.${currentSuporte.id}` : undefined,"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorDemandas.tsx",
+      "line": 148,
+      "table": "prestador_suporte_demandas",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_suporte_demandas', filter: `prestador_id=eq.${prestadorId}` }, () => void refreshCounts())"
+    }
+  ],
+  "prestador_agendamentos": [
+    {
+      "file": "src\\components\\prestador\\PrestadorAgenda.tsx",
+      "line": 68,
+      "table": "prestador_agendamentos",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, () => void load())"
+    },
+    {
+      "file": "src\\hooks\\useProviderNotifications.tsx",
+      "line": 223,
+      "table": "prestador_agendamentos",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_agendamentos', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)"
+    }
+  ],
+  "prestador_transacoes": [
+    {
+      "file": "src\\components\\prestador\\PrestadorFinanceiro.tsx",
+      "line": 90,
+      "table": "prestador_transacoes",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void loadData())"
+    },
+    {
+      "file": "src\\hooks\\useProviderNotifications.tsx",
+      "line": 220,
+      "table": "prestador_transacoes",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_transacoes', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh)"
+    }
+  ],
+  "prestador_promocoes_ativacoes": [
+    {
+      "file": "src\\components\\prestador\\PrestadorPromocoes.tsx",
+      "line": 54,
+      "table": "prestador_promocoes_ativacoes",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_promocoes_ativacoes', filter: `prestador_id=eq.${prestadorId}` }, () => void load(() => isMounted))"
+    }
+  ],
+  "admin_notificacoes": [
+    {
+      "file": "src\\hooks\\useAdminNotifications.tsx",
+      "line": 351,
+      "table": "admin_notificacoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'admin_notificacoes' }, () => scheduleRefresh(true))"
+    }
+  ],
+  "notificacoes": [
+    {
+      "file": "src\\hooks\\useAdminNotifications.tsx",
+      "line": 352,
+      "table": "notificacoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'notificacoes' }, () => scheduleRefresh(true));"
+    },
+    {
+      "file": "src\\hooks\\useClientNotifications.tsx",
+      "line": 319,
+      "table": "notificacoes",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": ".on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes' }, (payload) => {"
+    },
+    {
+      "file": "src\\hooks\\useProviderNotifications.tsx",
+      "line": 226,
+      "table": "notificacoes",
+      "hasFilter": true,
+      "filterVal": "`prestador_id=eq.${prestadorId",
+      "snippet": ".on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `prestador_id=eq.${prestadorId}` }, (payload) => {"
+    },
+    {
+      "file": "src\\hooks\\useProviderNotifications.tsx",
+      "line": 232,
+      "table": "notificacoes",
+      "hasFilter": true,
+      "filterVal": "'destinatario_tipo=in.(broadcast_prestadores",
+      "snippet": ".on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: 'destinatario_tipo=in.(broadcast_prestadores,broadcast_todos)' }, (payload) => {"
+    }
+  ],
+  "sistema_sessoes": [
+    {
+      "file": "src\\hooks\\useAutoLogout.ts",
+      "line": 53,
+      "table": "sistema_sessoes",
+      "hasFilter": true,
+      "filterVal": "`id=eq.${sessaoId",
+      "snippet": "{\r\n            event: 'UPDATE',\r\n            schema: 'public',\r\n            table: 'sistema_sessoes',\r\n            filter: `id=eq.${sessaoId}`,"
+    }
+  ],
+  "gsa_advertisers": [
+    {
+      "file": "src\\pages\\AdvertiserPortal.tsx",
+      "line": 514,
+      "table": "gsa_advertisers",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_advertisers', onChange: () => void load(true), debounceMs: 500 },"
+    }
+  ],
+  "gsa_ad_requests": [
+    {
+      "file": "src\\pages\\AdvertiserPortal.tsx",
+      "line": 515,
+      "table": "gsa_ad_requests",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_ad_requests', onChange: () => void load(true), debounceMs: 500 },"
+    }
+  ],
+  "gsa_ad_proposals": [
+    {
+      "file": "src\\pages\\AdvertiserPortal.tsx",
+      "line": 516,
+      "table": "gsa_ad_proposals",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_ad_proposals', onChange: () => void load(true), debounceMs: 500 },"
+    }
+  ],
+  "gsa_ad_campaigns": [
+    {
+      "file": "src\\pages\\AdvertiserPortal.tsx",
+      "line": 517,
+      "table": "gsa_ad_campaigns",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_ad_campaigns', onChange: () => void load(true), debounceMs: 500 },"
+    }
+  ],
+  "gsa_ad_creatives": [
+    {
+      "file": "src\\pages\\AdvertiserPortal.tsx",
+      "line": 518,
+      "table": "gsa_ad_creatives",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_ad_creatives', onChange: () => void load(true), debounceMs: 500 },"
+    }
+  ],
+  "gsa_ad_payments": [
+    {
+      "file": "src\\pages\\AdvertiserPortal.tsx",
+      "line": 519,
+      "table": "gsa_ad_payments",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_ad_payments', onChange: () => void load(true), debounceMs: 500 },"
+    }
+  ],
+  "gsa_ad_negotiations": [
+    {
+      "file": "src\\pages\\AdvertiserPortal.tsx",
+      "line": 520,
+      "table": "gsa_ad_negotiations",
+      "hasFilter": false,
+      "filterVal": null,
+      "snippet": "{ table: 'gsa_ad_negotiations', onChange: () => void load(true), debounceMs: 500 },"
+    }
+  ],
+  "colaborador_modulos": [
+    {
+      "file": "src\\pages\\SecureAdminPanel.tsx",
+      "line": 117,
+      "table": "colaborador_modulos",
+      "hasFilter": true,
+      "filterVal": "`colaborador_id=eq.${props.colaboradorId",
+      "snippet": ".on('postgres_changes', { event: '*', schema: 'public', table: 'colaborador_modulos', filter: `colaborador_id=eq.${props.colaboradorId}` }, refresh)"
+    }
+  ]
+}

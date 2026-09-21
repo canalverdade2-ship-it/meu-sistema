@@ -1,0 +1,3 @@
+import { runSshScript } from './ssh2-run.mjs';
+const js=String.raw`const puppeteer=require('/usr/lib/node_modules/@wonderwhy-er/desktop-commander/node_modules/puppeteer');(async()=>{const b=await puppeteer.connect({browserURL:'http://127.0.0.1:9228'});for(const p of (await b.pages()).filter(x=>x.url().includes('/signin/challenge/pwd'))){console.log((await p.evaluate(()=>document.body.innerText)).replace(/\n+/g,' | ').slice(0,1000));}await b.disconnect()})()`;
+const enc=Buffer.from(js).toString('base64');const r=await runSshScript(`printf '%s' '${enc}'|base64 -d >/tmp/read-msg.js\nnode /tmp/read-msg.js\nrm -f /tmp/read-msg.js`,30000);process.stdout.write(r.stdout);

@@ -919,9 +919,10 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
                     <div className="space-y-5 animate-in slide-in-from-top-4 duration-500">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Valor Aprovado (R$)</label>
-                        <input 
+                        <input  
                           value={maskCurrency(proposta.valorAprovado)} 
-                          onChange={e => handleCurrencyInputChange(e.target.value, (val) => setProposta({ ...proposta, valorAprovado: val.toString() }))} 
+                          inputMode="decimal"
+onChange={(e) => handleCurrencyInputChange(e.target.value, (val) => setProposta({ ...proposta, valorAprovado: val.toString() }))} 
                           className="w-full bg-slate-800 border-2 border-slate-600 text-white placeholder:text-slate-400 rounded-xl px-4 py-3.5 text-sm focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-400 focus:bg-slate-800 outline-none transition-all font-black shadow-md" 
                           placeholder="0,00" 
                         />
@@ -948,9 +949,10 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-300 uppercase tracking-wider">Taxa de Serviço (R$)</label>
-                        <input 
+                        <input  
                           value={maskCurrency(proposta.taxaServico)} 
-                          onChange={e => handleCurrencyInputChange(e.target.value, (val) => setProposta({ ...proposta, taxaServico: val.toString() }))} 
+                          inputMode="decimal"
+onChange={(e) => handleCurrencyInputChange(e.target.value, (val) => setProposta({ ...proposta, taxaServico: val.toString() }))} 
                           className="w-full bg-slate-800 border-2 border-slate-600 text-white placeholder:text-slate-400 rounded-xl px-4 py-3.5 text-sm focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-400 focus:bg-slate-800 outline-none transition-all font-black shadow-md" 
                           placeholder="0,00" 
                         />
@@ -1071,9 +1073,10 @@ useEffect(() => { fetchAll(); }, [activeSubTab]);
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">Valor da Oferta de Quitação (R$)</label>
-                        <input 
+                        <input  
                           value={maskCurrency(valorQuitacao)} 
-                          onChange={e => handleCurrencyInputChange(e.target.value, (val) => setValorQuitacao(val.toString()))} 
+                          inputMode="decimal"
+onChange={(e) => handleCurrencyInputChange(e.target.value, (val) => setValorQuitacao(val.toString()))} 
                           className="w-full bg-slate-800 border-2 border-slate-600 text-white placeholder:text-slate-400 rounded-xl px-4 py-3.5 text-sm focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-400 focus:bg-slate-800 outline-none transition-all font-black shadow-md" 
                           placeholder="0,00" 
                         />

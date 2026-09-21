@@ -1,0 +1,1120 @@
+{
+  "timestamp": "2026-08-26T23:15:02.468Z",
+  "tableDiscrepancies": [
+    {
+      "table": "gsa_tv_channels",
+      "files": [
+        "src\\components\\admin\\GsaTvModule.tsx",
+        "src\\components\\admin\\GsaTvModule.tsx"
+      ]
+    },
+    {
+      "table": "gsa_tv_media_items",
+      "files": [
+        "src\\components\\admin\\GsaTvModule.tsx",
+        "src\\components\\admin\\GsaTvModule.tsx"
+      ]
+    },
+    {
+      "table": "gsa_tv_schedule_slots",
+      "files": [
+        "src\\components\\admin\\GsaTvModule.tsx",
+        "src\\components\\admin\\GsaTvModule.tsx",
+        "src\\components\\admin\\GsaTvModule.tsx"
+      ]
+    },
+    {
+      "table": "gsa_tv_playlists",
+      "files": [
+        "src\\components\\admin\\GsaTvModule.tsx"
+      ]
+    },
+    {
+      "table": "gsa_tv_incidents",
+      "files": [
+        "src\\components\\admin\\GsaTvModule.tsx"
+      ]
+    },
+    {
+      "table": "gsa_tv_audit_log",
+      "files": [
+        "src\\components\\admin\\GsaTvModule.tsx",
+        "src\\components\\admin\\GsaTvModule.tsx"
+      ]
+    },
+    {
+      "table": "gsa_tv_jobs",
+      "files": [
+        "src\\components\\admin\\GsaTvModule.tsx"
+      ]
+    }
+  ],
+  "columnDiscrepancies": [
+    {
+      "col": "prestador_demandas.codigo_os",
+      "files": [
+        "src\\components\\admin\\DemandasColaboradorModule.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "prestador_demandas.cliente_id",
+      "files": [
+        "src\\components\\admin\\DemandasColaboradorModule.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\prestador\\PrestadorDemandas.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_compra.valor",
+      "files": [
+        "src\\components\\admin\\OrdensCompraModule.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\ClientProdutos.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_compra.codigo_produto",
+      "files": [
+        "src\\components\\admin\\OrdensCompraModule.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\store\\PurchasesPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\StoreHub.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_compra.codigo_barras",
+      "files": [
+        "src\\components\\admin\\OrdensCompraModule.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\store\\PurchasesPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\StoreHub.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_compra.identificador_preferencial",
+      "files": [
+        "src\\components\\admin\\OrdensCompraModule.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\store\\PurchasesPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\StoreHub.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_compra.tipo_codigo_barras",
+      "files": [
+        "src\\components\\admin\\OrdensCompraModule.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_assinatura.valor",
+      "files": [
+        "src\\components\\admin\\OrdensCompraModule.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_assinatura.codigo_assinatura",
+      "files": [
+        "src\\components\\admin\\OrdensCompraModule.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\store\\PurchasesPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\StoreHub.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "prestador_promocoes_ativacoes.credencial_acesso",
+      "files": [
+        "src\\components\\admin\\prestadores\\AdminPrestadorPromocoes.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "prestador_promocoes_ativacoes.telefone",
+      "files": [
+        "src\\components\\admin\\prestadores\\AdminPrestadorPromocoes.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "clientes.created_at",
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioGamificacao.tsx (FILTER_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.codigo_orcamento",
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioRentabilidade.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.total",
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioRentabilidade.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.acrescimo",
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioRentabilidade.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.desconto",
+      "files": [
+        "src\\components\\admin\\relatorios\\RelatorioRentabilidade.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "tickets.created_at",
+      "files": [
+        "src\\components\\admin\\super-domains\\contratos\\AtendimentoTicketsView.tsx (ORDER_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "cobrancas.codigo_fatura",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "cobrancas.data_vencimento",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "cobrancas.nome",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "cobrancas.cpf",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "cobrancas.cnpj",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "cobrancas.telefone",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "cobrancas.email",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\CobrancaView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "emprestimos.nome",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "emprestimos.cpf",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "emprestimos.cnpj",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "emprestimos.email",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "emprestimos.telefone",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "emprestimos.saldo_carteira",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "emprestimos.numero_parcela",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "emprestimos.valor",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "emprestimos.data_vencimento",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "emprestimos.tipo",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "emprestimos.arquivo_url",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "loja_credito_solicitacoes.nome",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "loja_credito_solicitacoes.cpf",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "loja_credito_solicitacoes.cnpj",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "loja_credito_solicitacoes.email",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "loja_credito_solicitacoes.telefone",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.nome",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\utils\\referral.ts (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.cpf",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.cnpj",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.email",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.telefone",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.codigo_os",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.valor_servico",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.valor_adicional",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.descricao_adicional",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.codigo_ordem",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.quantidade",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.prazo_meses",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.metodo",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.valor",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.codigo_fiscal",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "saques.nome",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "saques.codigo_cliente",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "saques.cpf",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "saques.saldo_carteira",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "saques.telefone",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "transferencias.nome",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "transferencias.cpf",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\ClientPontos.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\ClientPontos.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\ClientTransferencias.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\ClientTransferencias.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "transferencias.data_cadastro",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\ClientPontos.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\ClientPontos.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "transferencias.saldo_carteira",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\ClientPontos.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\ClientPontos.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "transferencias.saldo_pontos",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "loja_reembolsos.nome",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\RentabilidadeReembolsosView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "loja_reembolsos.cpf",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\RentabilidadeReembolsosView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "loja_reembolsos.email",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\RentabilidadeReembolsosView.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "loja_reembolsos.created_at",
+      "files": [
+        "src\\components\\admin\\super-domains\\financeiro\\RentabilidadeReembolsosView.tsx (ORDER_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.nome",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\lib\\pixService.ts (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\lib\\pixService.ts (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\lib\\pixService.ts (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.cpf",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.cnpj",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.email",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.telefone",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.codigo_cliente",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.descricao",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\admin\\super-domains\\operacoes\\OrcamentosWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.nome",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.cpf",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.cnpj",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.telefone",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.email",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.produto_id",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.assinatura_id",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.codigo_orcamento",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.total",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.valor_servico",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.valor_adicional",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.descricao_adicional",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.acrescimo",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.desconto",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.link_entrega",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.link_resultado",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.arquivos_resultado",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.arquivos_briefing",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.nome_razao",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_servico.documento",
+      "files": [
+        "src\\components\\admin\\super-domains\\operacoes\\OrdensServicoWorkstation.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "cliente_premios.email",
+      "files": [
+        "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "cliente_premios.cpf",
+      "files": [
+        "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "vouchers.email",
+      "files": [
+        "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "indicacoes.created_at",
+      "files": [
+        "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx (ORDER_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "prestador_saques.documento",
+      "files": [
+        "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "prestador_saques.email",
+      "files": [
+        "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "saques.email",
+      "files": [
+        "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "saques.cnpj",
+      "files": [
+        "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "saques.created_at",
+      "files": [
+        "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx (ORDER_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.codigo_promocao",
+      "files": [
+        "src\\components\\client\\ClientOrcamentos.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "cliente_promocoes.total",
+      "files": [
+        "src\\components\\client\\ClientPromocoes.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "cliente_promocoes.desconto",
+      "files": [
+        "src\\components\\client\\ClientPromocoes.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.promocao_id",
+      "files": [
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.codigo_promocao",
+      "files": [
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.taxa_entrega",
+      "files": [
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.cupom_desconto_id",
+      "files": [
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.cupom_entrega_id",
+      "files": [
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "faturas.quantidade_meses",
+      "files": [
+        "src\\components\\client\\financeiro\\FaturasList.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "classificados_anuncios.tipo",
+      "files": [
+        "src\\components\\client\\marketplace\\classifieds\\ClassifiedDetailPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\marketplace\\classifieds\\EditClassifiedListingPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\marketplace\\classifieds\\GeneralClassifiedsPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\marketplace\\classifieds\\RealEstateMarketplacePage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\marketplace\\classifieds\\VehiclesMarketplacePage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "classificados_anuncios.url",
+      "files": [
+        "src\\components\\client\\marketplace\\classifieds\\EditClassifiedListingPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "classificados_anuncios.campos",
+      "files": [
+        "src\\components\\client\\marketplace\\classifieds\\EditClassifiedListingPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\marketplace\\classifieds\\MyClassifiedsPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "classificados_anuncios.observacao",
+      "files": [
+        "src\\components\\client\\marketplace\\classifieds\\EditClassifiedListingPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\marketplace\\classifieds\\MyClassifiedsPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "classificados_transacoes.categoria",
+      "files": [
+        "src\\components\\client\\marketplace\\classifieds\\MyClassifiedSalesPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "classificados_propostas.preco",
+      "files": [
+        "src\\components\\client\\marketplace\\classifieds\\MyNegotiationsPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "classificados_propostas.slug",
+      "files": [
+        "src\\components\\client\\marketplace\\classifieds\\MyNegotiationsPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.reserva_id",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\MyTripsPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.storage_path",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\MyTripsPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.file_name",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\MyTripsPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.descricao",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\MyTripsPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.motivo",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelCancellationsPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.valor_solicitado",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelCancellationsPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.valor_pago_no_pedido",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelCancellationsPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.taxas_aplicaveis",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelCancellationsPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.valor_reembolsado",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelCancellationsPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.faturas_suspensas",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelCancellationsPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.resposta_gsa",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelCancellationsPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.decidido_em",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelCancellationsPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.concluido_em",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelCancellationsPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_pacotes.is_capa",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelPackageDetailPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.snapshot_completo",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.quantidade_passageiros",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.parcelamento_permitido",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.nome_completo",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.data_nascimento",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.tipo_documento",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.numero_documento",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.tipo_passageiro",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.verificado",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "viagens_transacoes.file_type",
+      "files": [
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_compra.imagem_url",
+      "files": [
+        "src\\components\\client\\store\\PurchasesPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\StoreHub.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_assinatura.imagem_url",
+      "files": [
+        "src\\components\\client\\store\\PurchasesPage.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\StoreHub.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "ordens_compra.created_at",
+      "files": [
+        "src\\components\\client\\store\\PurchasesPage.tsx (ORDER_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\StoreHub.tsx (ORDER_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "loja_reembolsos.orcamento_id",
+      "files": [
+        "src\\components\\client\\StoreHub.tsx (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\components\\client\\StoreHub.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "loja_solicitacoes.total",
+      "files": [
+        "src\\components\\client\\StoreHub.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "prestador_agendamentos.titulo",
+      "files": [
+        "src\\components\\prestador\\PrestadorAgenda.tsx (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "prestador_promocoes.prestador_id",
+      "files": [
+        "src\\components\\prestador\\PrestadorPromocoes.tsx (FILTER_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "notificacoes.ator_tipo",
+      "files": [
+        "src\\hooks\\useProviderNotifications.tsx (FILTER_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.codigo",
+      "files": [
+        "src\\lib\\pixService.ts (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.tipo",
+      "files": [
+        "src\\lib\\pixService.ts (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.valor_unitario",
+      "files": [
+        "src\\lib\\pixService.ts (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.subtotal",
+      "files": [
+        "src\\lib\\pixService.ts (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.is_brinde",
+      "files": [
+        "src\\lib\\pixService.ts (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.imagem_url",
+      "files": [
+        "src\\lib\\pixService.ts (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\lib\\pixService.ts (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.codigo_produto",
+      "files": [
+        "src\\lib\\pixService.ts (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\lib\\pixService.ts (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.codigo_barras",
+      "files": [
+        "src\\lib\\pixService.ts (SELECT_COLUMN_NOT_IN_DB)",
+        "src\\lib\\pixService.ts (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "orcamentos.codigo_ordem",
+      "files": [
+        "src\\lib\\pixService.ts (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "clientes.data_abertura",
+      "files": [
+        "src\\pages\\Afiliado\\AfiliadoDashboard.tsx (ORDER_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "indicacoes.nome",
+      "files": [
+        "src\\utils\\referral.ts (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    },
+    {
+      "col": "solicitacoes_exclusao.count",
+      "files": [
+        "src\\validation\\step4_integrity_audit.ts (SELECT_COLUMN_NOT_IN_DB)"
+      ]
+    }
+  ],
+  "rpcDiscrepancies": [],
+  "publicRpcPermissionIssues": []
+}

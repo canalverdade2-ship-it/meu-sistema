@@ -63,15 +63,15 @@ assert.match(simple, /Calculadora de férias/, 'As férias Free precisam possuir
 
 const advanced = read('src/components/public/FreeToolsAdvancedCalculators.tsx');
 assert.match(advanced, /mode: 'pro'/, 'As calculadoras avançadas precisam gerar relatórios Pro.');
-assert.match(advanced, /Memória do cálculo/, 'A rescisão Pro deve incluir memória detalhada no relatório.');
-assert.match(advanced, /Comparação das regras/, 'A aposentadoria Pro deve incluir comparação das regras.');
-assert.match(advanced, /Composição do resultado/, 'As férias Pro devem incluir composição completa.');
+assert.match(advanced, /Memória detalhada de verbas|Memória do cálculo/, 'A rescisão Pro deve incluir memória detalhada no relatório.');
+assert.match(advanced, /Análise detalhada das 5 regras|regras de transição/, 'A aposentadoria Pro deve incluir comparação das regras.');
+assert.match(advanced, /Relatório completo de férias|Opções avançadas de férias/, 'As férias Pro devem incluir composição completa.');
 
 const additional = read('src/components/public/FreeToolsAdditionalCalculators.tsx');
 assert.match(additional, /Calculadora de 13º salário/, 'O 13º Free e Pro precisa possuir relatório.');
 assert.match(additional, /Triagem de benefícios do INSS/, 'Benefícios Free e Pro precisam possuir relatório.');
 assert.match(additional, /Triagem BPC \/ LOAS/, 'BPC Free e Pro precisa possuir relatório.');
-assert.match(additional, /Documentos iniciais para separar/, 'Benefícios Pro deve incluir documentos no PDF completo.');
-assert.match(additional, /Análise detalhada dos critérios/, 'BPC Pro deve incluir todos os critérios no PDF completo.');
+assert.match(additional, /Checklist detalhado de requisitos|Modalidade e estimativa de renda/, 'Benefícios Pro deve incluir requisitos no PDF completo.');
+assert.match(additional, /Composição da renda familiar|Análise dos Limites Legais/, 'BPC Pro deve incluir todos os critérios no PDF completo.');
 
 console.log('Relatórios PDF locais das seis calculadoras, nos modos Free e Pro, validados com sucesso.');

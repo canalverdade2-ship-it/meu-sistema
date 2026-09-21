@@ -58,7 +58,7 @@ function writeStorage(storage: Storage, key: string, value: string) {
 
 function getPersistentId(key: string, storage: Storage) {
   const existing = readStorage(storage, key);
-  if (existing) return existing;
+  if (existing && /^[a-zA-Z0-9._:-]+$/.test(existing)) return existing;
   const value = randomId();
   writeStorage(storage, key, value);
   return value;
@@ -77,7 +77,9 @@ function deviceType() {
 }
 
 function normalizePathname(pathname: string) {
-  return pathname.replace(/\/+$/, '') || '/';
+  let normalized = pathname.replace(/\/+$/, '') || '/';
+  if (!normalized.startsWith('/')) normalized = '/' + normalized;
+  return normalized;
 }
 
 export function isPlacementAllowedOnRoute(placementCode: AdvertisingPlacementCode, pathname: string) {

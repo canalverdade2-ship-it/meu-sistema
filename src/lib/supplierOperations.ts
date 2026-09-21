@@ -182,3 +182,21 @@ export async function updateAdminSupplierPayable(payableId: string, action: stri
     p_payload: payload,
   });
 }
+
+export async function reviewAdminSupplierBankChange(
+  supplierId: string,
+  approve: boolean,
+  reason?: string,
+) {
+  const result = await callAdminRpc('gsa_admin_review_supplier_bank_change', {
+    p_supplier_id: supplierId,
+    p_approve: approve,
+    p_reason: reason?.trim() || null,
+  });
+  await notifySupplierPortal(supplierId);
+  return result;
+}
+
+export async function getAdminSupplierFinancialAnomalies() {
+  return callAdminRpc<Array<Record<string, any>>>('gsa_admin_supplier_financial_anomalies');
+}

@@ -1,0 +1,553 @@
+{
+  "clientes": {
+    "definitions": [
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    codigo_cliente TEXT UNIQUE,\n    nome TEXT NOT NULL,\n    email TEXT UNIQUE,\n    cpf TEXT UNIQUE,\n    cnpj TEXT UNIQUE,\n    tipo_pessoa TEXT CHECK (tipo_pessoa IN ('pf', 'pj')) NOT NULL DEFAULT 'pf',\n    telefone TEXT,\n    data_nascimento DATE,\n    cep TEXT,\n    endereco TEXT,\n    numero TEXT,\n    bairro TEXT,\n    cidade TEXT,\n    estado TEXT,\n    observacoes TEXT,\n    status TEXT CHECK (status IN ('ativo', 'inativo', 'pendente')) DEFAULT 'ativo',\n    saldo_carteira DECIMAL(12,2) DEFAULT 0.00 NOT NULL,\n    saldo_pontos INTEGER DEFAULT 0 NOT NULL,\n    pontos_totais INTEGER DEFAULT 0 NOT NULL,\n    carteira_bloqueada BOOLEAN DEFAULT false,\n    pontos_bloqueados BOOLEAN DEFAULT false,\n    cadastro_aprovado BOOLEAN DEFAULT true,\n    bonus_boas_vindas_pendente BOOLEAN DEFAULT false,\n    saque_liberado_manual BOOLEAN DEFAULT false,\n    indicacao_origem_id UUID,\n    nivel_id UUID REFERENCES client_levels(id),\n    nivel_manual_id UUID REFERENCES client_levels(id),\n    nivel_manual_info TEXT,\n    data_cadastro TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260313000000_add_cadastro_padrao.sql",
+        "statement": "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS cadastro_aprovado BOOLEAN DEFAULT true;"
+      },
+      {
+        "file": "supabase/migrations/20260313000000_add_cadastro_padrao.sql",
+        "statement": "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS bonus_boas_vindas_pendente BOOLEAN DEFAULT false;"
+      },
+      {
+        "file": "supabase/migrations/20260313000000_add_cadastro_padrao.sql",
+        "statement": "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS carteira_bloqueada BOOLEAN DEFAULT false;"
+      },
+      {
+        "file": "supabase/migrations/20260313000000_add_cadastro_padrao.sql",
+        "statement": "ALTER TABLE clientes ADD COLUMN IF NOT EXISTS pontos_bloqueados BOOLEAN DEFAULT false;"
+      },
+      {
+        "file": "supabase/migrations/20260722233000_complete_affiliate_flow.sql",
+        "statement": "ALTER TABLE public.clientes\r\n  ADD COLUMN IF NOT EXISTS pontos numeric(14,2) NOT NULL DEFAULT 0,\r\n  ADD COLUMN IF NOT EXISTS saldo_carteira numeric(14,2) NOT NULL DEFAULT 0;"
+      }
+    ]
+  },
+  "cobrancas": {
+    "definitions": [],
+    "alters": []
+  },
+  "cobranca_historico": {
+    "definitions": [],
+    "alters": []
+  },
+  "cobranca_acordo_parcelas": {
+    "definitions": [],
+    "alters": []
+  },
+  "carteira_lancamentos": {
+    "definitions": [
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    cliente_id UUID REFERENCES clientes(id) NOT NULL,\n    valor DECIMAL(12,2) NOT NULL,\n    tipo TEXT CHECK (tipo IN ('credito', 'debito')) NOT NULL,\n    descricao TEXT,\n    data_lancamento TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": []
+  },
+  "cliente_premios": {
+    "definitions": [
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    cliente_id UUID REFERENCES clientes(id) ON DELETE CASCADE NOT NULL,\n    titulo TEXT NOT NULL,\n    descricao TEXT,\n    pontos_custo INTEGER NOT NULL,\n    status TEXT CHECK (status IN ('disponivel', 'resgatado', 'cancelado')) DEFAULT 'disponivel',\n    data_resgate TIMESTAMP WITH TIME ZONE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260714011000_complete_cliente_premios_columns.sql",
+        "statement": "ALTER TABLE public.cliente_premios\n  ADD COLUMN IF NOT EXISTS nome text,\n  ADD COLUMN IF NOT EXISTS tipo text,\n  ADD COLUMN IF NOT EXISTS data_cadastro timestamptz,\n  ADD COLUMN IF NOT EXISTS data_validade timestamptz,\n  ADD COLUMN IF NOT EXISTS data_cancelamento timestamptz,\n  ADD COLUMN IF NOT EXISTS motivo_cancelamento text,\n  ADD COLUMN IF NOT EXISTS forma_resgate text;"
+      }
+    ]
+  },
+  "prestador_premios": {
+    "definitions": [],
+    "alters": []
+  },
+  "gsa_afiliados": {
+    "definitions": [
+      {
+        "file": "supabase/migrations/20260722040000_affiliate_program.sql",
+        "body": "\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  cliente_id uuid NOT NULL UNIQUE REFERENCES public.clientes(id) ON DELETE RESTRICT,\n  codigo_publico text NOT NULL UNIQUE,\n  nome_divulgacao text NOT NULL,\n  status text NOT NULL DEFAULT 'ativo',\n  status_motivo text,\n  pix_tipo text,\n  pix_chave text,\n  termos_versao text NOT NULL,\n  termos_aceitos_em timestamptz NOT NULL DEFAULT now(),\n  created_at timestamptz NOT NULL DEFAULT now(),\n  updated_at timestamptz NOT NULL DEFAULT now(),\n  CONSTRAINT gsa_afiliados_codigo_check CHECK (codigo_publico ~ '^A[0-9A-F]{20,32}$'),\n  CONSTRAINT gsa_afiliados_status_check CHECK (status IN ('ativo','suspenso','encerrado')),\n  CONSTRAINT gsa_afiliados_pix_tipo_check CHECK (\n    pix_tipo IS NULL OR pix_tipo IN ('cpf','cnpj','email','telefone','aleatoria')\n  )\n"
+      }
+    ],
+    "alters": []
+  },
+  "sistema_logs": {
+    "definitions": [],
+    "alters": []
+  },
+  "system_settings": {
+    "definitions": [
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    key TEXT UNIQUE NOT NULL,\n    value TEXT NOT NULL,\n    must_change_code BOOLEAN DEFAULT false,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260714051000_secure_atomic_login_sessions.sql",
+        "statement": "ALTER TABLE public.system_settings\n  ADD COLUMN IF NOT EXISTS value_hash text;"
+      }
+    ]
+  },
+  "faturas": {
+    "definitions": [
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    codigo_fatura TEXT UNIQUE,\n    os_id UUID REFERENCES ordens_servico(id),\n    ordem_compra_id UUID REFERENCES ordens_compra(id),\n    ordem_assinatura_id UUID REFERENCES ordens_assinatura(id),\n    cliente_id UUID REFERENCES clientes(id) NOT NULL,\n    valor_total DECIMAL(12,2) NOT NULL,\n    valor_pago DECIMAL(12,2) DEFAULT 0.00,\n    valor_final_pendente DECIMAL(12,2) NOT NULL,\n    status TEXT CHECK (status IN ('pendente', 'pago', 'cancelado', 'revisada', 'vencida', 'aguardando_link', 'pendente_pagamento')) DEFAULT 'pendente',\n    tipo TEXT CHECK (tipo IN ('servico', 'produto', 'assinatura', 'pacote_nivel')),\n    data_vencimento DATE NOT NULL,\n    data_pagamento TIMESTAMP WITH TIME ZONE,\n    forma_pagamento_escolhida TEXT,\n    mes_referencia TEXT,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260312000000_add_renovacao_fields.sql",
+        "statement": "ALTER TABLE faturas ADD COLUMN IF NOT EXISTS gerada_automaticamente BOOLEAN DEFAULT false;"
+      },
+      {
+        "file": "supabase/migrations/20260312000000_add_renovacao_fields.sql",
+        "statement": "ALTER TABLE faturas ADD COLUMN IF NOT EXISTS mes_referencia VARCHAR(7);"
+      },
+      {
+        "file": "supabase/migrations/20260317000000_add_pacote_nivel_to_faturas.sql",
+        "statement": "ALTER TABLE faturas ADD COLUMN IF NOT EXISTS pacote_nivel_id TEXT;"
+      },
+      {
+        "file": "supabase/migrations/20260317000000_add_pacote_nivel_to_faturas.sql",
+        "statement": "ALTER TABLE faturas ADD COLUMN IF NOT EXISTS itens_faturados JSONB;"
+      },
+      {
+        "file": "supabase/migrations/20260317000000_add_pacote_nivel_to_faturas.sql",
+        "statement": "ALTER TABLE faturas ADD COLUMN IF NOT EXISTS historico_pagamentos JSONB;"
+      },
+      {
+        "file": "supabase/migrations/20260527000001_auto_revert_quitacao.sql",
+        "statement": "ALTER TABLE faturas ADD COLUMN IF NOT EXISTS quitacao_fatura_id UUID REFERENCES faturas(id) ON DELETE SET NULL;"
+      },
+      {
+        "file": "supabase/migrations/20260714056000_atomic_session_store_checkout.sql",
+        "statement": "ALTER TABLE public.faturas\n  ADD COLUMN IF NOT EXISTS orcamento_id uuid REFERENCES public.orcamentos(id) ON DELETE SET NULL,\n  ADD COLUMN IF NOT EXISTS desconto_promocional_aplicado numeric NOT NULL DEFAULT 0;"
+      },
+      {
+        "file": "supabase/migrations/20260720230000_gsa_viagens_parcelamento_checkout.sql",
+        "statement": "ALTER TABLE public.faturas\r\n  ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'::JSONB;"
+      },
+      {
+        "file": "supabase/migrations/20260721150000_gsa_viagens_financial_integrity.sql",
+        "statement": "ALTER TABLE public.faturas\r\n  ADD COLUMN IF NOT EXISTS cobranca_suspensa boolean NOT NULL DEFAULT false,\r\n  ADD COLUMN IF NOT EXISTS suspensa_em timestamptz,\r\n  ADD COLUMN IF NOT EXISTS motivo_suspensao text;"
+      },
+      {
+        "file": "supabase/migrations/20260722040000_affiliate_program.sql",
+        "statement": "ALTER TABLE public.faturas ADD COLUMN IF NOT EXISTS affiliate_attribution_id uuid REFERENCES public.gsa_afiliado_atribuicoes(id) ON DELETE RESTRICT;"
+      }
+    ]
+  },
+  "ordens_servico": {
+    "definitions": [
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    codigo_os TEXT UNIQUE,\n    orcamento_id UUID REFERENCES orcamentos(id),\n    cliente_id UUID REFERENCES clientes(id) NOT NULL,\n    status TEXT CHECK (status IN ('andamento', 'concluido', 'cancelado')) DEFAULT 'andamento',\n    data_inicio TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    data_fim TIMESTAMP WITH TIME ZONE,\n    tipo_entrega TEXT CHECK (tipo_entrega IN ('whatsapp', 'online')),\n    link_documento TEXT,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260714056000_atomic_session_store_checkout.sql",
+        "statement": "ALTER TABLE public.ordens_servico\n  ADD COLUMN IF NOT EXISTS servico_id uuid REFERENCES public.servicos(id) ON DELETE SET NULL;"
+      },
+      {
+        "file": "supabase/migrations/20260723120000_system_db_alignment.sql",
+        "statement": "ALTER TABLE public.ordens_servico ADD COLUMN IF NOT EXISTS anexos_os JSONB DEFAULT '[]'::jsonb;"
+      }
+    ]
+  },
+  "ordens_compra": {
+    "definitions": [
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    codigo_ordem TEXT UNIQUE,\n    produto_id UUID REFERENCES produtos(id),\n    cliente_id UUID REFERENCES clientes(id) NOT NULL,\n    status TEXT CHECK (status IN ('em_analise', 'aprovado', 'concluido', 'cancelado')) DEFAULT 'em_analise',\n    quantidade INTEGER DEFAULT 1,\n    data_criacao TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260721010000_harden_products_and_subscriptions.sql",
+        "statement": "ALTER TABLE public.ordens_compra\r\n  ADD COLUMN IF NOT EXISTS nome_produto_contratado TEXT,\r\n  ADD COLUMN IF NOT EXISTS valor_unitario_contratado NUMERIC,\r\n  ADD COLUMN IF NOT EXISTS estoque_estornado_em TIMESTAMPTZ;"
+      },
+      {
+        "file": "supabase/migrations/20260817120000_product_variations_marketplace.sql",
+        "statement": "ALTER TABLE public.ordens_compra\n  ADD COLUMN IF NOT EXISTS produto_variante_id uuid\n    REFERENCES public.produto_variantes(id) ON DELETE SET NULL,\n  ADD COLUMN IF NOT EXISTS variacao_selecionada jsonb;"
+      }
+    ]
+  },
+  "ordens_assinatura": {
+    "definitions": [
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    codigo_ordem TEXT UNIQUE,\n    assinatura_id UUID REFERENCES assinaturas(id),\n    cliente_id UUID REFERENCES clientes(id) NOT NULL,\n    status TEXT CHECK (status IN ('em_analise', 'aprovado', 'concluido', 'cancelado', 'em_cancelamento')) DEFAULT 'em_analise',\n    quantidade INTEGER DEFAULT 1,\n    prazo_meses INTEGER,\n    renovacao_automatica BOOLEAN DEFAULT true,\n    data_vencimento TIMESTAMP WITH TIME ZONE,\n    data_criacao TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260312000000_add_renovacao_fields.sql",
+        "statement": "ALTER TABLE ordens_assinatura ADD COLUMN IF NOT EXISTS prazo_meses INTEGER;"
+      },
+      {
+        "file": "supabase/migrations/20260312000000_add_renovacao_fields.sql",
+        "statement": "ALTER TABLE ordens_assinatura ADD COLUMN IF NOT EXISTS renovacao_automatica BOOLEAN DEFAULT false;"
+      },
+      {
+        "file": "supabase/migrations/20260312000000_add_renovacao_fields.sql",
+        "statement": "ALTER TABLE ordens_assinatura ADD COLUMN IF NOT EXISTS data_vencimento TIMESTAMP WITH TIME ZONE;"
+      },
+      {
+        "file": "supabase/migrations/20260312000000_add_renovacao_fields.sql",
+        "statement": "ALTER TABLE ordens_assinatura ADD COLUMN IF NOT EXISTS data_cancelamento TIMESTAMP WITH TIME ZONE;"
+      },
+      {
+        "file": "supabase/migrations/20260312000000_add_renovacao_fields.sql",
+        "statement": "ALTER TABLE ordens_assinatura ADD COLUMN IF NOT EXISTS valor_proporcional_cancelamento DECIMAL(10,2);"
+      },
+      {
+        "file": "supabase/migrations/20260525000000_add_prazo_meses.sql",
+        "statement": "ALTER TABLE ordens_assinatura ADD COLUMN IF NOT EXISTS prazo_meses integer;"
+      },
+      {
+        "file": "supabase/migrations/20260721010000_harden_products_and_subscriptions.sql",
+        "statement": "ALTER TABLE public.ordens_assinatura\r\n  ADD COLUMN IF NOT EXISTS nome_assinatura_contratada TEXT,\r\n  ADD COLUMN IF NOT EXISTS valor_mensal_contratado NUMERIC;"
+      }
+    ]
+  },
+  "orcamentos": {
+    "definitions": [
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    codigo_orcamento TEXT UNIQUE,\n    cliente_id UUID REFERENCES clientes(id) NOT NULL,\n    servico_id UUID REFERENCES servicos(id),\n    produto_id UUID REFERENCES produtos(id),\n    assinatura_id UUID REFERENCES assinaturas(id),\n    promocao_id UUID REFERENCES promocoes(id),\n    categoria TEXT CHECK (categoria IN ('servico', 'produto', 'assinatura')),\n    valor_servico DECIMAL(12,2) DEFAULT 0.00,\n    valor_produto DECIMAL(12,2) DEFAULT 0.00,\n    valor_assinatura DECIMAL(12,2) DEFAULT 0.00,\n    valor_adicional DECIMAL(12,2) DEFAULT 0.00,\n    descricao_adicional TEXT,\n    acrescimo DECIMAL(12,2) DEFAULT 0.00,\n    desconto DECIMAL(12,2) DEFAULT 0.00,\n    promocao_desconto_manual DECIMAL(12,2) DEFAULT 0.00,\n    total DECIMAL(12,2) NOT NULL,\n    status TEXT CHECK (status IN ('aberto', 'aprovado', 'cancelado', 'em revisão', 'negociação')) DEFAULT 'aberto',\n    fase_negociacao TEXT CHECK (fase_negociacao IN ('cliente', 'admin')),\n    quantidade INTEGER DEFAULT 1,\n    data_criacao TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260312000000_add_renovacao_fields.sql",
+        "statement": "ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS origem_renovacao_id UUID;"
+      },
+      {
+        "file": "supabase/migrations/20260312000000_add_renovacao_fields.sql",
+        "statement": "ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS tipo_renovacao TEXT CHECK (tipo_renovacao IN ('comprar_novamente', 'assinar_novamente', 'renovar_assinatura'));"
+      },
+      {
+        "file": "supabase/migrations/20260315000000_add_promocao_desconto_manual.sql",
+        "statement": "ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS promocao_desconto_manual numeric DEFAULT 0;"
+      },
+      {
+        "file": "supabase/migrations/20260315000001_add_promocao_fk.sql",
+        "statement": "ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS promocao_id uuid;"
+      },
+      {
+        "file": "supabase/migrations/20260423150500_add_comprovante_concorrente.sql",
+        "statement": "ALTER TABLE public.orcamentos \nADD COLUMN IF NOT EXISTS comprovante_concorrente text;"
+      },
+      {
+        "file": "supabase/migrations/20260527142323_add_quitacao_orcamentos.sql",
+        "statement": "ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS status_quitacao_credito text;"
+      },
+      {
+        "file": "supabase/migrations/20260527142323_add_quitacao_orcamentos.sql",
+        "statement": "ALTER TABLE orcamentos ADD COLUMN IF NOT EXISTS valor_quitacao_acordo numeric;"
+      },
+      {
+        "file": "supabase/migrations/20260714055000_secure_public_onboarding_flows.sql",
+        "statement": "ALTER TABLE public.orcamentos ADD COLUMN IF NOT EXISTS contato_publico jsonb;"
+      },
+      {
+        "file": "supabase/migrations/20260714055000_secure_public_onboarding_flows.sql",
+        "statement": "ALTER TABLE public.orcamentos ADD COLUMN IF NOT EXISTS public_request_hash text;"
+      },
+      {
+        "file": "supabase/migrations/20260714056000_atomic_session_store_checkout.sql",
+        "statement": "ALTER TABLE public.orcamentos\n  ADD COLUMN IF NOT EXISTS checkout_request_id uuid,\n  ADD COLUMN IF NOT EXISTS subtotal_itens numeric NOT NULL DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS desconto_promocional numeric NOT NULL DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS desconto_cupom numeric NOT NULL DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS desconto_pontos numeric NOT NULL DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS abatimento_carteira numeric NOT NULL DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS forma_pagamento_loja text,\n  ADD COLUMN IF NOT EXISTS parcelas_credito integer,\n  ADD COLUMN IF NOT EXISTS total_contrato numeric NOT NULL DEFAULT 0;"
+      },
+      {
+        "file": "supabase/migrations/20260716183000_individual_product_discounts.sql",
+        "statement": "ALTER TABLE public.orcamentos\n    ADD COLUMN subtotal_preco_tabela numeric NULL,\n    ADD COLUMN desconto_produtos numeric NULL;"
+      },
+      {
+        "file": "supabase/migrations/20260722030000_service_catalog_packages.sql",
+        "statement": "ALTER TABLE public.orcamentos\n  ADD COLUMN IF NOT EXISTS pacote_servico_id uuid REFERENCES public.servicos_pacotes(id) ON DELETE SET NULL;"
+      },
+      {
+        "file": "supabase/migrations/20260722040000_affiliate_program.sql",
+        "statement": "ALTER TABLE public.orcamentos ADD COLUMN IF NOT EXISTS affiliate_attribution_id uuid REFERENCES public.gsa_afiliado_atribuicoes(id) ON DELETE RESTRICT;"
+      },
+      {
+        "file": "supabase/migrations/20260723120000_system_db_alignment.sql",
+        "statement": "ALTER TABLE public.orcamentos ADD COLUMN IF NOT EXISTS anexos JSONB DEFAULT '[]'::jsonb;"
+      },
+      {
+        "file": "supabase/migrations/20260723120000_system_db_alignment.sql",
+        "statement": "ALTER TABLE public.orcamentos ADD COLUMN IF NOT EXISTS comprovante_concorrente_urls JSONB DEFAULT '[]'::jsonb;"
+      }
+    ]
+  },
+  "prestadores": {
+    "definitions": [
+      {
+        "file": "supabase/migrations/20260317000002_create_prestadores_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    tipo_cadastro TEXT CHECK (tipo_cadastro IN ('cpf', 'cnpj')) NOT NULL,\n    nome_razao TEXT NOT NULL,\n    nome_responsavel TEXT,\n    documento TEXT UNIQUE NOT NULL, -- CPF or CNPJ\n    email TEXT NOT NULL,\n    telefone TEXT NOT NULL,\n    cep TEXT,\n    area_servico TEXT,\n    observacoes TEXT,\n    status TEXT CHECK (status IN ('pendente', 'em_analise', 'ativo', 'suspenso', 'desligado', 'reprovado')) DEFAULT 'pendente',\n    credencial_acesso TEXT UNIQUE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      },
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    usuario_id UUID,\n    tipo_cadastro TEXT CHECK (tipo_cadastro IN ('cpf', 'cnpj')) NOT NULL,\n    nome_razao TEXT NOT NULL,\n    documento TEXT UNIQUE NOT NULL,\n    email TEXT NOT NULL,\n    telefone TEXT NOT NULL,\n    cep TEXT,\n    area_servico TEXT,\n    credencial_acesso TEXT UNIQUE,\n    status TEXT CHECK (status IN ('pendente', 'em_analise', 'ativo', 'suspenso', 'desligado', 'reprovado')) DEFAULT 'pendente',\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260519000000_add_numero_to_prestadores.sql",
+        "statement": "ALTER TABLE prestadores ADD COLUMN IF NOT EXISTS numero TEXT;"
+      }
+    ]
+  },
+  "prestador_demandas": {
+    "definitions": [
+      {
+        "file": "supabase/migrations/20260317000002_create_prestadores_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    prestador_id UUID REFERENCES prestadores(id) ON DELETE CASCADE NOT NULL,\n    os_id UUID REFERENCES ordens_servico(id) ON DELETE SET NULL,\n    titulo TEXT NOT NULL,\n    descricao TEXT,\n    valor_proposto_admin DECIMAL(12,2),\n    valor_proposto_prestador DECIMAL(12,2),\n    valor_final DECIMAL(12,2),\n    status TEXT CHECK (status IN ('aberta', 'em_negociacao', 'ativa', 'concluida', 'recusada', 'cancelada')) DEFAULT 'aberta',\n    data_inicio TIMESTAMP WITH TIME ZONE,\n    data_conclusao TIMESTAMP WITH TIME ZONE,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      },
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    prestador_id UUID REFERENCES prestadores(id) ON DELETE CASCADE,\n    os_id UUID REFERENCES ordens_servico(id),\n    titulo TEXT NOT NULL,\n    descricao TEXT,\n    detalhes TEXT,\n    valor_proposto_admin DECIMAL(12,2),\n    valor_proposto_prestador DECIMAL(12,2),\n    valor_final DECIMAL(12,2),\n    status TEXT CHECK (status IN ('aberta', 'em_negociacao', 'contraproposta_prestador', 'contraproposta_admin_final', 'ativa', 'em_analise', 'concluida', 'recusada', 'cancelada')) DEFAULT 'aberta',\n    data_inicio TIMESTAMP WITH TIME ZONE,\n    data_conclusao TIMESTAMP WITH TIME ZONE,\n    prazo_entrega DATE,\n    link_entrega TEXT,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260318000000_update_prestador_demandas.sql",
+        "statement": "ALTER TABLE prestador_demandas ADD COLUMN IF NOT EXISTS detalhes TEXT;"
+      },
+      {
+        "file": "supabase/migrations/20260318000000_update_prestador_demandas.sql",
+        "statement": "ALTER TABLE prestador_demandas ADD COLUMN IF NOT EXISTS prazo_entrega DATE;"
+      },
+      {
+        "file": "supabase/migrations/20260318000000_update_prestador_demandas.sql",
+        "statement": "ALTER TABLE prestador_demandas ADD COLUMN IF NOT EXISTS link_entrega TEXT;"
+      },
+      {
+        "file": "supabase/migrations/20260318000000_update_prestador_demandas.sql",
+        "statement": "ALTER TABLE prestador_demandas ADD COLUMN IF NOT EXISTS data_entrega_prestador TIMESTAMP WITH TIME ZONE;"
+      },
+      {
+        "file": "supabase/migrations/20260318000000_update_prestador_demandas.sql",
+        "statement": "ALTER TABLE prestador_demandas ADD COLUMN IF NOT EXISTS observacao_entrega TEXT;"
+      },
+      {
+        "file": "supabase/migrations/20260318000000_update_prestador_demandas.sql",
+        "statement": "ALTER TABLE prestador_demandas ADD COLUMN IF NOT EXISTS motivo_negociacao TEXT;"
+      },
+      {
+        "file": "supabase/migrations/20260318000000_update_prestador_demandas.sql",
+        "statement": "ALTER TABLE prestador_demandas ADD COLUMN IF NOT EXISTS is_contraproposta_final BOOLEAN DEFAULT false;"
+      },
+      {
+        "file": "supabase/migrations/20260318000001_support_and_adjustments.sql",
+        "statement": "ALTER TABLE prestador_demandas ADD COLUMN IF NOT EXISTS ajuste_solicitado TEXT;"
+      },
+      {
+        "file": "supabase/migrations/20260318000001_support_and_adjustments.sql",
+        "statement": "ALTER TABLE prestador_demandas ADD COLUMN IF NOT EXISTS prazo_ajuste TIMESTAMP WITH TIME ZONE;"
+      },
+      {
+        "file": "supabase/migrations/20260318000001_support_and_adjustments.sql",
+        "statement": "ALTER TABLE prestador_demandas ADD COLUMN IF NOT EXISTS status_ajuste TEXT CHECK (status_ajuste IN ('nenhum', 'solicitado', 'pendente_ajuste', 'ajustado'));"
+      }
+    ]
+  },
+  "prestador_saques": {
+    "definitions": [
+      {
+        "file": "supabase/migrations/20260318000000_update_prestador_demandas.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    prestador_id UUID REFERENCES prestadores(id) ON DELETE CASCADE,\n    valor DECIMAL(12,2) NOT NULL,\n    status TEXT CHECK (status IN ('em_analise', 'aprovado', 'recusado')) DEFAULT 'em_analise',\n    dados_bancarios JSONB,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      },
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    prestador_id UUID REFERENCES prestadores(id) ON DELETE CASCADE,\n    valor DECIMAL(12,2) NOT NULL,\n    status TEXT CHECK (status IN ('em_analise', 'aprovado', 'recusado', 'pago')) DEFAULT 'em_analise',\n    dados_bancarios JSONB,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": []
+  },
+  "saques": {
+    "definitions": [
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    cliente_id UUID REFERENCES clientes(id) NOT NULL,\n    valor DECIMAL(12,2) NOT NULL,\n    taxa_aplicada DECIMAL(12,2) DEFAULT 0,\n    valor_liquido DECIMAL(12,2) DEFAULT 0,\n    tipo_chave_pix TEXT,\n    chave_pix TEXT NOT NULL,\n    status TEXT CHECK (status IN ('pendente', 'aprovado', 'recusado', 'pago', 'cancelado')) DEFAULT 'pendente',\n    data_solicitacao TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    data_vencimento TIMESTAMP WITH TIME ZONE,\n    data_pagamento TIMESTAMP WITH TIME ZONE\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260714056200_secure_client_wallet_points_transfers.sql",
+        "statement": "ALTER TABLE public.saques ADD COLUMN IF NOT EXISTS request_id uuid;"
+      }
+    ]
+  },
+  "transferencias": {
+    "definitions": [
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    cliente_origem_id UUID REFERENCES clientes(id) NOT NULL,\n    cliente_destino_id UUID REFERENCES clientes(id) NOT NULL,\n    tipo TEXT CHECK (tipo IN ('saldo', 'pontos')) NOT NULL,\n    valor DECIMAL(12,2) NOT NULL,\n    taxa_aplicada DECIMAL(12,2) DEFAULT 0,\n    valor_liquido DECIMAL(12,2) DEFAULT 0,\n    status TEXT CHECK (status IN ('em_analise', 'aprovado', 'recusado', 'reprovado', 'concluido', 'estornado', 'cancelado')) DEFAULT 'em_analise',\n    motivo TEXT,\n    data_solicitacao TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260714056200_secure_client_wallet_points_transfers.sql",
+        "statement": "ALTER TABLE public.transferencias ADD COLUMN IF NOT EXISTS request_id uuid;"
+      }
+    ]
+  },
+  "tickets": {
+    "definitions": [
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    cliente_id UUID REFERENCES clientes(id),\n    prestador_id UUID REFERENCES prestadores(id),\n    assunto TEXT NOT NULL,\n    descricao TEXT NOT NULL,\n    status TEXT CHECK (status IN ('aberto', 'em andamento', 'concluido')) DEFAULT 'aberto',\n    data_abertura TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    data_fechamento TIMESTAMP WITH TIME ZONE\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260317000002_create_prestadores_schema.sql",
+        "statement": "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS prestador_id UUID REFERENCES prestadores(id) ON DELETE CASCADE;"
+      }
+    ]
+  },
+  "ticket_mensagens": {
+    "definitions": [
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    ticket_id UUID REFERENCES tickets(id) ON DELETE CASCADE,\n    autor_id TEXT NOT NULL,\n    autor_nome TEXT NOT NULL,\n    mensagem TEXT NOT NULL,\n    tipo TEXT CHECK (tipo IN ('cliente', 'admin', 'prestador')) NOT NULL,\n    data_envio TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260720200500_ticket_attachment_names.sql",
+        "statement": "ALTER TABLE public.ticket_mensagens\r\n  ADD COLUMN IF NOT EXISTS anexo_nome text;"
+      }
+    ]
+  },
+  "empresa": {
+    "definitions": [
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    nome TEXT NOT NULL,\n    razao_social TEXT,\n    cnpj TEXT UNIQUE,\n    telefone TEXT,\n    responsavel TEXT,\n    taxa_conversao_pontos DECIMAL(10,4) DEFAULT 0.01,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": []
+  },
+  "loja_reembolsos": {
+    "definitions": [],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260609163754_fix_loja_reembolsos.sql",
+        "statement": "ALTER TABLE public.loja_reembolsos\n        ADD COLUMN ordem_assinatura_id uuid REFERENCES public.ordens_assinatura(id) ON DELETE SET NULL;"
+      }
+    ]
+  },
+  "loja_solicitacoes": {
+    "definitions": [],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260518000000_add_imagens_anexo_to_loja_solicitacoes.sql",
+        "statement": "ALTER TABLE public.loja_solicitacoes ADD COLUMN IF NOT EXISTS imagens_anexo jsonb DEFAULT '[]'::jsonb;"
+      },
+      {
+        "file": "supabase/migrations/20260519000001_add_descricao_detalhada_to_loja_solicitacoes.sql",
+        "statement": "ALTER TABLE public.loja_solicitacoes ADD COLUMN IF NOT EXISTS descricao_detalhada text;"
+      }
+    ]
+  },
+  "saude_contratos": {
+    "definitions": [
+      {
+        "file": "supabase/migrations/20260718120000_gsa_saude_complete.sql",
+        "body": "\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), proposta_id uuid REFERENCES public.saude_propostas(id), cliente_id uuid NOT NULL REFERENCES public.clientes(id) ON DELETE CASCADE,\n  parceiro_id uuid NOT NULL REFERENCES public.saude_parceiros(id), produto_id uuid REFERENCES public.saude_produtos(id),\n  numero text, titulo text, vigencia_inicio date, vigencia_fim date, mensalidade_operadora numeric(12,2),\n  status text NOT NULL DEFAULT 'em_implantacao' CHECK (status IN ('em_implantacao','ativo','suspenso','encerrado','cancelado')),\n  created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260722040000_affiliate_program.sql",
+        "statement": "ALTER TABLE public.saude_contratos ADD COLUMN IF NOT EXISTS affiliate_attribution_id uuid REFERENCES public.gsa_afiliado_atribuicoes(id) ON DELETE RESTRICT;"
+      }
+    ]
+  },
+  "seguros_apolices": {
+    "definitions": [
+      {
+        "file": "supabase/migrations/20260718121000_gsa_seguros_complete.sql",
+        "body": "\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), proposta_id uuid REFERENCES public.seguros_propostas(id), cliente_id uuid NOT NULL REFERENCES public.clientes(id) ON DELETE CASCADE,\n  parceiro_id uuid NOT NULL REFERENCES public.seguros_parceiros(id), produto_id uuid REFERENCES public.seguros_produtos(id),\n  numero text, titulo text, vigencia_inicio date, vigencia_fim date, premio_seguradora numeric(12,2), objeto_segurado text,\n  status text NOT NULL DEFAULT 'em_implantacao' CHECK(status IN ('em_implantacao','ativo','suspenso','encerrado','cancelado')),\n  created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260722040000_affiliate_program.sql",
+        "statement": "ALTER TABLE public.seguros_apolices ADD COLUMN IF NOT EXISTS affiliate_attribution_id uuid REFERENCES public.gsa_afiliado_atribuicoes(id) ON DELETE RESTRICT;"
+      }
+    ]
+  },
+  "fornecedores": {
+    "definitions": [
+      {
+        "file": "supabase/migrations/20260722020000_supplier_procurement_foundation.sql",
+        "body": "\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  codigo text NOT NULL UNIQUE DEFAULT ('FOR-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 10))),\n  tipo_pessoa text NOT NULL CHECK (tipo_pessoa IN ('pf', 'pj')),\n  documento text NOT NULL,\n  razao_social text NOT NULL,\n  nome_fantasia text,\n  inscricao_estadual text,\n  responsavel_nome text NOT NULL,\n  email text NOT NULL,\n  telefone text NOT NULL,\n  cep text,\n  endereco text,\n  numero text,\n  complemento text,\n  bairro text,\n  cidade text,\n  estado text,\n  dados_bancarios jsonb NOT NULL DEFAULT '{}'::jsonb,\n  observacoes text,\n  status text NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'em_analise', 'ajuste_solicitado', 'ativo', 'suspenso', 'reprovado')),\n  pin_hash text,\n  pin_tentativas integer NOT NULL DEFAULT 0 CHECK (pin_tentativas >= 0),\n  pin_bloqueado boolean NOT NULL DEFAULT false,\n  aprovado_em timestamptz,\n  aprovado_por uuid,\n  motivo_status text,\n  created_at timestamptz NOT NULL DEFAULT now(),\n  updated_at timestamptz NOT NULL DEFAULT now(),\n  CONSTRAINT fornecedores_documento_formato CHECK (documento ~ '^\\d{11}$' OR documento ~ '^\\d{14}$'),\n  CONSTRAINT fornecedores_email_formato CHECK (position('@' in email) > 1),\n  CONSTRAINT fornecedores_documento_unique UNIQUE (documento)\n"
+      }
+    ],
+    "alters": []
+  },
+  "cupons_loja": {
+    "definitions": [],
+    "alters": []
+  },
+  "indicacoes": {
+    "definitions": [
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    codigo_indicacao TEXT UNIQUE,\n    indicador_id UUID REFERENCES clientes(id) NOT NULL,\n    indicado_nome TEXT NOT NULL,\n    whatsapp_indicado TEXT NOT NULL,\n    data_indicacao DATE DEFAULT CURRENT_DATE,\n    voucher_id UUID REFERENCES vouchers(id),\n    status TEXT CHECK (status IN ('aberta', 'concluída', 'cancelada')) DEFAULT 'aberta',\n    data_cadastro_indicado TIMESTAMP WITH TIME ZONE,\n    data_conclusao TIMESTAMP WITH TIME ZONE,\n    bonus_indicador DECIMAL(12,2) DEFAULT 20.00,\n    bonus_indicado DECIMAL(12,2) DEFAULT 10.00,\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": []
+  },
+  "ordens_fiscais": {
+    "definitions": [],
+    "alters": []
+  },
+  "emprestimos": {
+    "definitions": [],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260429000001_add_quitacao_acordo.sql",
+        "statement": "ALTER TABLE emprestimos ADD COLUMN IF NOT EXISTS valor_quitacao_acordo numeric;"
+      }
+    ]
+  },
+  "loja_credito_solicitacoes": {
+    "definitions": [],
+    "alters": []
+  },
+  "colaboradores": {
+    "definitions": [
+      {
+        "file": "master_supabase_schema.sql",
+        "body": "\n    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n    nome TEXT NOT NULL,\n    email TEXT UNIQUE,\n    telefone TEXT,\n    credencial_acesso TEXT UNIQUE NOT NULL,\n    funcao_id UUID REFERENCES funcoes(id),\n    status TEXT CHECK (status IN ('ativo', 'inativo')) DEFAULT 'ativo',\n    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
+      }
+    ],
+    "alters": [
+      {
+        "file": "supabase/migrations/20260714051000_secure_atomic_login_sessions.sql",
+        "statement": "ALTER TABLE public.colaboradores\n  ADD COLUMN IF NOT EXISTS credencial_hash text;"
+      },
+      {
+        "file": "supabase/migrations/20260720213000_secure_collaborator_panel.sql",
+        "statement": "ALTER TABLE public.colaboradores ADD COLUMN IF NOT EXISTS credencial_hash text;"
+      },
+      {
+        "file": "supabase/migrations/20260720235500_admin_secure_operations.sql",
+        "statement": "ALTER TABLE public.colaboradores\r\n  ADD COLUMN IF NOT EXISTS credencial_hash text;"
+      }
+    ]
+  }
+}

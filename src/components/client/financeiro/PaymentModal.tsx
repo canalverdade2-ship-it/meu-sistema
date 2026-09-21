@@ -12,11 +12,12 @@ import {
   Clock
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
+import { useRealtimeSubscription } from '../../../hooks/useRealtime';
 import { toast } from 'react-hot-toast';
 import { formatCurrency } from '../../../lib/utils';
 import { Modal } from '../../ui/Modal';
 import { logService } from '../../../lib/logService';
-import { callClientRpc } from '../../../lib/clientRpc';
+import { callClientRpc, requireClientSession } from '../../../lib/clientRpc';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -68,10 +69,15 @@ export function PaymentModal({ isOpen, onClose, fatura, onSuccess, clientName }:
   const negativeBalanceCharge = saldoCarteira < 0 ? Math.abs(saldoCarteira) : 0;
   const netTotal = Number((Math.max(0, subtotal - voucherDiscount - walletDeduction - pontosDeduction) + negativeBalanceCharge).toFixed(2));
 
+  const isStoreInvoice = fatura?.orcamentos?.categoria === 'loja' 
+    || fatura?.orcamentos?.origem_gsa_store 
+    || fatura?.ordens_compra != null 
+    || fatura?.itens_faturados?.some((i: any) => i.tipo === 'produto');
+
   useEffect(() => {
     if (isOpen) {
       fetchClientData();
-      setStep(1);
+      setStep(isStoreInvoice ? 3 : 1);
       setPaymentConfirmed(false);
       setPaymentLink(null);
       notifyWhatsAppModal(true);
@@ -81,7 +87,28 @@ export function PaymentModal({ isOpen, onClose, fatura, onSuccess, clientName }:
     return () => { notifyWhatsAppModal(false); };
   }, [isOpen]);
 
-  const fetchClientData = async () => {
+  useRealtimeSubscription(
+    [
+      {
+        table: 'clientes',
+        filter: fatura?.cliente_id ? `id=eq.${fatura.cliente_id}` : undefined,
+        enabled: isOpen && Boolean(fatura?.cliente_id),
+        onChange: fetchClientData,
+      },
+      {
+        table: 'vouchers',
+        enabled: isOpen && Boolean(fatura?.cliente_id),
+        onChange: () => {
+          if (showVouchersList) {
+            fetchAvailableVouchers();
+          }
+        },
+      },
+    ],
+    [isOpen, fatura?.cliente_id, showVouchersList]
+  );
+
+  async function fetchClientData() {
     const { data } = await supabase.from('clientes').select('saldo_carteira, saldo_pontos, carteira_bloqueada, pontos_bloqueados').eq('id', fatura.cliente_id).single();
     if (data) {
       setSaldoCarteira(data.saldo_carteira || 0);
@@ -204,17 +231,37 @@ export function PaymentModal({ isOpen, onClose, fatura, onSuccess, clientName }:
 
     setGeneratingLink(true);
     try {
+      const prepared = await callClientRpc<any>('gsa_client_pagar_fatura', {
+        p_payload: {
+          fatura_id: fatura.id,
+          voucher_id: appliedVoucher?.id || null,
+          metodo: selectedMethod || 'pix_infinitepay',
+          use_wallet: useWallet,
+          use_pontos: usePontos,
+          taxa_conversao: taxaConversao,
+        },
+      });
+      if (prepared?.status === 'pago') {
+        toast.success('Pagamento realizado com sucesso!');
+        setPaymentConfirmed(true);
+        setStep(4);
+        onSuccess();
+        return;
+      }
+      const clientSession = requireClientSession();
       const { data: result, error } = await supabase.functions.invoke('gsa-payments', {
         body: {
+          action: 'create_link',
           fatura_id: fatura.id,
-          cliente_id: fatura.cliente_id,
-          valor_liquido: netTotal,
+          sessao_id: clientSession.sessaoId,
+          session_token: clientSession.sessionToken,
         },
       });
 
       if (error || !result?.link) throw new Error(result?.error || 'Erro ao gerar link de pagamento.');
-      setPaymentLink(result.link);
-      setStep(4);
+      
+      // Redireciona diretamente para o link de pagamento
+      window.location.href = result.link;
     } catch (err: any) {
       toast.error(err.message || 'Não foi possível gerar o link.');
     } finally {
@@ -223,24 +270,26 @@ export function PaymentModal({ isOpen, onClose, fatura, onSuccess, clientName }:
   };
 
   const paymentMethods = [
-    { id: 1, nome: 'Pix (Automático)', slug: 'pix_infinitepay', tipo: 'automatico' },
-    { id: 2, nome: 'Pix (Manual)', slug: 'pix_manual', tipo: 'manual', instrucoes: 'Chave PIX: financeiro@gsa.com\nApós o pagamento, anexe o comprovante no suporte.' },
-    { id: 3, nome: 'Transferência', slug: 'transferencia', tipo: 'manual', instrucoes: 'Banco Inter (077)\nAg: 0001\nCC: 123456-7\nGSA SERVICOS' },
+    { id: 1, nome: 'PIX', slug: 'pix_infinitepay', tipo: 'automatico' },
+    { id: 2, nome: 'CARTÃO DE CRÉDITO', slug: 'cartao_infinitepay', tipo: 'automatico' },
+    { id: 3, nome: 'BOLETO BANCÁRIO', slug: 'boleto_manual', tipo: 'manual', instrucoes: 'O boleto será enviado pelo nosso financeiro. Aguarde o contato.' },
   ];
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Realizar Pagamento" size="wide">
       <div className="space-y-6">
         {/* Steps Indicator */}
-        <div className="flex items-center justify-between px-4">
-          {[1, 2, 3, 4].map(s => (
-            <div key={s} className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${step >= s ? 'bg-[#1a1a1a] text-white' : 'bg-[#f8f7f5] text-[#1a1a1a]/40'}`}>
-              {s}
-            </div>
-          ))}
-        </div>
+        {!isStoreInvoice && (
+          <div className="flex items-center justify-between px-4">
+            {[1, 2, 3, 4].map(s => (
+              <div key={s} className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${step >= s ? 'bg-[#1a1a1a] text-white' : 'bg-[#f8f7f5] text-[#1a1a1a]/40'}`}>
+                {s}
+              </div>
+            ))}
+          </div>
+        )}
 
-        {step === 1 && (
+        {step === 1 && !isStoreInvoice && (
           <div className="space-y-6">
             <h4 className="font-medium text-[#1a1a1a]">1. Descontos e Carteira</h4>
             
@@ -334,7 +383,7 @@ export function PaymentModal({ isOpen, onClose, fatura, onSuccess, clientName }:
           </div>
         )}
 
-        {step === 2 && (
+        {step === 2 && !isStoreInvoice && (
           <div className="space-y-6">
             <h4 className="font-bold text-neutral-900">2. Revisão de Valores</h4>
             <div className="space-y-3 rounded-2xl bg-neutral-100 p-6 ring-1 ring-neutral-300 text-sm">
@@ -357,7 +406,7 @@ export function PaymentModal({ isOpen, onClose, fatura, onSuccess, clientName }:
 
         {step === 3 && (
           <div className="space-y-6">
-            <h4 className="font-bold text-neutral-900">3. Forma de Pagamento</h4>
+            <h4 className="font-bold text-neutral-900">{isStoreInvoice ? 'Forma de Pagamento' : '3. Forma de Pagamento'}</h4>
             <div className="grid grid-cols-1 gap-3">
               {paymentMethods.map(m => (
                 <button 
@@ -370,7 +419,7 @@ export function PaymentModal({ isOpen, onClose, fatura, onSuccess, clientName }:
               ))}
             </div>
             <div className="flex gap-4">
-              <button onClick={() => setStep(2)} className="flex-1 rounded-xl border py-3 font-bold">Voltar</button>
+              <button onClick={() => isStoreInvoice ? onClose() : setStep(2)} className="flex-1 rounded-xl border py-3 font-bold">Voltar</button>
               <button onClick={handleGoToPayment} disabled={!selectedMethod || generatingLink} className="flex-1 rounded-xl bg-indigo-600 py-3 font-bold text-white">Confirmar</button>
             </div>
           </div>

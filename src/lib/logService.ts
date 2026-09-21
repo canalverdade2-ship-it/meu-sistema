@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import { sessionService } from './sessionService';
 
-type AtorTipo = 'admin' | 'colaborador' | 'cliente' | 'prestador' | 'fornecedor' | 'sistema';
+export type AtorTipo = 'admin' | 'colaborador' | 'cliente' | 'prestador' | 'fornecedor' | 'sistema';
 
 interface LogData {
   ator_tipo: AtorTipo;

@@ -103,6 +103,35 @@ BEGIN
 END;
 $$;
 
+DO $$
+DECLARE
+  v_table text;
+BEGIN
+  FOREACH v_table IN ARRAY ARRAY[
+    'fornecedores','fornecedor_produtos','fornecedor_produto_solicitacoes',
+    'pedidos_compra_fornecedor','pedido_compra_fornecedor_itens','fornecedor_entregas',
+    'fornecedor_entrega_itens','contas_pagar','fornecedor_auditoria','fornecedor_notificacoes',
+    'produto_fornecedor_config','produtos_fornecedores_config'
+  ] LOOP
+    IF has_table_privilege('anon', 'public.' || v_table, 'SELECT')
+       OR has_table_privilege('anon', 'public.' || v_table, 'INSERT')
+       OR has_table_privilege('anon', 'public.' || v_table, 'UPDATE')
+       OR has_table_privilege('anon', 'public.' || v_table, 'DELETE') THEN
+      RAISE EXCEPTION 'Supplier security verification failed: anon privilege on %', v_table;
+    END IF;
+  END LOOP;
+
+  IF EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND policyname='Allow All Access' AND tablename = ANY(ARRAY['fornecedores','fornecedor_produtos','fornecedor_produto_solicitacoes','pedidos_compra_fornecedor','pedido_compra_fornecedor_itens','fornecedor_entregas','fornecedor_entrega_itens','contas_pagar','fornecedor_auditoria','fornecedor_notificacoes','produto_fornecedor_config','produtos_fornecedores_config'])) THEN
+    RAISE EXCEPTION 'Supplier security verification failed: permissive policy remains';
+  END IF;
+
+  IF has_function_privilege('anon','public.gsa_supplier_dashboard_snapshot()','EXECUTE')
+     OR has_function_privilege('anon','public.gsa_supplier_submit_delivery(uuid,uuid,jsonb)','EXECUTE') THEN
+    RAISE EXCEPTION 'Supplier security verification failed: supplier RPC exposed to anon';
+  END IF;
+END;
+$$;
+
 SELECT jsonb_build_object(
   'status', 'ok',
   'module', 'supplier',

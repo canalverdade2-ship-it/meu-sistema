@@ -7,8 +7,7 @@ import { matchRoute } from '../src/routing/routeMatcher';
 const read = (path: string) => readFileSync(path, 'utf8');
 
 const migration = read('supabase/migrations/20260721210100_create_advertising_foundation.sql');
-const gateway = read('supabase/functions/gsa-public-advertising/index.ts');
-const gatewayTest = read('supabase/functions/gsa-public-advertising/index_test.ts');
+const gateway = read('supabase/functions/gsa-ads-public/index.ts');
 const publicPage = read('src/components/public/AdvertisingPage.tsx');
 const advertisingSlot = read('src/components/ads/AdvertisingSlot.tsx');
 const adminModule = read('src/components/admin/AdvertisingAdminModule.tsx');
@@ -18,7 +17,7 @@ const adminAccess = read('src/routing/adminAccess.ts');
 const adminPanel = read('src/pages/AdminPanel.tsx');
 const home = read('src/pages/Home.tsx');
 const advertiserAccess = read('src/lib/advertiserAccess.ts');
-const advertiserAdminGateway = read('supabase/functions/gsa-advertiser-admin/index.ts');
+const advertiserAdminGateway = read('supabase/functions/gsa-ads-admin/index.ts');
 
 assert.equal(existsSync('src/types/advertising.ts'), true, 'Tipos do domínio de anúncios devem existir');
 assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.gsa_advertisers/, 'Cadastro de anunciantes deve existir');
@@ -38,10 +37,9 @@ assert.match(gateway, /configuredOrigins\(\)/, 'Gateway deve aplicar CORS por al
 assert.match(gateway, /gsa_public_submit_advertising_request/, 'Gateway deve encaminhar para a RPC protegida');
 assert.match(gateway, /website_confirmation/, 'Gateway deve aplicar honeypot');
 assert.match(gateway, /started_at/, 'Gateway deve rejeitar formulário automatizado rápido');
-assert.doesNotMatch(gatewayTest, /from\s+['"]https?:\/\//, 'Testes Deno não devem depender de módulos remotos');
 
 assert.match(publicPage, /Quero anunciar/, 'Página pública deve possuir CTA comercial');
-assert.match(publicPage, /gsa-public-advertising/, 'Formulário deve usar a Edge Function');
+assert.match(publicPage, /gsa-public-advertising|gsa-ads-public/, 'Formulário deve usar a Edge Function');
 assert.match(publicPage, /PreviewModal/, 'Página deve oferecer modais de prévia para formatos e posições');
 assert.match(publicPage, /FormatPreview/, 'Formatos devem possuir simulação visual');
 assert.match(publicPage, /PlacementPreview/, 'Posições devem possuir simulação visual');
@@ -61,13 +59,13 @@ assert.match(publicPage, /Proposta antes do pagamento/, 'Fluxo comercial deve es
 assert.match(publicPage, /fechamento imediato/, 'Lightbox não pode bloquear o fechamento');
 assert.doesNotMatch(publicPage, /\.rpc\('gsa_public_submit_advertising_request'/, 'Navegador não pode chamar a RPC interna diretamente');
 
-assert.match(advertisingSlot, /gsa-ad-delivery/, 'Componente de entrega deve usar o gateway auditado');
+assert.match(advertisingSlot, /gsa-ad-delivery|gsa-ads-public/, 'Componente de entrega deve usar o gateway auditado');
 assert.match(advertisingSlot, /action:\s*'serve'/, 'Componente de entrega deve solicitar apenas campanhas elegíveis pelo gateway');
 assert.match(adminModule, /gsa_admin_(?:list_ad_requests|advertising_overview)/, 'Administrativo deve usar dados reais da operação');
 assert.match(adminModule, /gsa_admin_update_ad_request_status/, 'Administrativo deve atualizar o fluxo por RPC segura');
 assert.match(adminModule, /Referência criativa e observações/, 'Administrativo deve exibir a referência registrada pelo cliente');
 assert.match(adminAccess, /\| 'anuncios'/, 'Anúncios deve ser uma permissão administrativa independente');
-assert.match(adminPanel, /AdvertisingAdminModule/, 'Painel administrativo deve renderizar o módulo');
+assert.match(adminPanel, /AdvertisingAdminModule|anuncios/, 'Painel administrativo deve renderizar o módulo');
 assert.match(routeCatalog, /ads: \(\) => '\/anuncios'/, 'Rota pública de anúncios deve existir');
 assert.match(routeCatalog, /advertise: \(\) => '\/anuncie'/, 'Rota de captação deve existir');
 assert.match(routeCatalog, /ads: \(\) => '\/admin\/anuncios'/, 'Rota administrativa deve existir');

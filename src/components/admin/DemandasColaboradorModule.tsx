@@ -7,6 +7,7 @@ import { callAdminRpc } from '../../lib/adminRpc';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'react-hot-toast';
 import { isPast } from 'date-fns';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 import { DemandasKanban } from './demandas/DemandasKanban';
 import { DemandasTabela } from './demandas/DemandasTabela';
@@ -55,7 +56,6 @@ export function DemandasColaboradorModule({ colaboradorId, colaboradorNome, admi
           colaborador:colaboradores(id, nome),
           prestador:prestadores(id, nome_razao)
         `)
-        .or('colaborador_id.not.is.null,and(status.neq.aberta,status.neq.cancelada)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -145,31 +145,28 @@ export function DemandasColaboradorModule({ colaboradorId, colaboradorNome, admi
     }
   }, [initialItemId, demandas.length]);
 
-  useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    const debouncedFetch = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => { void fetchDemandas(); }, 300);
-    };
-
-    const channel = supabase
-      .channel(`colaborador-demandas-rt-${colaboradorId || 'admin'}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas' }, debouncedFetch)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_demandas_historico' }, (payload) => {
-        debouncedFetch();
+  useRealtimeSubscription([
+    { table: 'prestador_demandas', onChange: fetchDemandas, debounceMs: 300 },
+    {
+      table: 'prestador_demandas_historico',
+      onChange: fetchDemandas,
+      onPayload: (payload) => {
         if (selectedDemanda && payload.new && (payload.new as any).demanda_id === selectedDemanda.id) {
           void refreshHistorico(selectedDemanda.id);
         }
-      })
-      .subscribe();
+      },
+      debounceMs: 300,
+    },
+    { table: 'demanda_comentarios', onChange: fetchDemandas, debounceMs: 300 },
+    { table: 'os_notas', onChange: fetchDemandas, debounceMs: 300 },
+    { table: 'os_suporte_mensagens', onChange: fetchDemandas, debounceMs: 300 },
+    { table: 'colaboradores', onChange: fetchAuxiliares, debounceMs: 300 },
+    { table: 'prestadores', onChange: fetchAuxiliares, debounceMs: 300 },
+  ], [colaboradorId, adminType, selectedDemanda?.id]);
 
-    return () => {
-      clearTimeout(timeoutId);
-      supabase.removeChannel(channel).catch(console.error);
-    };
-  }, [colaboradorId, adminType, selectedDemanda?.id]);
-
-  const emAberto = demandas.filter((d) => ['aguardando_atribuicao', 'aberta', 'em_ajuste', 'pendente_aceite'].includes(d.status)).length;
+  const emAberto = demandas.filter((d) =>
+    ['aguardando_atribuicao', 'aberta', 'em_ajuste'].includes(d.status) || d.status_aceite === 'pendente_aceite'
+  ).length;
   const emExecucao = demandas.filter((d) => d.status === 'ativa').length;
   const emAnalise = demandas.filter((d) => d.status === 'em_analise').length;
   const emNegociacao = demandas.filter((d) => ['em_negociacao', 'contraproposta_prestador', 'contraproposta_admin_final'].includes(d.status)).length;

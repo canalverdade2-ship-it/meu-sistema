@@ -82,7 +82,9 @@ function validateImage(file: File | null): string | null {
 export function PartnerApplicationModal({ open }: PartnerApplicationModalProps) {
   useEffect(() => {
     if (!open || typeof window === 'undefined') return;
-    if (window.location.pathname !== '/parceiros/solicitar') navigate('/parceiros/solicitar');
+    if (window.location.pathname !== '/nossos-parceiros/solicitar' && window.location.pathname !== '/parceiros/solicitar') {
+      navigate('/nossos-parceiros/solicitar');
+    }
   }, [open]);
 
   return null;
@@ -155,7 +157,7 @@ export function PartnerApplicationForm({ onCancel }: PartnerApplicationFormProps
         return fail('Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido para análise cadastral.');
       }
       if (form.category.trim().length < 2) return fail('Informe a categoria de atuação.');
-      if (form.short_description.trim().length < 20) return fail('A descrição curta deve ter pelo menos 20 caracteres.');
+      if (form.short_description.trim().length < 3) return fail('Informe uma breve apresentação ou descrição do parceiro.');
     }
 
     if (step === 1) {

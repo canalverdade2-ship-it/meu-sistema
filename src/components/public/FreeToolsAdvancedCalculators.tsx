@@ -147,7 +147,9 @@ function Result({
   report,
   action,
   status,
+  tool,
   onUnlockRequired,
+  onPdfGenerated,
 }: {
   eyebrow: string;
   headline: string;
@@ -158,7 +160,9 @@ function Result({
   report: CalculatorPdfReport;
   action?: ReactNode;
   status?: ProAccessStatus | null;
+  tool?: ProToolId;
   onUnlockRequired?: () => void;
+  onPdfGenerated?: () => void;
 }) {
   return (
     <aside className="bg-[#132231] p-5 text-white sm:p-7 lg:sticky lg:top-0 lg:self-start">
@@ -183,7 +187,14 @@ function Result({
         {note}
       </div>
       <div className="mt-6 border-t border-white/10 pt-5">
-        <CalculatorPdfReportButton report={report} mode="pro" status={status} onUnlockRequired={onUnlockRequired} />
+        <CalculatorPdfReportButton 
+          report={report} 
+          mode="pro" 
+          tool={tool} 
+          status={status} 
+          onUnlockRequired={onUnlockRequired} 
+          onPdfGenerated={onPdfGenerated} 
+        />
       </div>
       {action && <div className="mt-4">{action}</div>}
     </aside>
@@ -210,7 +221,7 @@ function Workbench({ title, description, children, result }: { title: string; de
 // 1. RESCISÃO CLT (PRO AVANÇADA)
 // ==========================================
 
-function TerminationPro({ status, onUnlockRequired }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void }) {
+function TerminationPro({ status, onUnlockRequired, onPdfGenerated }: { status?: ProAccessStatus | null; onUnlockRequired?: () => void; onPdfGenerated?: () => void }) {
   const [salary, setSalary] = useState('3500');
   const [reason, setReason] = useState<TerminationReason>('without_cause');
   const [noticeType, setNoticeType] = useState<NoticeType>('indemnified_employer');
@@ -326,8 +337,10 @@ function TerminationPro({ status, onUnlockRequired }: { status?: ProAccessStatus
           icon={<Calculator className="h-5 w-5" />}
           note="O saldo do FGTS não integra o total líquido. O saque depende da modalidade e da chave de conectividade."
           report={report}
+          tool="termination"
           status={status}
           onUnlockRequired={onUnlockRequired}
+          onPdfGenerated={onPdfGenerated}
         >
           {/* Gráfico/Barra de Distribuição Visual */}
           <div className="my-4 overflow-hidden rounded-lg bg-white/10 p-1">
@@ -1484,12 +1497,14 @@ export function FreeToolsAdvancedCalculator({
   tool,
   status,
   onUnlockRequired,
+  onPdfGenerated,
 }: {
   tool: ProToolId;
   status?: ProAccessStatus | null;
   onUnlockRequired?: () => void;
+  onPdfGenerated?: () => void;
 }) {
-  if (tool === 'termination') return <TerminationPro status={status} onUnlockRequired={onUnlockRequired} />;
+  if (tool === 'termination') return <TerminationPro status={status} onUnlockRequired={onUnlockRequired} onPdfGenerated={onPdfGenerated} />;
   if (tool === 'retirement') return <RetirementPro status={status} onUnlockRequired={onUnlockRequired} />;
   if (tool === 'vacation') return <VacationPro status={status} onUnlockRequired={onUnlockRequired} />;
   if (tool === 'thirteenth') return <ThirteenthPro status={status} onUnlockRequired={onUnlockRequired} />;

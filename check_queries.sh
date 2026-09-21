@@ -1,0 +1,1 @@
+PGPASSWORD='GSA_SENHA_FORTE_2026' psql -h 127.0.0.1 -p 5433 -U supabase_admin -d gsahub -c "SELECT pid, state, query, wait_event_type, wait_event, (now() - query_start) AS duration FROM pg_stat_activity WHERE state = 'active' AND query ILIKE '%delete%' AND pid <> pg_backend_pid();"

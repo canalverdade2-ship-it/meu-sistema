@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { callAdminRpc, createAdminRequestId } from './adminRpc';
 import { toast } from 'react-hot-toast';
 
 export interface DemandHistoryParams {
@@ -23,25 +23,16 @@ export const demandService = {
     prestadorDestinoId = null,
     valorProposto = null
   }: DemandHistoryParams) {
-    try {
-      const { error } = await supabase
-        .from('prestador_demandas_historico')
-        .insert({
-          demanda_id: demandaId,
-          tipo_evento: tipoEvento,
-          motivo,
-          colaborador_origem_id: colaboradorOrigemId,
-          colaborador_destino_id: colaboradorDestinoId,
-          prestador_origem_id: prestadorOrigemId,
-          prestador_destino_id: prestadorDestinoId,
-          valor_proposto: valorProposto
-        });
-
-      if (error) {
-        console.error('Error adding demand history:', error);
-        toast.error(`Falha ao gravar histórico: ${error.message}`);
-        return { success: false, error };
-      }
+    try {      await callAdminRpc('gsa_admin_add_demand_history', {
+        p_demanda_id: demandaId,
+        p_tipo_evento: tipoEvento,
+        p_motivo: motivo,
+        p_colaborador_destino_id: colaboradorDestinoId,
+        p_prestador_origem_id: prestadorOrigemId,
+        p_prestador_destino_id: prestadorDestinoId,
+        p_valor_proposto: valorProposto,
+        p_request_id: createAdminRequestId(),
+      });
 
       return { success: true };
     } catch (error) {

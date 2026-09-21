@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import type React from 'react';
-import { Bell, Building2, Calculator, CreditCard, Layout, LockKeyhole, MessageSquare, Plus, RefreshCw, Save, Send, Settings, Users, Wallet, X } from 'lucide-react';
+import { Bell, Building2, Calculator, CreditCard, Layout, LockKeyhole, MessageSquare, ShoppingBag, Plus, RefreshCw, Save, Send, Settings, Users, Wallet, X } from 'lucide-react';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
+import { maskCNPJ, maskPhone } from '../../lib/utils';
 import { sendAdminWhatsAppNotification } from '../../utils/n8nWhatsApp';
 import { CalculatorProAdminPanel } from './CalculatorProAdminPanel';
 import { CalculatorProPaymentConfiguration } from './CalculatorProPaymentConfiguration';
 
-type Tab = 'empresa' | 'financeiro' | 'calculadoras' | 'indicacao' | 'whatsapp' | 'portal' | 'seguranca';
+type Tab = 'empresa' | 'financeiro' | 'calculadoras' | 'indicacao' | 'whatsapp' | 'portal' | 'seguranca' | 'loja';
 
 type SettingsSnapshot = {
   company?: any | null;
@@ -44,6 +46,14 @@ export function ConfiguracoesModule() {
       if (isMounted.current) setLoading(false);
     }
   }, []);
+
+  useRealtimeSubscription({
+    table: 'system_settings',
+    debounceMs: 300,
+    onChange: () => {
+      void load();
+    },
+  });
 
   useEffect(() => {
     const isMounted = { current: true };
@@ -110,6 +120,7 @@ export function ConfiguracoesModule() {
 
   const tabs: Array<{ id: Tab; label: string; icon: React.ElementType }> = [
     { id: 'empresa', label: 'Empresa', icon: Building2 },
+    { id: 'loja', label: 'Loja / Marketplace', icon: ShoppingBag },
     { id: 'financeiro', label: 'Financeiro', icon: Wallet },
     { id: 'calculadoras', label: 'Calculadoras Pro', icon: Calculator },
     { id: 'indicacao', label: 'Indicação', icon: Users },
@@ -120,14 +131,22 @@ export function ConfiguracoesModule() {
 
   if (loading) return <div className="flex min-h-[420px] items-center justify-center"><RefreshCw className="h-9 w-9 animate-spin text-indigo-600" /></div>;
 
-  return <div className="space-y-6 pb-10">
-    <header className="rounded-[2rem] bg-neutral-950 p-6 text-white shadow-xl"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Allowlist administrativa</p><h1 className="mt-2 flex items-center gap-3 text-2xl font-black"><Settings className="h-6 w-6 text-indigo-400" /> Configurações Globais</h1><p className="mt-2 text-sm text-white/55">Somente chaves e produtos conhecidos podem ser lidos ou alterados por este painel.</p></div><button type="button" disabled={loading || saving} onClick={() => void load()} className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-neutral-900 disabled:opacity-50"><RefreshCw className="h-4 w-4" /> Atualizar</button></div></header>
+  return (
+    <div className="space-y-6 pb-10">
+      <header className="rounded-[2rem] bg-neutral-950 p-6 text-white shadow-xl"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Allowlist administrativa</p><h1 className="mt-2 flex items-center gap-3 text-2xl font-black"><Settings className="h-6 w-6 text-indigo-400" /> Configurações Globais</h1><p className="mt-2 text-sm text-white/55">Somente chaves e produtos conhecidos podem ser lidos ou alterados por este painel.</p></div><button type="button" disabled={loading || saving} onClick={() => void load()} className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-black text-neutral-900 disabled:opacity-50"><RefreshCw className="h-4 w-4" /> Atualizar</button></div></header>
 
     <div className="grid grid-cols-2 gap-2 rounded-2xl border border-neutral-200 bg-white p-2 sm:grid-cols-3 lg:grid-cols-7">{tabs.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => setActiveTab(id)} className={`flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-bold ${activeTab === id ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200' : 'text-neutral-500 hover:bg-neutral-50'}`}><Icon className="h-4 w-4" />{label}</button>)}</div>
 
-    {activeTab === 'empresa' && <section className="space-y-6"><Card title="Dados da empresa" icon={Building2}><div className="grid gap-4 sm:grid-cols-2"><TextField label="Razão social" value={company.razao_social || ''} onChange={(next) => setCompany({ ...company, razao_social: next })} /><TextField label="CNPJ" value={company.cnpj || ''} onChange={(next) => setCompany({ ...company, cnpj: next })} /><TextField label="Telefone" value={company.telefone || ''} onChange={(next) => setCompany({ ...company, telefone: next })} /><TextField label="Responsável" value={company.responsavel || ''} onChange={(next) => setCompany({ ...company, responsavel: next })} /></div><SaveButton saving={saving} onClick={() => void saveCompany()} label="Salvar dados da empresa" /></Card><Card title="Cadastro padrão" icon={Users}><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><SelectField label="Status do código" value={value('codigo_cadastro_padrao_ativo', 'false')} onChange={(next) => setValue('codigo_cadastro_padrao_ativo', next)} options={[["true", "Ativo"], ["false", "Desativado"]]} /><TextField label="Código" value={value('codigo_cadastro_padrao', 'BEMVINDO')} onChange={(next) => setValue('codigo_cadastro_padrao', next.toUpperCase())} /><SelectField label="Tipo de bônus" value={value('bonus_cadastro_tipo', 'pontos')} onChange={(next) => setValue('bonus_cadastro_tipo', next)} options={[["pontos", "Pontos"], ["carteira", "Carteira"]]} /><NumberField label="Valor do bônus" value={value('bonus_cadastro_valor', '100')} onChange={(next) => setValue('bonus_cadastro_valor', next)} /></div><SaveButton saving={saving} onClick={() => void saveSettings(['codigo_cadastro_padrao_ativo', 'codigo_cadastro_padrao', 'bonus_cadastro_tipo', 'bonus_cadastro_valor'], 'Configurações de cadastro salvas.')} /></Card></section>}
+    {activeTab === 'empresa' && <section className="space-y-6"><Card title="Dados da empresa" icon={Building2}><div className="grid gap-4 sm:grid-cols-2"><TextField label="Razão social" value={company.razao_social || ''} onChange={(next) => setCompany({ ...company, razao_social: next })} /><TextField label="CNPJ" placeholder="00.000.000/0000-00" maxLength={18} value={maskCNPJ(company.cnpj || '')} onChange={(next) => setCompany({ ...company, cnpj: maskCNPJ(next) })} /><TextField label="Telefone" placeholder="(00) 00000-0000" maxLength={15} value={maskPhone(company.telefone || '')} onChange={(next) => setCompany({ ...company, telefone: maskPhone(next) })} /><TextField label="Responsável" value={company.responsavel || ''} onChange={(next) => setCompany({ ...company, responsavel: next })} /></div><SaveButton saving={saving} onClick={() => void saveCompany()} label="Salvar dados da empresa" /></Card><Card title="Cadastro padrão" icon={Users}><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><SelectField label="Status do código" value={value('codigo_cadastro_padrao_ativo', 'false')} onChange={(next) => setValue('codigo_cadastro_padrao_ativo', next)} options={[["true", "Ativo"], ["false", "Desativado"]]} /><TextField label="Código" value={value('codigo_cadastro_padrao', 'BEMVINDO')} onChange={(next) => setValue('codigo_cadastro_padrao', next.toUpperCase())} /><SelectField label="Tipo de bônus" value={value('bonus_cadastro_tipo', 'pontos')} onChange={(next) => setValue('bonus_cadastro_tipo', next)} options={[["pontos", "Pontos"], ["carteira", "Carteira"]]} /><NumberField label="Valor do bônus" value={value('bonus_cadastro_valor', '100')} onChange={(next) => setValue('bonus_cadastro_valor', next)} /></div><SaveButton saving={saving} onClick={() => void saveSettings(['codigo_cadastro_padrao_ativo', 'codigo_cadastro_padrao', 'bonus_cadastro_tipo', 'bonus_cadastro_valor'], 'Configurações de cadastro salvas.')} /></Card></section>}
+
+    {activeTab === 'loja' && <section className="space-y-6"><Card title="Marketplace & Loja" icon={ShoppingBag}><div className="grid gap-4 sm:grid-cols-2"><TextField label="Valor mínimo Frete Grátis (R$)" placeholder="Ex: 19,90" value={value('loja_frete_gratis_valor', '19,90')} onChange={(next) => setValue('loja_frete_gratis_valor', next)} /></div><SaveButton saving={saving} onClick={() => void saveSettings(['loja_frete_gratis_valor'], 'Configurações de loja salvas.')} /></Card></section>}
 
     {activeTab === 'financeiro' && <section className="space-y-6"><CalculatorProPaymentConfiguration />
+      <Card title="Taxa de Saque do Crédito GSA" icon={Wallet}>
+        <div className="grid gap-4 sm:grid-cols-2"><SelectField label="Tipo da taxa" value={value('credito_saque_taxa_tipo', 'percentual')} onChange={(next) => setValue('credito_saque_taxa_tipo', next)} options={[["percentual", "Percentual sobre o saque"], ["fixa", "Valor fixo por saque"]]} /><NumberField label={value('credito_saque_taxa_tipo', 'percentual') === 'percentual' ? 'Taxa (%)' : 'Taxa fixa (R$)'} value={value('credito_saque_taxa_valor', '0')} onChange={(next) => setValue('credito_saque_taxa_valor', next)} /></div>
+        <p className="mt-4 rounded-xl border border-indigo-100 bg-indigo-50 p-3 text-xs text-indigo-900">O cliente vê o valor do saque + taxa antes de confirmar. A configuração usada fica congelada no protocolo e a fatura vence 30 dias após a liberação PIX.</p>
+        <SaveButton saving={saving} onClick={() => void saveSettings(['credito_saque_taxa_tipo', 'credito_saque_taxa_valor'], 'Taxa de saque do crédito salva.')} />
+      </Card>
       <Card title="Desconto PIX" icon={Wallet}>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <SelectField label="Desconto PIX Ativo" value={value('loja_pix_desconto_ativo', 'true')} onChange={(next) => setValue('loja_pix_desconto_ativo', next)} options={[["true", "Sim"], ["false", "Não"]]} />
@@ -268,19 +287,20 @@ export function ConfiguracoesModule() {
     {activeTab === 'seguranca' && <Card title="Segurança de credenciais" icon={LockKeyhole}><div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-900"><p className="font-black">Alteração de credencial administrativa removida deste formulário.</p><p className="mt-2">Segredos de autenticação não são mais lidos ou gravados em <code>system_settings</code> por uma RPC genérica. A rotação deve ocorrer por um fluxo dedicado, com hash, revogação de sessões e registro de auditoria.</p></div></Card>}
 
     {methodForm && <Overlay onClose={() => setMethodForm(null)}><div className="flex items-center justify-between"><h2 className="text-2xl font-black">{methodForm.id ? 'Editar' : 'Nova'} forma de pagamento</h2><button type="button" onClick={() => setMethodForm(null)}><X className="h-5 w-5" /></button></div><div className="mt-6 space-y-4"><TextField label="Nome" value={methodForm.nome || ''} onChange={(next) => setMethodForm({ ...methodForm, nome: next })} /><TextField label="Slug" value={methodForm.slug || ''} onChange={(next) => setMethodForm({ ...methodForm, slug: next })} /><TextField label="Tipo" value={methodForm.tipo || 'manual'} onChange={(next) => setMethodForm({ ...methodForm, tipo: next })} /><label className="block text-sm font-bold">Instruções<textarea rows={4} value={methodForm.instrucoes || ''} onChange={(event) => setMethodForm({ ...methodForm, instrucoes: event.target.value })} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label></div><div className="mt-8 flex justify-end gap-3"><button type="button" onClick={() => setMethodForm(null)} className="rounded-xl border border-neutral-200 px-5 py-3 font-bold">Cancelar</button><button type="button" disabled={saving} onClick={() => void saveMethod()} className="rounded-xl bg-indigo-600 px-6 py-3 font-black text-white disabled:opacity-50">Salvar</button></div></Overlay>}
-  </div>;
+    </div>
+  );
 }
 
 function Card({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) {
   return <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm sm:p-7"><h2 className="mb-6 flex items-center gap-3 text-lg font-black"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600"><Icon className="h-5 w-5" /></span>{title}</h2>{children}</section>;
 }
 
-function TextField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return <label className="block text-sm font-bold">{label}<input value={value} onChange={(event) => onChange(event.target.value)} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label>;
+function TextField({ label, value, onChange, placeholder, maxLength }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; maxLength?: number }) {
+  return <label className="block text-sm font-bold">{label}<input value={value} placeholder={placeholder} maxLength={maxLength} onChange={(event) => onChange(event.target.value)} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label>;
 }
 
 function NumberField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return <label className="block text-sm font-bold">{label}<input type="number" min="0" value={value} onChange={(event) => onChange(event.target.value)} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label>;
+  return <label className="block text-sm font-bold">{label}<input  type="number" min="0" value={value} inputMode="numeric" onChange={(event) => onChange(event.target.value)} className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3" /></label>;
 }
 
 function SelectField({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: Array<[string, string]> }) {

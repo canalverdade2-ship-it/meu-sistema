@@ -1,0 +1,66 @@
+{
+  "id": "gsaTvFixedGrid09",
+  "name": "GSA TV 09 - Fixed Grid Horizon",
+  "active": true,
+  "settings": {
+    "saveManualExecutions": true,
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo"
+  },
+  "tags": [
+    { "name": "gsa-tv" },
+    { "name": "v2-vps" }
+  ],
+  "nodes": [
+    {
+      "id": "daily-trigger",
+      "name": "Cron - Daily 00:10",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [260, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "10 0 * * *" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "manual-trigger",
+      "name": "Execute - Test or Reuse",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [260, 440],
+      "parameters": { "inputSource": "passthrough" }
+    },
+    {
+      "id": "queue-horizon",
+      "name": "HTTP - Maintain 30 Day Horizon",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [540, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.30.250.1:19202/automation/jobs",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\"job_type\":\"materialize_fixed_schedule\",\"payload\":{\"days\":30}}",
+        "options": {
+          "timeout": 30000,
+          "response": { "response": { "neverError": true } }
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Cron - Daily 00:10": {
+      "main": [[{ "node": "HTTP - Maintain 30 Day Horizon", "type": "main", "index": 0 }]]
+    },
+    "Execute - Test or Reuse": {
+      "main": [[{ "node": "HTTP - Maintain 30 Day Horizon", "type": "main", "index": 0 }]]
+    }
+  }
+}

@@ -188,7 +188,7 @@ async function main() {
   );
 
   await assertFileContains(
-    'src/components/client/store/CheckoutModal.tsx',
+    'src/components/client/store/TravelCheckoutModal.tsx',
     [
       'travelInstallments',
       'normalizedTravelInstallments',

@@ -1,0 +1,3 @@
+set -eu
+dburl=$(sudo docker inspect gsa-tv-control-plane --format '{{range .Config.Env}}{{println .}}{{end}}' | awk -F= '$1=="DATABASE_URL"{sub(/^DATABASE_URL=/,"");print;exit}')
+sudo docker run --pull=never --rm --network host postgres:15-alpine psql "$dburl" -X -qAt -v ON_ERROR_STOP=1 -c "SELECT p.id,p.name,p.project_type,p.state,length(p.brief),jsonb_array_length(coalesce(p.metadata->'editorial_item_ids','[]'::jsonb)) FROM public.gsa_tv_ai_projects p JOIN public.gsa_tv_program_blocks b ON b.id::text=p.metadata->>'editorial_block_id' WHERE b.schedule_version_id='003801b7-5f2d-4da3-a531-915ce52a27f3' AND p.state='draft' ORDER BY b.position;"

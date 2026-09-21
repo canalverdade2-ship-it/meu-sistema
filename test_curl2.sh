@@ -1,0 +1,2 @@
+echo '{"id": "dfb0bfe3-6d14-468e-9126-52e947925f04", "timestamp": "2026-09-15T12:00:00Z"}' > /tmp/payload.json
+curl -v -X POST -H 'Content-Type: application/json' -d @/tmp/payload.json http://127.0.0.1:5678/webhook/gsa-produtos-scraping

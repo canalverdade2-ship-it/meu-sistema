@@ -9,6 +9,7 @@ import { supabase } from '../../lib/supabase';
 import { Modal } from '../ui/Modal';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
 import { callClientRpc } from '../../lib/clientRpc';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 const TABS = ['Geral', 'Benefícios', 'Níveis', 'Histórico'];
 const TAB_LABELS: Record<string, string> = {
@@ -173,6 +174,11 @@ export function ClientAreaVIP({
       setLoading(false);
     }
   };
+
+  useRealtimeSubscription([
+    { table: 'client_levels', onChange: fetchLevels },
+    { table: 'assinaturas', onChange: fetchLevels },
+  ]);
 
   const formatDate = (dateString: string) => {
     return new Intl.DateTimeFormat('pt-BR', {

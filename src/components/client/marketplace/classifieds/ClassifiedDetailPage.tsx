@@ -3,7 +3,6 @@ import { copyToClipboard } from '../../../../lib/utils';
 import { motion } from 'framer-motion';
 import { ArrowLeft, MapPin, Shield, CheckCircle2, Calendar, Share2, Heart, MessageCircle, Send, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { clientOperationalWrite } from '../../../../lib/clientOperationalWrite';
 import { notificationService } from '../../../../lib/notificationService';
 import { supabase } from '../../../../lib/supabase';
 import { AdvertisingSlot } from '../../../ads/AdvertisingSlot';
@@ -84,37 +83,25 @@ export function ClassifiedDetailPage({ slug, onBack, clientId }: ClassifiedDetai
     try {
       const advertisedPrice = Number(ad.preco || 0);
       const formattedAmount = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount);
-      const formattedAdvertisedPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(advertisedPrice);
-      const description = [
-        'Solicitação de proposta moderada pelos Classificados GSA.',
-        '',
-        `Anúncio: ${ad.titulo}`,
-        `Código do anúncio: ${ad.id}`,
-        `Valor anunciado: ${formattedAdvertisedPrice}`,
-        `Valor proposto: ${formattedAmount}`,
-        '',
-        'Mensagem do comprador:',
-        message,
-        '',
-        'A negociação deve permanecer dentro dos canais da GSA até a liberação administrativa.',
-      ].join('\n');
-
-      const ticket = await clientOperationalWrite<{ id: string }>(clientId, 'tickets', 'insert', {
-        assunto: `Proposta Classificados: ${ad.titulo}`,
-        descricao: description,
-        status: 'aberto',
+      const { data: proposal, error: proposalError } = await supabase.rpc('rpc_criar_proposta_classificado', {
+        p_anuncio_id: ad.id,
+        p_comprador_id: clientId,
+        p_valor_proposta: amount,
+        p_mensagem: message,
       });
 
-      if (!ticket?.id) throw new Error('O ticket da proposta não foi criado.');
+      if (proposalError || !proposal?.success || !proposal?.id) {
+        throw new Error(proposalError?.message || 'A proposta não pôde ser registrada.');
+      }
 
       await notificationService.notifyAdmin(
         '💬 Nova proposta nos Classificados',
         `Um cliente enviou uma proposta de ${formattedAmount} para o anúncio “${ad.titulo}”.`,
-        'suporte',
+        'classificados',
         'propostas',
         {
-          itemId: ticket.id,
-          tab: 'abertos',
+          itemId: proposal.id,
+          tab: 'propostas',
           prioridade: 'alta',
           contexto: {
             anuncio_id: ad.id,
@@ -125,9 +112,9 @@ export function ClassifiedDetailPage({ slug, onBack, clientId }: ClassifiedDetai
         },
       );
 
-      toast.success('Proposta enviada para mediação da GSA.');
+      toast.success('Proposta registrada nos Classificados GSA.');
       setShowProposalForm(false);
-      navigate(routes.client.ticket(ticket.id));
+      navigate(routes.marketplace.classifieds.negociacoes());
     } catch (error: any) {
       console.error('Erro ao enviar proposta dos Classificados:', error);
       toast.error(error?.message || 'Não foi possível enviar a proposta.');
@@ -286,12 +273,12 @@ export function ClassifiedDetailPage({ slug, onBack, clientId }: ClassifiedDetai
 
                     <label className="block text-xs font-black uppercase tracking-wider text-neutral-500">
                       Valor proposto
-                      <input
+                      <input 
                         type="number"
                         min="0.01"
                         step="0.01"
                         value={proposalAmount}
-                        onChange={(event) => setProposalAmount(event.target.value)}
+                        inputMode="numeric" onChange={(event) => setProposalAmount(event.target.value)}
                         className="mt-2 w-full rounded-2xl border border-neutral-200 px-4 py-3 text-base font-bold text-neutral-900 outline-none focus:border-neutral-500"
                       />
                     </label>
@@ -327,7 +314,7 @@ export function ClassifiedDetailPage({ slug, onBack, clientId }: ClassifiedDetai
                       <MessageCircle className="h-5 w-5" /> Enviar Proposta
                     </button>
                     <p className="text-xs text-center text-neutral-400 font-medium px-4">
-                      Sua proposta será registrada em um atendimento protegido e analisada pela GSA antes do contato com o vendedor.
+                      Sua proposta será registrada na negociação protegida dos Classificados e acompanhada pela GSA.
                     </p>
                   </div>
                 )}

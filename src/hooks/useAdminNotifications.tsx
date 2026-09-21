@@ -250,6 +250,7 @@ export function AdminNotificationProvider({ children }: { children: React.ReactN
   const [pendencies, setPendencies] = useState<PendencyCounts>(defaultCounts);
   const [notifications, setNotifications] = useState<AdminNotificacao[]>([]);
   const knownIdsRef = useRef<Set<string>>(new Set());
+  const notificationsLoadedRef = useRef(false);
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchPendencies = useCallback(async () => {
@@ -269,14 +270,15 @@ export function AdminNotificationProvider({ children }: { children: React.ReactN
         p_limit: 50,
       });
       const next = Array.isArray(data) ? data : [];
-      if (notifyOnNew && knownIdsRef.current.size > 0) {
-        const newlyReceived = next.find((item) => !knownIdsRef.current.has(item.id));
+      if (notifyOnNew && notificationsLoadedRef.current) {
+        const newlyReceived = next.find((item) => !item.lida && !knownIdsRef.current.has(item.id));
         if (newlyReceived) {
           playNotificationSound();
           toast.success(newlyReceived.titulo, { duration: 4500 });
         }
       }
       knownIdsRef.current = new Set(next.map((item) => item.id));
+      notificationsLoadedRef.current = true;
       setNotifications(next);
     } catch (error) {
       console.error('Erro ao buscar notificações administrativas seguras:', error);
@@ -301,7 +303,11 @@ export function AdminNotificationProvider({ children }: { children: React.ReactN
   );
 
   useEffect(() => {
-    void refreshAll(false);
+    // Atraso de 500ms para permitir que a UI principal (como fetch do colaborador) renderize primeiro 
+    // sem esgotar o pool de conexões do navegador.
+    const initialTimer = setTimeout(() => {
+      void refreshAll(false);
+    }, 500);
 
     const channel = supabase
       .channel('admin-notifications-secure')
@@ -310,16 +316,17 @@ export function AdminNotificationProvider({ children }: { children: React.ReactN
       .subscribe();
 
     const interval = window.setInterval(() => {
-      if (document.visibilityState === 'visible') void refreshAll(false);
+      if (document.visibilityState === 'visible') void refreshAll(true);
     }, 60_000);
 
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible') void refreshAll(false);
+      if (document.visibilityState === 'visible') scheduleRefresh(true);
     };
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+      clearTimeout(initialTimer);
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibility);
       supabase.removeChannel(channel).catch(console.error);

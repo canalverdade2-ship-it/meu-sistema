@@ -1,0 +1,14 @@
+const fs=require('fs');
+const crypto=require('crypto');
+const file='/home/opc/gsa-ai/GSA_TV_MEMORY_CHANGELOG.md';
+const marker='legacy-ai-worker-audit-20260909-1915';
+if(fs.readFileSync(file,'utf8').includes(marker))process.exit(0);
+const worker=fs.readFileSync('/opt/gsa-tv/ai-worker/ai_worker.mjs','utf8');
+const hash=crypto.createHash('sha256').update(worker).digest('hex');
+const now=new Date();
+const backup=file+'.bak-worker-audit-'+now.toISOString().replace(/[:.]/g,'-');
+const entry=`\n## ${now.toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})} BRT — Produtor legado incompatível com critérios atuais\n\n- gsa-ai-producer.service e gsa-program-builder.service estavam ativos. Analisado estaticamente /opt/gsa-tv/ai-worker/ai_worker.mjs, SHA256 ${hash}. Não foi executado job nem alterado serviço.\n- O worker consulta ai_flow_vids_generate queued/pending em loop a cada 2 segundos. O loop inspecionado não condiciona consumo à janela 00h–05h59. O nome do job não prova uso efetivo de Flow.\n- Render usa um vídeo de apoio fixo por preset, de acervo antigo de 01/09, com -stream_loop -1. Isso não atende News com 90% de vídeos novos sem repetição nem comprova correspondência cena/narração.\n- Após render, o INSERT grava state ready, rights_ok true e approval_state approved diretamente, sem evidência de QC editorial/licença no trecho de promoção. Especificações de codec são declaradas no INSERT; não equivalem a inspeção do master final.\n- Grafismo inclui texto REDE 24 HORAS, incompatível com novo horário. Render mantém 1920x1080/30; nenhuma redução de qualidade foi proposta ou executada.\n- Às 19h15 BRT: disco 92%, 17GiB livres; load 5.07/5.18/5.30. Havia ffmpeg consumindo 277% CPU, mas não foi atribuída origem nem concluído que era este worker. Não interrompido processo de outra tarefa.\n- Pendência: reconciliar produtor legado com fábrica definitiva; substituir repetição de fundo por manifesto de cenas novas/licenciadas e separar render concluído de aprovação; aplicar guarda noturna após identificar consumidores e trabalho em andamento. Não promover saída deste caminho como News final conforme os requisitos atuais.\n- Identificador: ${marker}\n`;
+fs.copyFileSync(file,backup,fs.constants.COPYFILE_EXCL);
+fs.appendFileSync(file,entry);
+if(!fs.readFileSync(file,'utf8').endsWith(entry))throw Error('Falha ao verificar registro');
+console.log(JSON.stringify({registered:true,backup,hash}));

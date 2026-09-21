@@ -1,0 +1,1 @@
+PGPASSWORD='GSA_SENHA_FORTE_2026' psql -h 127.0.0.1 -p 5433 -U supabase_admin -d gsahub -c "UPDATE automacao_scraping_configs SET n8n_webhook_url = 'http://147.15.43.141:5678/webhook/gsa-produtos-scraping';"

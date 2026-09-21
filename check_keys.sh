@@ -1,0 +1,1 @@
+sudo docker exec -e PGPASSWORD='evopass' evo-postgres psql -U evo -d n8n -t -c "SELECT id, \"userId\", \"apiKey\" FROM user_api_keys LIMIT 1;"

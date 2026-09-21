@@ -20,6 +20,8 @@ import {
   getProductQuantityPriceBreakdown,
   hasActiveProductDiscount,
 } from '../../../lib/productPricing';
+import { variationSelectionLabel, type ProductVariationSelection } from '../../../types/productVariations';
+import { notifyWhatsAppModal } from '../../ui/WhatsAppButton';
 
 type CartItem = {
   id: string;
@@ -28,6 +30,8 @@ type CartItem = {
   quantidade: number;
   item_detalhes?: Produto | any;
   prazo_meses?: number;
+  produto_variante_id?: string | null;
+  opcoes_variacao?: ProductVariationSelection | null;
 };
 
 interface CartDrawerProps {
@@ -52,9 +56,6 @@ interface CartDrawerProps {
 
 const roundMoney = (value: number): number => Math.round(value * 100) / 100;
 
-// Um item pode continuar no carrinho depois de o produto ser desativado ou
-// ocultado da loja. Nesse caso o checkout falha no servidor com
-// "Produto indisponivel para este cliente." — por isso bloqueamos antes.
 function isUnavailableItem(item: CartItem): boolean {
   if (!item.item_detalhes) return true;
   if (item.tipo !== 'produto') return false;
@@ -62,9 +63,25 @@ function isUnavailableItem(item: CartItem): boolean {
   const status = String(details?.status || '').toLowerCase();
   if (status && status !== 'ativo') return true;
   if (details?.visivel_na_loja === false) return true;
+  if (details?.possui_variacoes && !item.produto_variante_id) return true;
   return false;
 }
 
+function getItemStockInfo(item: CartItem): { controle_estoque: boolean; estoque_disponivel: number } {
+  if (item.tipo !== 'produto') {
+    return { controle_estoque: false, estoque_disponivel: Infinity };
+  }
+  if (item.opcoes_variacao && item.opcoes_variacao.controle_estoque != null) {
+    return {
+      controle_estoque: Boolean(item.opcoes_variacao.controle_estoque),
+      estoque_disponivel: Number(item.opcoes_variacao.estoque_disponivel || 0),
+    };
+  }
+  return {
+    controle_estoque: Boolean(item.item_detalhes?.controle_estoque),
+    estoque_disponivel: Number(item.item_detalhes?.estoque_disponivel || 0),
+  };
+}
 
 function itemSubtotal(item: CartItem): number {
   if (item.tipo === 'produto') {
@@ -99,6 +116,15 @@ export default function CartDrawer({
   onCheckout,
 }: CartDrawerProps) {
   const [showCoupons, setShowCoupons] = useState(Boolean(cupomDesconto || cupomEntrega));
+
+  useEffect(() => {
+    if (isOpen) {
+      notifyWhatsAppModal(true);
+    }
+    return () => {
+      notifyWhatsAppModal(false);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (cupomDesconto || cupomEntrega) setShowCoupons(true);
@@ -138,19 +164,12 @@ export default function CartDrawer({
 
   const totalDiscount = roundMoney(promotionDiscount + couponDiscount);
   const total = roundMoney(Math.max(0, subtotal - totalDiscount));
-  const hasOutOfStockItems = cartItems.some((item) => (
-    !item.item_detalhes
-    || isUnavailableItem(item)
-    || (item.tipo === 'produto'
-    && item.item_detalhes?.controle_estoque
-    && Number(item.item_detalhes?.estoque_disponivel || 0) <= 0)
-    // Também bloqueia o checkout quando a quantidade no carrinho ultrapassa o estoque
-    // disponível atual (ex.: estoque reduzido após o item já estar no carrinho).
-    || (item.tipo === 'produto'
-    && item.item_detalhes?.controle_estoque
-    && Number(item.quantidade || 0) > Number(item.item_detalhes?.estoque_disponivel || 0))
-  ));
-
+  const hasOutOfStockItems = cartItems.some((item) => {
+    if (!item.item_detalhes || isUnavailableItem(item)) return true;
+    if (item.tipo !== 'produto') return false;
+    const { controle_estoque, estoque_disponivel } = getItemStockInfo(item);
+    return controle_estoque && (estoque_disponivel <= 0 || Number(item.quantidade || 0) > estoque_disponivel);
+  });
 
   if (!isOpen) return null;
 
@@ -180,7 +199,7 @@ export default function CartDrawer({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100/80 text-slate-500 transition hover:bg-slate-200 hover:text-slate-800"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100/80 text-slate-500 transition hover:bg-slate-200 hover:text-slate-800 cursor-pointer"
               aria-label="Fechar carrinho"
             >
               <X className="h-5 w-5" aria-hidden="true" />
@@ -191,6 +210,7 @@ export default function CartDrawer({
           <div className="flex items-center justify-between bg-slate-50/80 px-5 py-2.5 border-t border-slate-100/80">
             <p className="text-xs font-semibold text-slate-500">
               {cartItems.length} {cartItems.length === 1 ? 'item selecionado' : 'itens selecionados'}
+
             </p>
             {cartItems.length > 0 && onClearCart && (
               <button
@@ -234,11 +254,12 @@ export default function CartDrawer({
                 const isProduct = item.tipo === 'produto';
                 const isItemDeleted = !item.item_detalhes;
                 const isUnavailable = isUnavailableItem(item);
+                const { controle_estoque: controlaEstoque, estoque_disponivel: estoqueDisp } = getItemStockInfo(item);
                 const outOfStock = isItemDeleted
                   || isUnavailable
                   || (isProduct
-                  && item.item_detalhes?.controle_estoque
-                  && Number(item.item_detalhes?.estoque_disponivel || 0) <= 0);
+                  && controlaEstoque
+                  && (estoqueDisp <= 0 || Number(item.quantidade || 0) > estoqueDisp));
 
                 const subtotalForItem = itemSubtotal(item);
                 const originalSubtotal = roundMoney(Number(item.item_detalhes?.valor || 0) * Number(item.quantidade || 1));
@@ -269,6 +290,11 @@ export default function CartDrawer({
                         <h3 className="mt-1 line-clamp-2 text-sm font-extrabold leading-5 text-slate-950">
                           {item.item_detalhes?.nome || 'Item não encontrado (excluído)'}
                         </h3>
+                        {item.tipo === 'produto' && variationSelectionLabel(item.opcoes_variacao) && (
+                          <p className="mt-1 text-[11px] font-semibold leading-4 text-indigo-700">
+                            {variationSelectionLabel(item.opcoes_variacao)}
+                          </p>
+                        )}
                         {item.prazo_meses && (
                           <p className="mt-1 text-xs font-semibold text-slate-500">
                             Período: {item.prazo_meses} {item.prazo_meses === 1 ? 'mês' : 'meses'}
@@ -280,6 +306,8 @@ export default function CartDrawer({
                             <AlertCircle className="h-4 w-4" aria-hidden="true" />
                             {isItemDeleted
                               ? 'Item não disponível mais no catálogo'
+                              : item.item_detalhes?.possui_variacoes && !item.produto_variante_id
+                                ? 'Escolha novamente cor, tamanho ou outra opção'
                               : isUnavailable
                                 ? 'Produto saiu do catálogo — remova para continuar'
                                 : 'Item indisponível no estoque'}
@@ -310,8 +338,7 @@ export default function CartDrawer({
                                 </button>
                                 <span className="w-8 text-center text-xs font-extrabold tabular-nums text-slate-900">{item.quantidade}</span>
                                 {(() => {
-                                  const controlaEstoque = !!item.item_detalhes?.controle_estoque;
-                                  const estoque = Number(item.item_detalhes?.estoque_disponivel || 0);
+                                  const { controle_estoque: controlaEstoque, estoque_disponivel: estoque } = getItemStockInfo(item);
                                   const noLimite = controlaEstoque && item.quantidade >= estoque;
                                   return (
                                     <button
@@ -448,7 +475,7 @@ export default function CartDrawer({
                   <div className="flex items-baseline justify-between pt-1 border-t border-slate-100">
                     <div>
                       <span className="font-bold text-slate-900 text-sm">Total dos itens</span>
-                      <span className="ml-2 text-[10px] text-slate-400 font-normal">Frete no checkout</span>
+                      <span className="ml-2 text-[10px] text-slate-400 font-normal">Frete calculado no checkout</span>
                     </div>
                     <span className="text-xl font-black text-[#17345f] tracking-tight">{formatCurrency(total)}</span>
                   </div>
@@ -457,7 +484,7 @@ export default function CartDrawer({
                 <div className="flex items-baseline justify-between">
                   <div>
                     <span className="font-bold text-slate-900 text-sm">Total dos itens</span>
-                    <span className="ml-2 text-[10px] text-slate-400 font-normal">Frete no checkout</span>
+                    <span className="ml-2 text-[10px] text-slate-400 font-normal">Frete calculado no checkout</span>
                   </div>
                   <span className="text-xl font-black text-[#17345f] tracking-tight">{formatCurrency(total)}</span>
                 </div>

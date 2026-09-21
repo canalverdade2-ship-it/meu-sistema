@@ -1,0 +1,2 @@
+sudo docker exec -e PGPASSWORD='evopass' evo-postgres psql -U evo -d n8n -t -c "SELECT CAST(data AS text) FROM execution_data WHERE \"executionId\" = 52020;" > /tmp/n8n_err_52020.json
+cat /tmp/n8n_err_52020.json | head -c 2000

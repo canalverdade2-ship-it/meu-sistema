@@ -1,0 +1,908 @@
+[
+  {
+    "table": "demanda_comentarios",
+    "column": "prestador_id",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\demandas\\DemandasComentarios.tsx",
+        "table": "demanda_comentarios",
+        "column": "prestador_id",
+        "selectClause": "prestador_id, colaborador_id, titulo"
+      }
+    ]
+  },
+  {
+    "table": "demanda_comentarios",
+    "column": "colaborador_id",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\demandas\\DemandasComentarios.tsx",
+        "table": "demanda_comentarios",
+        "column": "colaborador_id",
+        "selectClause": "prestador_id, colaborador_id, titulo"
+      }
+    ]
+  },
+  {
+    "table": "demanda_comentarios",
+    "column": "titulo",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\demandas\\DemandasComentarios.tsx",
+        "table": "demanda_comentarios",
+        "column": "titulo",
+        "selectClause": "prestador_id, colaborador_id, titulo"
+      }
+    ]
+  },
+  {
+    "table": "faturas",
+    "column": "id'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\relatorios\\RelatorioExecutivo.tsx",
+        "table": "faturas",
+        "column": "id'",
+        "selectClause": "id', { count: 'exact' }).eq('status', 'pendente"
+      }
+    ]
+  },
+  {
+    "table": "faturas",
+    "column": "'pendente",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\relatorios\\RelatorioExecutivo.tsx",
+        "table": "faturas",
+        "column": "'pendente",
+        "selectClause": "id', { count: 'exact' }).eq('status', 'pendente"
+      }
+    ]
+  },
+  {
+    "table": "saques",
+    "column": "id'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\relatorios\\RelatorioExecutivo.tsx",
+        "table": "saques",
+        "column": "id'",
+        "selectClause": "id', { count: 'exact' }).eq('status', 'pendente"
+      },
+      {
+        "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+        "table": "saques",
+        "column": "id'",
+        "selectClause": "id', { count: 'exact', head: true }).eq('status', 'pendente"
+      }
+    ]
+  },
+  {
+    "table": "saques",
+    "column": "'pendente",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\relatorios\\RelatorioExecutivo.tsx",
+        "table": "saques",
+        "column": "'pendente",
+        "selectClause": "id', { count: 'exact' }).eq('status', 'pendente"
+      },
+      {
+        "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+        "table": "saques",
+        "column": "'pendente",
+        "selectClause": "id', { count: 'exact', head: true }).eq('status', 'pendente"
+      }
+    ]
+  },
+  {
+    "table": "ordens_fiscais",
+    "column": "nome",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+        "table": "ordens_fiscais",
+        "column": "nome",
+        "selectClause": "id, nome, cpf, cnpj, email, telefone"
+      }
+    ]
+  },
+  {
+    "table": "ordens_fiscais",
+    "column": "cpf",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+        "table": "ordens_fiscais",
+        "column": "cpf",
+        "selectClause": "id, nome, cpf, cnpj, email, telefone"
+      }
+    ]
+  },
+  {
+    "table": "ordens_fiscais",
+    "column": "cnpj",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+        "table": "ordens_fiscais",
+        "column": "cnpj",
+        "selectClause": "id, nome, cpf, cnpj, email, telefone"
+      }
+    ]
+  },
+  {
+    "table": "ordens_fiscais",
+    "column": "email",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+        "table": "ordens_fiscais",
+        "column": "email",
+        "selectClause": "id, nome, cpf, cnpj, email, telefone"
+      }
+    ]
+  },
+  {
+    "table": "ordens_fiscais",
+    "column": "telefone",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+        "table": "ordens_fiscais",
+        "column": "telefone",
+        "selectClause": "id, nome, cpf, cnpj, email, telefone"
+      }
+    ]
+  },
+  {
+    "table": "saques",
+    "column": "'exact'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+        "table": "saques",
+        "column": "'exact'",
+        "selectClause": "id', { count: 'exact', head: true }).eq('status', 'pendente"
+      }
+    ]
+  },
+  {
+    "table": "cobrancas",
+    "column": "id'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+        "table": "cobrancas",
+        "column": "id'",
+        "selectClause": "id', { count: 'exact', head: true }).neq('status', 'quitado"
+      }
+    ]
+  },
+  {
+    "table": "cobrancas",
+    "column": "'exact'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+        "table": "cobrancas",
+        "column": "'exact'",
+        "selectClause": "id', { count: 'exact', head: true }).neq('status', 'quitado"
+      },
+      {
+        "file": "src\\utils\\riskProfile.ts",
+        "table": "cobrancas",
+        "column": "'exact'",
+        "selectClause": "*', { count: 'exact', head: true })\n        .eq('cliente_id', clienteId)\n        .neq('status', 'resolvida"
+      }
+    ]
+  },
+  {
+    "table": "cobrancas",
+    "column": "'quitado",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+        "table": "cobrancas",
+        "column": "'quitado",
+        "selectClause": "id', { count: 'exact', head: true }).neq('status', 'quitado"
+      }
+    ]
+  },
+  {
+    "table": "ordens_fiscais",
+    "column": "id'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+        "table": "ordens_fiscais",
+        "column": "id'",
+        "selectClause": "id', { count: 'exact', head: true }).eq('status_emissao', 'pendente_emissao"
+      }
+    ]
+  },
+  {
+    "table": "ordens_fiscais",
+    "column": "'exact'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+        "table": "ordens_fiscais",
+        "column": "'exact'",
+        "selectClause": "id', { count: 'exact', head: true }).eq('status_emissao', 'pendente_emissao"
+      }
+    ]
+  },
+  {
+    "table": "ordens_fiscais",
+    "column": "'pendente_emissao",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+        "table": "ordens_fiscais",
+        "column": "'pendente_emissao",
+        "selectClause": "id', { count: 'exact', head: true }).eq('status_emissao', 'pendente_emissao"
+      }
+    ]
+  },
+  {
+    "table": "orcamentos",
+    "column": "status'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+        "table": "orcamentos",
+        "column": "status'",
+        "selectClause": "id, status', { count: 'exact', head: false }),\n        supabase.from('ordens_servico"
+      }
+    ]
+  },
+  {
+    "table": "orcamentos",
+    "column": "'exact'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+        "table": "orcamentos",
+        "column": "'exact'",
+        "selectClause": "id, status', { count: 'exact', head: false }),\n        supabase.from('ordens_servico"
+      },
+      {
+        "file": "src\\components\\client\\store\\CouponsPage.tsx",
+        "table": "orcamentos",
+        "column": "'exact'",
+        "selectClause": "id', { count: 'exact', head: true })\n          .eq('cliente_id', clientId)\n          .neq('status', 'cancelado"
+      },
+      {
+        "file": "src\\hooks\\useClientNotifications.tsx",
+        "table": "orcamentos",
+        "column": "'exact'",
+        "selectClause": "*', { count: 'exact', head: true })\r\n        .eq('cliente_id', clientId)\r\n        .in('status', ['aberto', 'pendente', 'negociação', 'em revisão', 'pendência documentos']);\r\n\r\n      // Promoções precisam ser calculadas à parte por causa da lógica de data dinâmica\r\n      const now = new Date().toISOString();\r\n      const [promocoesAtivas, minhasPromosAtivadas] = await Promise.all([\r\n        supabase.from('promocoes"
+      },
+      {
+        "file": "src\\pages\\ClientPortal.tsx",
+        "table": "orcamentos",
+        "column": "'exact'",
+        "selectClause": "*', { count: 'exact', head: true })\n          .eq('cliente_id', clientId);\n\n        if (count === 0) {\n          setShowReferralModal(true);\n        }\n      }\n    }\n  };\n\n  const checkWelcomeBonus = async () => {\n    if (isCheckingBonus.current) return;\n    isCheckingBonus.current = true;\n\n    console.log('[Bonus] Verificando bônus de boas-vindas..."
+      }
+    ]
+  },
+  {
+    "table": "prestador_demandas",
+    "column": "id'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+        "table": "prestador_demandas",
+        "column": "id'",
+        "selectClause": "id', { count: 'exact', head: true }).in('status', ['aberta', 'em_andamento']),\n        supabase.from('ordens_compra"
+      }
+    ]
+  },
+  {
+    "table": "prestador_demandas",
+    "column": "'exact'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+        "table": "prestador_demandas",
+        "column": "'exact'",
+        "selectClause": "id', { count: 'exact', head: true }).in('status', ['aberta', 'em_andamento']),\n        supabase.from('ordens_compra"
+      }
+    ]
+  },
+  {
+    "table": "prestador_demandas",
+    "column": "['aberta'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+        "table": "prestador_demandas",
+        "column": "['aberta'",
+        "selectClause": "id', { count: 'exact', head: true }).in('status', ['aberta', 'em_andamento']),\n        supabase.from('ordens_compra"
+      }
+    ]
+  },
+  {
+    "table": "prestadores",
+    "column": "id'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "table": "prestadores",
+        "column": "id'",
+        "selectClause": "id', { count: 'exact', head: true })\n        .eq('status', 'ativo"
+      }
+    ]
+  },
+  {
+    "table": "prestadores",
+    "column": "'exact'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "table": "prestadores",
+        "column": "'exact'",
+        "selectClause": "id', { count: 'exact', head: true })\n        .eq('status', 'ativo"
+      }
+    ]
+  },
+  {
+    "table": "prestadores",
+    "column": "'ativo",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "table": "prestadores",
+        "column": "'ativo",
+        "selectClause": "id', { count: 'exact', head: true })\n        .eq('status', 'ativo"
+      }
+    ]
+  },
+  {
+    "table": "prestador_saques",
+    "column": "id'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "table": "prestador_saques",
+        "column": "id'",
+        "selectClause": "id', { count: 'exact', head: true })\n        .in('status', ['pendente', 'aguardando', 'em_analise']);\n\n      const { count: csCount } = await supabase\n        .from('saques"
+      }
+    ]
+  },
+  {
+    "table": "prestador_saques",
+    "column": "'exact'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "table": "prestador_saques",
+        "column": "'exact'",
+        "selectClause": "id', { count: 'exact', head: true })\n        .in('status', ['pendente', 'aguardando', 'em_analise']);\n\n      const { count: csCount } = await supabase\n        .from('saques"
+      }
+    ]
+  },
+  {
+    "table": "prestador_saques",
+    "column": "['pendente'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "table": "prestador_saques",
+        "column": "['pendente'",
+        "selectClause": "id', { count: 'exact', head: true })\n        .in('status', ['pendente', 'aguardando', 'em_analise']);\n\n      const { count: csCount } = await supabase\n        .from('saques"
+      }
+    ]
+  },
+  {
+    "table": "prestador_saques",
+    "column": "'aguardando'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "table": "prestador_saques",
+        "column": "'aguardando'",
+        "selectClause": "id', { count: 'exact', head: true })\n        .in('status', ['pendente', 'aguardando', 'em_analise']);\n\n      const { count: csCount } = await supabase\n        .from('saques"
+      }
+    ]
+  },
+  {
+    "table": "fornecedores",
+    "column": "id'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "table": "fornecedores",
+        "column": "id'",
+        "selectClause": "id', { count: 'exact', head: true })\n        .eq('status', 'ativo"
+      }
+    ]
+  },
+  {
+    "table": "fornecedores",
+    "column": "'exact'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "table": "fornecedores",
+        "column": "'exact'",
+        "selectClause": "id', { count: 'exact', head: true })\n        .eq('status', 'ativo"
+      }
+    ]
+  },
+  {
+    "table": "fornecedores",
+    "column": "'ativo",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "table": "fornecedores",
+        "column": "'ativo",
+        "selectClause": "id', { count: 'exact', head: true })\n        .eq('status', 'ativo"
+      }
+    ]
+  },
+  {
+    "table": "gsa_afiliados",
+    "column": "id'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "table": "gsa_afiliados",
+        "column": "id'",
+        "selectClause": "id', { count: 'exact', head: true })\n        .eq('status', 'ativo"
+      }
+    ]
+  },
+  {
+    "table": "gsa_afiliados",
+    "column": "'exact'",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "table": "gsa_afiliados",
+        "column": "'exact'",
+        "selectClause": "id', { count: 'exact', head: true })\n        .eq('status', 'ativo"
+      }
+    ]
+  },
+  {
+    "table": "gsa_afiliados",
+    "column": "'ativo",
+    "occurrences": [
+      {
+        "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+        "table": "gsa_afiliados",
+        "column": "'ativo",
+        "selectClause": "id', { count: 'exact', head: true })\n        .eq('status', 'ativo"
+      }
+    ]
+  },
+  {
+    "table": "faturas",
+    "column": "*'",
+    "occurrences": [
+      {
+        "file": "src\\components\\client\\ClientFinanceiro.tsx",
+        "table": "faturas",
+        "column": "*'",
+        "selectClause": "*', { count: 'exact', head: true })\r\n      .eq('cliente_id', clientId)\r\n      .eq('status', 'pago"
+      }
+    ]
+  },
+  {
+    "table": "faturas",
+    "column": "'exact'",
+    "occurrences": [
+      {
+        "file": "src\\components\\client\\ClientFinanceiro.tsx",
+        "table": "faturas",
+        "column": "'exact'",
+        "selectClause": "*', { count: 'exact', head: true })\r\n      .eq('cliente_id', clientId)\r\n      .eq('status', 'pago"
+      }
+    ]
+  },
+  {
+    "table": "faturas",
+    "column": "'pago",
+    "occurrences": [
+      {
+        "file": "src\\components\\client\\ClientFinanceiro.tsx",
+        "table": "faturas",
+        "column": "'pago",
+        "selectClause": "*', { count: 'exact', head: true })\r\n      .eq('cliente_id', clientId)\r\n      .eq('status', 'pago"
+      }
+    ]
+  },
+  {
+    "table": "cupons_ativados",
+    "column": "promocao_quantidade_id",
+    "occurrences": [
+      {
+        "file": "src\\components\\client\\ClientGSAStore.tsx",
+        "table": "cupons_ativados",
+        "column": "promocao_quantidade_id",
+        "selectClause": "promocao_quantidade_id"
+      }
+    ]
+  },
+  {
+    "table": "orcamentos",
+    "column": "id'",
+    "occurrences": [
+      {
+        "file": "src\\components\\client\\store\\CouponsPage.tsx",
+        "table": "orcamentos",
+        "column": "id'",
+        "selectClause": "id', { count: 'exact', head: true })\n          .eq('cliente_id', clientId)\n          .neq('status', 'cancelado"
+      }
+    ]
+  },
+  {
+    "table": "orcamentos",
+    "column": "'cancelado",
+    "occurrences": [
+      {
+        "file": "src\\components\\client\\store\\CouponsPage.tsx",
+        "table": "orcamentos",
+        "column": "'cancelado",
+        "selectClause": "id', { count: 'exact', head: true })\n          .eq('cliente_id', clientId)\n          .neq('status', 'cancelado"
+      }
+    ]
+  },
+  {
+    "table": "clientes",
+    "column": "quantidade",
+    "occurrences": [
+      {
+        "file": "src\\components\\client\\store\\EcommerceHeader.tsx",
+        "table": "clientes",
+        "column": "quantidade",
+        "selectClause": "quantidade"
+      }
+    ]
+  },
+  {
+    "table": "prestador_documentos",
+    "column": "updated_at",
+    "occurrences": [
+      {
+        "file": "src\\components\\prestador\\PrestadorDocumentos.tsx",
+        "table": "prestador_documentos",
+        "column": "updated_at",
+        "selectClause": "id,nome,tipo,urls,status,created_at,updated_at,motivo_rejeicao,enviado_por_admin"
+      }
+    ]
+  },
+  {
+    "table": "prestadores",
+    "column": "nome_completo",
+    "occurrences": [
+      {
+        "file": "src\\components\\prestador\\PrestadorFinanceiro.tsx",
+        "table": "prestadores",
+        "column": "nome_completo",
+        "selectClause": "nome_completo, telefone"
+      }
+    ]
+  },
+  {
+    "table": "prestador_promocoes",
+    "column": "data_inicio",
+    "occurrences": [
+      {
+        "file": "src\\components\\prestador\\PrestadorPromocoes.tsx",
+        "table": "prestador_promocoes",
+        "column": "data_inicio",
+        "selectClause": "id,titulo,descricao,regras,status,data_inicio,data_fim,created_at"
+      }
+    ]
+  },
+  {
+    "table": "tickets",
+    "column": "updated_at",
+    "occurrences": [
+      {
+        "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+        "table": "tickets",
+        "column": "updated_at",
+        "selectClause": "id,assunto,descricao,status,data_abertura,updated_at"
+      }
+    ]
+  },
+  {
+    "table": "orcamentos",
+    "column": "*'",
+    "occurrences": [
+      {
+        "file": "src\\hooks\\useClientNotifications.tsx",
+        "table": "orcamentos",
+        "column": "*'",
+        "selectClause": "*', { count: 'exact', head: true })\r\n        .eq('cliente_id', clientId)\r\n        .in('status', ['aberto', 'pendente', 'negociação', 'em revisão', 'pendência documentos']);\r\n\r\n      // Promoções precisam ser calculadas à parte por causa da lógica de data dinâmica\r\n      const now = new Date().toISOString();\r\n      const [promocoesAtivas, minhasPromosAtivadas] = await Promise.all([\r\n        supabase.from('promocoes"
+      },
+      {
+        "file": "src\\pages\\ClientPortal.tsx",
+        "table": "orcamentos",
+        "column": "*'",
+        "selectClause": "*', { count: 'exact', head: true })\n          .eq('cliente_id', clientId);\n\n        if (count === 0) {\n          setShowReferralModal(true);\n        }\n      }\n    }\n  };\n\n  const checkWelcomeBonus = async () => {\n    if (isCheckingBonus.current) return;\n    isCheckingBonus.current = true;\n\n    console.log('[Bonus] Verificando bônus de boas-vindas..."
+      }
+    ]
+  },
+  {
+    "table": "orcamentos",
+    "column": "['aberto'",
+    "occurrences": [
+      {
+        "file": "src\\hooks\\useClientNotifications.tsx",
+        "table": "orcamentos",
+        "column": "['aberto'",
+        "selectClause": "*', { count: 'exact', head: true })\r\n        .eq('cliente_id', clientId)\r\n        .in('status', ['aberto', 'pendente', 'negociação', 'em revisão', 'pendência documentos']);\r\n\r\n      // Promoções precisam ser calculadas à parte por causa da lógica de data dinâmica\r\n      const now = new Date().toISOString();\r\n      const [promocoesAtivas, minhasPromosAtivadas] = await Promise.all([\r\n        supabase.from('promocoes"
+      }
+    ]
+  },
+  {
+    "table": "orcamentos",
+    "column": "'pendente'",
+    "occurrences": [
+      {
+        "file": "src\\hooks\\useClientNotifications.tsx",
+        "table": "orcamentos",
+        "column": "'pendente'",
+        "selectClause": "*', { count: 'exact', head: true })\r\n        .eq('cliente_id', clientId)\r\n        .in('status', ['aberto', 'pendente', 'negociação', 'em revisão', 'pendência documentos']);\r\n\r\n      // Promoções precisam ser calculadas à parte por causa da lógica de data dinâmica\r\n      const now = new Date().toISOString();\r\n      const [promocoesAtivas, minhasPromosAtivadas] = await Promise.all([\r\n        supabase.from('promocoes"
+      }
+    ]
+  },
+  {
+    "table": "orcamentos",
+    "column": "'negociação'",
+    "occurrences": [
+      {
+        "file": "src\\hooks\\useClientNotifications.tsx",
+        "table": "orcamentos",
+        "column": "'negociação'",
+        "selectClause": "*', { count: 'exact', head: true })\r\n        .eq('cliente_id', clientId)\r\n        .in('status', ['aberto', 'pendente', 'negociação', 'em revisão', 'pendência documentos']);\r\n\r\n      // Promoções precisam ser calculadas à parte por causa da lógica de data dinâmica\r\n      const now = new Date().toISOString();\r\n      const [promocoesAtivas, minhasPromosAtivadas] = await Promise.all([\r\n        supabase.from('promocoes"
+      }
+    ]
+  },
+  {
+    "table": "orcamentos",
+    "column": "'em revisão'",
+    "occurrences": [
+      {
+        "file": "src\\hooks\\useClientNotifications.tsx",
+        "table": "orcamentos",
+        "column": "'em revisão'",
+        "selectClause": "*', { count: 'exact', head: true })\r\n        .eq('cliente_id', clientId)\r\n        .in('status', ['aberto', 'pendente', 'negociação', 'em revisão', 'pendência documentos']);\r\n\r\n      // Promoções precisam ser calculadas à parte por causa da lógica de data dinâmica\r\n      const now = new Date().toISOString();\r\n      const [promocoesAtivas, minhasPromosAtivadas] = await Promise.all([\r\n        supabase.from('promocoes"
+      }
+    ]
+  },
+  {
+    "table": "faturas",
+    "column": "fase_negociacao",
+    "occurrences": [
+      {
+        "file": "src\\lib\\pixService.ts",
+        "table": "faturas",
+        "column": "fase_negociacao",
+        "selectClause": "status, fase_negociacao"
+      }
+    ]
+  },
+  {
+    "table": "clientes",
+    "column": "key",
+    "occurrences": [
+      {
+        "file": "src\\pages\\ClientPortal.tsx",
+        "table": "clientes",
+        "column": "key",
+        "selectClause": "key, value"
+      }
+    ]
+  },
+  {
+    "table": "clientes",
+    "column": "value",
+    "occurrences": [
+      {
+        "file": "src\\pages\\ClientPortal.tsx",
+        "table": "clientes",
+        "column": "value",
+        "selectClause": "key, value"
+      }
+    ]
+  },
+  {
+    "table": "emprestimo_historico",
+    "column": "value",
+    "occurrences": [
+      {
+        "file": "src\\utils\\emprestimoUtils.ts",
+        "table": "emprestimo_historico",
+        "column": "value",
+        "selectClause": "value"
+      }
+    ]
+  },
+  {
+    "table": "emprestimos",
+    "column": "*'",
+    "occurrences": [
+      {
+        "file": "src\\utils\\emprestimoUtils.ts",
+        "table": "emprestimos",
+        "column": "*'",
+        "selectClause": "*', { count: 'exact', head: true })\n    .eq('cliente_id', clienteId)\n    .not('status', 'in', '(\"quitado\",\"cancelado\",\"proposta_expirada"
+      }
+    ]
+  },
+  {
+    "table": "emprestimos",
+    "column": "'exact'",
+    "occurrences": [
+      {
+        "file": "src\\utils\\emprestimoUtils.ts",
+        "table": "emprestimos",
+        "column": "'exact'",
+        "selectClause": "*', { count: 'exact', head: true })\n    .eq('cliente_id', clienteId)\n    .not('status', 'in', '(\"quitado\",\"cancelado\",\"proposta_expirada"
+      }
+    ]
+  },
+  {
+    "table": "emprestimos",
+    "column": "'in'",
+    "occurrences": [
+      {
+        "file": "src\\utils\\emprestimoUtils.ts",
+        "table": "emprestimos",
+        "column": "'in'",
+        "selectClause": "*', { count: 'exact', head: true })\n    .eq('cliente_id', clienteId)\n    .not('status', 'in', '(\"quitado\",\"cancelado\",\"proposta_expirada"
+      }
+    ]
+  },
+  {
+    "table": "emprestimo_parcelas",
+    "column": "*'",
+    "occurrences": [
+      {
+        "file": "src\\utils\\emprestimoUtils.ts",
+        "table": "emprestimo_parcelas",
+        "column": "*'",
+        "selectClause": "*', { count: 'exact', head: true })\n    .eq('cliente_id', clienteId)\n    .eq('status', 'vencida"
+      }
+    ]
+  },
+  {
+    "table": "emprestimo_parcelas",
+    "column": "'exact'",
+    "occurrences": [
+      {
+        "file": "src\\utils\\emprestimoUtils.ts",
+        "table": "emprestimo_parcelas",
+        "column": "'exact'",
+        "selectClause": "*', { count: 'exact', head: true })\n    .eq('cliente_id', clienteId)\n    .eq('status', 'vencida"
+      }
+    ]
+  },
+  {
+    "table": "emprestimo_parcelas",
+    "column": "'vencida",
+    "occurrences": [
+      {
+        "file": "src\\utils\\emprestimoUtils.ts",
+        "table": "emprestimo_parcelas",
+        "column": "'vencida",
+        "selectClause": "*', { count: 'exact', head: true })\n    .eq('cliente_id', clienteId)\n    .eq('status', 'vencida"
+      }
+    ]
+  },
+  {
+    "table": "cobrancas",
+    "column": "*'",
+    "occurrences": [
+      {
+        "file": "src\\utils\\riskProfile.ts",
+        "table": "cobrancas",
+        "column": "*'",
+        "selectClause": "*', { count: 'exact', head: true })\n        .eq('cliente_id', clienteId)\n        .neq('status', 'resolvida"
+      }
+    ]
+  },
+  {
+    "table": "cobrancas",
+    "column": "'resolvida",
+    "occurrences": [
+      {
+        "file": "src\\utils\\riskProfile.ts",
+        "table": "cobrancas",
+        "column": "'resolvida",
+        "selectClause": "*', { count: 'exact', head: true })\n        .eq('cliente_id', clienteId)\n        .neq('status', 'resolvida"
+      }
+    ]
+  },
+  {
+    "table": "produtos",
+    "column": "saldo_pontos",
+    "occurrences": [
+      {
+        "file": "src\\validation\\master_block2.ts",
+        "table": "produtos",
+        "column": "saldo_pontos",
+        "selectClause": "saldo_pontos"
+      }
+    ]
+  },
+  {
+    "table": "faturas",
+    "column": "indicacao_origem_id",
+    "occurrences": [
+      {
+        "file": "src\\validation\\step3_finance_gamification.ts",
+        "table": "faturas",
+        "column": "indicacao_origem_id",
+        "selectClause": "indicacao_origem_id"
+      }
+    ]
+  },
+  {
+    "table": "notificacoes",
+    "column": "*'",
+    "occurrences": [
+      {
+        "file": "src\\validation\\step3_finance_gamification.ts",
+        "table": "notificacoes",
+        "column": "*'",
+        "selectClause": "*', { count: 'exact', head: true })\n        .in('cliente_id', [TEST_INDICATOR_ID, TEST_CLIENT_ID]);\n    logValidation(`Notificações geradas: ${notifCount}`, 'success"
+      }
+    ]
+  },
+  {
+    "table": "notificacoes",
+    "column": "'exact'",
+    "occurrences": [
+      {
+        "file": "src\\validation\\step3_finance_gamification.ts",
+        "table": "notificacoes",
+        "column": "'exact'",
+        "selectClause": "*', { count: 'exact', head: true })\n        .in('cliente_id', [TEST_INDICATOR_ID, TEST_CLIENT_ID]);\n    logValidation(`Notificações geradas: ${notifCount}`, 'success"
+      }
+    ]
+  },
+  {
+    "table": "notificacoes",
+    "column": "[TEST_INDICATOR_ID",
+    "occurrences": [
+      {
+        "file": "src\\validation\\step3_finance_gamification.ts",
+        "table": "notificacoes",
+        "column": "[TEST_INDICATOR_ID",
+        "selectClause": "*', { count: 'exact', head: true })\n        .in('cliente_id', [TEST_INDICATOR_ID, TEST_CLIENT_ID]);\n    logValidation(`Notificações geradas: ${notifCount}`, 'success"
+      }
+    ]
+  },
+  {
+    "table": "notificacoes",
+    "column": "'success",
+    "occurrences": [
+      {
+        "file": "src\\validation\\step3_finance_gamification.ts",
+        "table": "notificacoes",
+        "column": "'success",
+        "selectClause": "*', { count: 'exact', head: true })\n        .in('cliente_id', [TEST_INDICATOR_ID, TEST_CLIENT_ID]);\n    logValidation(`Notificações geradas: ${notifCount}`, 'success"
+      }
+    ]
+  },
+  {
+    "table": "clientes",
+    "column": "count",
+    "occurrences": [
+      {
+        "file": "src\\validation\\step4_integrity_audit.ts",
+        "table": "clientes",
+        "column": "count",
+        "selectClause": "count"
+      }
+    ]
+  }
+]

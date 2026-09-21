@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+const p='supabase/migrations/20260829212500_marketplace_legacy_items_backfill_and_refund_shape.sql';
+let s=fs.readFileSync(p,'utf8').replace(/\r\n/g,'\n');
+const marker='-- Normaliza snapshots históricos de produtos sem alterar estoque, saldo ou status.\n';
+if(!s.includes(marker)) throw new Error('marker missing');
+s=s.replace(marker,`CREATE TEMP TABLE legacy_marketplace_budgets ON COMMIT DROP AS\nSELECT o.id\nFROM public.orcamentos o\nWHERE NOT EXISTS (SELECT 1 FROM public.loja_pedido_itens li WHERE li.orcamento_id = o.id)\n  AND (EXISTS (SELECT 1 FROM public.ordens_compra oc WHERE oc.orcamento_id = o.id)\n    OR EXISTS (SELECT 1 FROM public.ordens_assinatura oa WHERE oa.orcamento_id = o.id));\n\n-- Normaliza snapshots históricos de produtos sem alterar estoque, saldo ou status.\n`);
+s=s.replace("JOIN public.orcamentos o ON o.id = oc.orcamento_id\nLEFT JOIN public.produtos p", "JOIN public.orcamentos o ON o.id = oc.orcamento_id\nJOIN legacy_marketplace_budgets lb ON lb.id = o.id\nLEFT JOIN public.produtos p");
+s=s.replace(/WHERE oc\.produto_id IS NOT NULL\n  AND NOT EXISTS \([\s\S]*?\n  \);\n\n-- Normaliza snapshots históricos de assinaturas\./, "WHERE oc.produto_id IS NOT NULL;\n\n-- Normaliza snapshots históricos de assinaturas.");
+s=s.replace("JOIN public.orcamentos o ON o.id = oa.orcamento_id\nLEFT JOIN public.assinaturas a", "JOIN public.orcamentos o ON o.id = oa.orcamento_id\nJOIN legacy_marketplace_budgets lb ON lb.id = o.id\nLEFT JOIN public.assinaturas a");
+s=s.replace(/WHERE oa\.assinatura_id IS NOT NULL\n  AND NOT EXISTS \([\s\S]*?\n  \);\n?$/, "WHERE oa.assinatura_id IS NOT NULL;\n\nNOTIFY pgrst, 'reload schema';\nCOMMIT;\n");
+fs.writeFileSync(p,s,'utf8');
+console.log('LEGACY_SCOPE_PATCHED');

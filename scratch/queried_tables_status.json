@@ -1,0 +1,704 @@
+[
+  {
+    "table": "assinaturas",
+    "rls": "VIEW_OR_UNTRACKED",
+    "policiesCount": 0,
+    "queriedInFilesCount": 10
+  },
+  {
+    "table": "automacao_scraping_configs",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "automacao_scraping_logs",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "blog_posts",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "carteira_lancamentos",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "classificados_anuncios",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 8
+  },
+  {
+    "table": "classificados_comissoes",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "classificados_comissoes_config",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "classificados_midias",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "classificados_propostas",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "classificados_transacoes",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "client_levels",
+    "rls": "VIEW_OR_UNTRACKED",
+    "policiesCount": 0,
+    "queriedInFilesCount": 5
+  },
+  {
+    "table": "cliente_documentos",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 3
+  },
+  {
+    "table": "cliente_notas_admin",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "cliente_premios",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 4
+  },
+  {
+    "table": "cliente_promocoes",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 9
+  },
+  {
+    "table": "clientes",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 60
+  },
+  {
+    "table": "cobrancas",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 5
+  },
+  {
+    "table": "colaboradores",
+    "rls": true,
+    "policiesCount": 5,
+    "queriedInFilesCount": 9
+  },
+  {
+    "table": "contratos",
+    "rls": true,
+    "policiesCount": 3,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "cupons_ativados",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 4
+  },
+  {
+    "table": "cupons_loja",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 11
+  },
+  {
+    "table": "demanda_comentarios",
+    "rls": "VIEW_OR_UNTRACKED",
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "documentos_cliente",
+    "rls": "VIEW_OR_UNTRACKED",
+    "policiesCount": 0,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "documentos_prestador",
+    "rls": "VIEW_OR_UNTRACKED",
+    "policiesCount": 0,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "empresa",
+    "rls": "VIEW_OR_UNTRACKED",
+    "policiesCount": 0,
+    "queriedInFilesCount": 5
+  },
+  {
+    "table": "emprestimo_comentarios",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "emprestimo_documentos",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "emprestimo_historico",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 3
+  },
+  {
+    "table": "emprestimo_parcelas",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 6
+  },
+  {
+    "table": "emprestimos",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 11
+  },
+  {
+    "table": "extrato_financeiro",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 9
+  },
+  {
+    "table": "fatura_contestacoes",
+    "rls": true,
+    "policiesCount": 3,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "faturas",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 28
+  },
+  {
+    "table": "gsa_afiliado_atribuicoes",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "gsa_afiliado_links",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "gsa_afiliados",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 3
+  },
+  {
+    "table": "gsa_client_operation_requests",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "gsa_tv_",
+    "rls": "VIEW_OR_UNTRACKED",
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "gsa_tv_graphics",
+    "rls": false,
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "gsa_whatsapp_ramais",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "indicacoes",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 11
+  },
+  {
+    "table": "level_history",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 3
+  },
+  {
+    "table": "loja_avaliacoes",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 3
+  },
+  {
+    "table": "loja_carrinhos",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 8
+  },
+  {
+    "table": "loja_categorias",
+    "rls": "VIEW_OR_UNTRACKED",
+    "policiesCount": 0,
+    "queriedInFilesCount": 7
+  },
+  {
+    "table": "loja_credito_documentos",
+    "rls": false,
+    "policiesCount": 2,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "loja_credito_movimentacoes",
+    "rls": false,
+    "policiesCount": 2,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "loja_credito_solicitacoes",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 7
+  },
+  {
+    "table": "loja_estoque_historico",
+    "rls": "VIEW_OR_UNTRACKED",
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "loja_favoritos",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "loja_pedido_itens",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "loja_pedidos",
+    "rls": "VIEW_OR_UNTRACKED",
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "loja_reembolsos",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "loja_solicitacoes",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 6
+  },
+  {
+    "table": "loja_vaquinha_contribuicoes",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "notificacao_leituras",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "notificacoes",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 8
+  },
+  {
+    "table": "orcamento_timeline",
+    "rls": true,
+    "policiesCount": 6,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "orcamentos",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 24
+  },
+  {
+    "table": "ordens_assinatura",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 13
+  },
+  {
+    "table": "ordens_compra",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 10
+  },
+  {
+    "table": "ordens_fiscais",
+    "rls": "VIEW_OR_UNTRACKED",
+    "policiesCount": 0,
+    "queriedInFilesCount": 11
+  },
+  {
+    "table": "ordens_servico",
+    "rls": false,
+    "policiesCount": 2,
+    "queriedInFilesCount": 15
+  },
+  {
+    "table": "os_notas",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 4
+  },
+  {
+    "table": "os_suporte_mensagens",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 3
+  },
+  {
+    "table": "pagamentos",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 4
+  },
+  {
+    "table": "parceiros",
+    "rls": true,
+    "policiesCount": 4,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "parceiros_publicos",
+    "rls": "VIEW_OR_UNTRACKED",
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "parceiros_resgates",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "parceiros_resgates_eventos",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "points_transactions",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 5
+  },
+  {
+    "table": "pontos_movimentacoes",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 7
+  },
+  {
+    "table": "prestador_agendamentos",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "prestador_demandas",
+    "rls": true,
+    "policiesCount": 3,
+    "queriedInFilesCount": 17
+  },
+  {
+    "table": "prestador_demandas_historico",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 3
+  },
+  {
+    "table": "prestador_documentos",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "prestador_faturas",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "prestador_historico",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "prestador_premios",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "prestador_promocoes",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "prestador_promocoes_ativacoes",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "prestador_saques",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 5
+  },
+  {
+    "table": "prestador_suporte_demandas",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "prestador_transacoes",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 4
+  },
+  {
+    "table": "prestador_vouchers",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "prestadores",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 17
+  },
+  {
+    "table": "pricing_configs",
+    "rls": "VIEW_OR_UNTRACKED",
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "produto_variacao_grupos",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "produto_variacao_opcoes",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "produto_variante_opcoes",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "produto_variantes",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "produtos",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 19
+  },
+  {
+    "table": "promocoes",
+    "rls": false,
+    "policiesCount": 0,
+    "queriedInFilesCount": 7
+  },
+  {
+    "table": "promocoes_quantidade",
+    "rls": "VIEW_OR_UNTRACKED",
+    "policiesCount": 0,
+    "queriedInFilesCount": 6
+  },
+  {
+    "table": "promocoes_quantidade_ativadas",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 4
+  },
+  {
+    "table": "promocoes_quantidade_uso",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "saques",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 10
+  },
+  {
+    "table": "saude_contratos",
+    "rls": false,
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "seguros_apolices",
+    "rls": false,
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "servicos",
+    "rls": "VIEW_OR_UNTRACKED",
+    "policiesCount": 0,
+    "queriedInFilesCount": 6
+  },
+  {
+    "table": "sistema_logs",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 4
+  },
+  {
+    "table": "solicitacoes_exclusao",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 4
+  },
+  {
+    "table": "suporte_mensagens",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "system_settings",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 20
+  },
+  {
+    "table": "ticket_mensagens",
+    "rls": false,
+    "policiesCount": 1,
+    "queriedInFilesCount": 6
+  },
+  {
+    "table": "tickets",
+    "rls": true,
+    "policiesCount": 2,
+    "queriedInFilesCount": 13
+  },
+  {
+    "table": "transferencias",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 7
+  },
+  {
+    "table": "viagens_categorias",
+    "rls": "VIEW_OR_UNTRACKED",
+    "policiesCount": 0,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "viagens_orcamentos",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "viagens_pacote_imagens",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "viagens_pacotes",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 4
+  },
+  {
+    "table": "viagens_passageiro_documentos",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "viagens_passageiros",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 1
+  },
+  {
+    "table": "viagens_propostas",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 2
+  },
+  {
+    "table": "viagens_transacoes",
+    "rls": true,
+    "policiesCount": 0,
+    "queriedInFilesCount": 3
+  },
+  {
+    "table": "vouchers",
+    "rls": true,
+    "policiesCount": 1,
+    "queriedInFilesCount": 9
+  }
+]

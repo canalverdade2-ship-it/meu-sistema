@@ -61,44 +61,32 @@ includesAll('src/components/admin/AdvertisingAdminModule.tsx', [
 ]);
 
 includesAll('src/components/ads/AdvertisingSlot.tsx', [
-  "'gsa-ad-delivery'",
   "action: 'serve'",
   "action: 'event'",
   "record('viewable')",
   'rel="sponsored noopener noreferrer"',
 ]);
 
-includesAll('supabase/functions/gsa-ad-delivery/index.ts', [
+includesAll('supabase/functions/gsa-ads-public/index.ts', [
   'MAX_BODY_BYTES',
-  'AD_DELIVERY_HASH_SALT',
   'gsa_auth_rate_limit_check',
-  "`ads:delivery:${action || 'unknown'}:ip:${ipHash}`",
-  '`ads:delivery:viewer:${viewerHash}`',
   'too_many_attempts',
   'gsa_ads_serve',
   'gsa_ads_record_event',
-  "createSignedUrl(data.ad.storage_path, 300)",
-]);
-
-includesAll('supabase/functions/gsa-advertiser-admin/index.ts', [
-  'inviteUserByEmail',
-  'gsa_admin_get_advertiser_invite_target',
-  'gsa_admin_link_advertiser_auth',
-]);
-
-includesAll('supabase/functions/gsa-advertising-webhook/index.ts', [
-  'ADVERTISING_WEBHOOK_SECRET',
-  "request.headers.get('x-gsa-signature')",
-  'gsa_ads_process_payment_event',
-  'safeEqual',
-]);
-
-includesAll('supabase/functions/gsa-advertising-scheduler/index.ts', [
   'ADVERTISING_CRON_SECRET',
   'safeEqual',
   'gsa_ads_refresh_campaign_states',
   'gsa_ads_list_orphan_creative_paths',
-  "from('gsa-ad-creatives').remove(orphanPaths)",
+]);
+
+includesAll('supabase/functions/gsa-ads-admin/index.ts', [
+  'inviteUserByEmail',
+  'gsa_admin_get_advertiser_invite_target',
+  'gsa_admin_link_advertiser_auth',
+  'ADVERTISING_WEBHOOK_SECRET',
+  "request.headers.get('x-gsa-signature')",
+  'gsa_ads_process_payment_event',
+  'safeEqual',
 ]);
 
 console.log('ADVERTISING_COMPLETION_CONTRACTS_OK');

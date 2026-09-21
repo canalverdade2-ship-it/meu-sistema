@@ -1,0 +1,24 @@
+name: gsa-n8n-runtime
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:2.33.5
+    container_name: n8n
+    restart: unless-stopped
+    env_file:
+      - /etc/gsa/n8n.env
+    ports:
+      - "127.0.0.1:5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      gsa-network: {}
+      gsa-tv-automation-net:
+        ipv4_address: 172.30.250.2
+volumes:
+  n8n_data:
+    external: true
+networks:
+  gsa-network:
+    external: true
+  gsa-tv-automation-net:
+    external: true

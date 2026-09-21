@@ -1,0 +1,1 @@
+sudo docker exec -e PGPASSWORD='evopass' evo-postgres psql -U evo -d n8n -t -c "SELECT \"versionId\", \"activeVersionId\", active FROM workflow_entity WHERE id = 'AAAABBBBCCCCDDDD';"

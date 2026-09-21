@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, MoreHorizontal, Briefcase, Trash2, User, Building2, Store, Image as ImageIcon, Upload, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { callAdminRpc, createAdminRequestId } from '../../lib/adminRpc';
 import { uploadToR2 } from '../../lib/r2Storage';
 import { Servico } from '../../types';
 import { Modal } from '../ui/Modal';
-import { formatCurrency, formatDate, generateCode } from '../../lib/utils';
+import { formatCurrency, formatDate } from '../../lib/utils';
 import { toast } from 'react-hot-toast';
 import { canDeleteRecord } from '../../lib/deleteRequest';
 import { logService } from '../../lib/logService';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 // Helper functions for gallery mapping
 const mapGalleryToColumns = (images: string[]) => {
@@ -77,25 +79,22 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
 
   useEffect(() => {
     fetchServicos();
+  }, [activeTab, search, tipoClienteFilter]);
 
-    const channel = supabase
-      .channel('admin-servicos-updates')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'servicos'
-      }, (payload) => {
-        fetchServicos();
+  useRealtimeSubscription([
+    {
+      table: 'servicos',
+      onChange: fetchServicos,
+      onPayload: (payload) => {
         if (payload.new && selectedServico && (payload.new as any).id === selectedServico.id) {
           setSelectedServico(prev => prev ? { ...prev, ...payload.new } as Servico : null);
         }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeTab, search, tipoClienteFilter, selectedServico?.id]);
+      },
+      debounceMs: 300,
+    },
+    { table: 'loja_categorias', onChange: fetchServicos, debounceMs: 300 },
+    { table: 'catalog_services', onChange: fetchServicos, debounceMs: 300 },
+  ], [activeTab, search, tipoClienteFilter, selectedServico?.id]);
 
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -112,8 +111,12 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
 
       // publicUrl is handled by uploadToR2 directly if bucket is public, else use getR2PublicUrl or getPrivateR2Url.
 
-      const { error: updateError } = await supabase.from('servicos').update({ imagem_url: publicUrl }).eq('id', selectedServico.id);
-      if (updateError) throw updateError;
+      await callAdminRpc('gsa_admin_service_mutation', {
+        p_action: 'save',
+        p_servico_id: selectedServico.id,
+        p_payload: { imagem_url: publicUrl },
+        p_request_id: createAdminRequestId(),
+      });
 
       setSelectedServico({ ...selectedServico, imagem_url: publicUrl });
       toast.success('Imagem atualizada com sucesso!');
@@ -125,7 +128,7 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
     }
   };
 
-  const fetchServicos = async () => {
+  async function fetchServicos() {
     let query = supabase
       .from('servicos')
       .select('*')
@@ -146,17 +149,17 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
   const handleCreate = async (formData: any) => {
     try {
       const { imagens_adicionais, ...otherData } = formData;
-      const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
-
-      const { data, error } = await supabase.from('servicos').insert([{
-        ...otherData,
-        ...galleryCols,
-        descricao: otherData.descricao || '',
-        codigo_servico: generateCode('SRV'),
-        status: 'ativo'
-      }]).select().single();
-
-      if (error) throw error;
+      const galleryCols = mapGalleryToColumns(imagens_adicionais || []);      const data = await callAdminRpc<Servico>('gsa_admin_service_mutation', {
+        p_action: 'save',
+        p_servico_id: null,
+        p_payload: {
+          ...otherData,
+          ...galleryCols,
+          descricao: otherData.descricao || '',
+          status: 'ativo',
+        },
+        p_request_id: createAdminRequestId(),
+      });
 
       toast.success('Serviço cadastrado com sucesso.');
       
@@ -165,7 +168,7 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
         acao: 'CRIAR_SERVICO',
         ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
         ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
+        ator_nome: colaboradorNome || 'Sistema',
         detalhes: `Cadastrou o serviço: ${formData.nome} (${formatCurrency(formData.valor)})`
       });
 
@@ -187,15 +190,16 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
     if (!selectedServico) return false;
     try {
       const { imagens_adicionais, ...otherData } = formData;
-      const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
-
-      const { error } = await supabase.from('servicos').update({
-        ...otherData,
-        ...galleryCols,
-        descricao: otherData.descricao || '',
-      }).eq('id', selectedServico.id);
-
-      if (error) throw error;
+      const galleryCols = mapGalleryToColumns(imagens_adicionais || []);      await callAdminRpc('gsa_admin_service_mutation', {
+        p_action: 'save',
+        p_servico_id: selectedServico.id,
+        p_payload: {
+          ...otherData,
+          ...galleryCols,
+          descricao: otherData.descricao || '',
+        },
+        p_request_id: createAdminRequestId(),
+      });
 
       toast.success('Serviço atualizado com sucesso.');
       
@@ -203,7 +207,7 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
         acao: 'EDITAR_SERVICO',
         ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
         ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
+        ator_nome: colaboradorNome || 'Sistema',
         detalhes: `Editou o serviço: ${formData.nome} (#${selectedServico.codigo_servico})`
       });
 
@@ -405,8 +409,12 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
 
                           try {
                             setSelectedServico({ ...selectedServico, tipo_cliente: next });
-                            const { error } = await supabase.from('servicos').update({ tipo_cliente: next }).eq('id', selectedServico.id);
-                            if (error) throw error;
+                            await callAdminRpc('gsa_admin_service_mutation', {
+                              p_action: 'save',
+                              p_servico_id: selectedServico.id,
+                              p_payload: { tipo_cliente: next },
+                              p_request_id: createAdminRequestId(),
+                            });
 
                             toast.success('Tipo de cliente atualizado.');
                             
@@ -414,7 +422,7 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
                               acao: 'EDITAR_SERVICO',
                               ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
                               ator_id: colaboradorId || undefined,
-                              ator_nome: colaboradorNome || 'Administrador',
+                              ator_nome: colaboradorNome || 'Sistema',
                               detalhes: `Alterou o tipo de cliente do serviço ${selectedServico.nome} para ${next}`
                             });
 
@@ -454,8 +462,12 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
                         try {
                           const newOcultar = e.target.checked;
                           setSelectedServico({ ...selectedServico, ocultar_valor: newOcultar });
-                          const { error } = await supabase.from('servicos').update({ ocultar_valor: newOcultar }).eq('id', selectedServico.id);
-                          if (error) throw error;
+                          await callAdminRpc('gsa_admin_service_mutation', {
+                            p_action: 'save',
+                            p_servico_id: selectedServico.id,
+                            p_payload: { ocultar_valor: newOcultar },
+                            p_request_id: createAdminRequestId(),
+                          });
                           
                           toast.success('Visibilidade de preço atualizada.');
                           fetchServicos();
@@ -517,8 +529,12 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
                       }
 
                       try {
-                        const { error } = await supabase.from('servicos').delete().eq('id', selectedServico.id);
-                        if (error) throw error;
+                        await callAdminRpc('gsa_admin_service_mutation', {
+                          p_action: 'delete',
+                          p_servico_id: selectedServico.id,
+                          p_payload: {},
+                          p_request_id: createAdminRequestId(),
+                        });
 
                         toast.success('Serviço excluído com sucesso.');
                         
@@ -527,7 +543,7 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
                           acao: 'EXCLUIR_SERVICO',
                           ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
                           ator_id: colaboradorId || undefined,
-                          ator_nome: colaboradorNome || 'Administrador',
+                          ator_nome: colaboradorNome || 'Sistema',
                           detalhes: `Excluiu permanentemente o serviço: ${selectedServico.nome} (#${selectedServico.codigo_servico})`
                         });
 
@@ -551,11 +567,12 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
                   <button 
                     onClick={async () => {
                       try {
-                        const newStatus = selectedServico.status === 'ativo' ? 'inativo' : 'ativo';
-                        const { error } = await supabase.from('servicos').update({ 
-                          status: newStatus
-                        }).eq('id', selectedServico.id);
-                        if (error) throw error;
+                        const newStatus = selectedServico.status === 'ativo' ? 'inativo' : 'ativo';                        await callAdminRpc('gsa_admin_service_mutation', {
+                          p_action: 'save',
+                          p_servico_id: selectedServico.id,
+                          p_payload: { status: newStatus },
+                          p_request_id: createAdminRequestId(),
+                        });
 
                         toast.success(`Serviço ${newStatus === 'ativo' ? 'ativado' : 'inativado'} com sucesso.`);
                         
@@ -564,7 +581,7 @@ export function ServicosModule({ activeSubTab, initialItemId, colaboradorId, col
                           acao: newStatus === 'ativo' ? 'ATIVAR_SERVICO' : 'INATIVAR_SERVICO',
                           ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
                           ator_id: colaboradorId || undefined,
-                          ator_nome: colaboradorNome || 'Administrador',
+                          ator_nome: colaboradorNome || 'Sistema',
                           detalhes: `${newStatus === 'ativo' ? 'Ativou' : 'Inativou'} o serviço: ${selectedServico.nome}`
                         });
 
@@ -727,12 +744,13 @@ function ServicoForm({ initialData, onSubmit, onCancel, categorias = [] }: { ini
       </div>
       <div>
         <label className="mb-1 block text-sm font-bold text-neutral-700">Valor (R$) *</label>
-        <input 
+        <input  
           type="number" 
           step="0.01"
           required
           value={formData.valor}
-          onChange={e => setFormData({...formData, valor: e.target.value})}
+          inputMode="numeric"
+onChange={(e) => setFormData({...formData, valor: e.target.value})}
           className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none"
         />
       </div>
@@ -759,10 +777,11 @@ function ServicoForm({ initialData, onSubmit, onCancel, categorias = [] }: { ini
         </div>
         <div>
           <label className="mb-1 block text-sm font-bold text-neutral-700">Ordem</label>
-          <input
+          <input 
             type="number"
             value={formData.ordem_catalogo}
-            onChange={e => setFormData({...formData, ordem_catalogo: Number(e.target.value) || 0})}
+            inputMode="numeric"
+onChange={(e) => setFormData({...formData, ordem_catalogo: Number(e.target.value) || 0})}
             className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none"
           />
         </div>

@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { sessionService } from './sessionService';
+import type { ProductVariationsPayload } from '../types/productVariations';
 
 export interface ParsedProductData {
   candidate_id?: string;
@@ -9,6 +10,8 @@ export interface ParsedProductData {
   moeda: string | null;
   nome_fornecedor: string | null;
   imagens: string[];
+  sku?: string | null;
+  variacoes: ProductVariationsPayload;
   url_original: string;
   url_final: string;
   origem_campos: Record<string, string>;
@@ -46,7 +49,11 @@ export const productUrlImportService = {
     return data.data as ParsedProductData;
   },
 
-  async importProductImages(images: string[]): Promise<{ uploaded: string[], failed: string[] }> {
+  async importProductImages(images: string[]): Promise<{
+    uploaded: string[];
+    failed: string[];
+    mappings: Array<{ original: string; uploaded: string }>;
+  }> {
     const session = sessionService.getCurrentSession();
     if (!session?.sessaoId || !session?.sessionToken) {
       throw new Error('Sessão administrativa não encontrada');
@@ -71,7 +78,8 @@ export const productUrlImportService = {
 
     return {
       uploaded: data?.data?.uploaded || [],
-      failed: data?.data?.failed || []
+      failed: data?.data?.failed || [],
+      mappings: data?.data?.mappings || [],
     };
   },
 

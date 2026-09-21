@@ -59,6 +59,11 @@ function walk(directory, files = []) {
 }
 
 function inspectLine(file, line, lineNumber, pattern, severity) {
+  const trimmed = line.trim();
+  const isComment = trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*');
+  if (isComment && (/(?:dados?|data)\s+(?:fict[ií]ci[oa]s?)/i.test(line) || /\bmocked\b/i.test(line))) {
+    return null;
+  }
   pattern.regex.lastIndex = 0;
   if (!pattern.regex.test(line)) return null;
   return {

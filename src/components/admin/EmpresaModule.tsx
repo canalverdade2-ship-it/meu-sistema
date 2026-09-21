@@ -3,7 +3,7 @@ import { Building2, Save, AlertCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Empresa } from '../../types';
 import { toast } from 'react-hot-toast';
-import { maskPhone } from '../../lib/utils';
+import { maskCNPJ, maskPhone } from '../../lib/utils';
 
 export function EmpresaModule() {
   const [empresa, setEmpresa] = useState<Empresa | null>(null);
@@ -147,11 +147,14 @@ export function EmpresaModule() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-bold text-neutral-700">CNPJ *</label>
-              <input 
+              <input  
                 type="text" 
                 required
-                value={formData.cnpj}
-                onChange={e => setFormData({...formData, cnpj: e.target.value})}
+                placeholder="00.000.000/0000-00"
+                maxLength={18}
+                value={maskCNPJ(formData.cnpj)}
+                inputMode="numeric"
+onChange={(e) => setFormData({...formData, cnpj: maskCNPJ(e.target.value)})}
                 className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none"
               />
             </div>

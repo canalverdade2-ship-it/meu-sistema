@@ -1,5 +1,5 @@
 import { callAdminRpc } from './adminRpc';
-import { supabase } from './supabase';
+import type { ProductVariationsPayload } from '../types/productVariations';
 
 export type StoreOrderStatus = 'pago' | 'em_expedicao' | 'em_transporte' | 'concluido';
 
@@ -23,11 +23,13 @@ export async function transitionAdminStoreOrder(input: {
   requestId: string;
   ordemId: string;
   status: StoreOrderStatus;
+  tracking?: { rastreavel: boolean; codigo: string };
 }) {
-  return callAdminRpc<any>('gsa_admin_transition_store_order', {
+  return callAdminRpc<any>(input.tracking ? 'gsa_admin_ship_store_order' : 'gsa_admin_transition_store_order', {
     p_request_id: input.requestId,
     p_ordem_compra_id: input.ordemId,
     p_novo_status: input.status,
+    ...(input.tracking ? { p_rastreavel: input.tracking.rastreavel, p_codigo_rastreio: input.tracking.codigo } : {}),
   });
 }
 
@@ -57,11 +59,13 @@ export async function saveAdminProductCatalog(input: {
   produtoId?: string | null;
   payload: Record<string, unknown>;
   fornecedor?: Record<string, unknown> | null;
+  variacoes?: ProductVariationsPayload | null;
 }) {
-  return callAdminRpc<any>('gsa_admin_save_product_catalog', {
+  return callAdminRpc<any>('gsa_admin_save_product_catalog_v2', {
     p_produto_id: input.produtoId || null,
     p_payload: input.payload,
     p_fornecedor: input.fornecedor || null,
+    p_variacoes: input.variacoes === undefined ? null : input.variacoes,
   });
 }
 
@@ -80,59 +84,12 @@ export async function archiveAdminCatalogItems(
   ids: string[],
 ) {
   if (!ids || ids.length === 0) return { success: true, updated: 0 };
-
-  const chunkSize = 50;
-  let totalUpdated = 0;
-
-  for (let i = 0; i < ids.length; i += chunkSize) {
-    const chunk = ids.slice(i, i + chunkSize);
-    try {
-      const res = await callAdminRpc<any>('gsa_admin_archive_catalog_items', {
-        p_tipo: tipo,
-        p_ids: chunk,
-      });
-      totalUpdated += res?.updated ?? chunk.length;
-    } catch (rpcErr) {
-      console.warn('[adminStoreOperations] Erro no RPC de arquivamento em lote, aplicando fallback direto:', rpcErr);
-      const table = tipo === 'produto' ? 'produtos' : 'assinaturas';
-      const { error: directError } = await supabase
-        .from(table)
-        .update({ status: 'inativo', visivel_na_loja: false })
-        .in('id', chunk);
-
-      if (directError) throw directError;
-      totalUpdated += chunk.length;
-    }
-  }
-
-  return { success: true, updated: totalUpdated };
+  const res = await callAdminRpc<any>('gsa_admin_archive_catalog_items', { p_tipo: tipo, p_ids: ids });
+  return { success: true, updated: Number(res?.updated ?? ids.length) };
 }
 
 export async function deleteAdminProductsBulk(ids: string[]) {
   if (!ids || ids.length === 0) return { success: true, deleted: 0 };
-
-  const chunkSize = 200;
-  let totalDeleted = 0;
-
-  for (let i = 0; i < ids.length; i += chunkSize) {
-    const chunk = ids.slice(i, i + chunkSize);
-    try {
-      const res = await callAdminRpc<any>('gsa_admin_delete_products_bulk', {
-        p_ids: chunk,
-      });
-      totalDeleted += res?.total ?? res?.deleted ?? chunk.length;
-    } catch (rpcErr) {
-      console.warn('[adminStoreOperations] Erro no RPC de exclusao em lote, aplicando fallback direto:', rpcErr);
-      await supabase.from('loja_carrinhos').delete().in('item_id', chunk).eq('tipo', 'produto');
-      await supabase.from('produto_fornecedor_config').delete().in('produto_id', chunk);
-      const { error: directError } = await supabase.from('produtos').delete().in('id', chunk);
-      if (directError) {
-        console.warn('[adminStoreOperations] Fallback para inativação devido a integridade referencial:', directError);
-        await supabase.from('produtos').update({ status: 'inativo', visivel_na_loja: false }).in('id', chunk);
-      }
-      totalDeleted += chunk.length;
-    }
-  }
-
-  return { success: true, deleted: totalDeleted };
+  const res = await callAdminRpc<any>('gsa_admin_delete_products_bulk', { p_ids: ids });
+  return { success: true, deleted: Number(res?.total ?? res?.deleted ?? ids.length) };
 }

@@ -1,8 +1,9 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, useCallback, useMemo, type ReactNode } from 'react';
 import { toast } from 'react-hot-toast';
 import { FileViewerModal } from '../components/ui/FileViewerModal';
 import { isPrivateDocumentReference, resolvePrivateFileReference } from '../lib/privateStorage';
-import { resolveProviderFileUrl } from '../lib/providerStorage';
+import { parseStorageReference, resolveProviderFileUrl } from '../lib/providerStorage';
+import { getPrivateR2Url, privatePathFromLegacyUrl } from '../lib/r2Storage';
 
 interface FileViewerContextType {
   openFile: (url: string, fileName?: string) => Promise<void>;
@@ -14,19 +15,16 @@ const FileViewerContext = createContext<FileViewerContextType | undefined>(undef
 async function resolveAnyFileReference(reference: string, expiresInSeconds = 300): Promise<string> {
   if (!reference) return '';
 
-  if (/^https?:\/\//i.test(reference) || /^blob:/i.test(reference) || /^data:/i.test(reference)) {
-    return reference;
-  }
-
+  const legacyPath = privatePathFromLegacyUrl(reference);
+  if (legacyPath) return await getPrivateR2Url(legacyPath);
   if (isPrivateDocumentReference(reference)) {
     return await resolvePrivateFileReference(reference, expiresInSeconds);
   }
 
-  try {
+  if (parseStorageReference(reference)) {
     return await resolveProviderFileUrl(reference, expiresInSeconds);
-  } catch (err) {
-    return reference;
   }
+  return reference;
 }
 
 function PrivateReferenceDomResolver() {
@@ -38,7 +36,7 @@ function PrivateReferenceDomResolver() {
       const reference = element.getAttribute(attribute);
       if (!reference || pendingRef.current.has(element)) return;
 
-      if (!isPrivateDocumentReference(reference) && !reference.startsWith('storage://') && !reference.startsWith('gsa-provider://')) {
+      if (!isPrivateDocumentReference(reference) && !parseStorageReference(reference) && !privatePathFromLegacyUrl(reference)) {
         return;
       }
 
@@ -89,7 +87,7 @@ export function FileViewerProvider({ children }: { children: ReactNode }) {
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
 
-  const openFile = async (url: string, name?: string) => {
+  const openFile = useCallback(async (url: string, name?: string) => {
     if (!url) {
       toast.error('Arquivo indisponível.');
       return;
@@ -104,18 +102,20 @@ export function FileViewerProvider({ children }: { children: ReactNode }) {
       console.error('Erro ao abrir arquivo protegido:', error);
       toast.error('Não foi possível autorizar o acesso ao arquivo.');
     }
-  };
+  }, []);
 
-  const closeFile = () => {
+  const closeFile = useCallback(() => {
     setIsOpen(false);
     window.setTimeout(() => {
       setFileUrl(null);
       setFileName(null);
     }, 300);
-  };
+  }, []);
+
+  const value = useMemo(() => ({ openFile, closeFile }), [openFile, closeFile]);
 
   return (
-    <FileViewerContext.Provider value={{ openFile, closeFile }}>
+    <FileViewerContext.Provider value={value}>
       {children}
       <PrivateReferenceDomResolver />
       <FileViewerModal isOpen={isOpen} onClose={closeFile} fileUrl={fileUrl} fileName={fileName} />

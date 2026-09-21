@@ -14,7 +14,18 @@ const IGNORED_FOLDERS = [
   '.agents',
   'test-results',
   'playwright-report',
-  '.codex-remote-attachments'
+  '.codex-remote-attachments',
+  'scratch',
+  'supabase_cli_bin',
+  '.gemini'
+];
+
+// Extensões e arquivos pesados/temporários a serem ignorados
+const IGNORED_EXTENSIONS = ['.exe', '.sql', '.log', '.zip', '.rar', '.tar', '.gz', '.7z'];
+const IGNORED_FILES = [
+  'cloudflared.exe',
+  'temp_file_view.txt',
+  'res.pipe(process.stdout))'
 ];
 
 function getNextBackupName() {
@@ -45,7 +56,7 @@ function getNextBackupName() {
   }
 }
 
-// Copia recursiva ignorando pastas pesadas
+// Copia recursiva ignorando pastas pesadas e arquivos binários/temporários
 function copyFolderSync(from, to) {
   if (!fs.existsSync(to)) {
     fs.mkdirSync(to, { recursive: true });
@@ -63,6 +74,10 @@ function copyFolderSync(from, to) {
       }
       copyFolderSync(srcPath, destPath);
     } else {
+      const ext = path.extname(entry.name).toLowerCase();
+      if (IGNORED_EXTENSIONS.includes(ext) || IGNORED_FILES.includes(entry.name)) {
+        continue; // Pula arquivos pesados ou temporários
+      }
       fs.copyFileSync(srcPath, destPath);
     }
   }

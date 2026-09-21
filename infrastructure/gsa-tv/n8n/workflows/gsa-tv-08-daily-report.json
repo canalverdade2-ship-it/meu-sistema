@@ -1,0 +1,170 @@
+{
+  "id": "gsaTvDailyReport08",
+  "name": "GSA TV 08 - Daily Operational Report",
+  "active": true,
+  "settings": {
+    "saveManualExecutions": true,
+    "executionOrder": "v1",
+    "timezone": "America/Sao_Paulo"
+  },
+  "tags": [
+    {
+      "name": "gsa-tv"
+    },
+    {
+      "name": "v2-vps"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "s8",
+      "name": "Cron - Daily 07:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "exec-trigger",
+      "name": "Execute - Test or Reuse",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        440
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "h8",
+      "name": "HTTP - Automation Snapshot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://172.30.250.1:19202/automation/snapshot",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "c8",
+      "name": "Code - Build Daily Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const c=$json.channel||{};return [{json:{type:'daily_operational_report',generated_at:new Date().toISOString(),channel:{status:c.status,desired_state:c.desired_state,playout_state:c.playout_state,signal_state:c.signal_state,last_error:c.last_error||null},open_incidents:($json.open_incidents||[]).length,rights_expiring:($json.rights_expiring||[]).length,execution_24h:$json.execution_24h||{},ai_jobs_24h:$json.ai_jobs_24h||[],latest_backup:($json.backups||[])[0]||null,alerts:$json.alerts||{}}}];"
+      }
+    },
+    {
+      "id": "h82",
+      "name": "HTTP - Save Daily Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        900,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.30.250.1:19202/automation/report",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Cron - Daily 07:00": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Automation Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Automation Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Code - Build Daily Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Build Daily Report": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Save Daily Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute - Test or Reuse": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Automation Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,4699 @@
+[
+  {
+    "fileName": "AcessosModule.tsx",
+    "componentName": "AcessosModule",
+    "relPathFromRoot": "src/components/admin/AcessosModule.tsx",
+    "relPathFromAdmin": "AcessosModule.tsx",
+    "lines": 428,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "colaboradores",
+      "sistema_logs",
+      "solicitacoes_exclusao"
+    ],
+    "rpcs": [
+      "gsa_admin_access_snapshot",
+      "gsa_admin_review_deletion_request",
+      "gsa_admin_rotate_collaborator_credential",
+      "gsa_admin_save_collaborator",
+      "gsa_admin_save_function",
+      "gsa_admin_set_collaborator_status"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "AdminNavigation.tsx",
+    "componentName": "AdminSuperDomainSwitcher",
+    "relPathFromRoot": "src/components/admin/AdminNavigation.tsx",
+    "relPathFromAdmin": "AdminNavigation.tsx",
+    "lines": 188,
+    "domain": "Outros",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "AdvertisingAdminModule.tsx",
+    "componentName": "AdvertisingAdminModule",
+    "relPathFromRoot": "src/components/admin/AdvertisingAdminModule.tsx",
+    "relPathFromAdmin": "AdvertisingAdminModule.tsx",
+    "lines": 380,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [
+      "gsa_ad_campaigns",
+      "gsa_ad_creatives",
+      "gsa_ad_payments",
+      "gsa_ad_placements",
+      "gsa_ad_proposals",
+      "gsa_ad_requests"
+    ],
+    "rpcs": [
+      "gsa_admin_advertising_overview"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "AffiliateAdminModule.tsx",
+    "componentName": "AffiliateAdminModule",
+    "relPathFromRoot": "src/components/admin/AffiliateAdminModule.tsx",
+    "relPathFromAdmin": "AffiliateAdminModule.tsx",
+    "lines": 1671,
+    "domain": "Outros",
+    "tables": [
+      "gsa_afiliado_comissoes",
+      "gsa_afiliado_links",
+      "gsa_afiliado_programas",
+      "gsa_afiliado_saques",
+      "gsa_afiliados",
+      "indicacoes"
+    ],
+    "rpcs": [
+      "gsa_admin_adjust_affiliate_balance",
+      "gsa_admin_affiliate_snapshot",
+      "gsa_admin_decide_affiliate_payout",
+      "gsa_admin_release_affiliate_commissions",
+      "gsa_admin_set_affiliate_status",
+      "gsa_admin_update_affiliate_details",
+      "gsa_admin_update_affiliate_points_settings",
+      "gsa_admin_update_affiliate_program",
+      "gsa_admin_update_global_saque_minimo"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "AreaVIPModule.tsx",
+    "componentName": "AreaVIPModule",
+    "relPathFromRoot": "src/components/admin/AreaVIPModule.tsx",
+    "relPathFromAdmin": "AreaVIPModule.tsx",
+    "lines": 1337,
+    "domain": "Benefícios, Saúde, Seguros & Suporte",
+    "tables": [
+      "client_levels",
+      "clientes",
+      "level_history",
+      "system_settings"
+    ],
+    "rpcs": [
+      "gsa_admin_upsert_settings"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "AssinaturasModule.tsx",
+    "componentName": "AssinaturasModule",
+    "relPathFromRoot": "src/components/admin/AssinaturasModule.tsx",
+    "relPathFromAdmin": "AssinaturasModule.tsx",
+    "lines": 891,
+    "domain": "Outros",
+    "tables": [
+      "assinaturas",
+      "loja_categorias",
+      "ordens_assinatura"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "CadastroModule.tsx",
+    "componentName": "CadastroModule",
+    "relPathFromRoot": "src/components/admin/CadastroModule.tsx",
+    "relPathFromAdmin": "CadastroModule.tsx",
+    "lines": 396,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "CalculatorProAdminPanel.tsx",
+    "componentName": "CalculatorProAdminPanel",
+    "relPathFromRoot": "src/components/admin/CalculatorProAdminPanel.tsx",
+    "relPathFromAdmin": "CalculatorProAdminPanel.tsx",
+    "lines": 689,
+    "domain": "Outros",
+    "tables": [],
+    "rpcs": [
+      "gsa_admin_create_calculator_pro_voucher",
+      "gsa_admin_ensure_calculator_pro_products",
+      "gsa_admin_save_calculator_pro_product",
+      "gsa_admin_set_calculator_pro_voucher_status"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "CalculatorProPaymentConfiguration.tsx",
+    "componentName": "CalculatorProPaymentConfiguration",
+    "relPathFromRoot": "src/components/admin/CalculatorProPaymentConfiguration.tsx",
+    "relPathFromAdmin": "CalculatorProPaymentConfiguration.tsx",
+    "lines": 134,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [],
+    "rpcs": [
+      "gsa_admin_calculator_pro_snapshot",
+      "gsa_admin_save_calculator_pro_runtime_config"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "CareersAdminModule.tsx",
+    "componentName": "CareersAdminModule",
+    "relPathFromRoot": "src/components/admin/CareersAdminModule.tsx",
+    "relPathFromAdmin": "CareersAdminModule.tsx",
+    "lines": 450,
+    "domain": "Outros",
+    "tables": [],
+    "rpcs": [
+      "gsa_admin_get_career_application",
+      "gsa_admin_get_career_resume_reference",
+      "gsa_admin_list_career_applications",
+      "gsa_admin_update_career_application"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "CareerVacanciesManager.tsx",
+    "componentName": "CareerVacanciesManager",
+    "relPathFromRoot": "src/components/admin/CareerVacanciesManager.tsx",
+    "relPathFromAdmin": "CareerVacanciesManager.tsx",
+    "lines": 117,
+    "domain": "Outros",
+    "tables": [],
+    "rpcs": [
+      "gsa_admin_list_career_vacancies",
+      "gsa_admin_upsert_career_vacancy"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "ClassifiedsModule.tsx",
+    "componentName": "ClassifiedsModule",
+    "relPathFromRoot": "src/components/admin/ClassifiedsModule.tsx",
+    "relPathFromAdmin": "ClassifiedsModule.tsx",
+    "lines": 358,
+    "domain": "Outros",
+    "tables": [
+      "classificados_anuncios",
+      "classificados_mensagens",
+      "classificados_midias",
+      "classificados_propostas",
+      "classificados_transacoes"
+    ],
+    "rpcs": [
+      "gsa_admin_classified_action",
+      "gsa_admin_list_resource"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "AdminClienteDocumentos.tsx",
+    "componentName": "AdminClienteDocumentos",
+    "relPathFromRoot": "src/components/admin/clientes/AdminClienteDocumentos.tsx",
+    "relPathFromAdmin": "clientes/AdminClienteDocumentos.tsx",
+    "lines": 587,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "cliente_documentos"
+    ],
+    "rpcs": [
+      "gsa_registrar_pendencia_whatsapp"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "ClientesModule.tsx",
+    "componentName": "ClientesModule",
+    "relPathFromRoot": "src/components/admin/ClientesModule.tsx",
+    "relPathFromAdmin": "ClientesModule.tsx",
+    "lines": 3195,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "classificados_anuncios",
+      "cliente_documentos",
+      "cliente_notas_admin",
+      "clientes",
+      "emprestimo_parcelas",
+      "emprestimos",
+      "extrato_financeiro",
+      "faturas",
+      "indicacoes",
+      "loja_credito_solicitacoes",
+      "notificacoes",
+      "orcamento_timeline",
+      "orcamentos",
+      "ordens_assinatura",
+      "ordens_compra",
+      "ordens_fiscais",
+      "ordens_servico",
+      "points_transactions",
+      "pontos_movimentacoes",
+      "prestador_demandas",
+      "saques",
+      "ticket_mensagens",
+      "tickets"
+    ],
+    "rpcs": [
+      "delete_client_cascade",
+      "gsa_admin_ajustar_saldo_cliente",
+      "gsa_admin_alterar_status_cliente",
+      "gsa_admin_atualizar_dados_cliente",
+      "gsa_admin_atualizar_status_cliente",
+      "gsa_admin_baixar_fatura",
+      "gsa_admin_criar_cliente",
+      "gsa_admin_desbloquear_pin_cliente",
+      "gsa_admin_enviar_fatura_cobranca",
+      "gsa_admin_reset_actor_pin"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "CobrancaModule.tsx",
+    "componentName": "CobrancaModule",
+    "relPathFromRoot": "src/components/admin/CobrancaModule.tsx",
+    "relPathFromAdmin": "CobrancaModule.tsx",
+    "lines": 1985,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "cobranca_acordo_parcelas",
+      "cobranca_historico",
+      "cobrancas",
+      "faturas",
+      "system_settings"
+    ],
+    "rpcs": [
+      "gsa_admin_baixar_cobranca_manual",
+      "gsa_admin_baixar_parcela_cobranca",
+      "gsa_admin_cancelar_acordo_cobranca",
+      "gsa_admin_criar_cobranca_fatura",
+      "gsa_admin_excluir_cobranca",
+      "gsa_admin_gerar_acordo_cobranca",
+      "gsa_admin_mudar_status_cobranca",
+      "gsa_admin_protestar_cobranca",
+      "gsa_admin_registrar_cobranca_historico",
+      "gsa_admin_upsert_settings"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "CollaboratorDashboard.tsx",
+    "componentName": "CollaboratorDashboard",
+    "relPathFromRoot": "src/components/admin/CollaboratorDashboard.tsx",
+    "relPathFromAdmin": "CollaboratorDashboard.tsx",
+    "lines": 167,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [],
+    "rpcs": [
+      "gsa_collaborator_dashboard_snapshot"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "ConfiguracoesModule.tsx",
+    "componentName": "ConfiguracoesModule",
+    "relPathFromRoot": "src/components/admin/ConfiguracoesModule.tsx",
+    "relPathFromAdmin": "ConfiguracoesModule.tsx",
+    "lines": 313,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [
+      "system_settings"
+    ],
+    "rpcs": [
+      "gsa_admin_save_company",
+      "gsa_admin_save_payment_method",
+      "gsa_admin_settings_snapshot",
+      "gsa_admin_update_settings_secure"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": false,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "CreditoModule.tsx",
+    "componentName": "CreditoModule",
+    "relPathFromRoot": "src/components/admin/CreditoModule.tsx",
+    "relPathFromAdmin": "CreditoModule.tsx",
+    "lines": 2208,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "clientes",
+      "faturas",
+      "loja_credito_documentos",
+      "loja_credito_movimentacoes",
+      "loja_credito_solicitacoes",
+      "system_settings"
+    ],
+    "rpcs": [
+      "gsa_admin_ajustar_limite_credito_cliente",
+      "gsa_admin_aprovar_aumento_credito",
+      "gsa_admin_atualizar_documento_credito",
+      "gsa_admin_definir_parcelamento_credito",
+      "gsa_admin_enviar_oferta_quitacao_credito",
+      "gsa_admin_liberar_credito_contrato",
+      "gsa_admin_preaprovar_credito",
+      "gsa_admin_recusar_credito",
+      "gsa_admin_rejeitar_contrato_credito",
+      "gsa_admin_solicitar_documento_credito",
+      "gsa_admin_upsert_settings"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "CuponsLojaModule.tsx",
+    "componentName": "CuponsLojaModule",
+    "relPathFromRoot": "src/components/admin/CuponsLojaModule.tsx",
+    "relPathFromAdmin": "CuponsLojaModule.tsx",
+    "lines": 752,
+    "domain": "E-commerce & Catálogo",
+    "tables": [
+      "clientes",
+      "cupons_loja",
+      "produtos"
+    ],
+    "rpcs": [
+      "gsa_admin_delete_store_coupon",
+      "gsa_admin_save_store_coupon"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "Dashboard.tsx",
+    "componentName": "Dashboard",
+    "relPathFromRoot": "src/components/admin/Dashboard.tsx",
+    "relPathFromAdmin": "Dashboard.tsx",
+    "lines": 531,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [
+      "clientes",
+      "cobrancas",
+      "emprestimos",
+      "faturas",
+      "orcamentos",
+      "ordens_compra",
+      "ordens_fiscais",
+      "ordens_servico",
+      "prestador_demandas",
+      "promocoes",
+      "saques",
+      "tickets",
+      "vouchers"
+    ],
+    "rpcs": [
+      "gsa_admin_baixar_fatura",
+      "gsa_admin_dashboard_snapshot",
+      "gsa_admin_processar_saque"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "DemandasComentarios.tsx",
+    "componentName": "DemandasComentarios",
+    "relPathFromRoot": "src/components/admin/demandas/DemandasComentarios.tsx",
+    "relPathFromAdmin": "demandas/DemandasComentarios.tsx",
+    "lines": 250,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "demanda_comentarios",
+      "prestador_demandas"
+    ],
+    "rpcs": [
+      "gsa_admin_add_demand_comment"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "DemandasDashboard.tsx",
+    "componentName": "DemandasDashboard",
+    "relPathFromRoot": "src/components/admin/demandas/DemandasDashboard.tsx",
+    "relPathFromAdmin": "demandas/DemandasDashboard.tsx",
+    "lines": 192,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "colaboradores",
+      "prestador_demandas",
+      "prestadores"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "DemandasDetalhesModal.tsx",
+    "componentName": "DemandasDetalhesModal",
+    "relPathFromRoot": "src/components/admin/demandas/DemandasDetalhesModal.tsx",
+    "relPathFromAdmin": "demandas/DemandasDetalhesModal.tsx",
+    "lines": 1690,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "os_suporte_mensagens",
+      "prestador_demandas",
+      "prestador_demandas_historico"
+    ],
+    "rpcs": [
+      "gsa_admin_add_os_note",
+      "gsa_admin_cancelar_demanda",
+      "gsa_admin_send_os_support_message",
+      "gsa_admin_transition_provider_demand"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "DemandasKanban.tsx",
+    "componentName": "DemandasKanban",
+    "relPathFromRoot": "src/components/admin/demandas/DemandasKanban.tsx",
+    "relPathFromAdmin": "demandas/DemandasKanban.tsx",
+    "lines": 146,
+    "domain": "Operações & Atendimento",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "DemandasTabela.tsx",
+    "componentName": "DemandasTabela",
+    "relPathFromRoot": "src/components/admin/demandas/DemandasTabela.tsx",
+    "relPathFromAdmin": "demandas/DemandasTabela.tsx",
+    "lines": 332,
+    "domain": "Operações & Atendimento",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "NovaDemandaModal.tsx",
+    "componentName": "NovaDemandaModal",
+    "relPathFromRoot": "src/components/admin/demandas/NovaDemandaModal.tsx",
+    "relPathFromAdmin": "demandas/NovaDemandaModal.tsx",
+    "lines": 490,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "colaboradores",
+      "ordens_servico",
+      "prestadores"
+    ],
+    "rpcs": [
+      "gsa_admin_create_provider_demand"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "DemandasColaboradorModule.tsx",
+    "componentName": "DemandasColaboradorModule",
+    "relPathFromRoot": "src/components/admin/DemandasColaboradorModule.tsx",
+    "relPathFromAdmin": "DemandasColaboradorModule.tsx",
+    "lines": 303,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "colaboradores",
+      "demanda_comentarios",
+      "os_notas",
+      "os_suporte_mensagens",
+      "prestador_demandas",
+      "prestador_demandas_historico",
+      "prestadores"
+    ],
+    "rpcs": [
+      "gsa_collaborator_demand_history",
+      "gsa_collaborator_list_demands"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "EcommerceAnalytics.tsx",
+    "componentName": "EcommerceAnalytics",
+    "relPathFromRoot": "src/components/admin/ecommerce/EcommerceAnalytics.tsx",
+    "relPathFromAdmin": "ecommerce/EcommerceAnalytics.tsx",
+    "lines": 123,
+    "domain": "E-commerce & Catálogo",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "PricingPanel.tsx",
+    "componentName": "PricingPanel",
+    "relPathFromRoot": "src/components/admin/ecommerce/PricingPanel.tsx",
+    "relPathFromAdmin": "ecommerce/PricingPanel.tsx",
+    "lines": 240,
+    "domain": "E-commerce & Catálogo",
+    "tables": [
+      "pricing_configs"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "EmpresaModule.tsx",
+    "componentName": "EmpresaModule",
+    "relPathFromRoot": "src/components/admin/EmpresaModule.tsx",
+    "relPathFromAdmin": "EmpresaModule.tsx",
+    "lines": 199,
+    "domain": "Outros",
+    "tables": [
+      "empresa"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "EmprestimosModule.tsx",
+    "componentName": "EmprestimosModule",
+    "relPathFromRoot": "src/components/admin/EmprestimosModule.tsx",
+    "relPathFromAdmin": "EmprestimosModule.tsx",
+    "lines": 1176,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "emprestimo_comentarios",
+      "emprestimo_documentos",
+      "emprestimo_historico",
+      "emprestimo_parcelas",
+      "emprestimos"
+    ],
+    "rpcs": [
+      "gsa_admin_emprestimo_aprovar",
+      "gsa_admin_emprestimo_atualizar_documento",
+      "gsa_admin_emprestimo_atualizar_status",
+      "gsa_admin_emprestimo_enviar_comentario",
+      "gsa_admin_emprestimo_enviar_contrato",
+      "gsa_admin_emprestimo_enviar_oferta_quitacao",
+      "gsa_admin_emprestimo_enviar_proposta",
+      "gsa_admin_emprestimo_salvar_observacao"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "FinanceiroModule.tsx",
+    "componentName": "FinanceiroModule",
+    "relPathFromRoot": "src/components/admin/FinanceiroModule.tsx",
+    "relPathFromAdmin": "FinanceiroModule.tsx",
+    "lines": 3289,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "clientes",
+      "fatura_contestacoes",
+      "faturas",
+      "ordens_assinatura",
+      "ordens_compra",
+      "ordens_fiscais",
+      "ordens_servico",
+      "prestador_saques",
+      "saques",
+      "transferencias"
+    ],
+    "rpcs": [
+      "fn_marcar_faturas_vencidas",
+      "gsa_admin_aplicar_ajuste_fatura",
+      "gsa_admin_baixar_fatura",
+      "gsa_admin_cancelar_fatura",
+      "gsa_admin_criar_fatura_manual",
+      "gsa_admin_enviar_fatura_cobranca",
+      "gsa_admin_processar_saque",
+      "gsa_admin_processar_transferencia"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "FiscalModule.tsx",
+    "componentName": "FiscalModule",
+    "relPathFromRoot": "src/components/admin/FiscalModule.tsx",
+    "relPathFromAdmin": "FiscalModule.tsx",
+    "lines": 206,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "faturas",
+      "ordens_fiscais"
+    ],
+    "rpcs": [
+      "gsa_admin_fiscal_update",
+      "gsa_admin_list_resource"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "FornecedoresModule.tsx",
+    "componentName": "FornecedoresModule",
+    "relPathFromRoot": "src/components/admin/FornecedoresModule.tsx",
+    "relPathFromAdmin": "FornecedoresModule.tsx",
+    "lines": 853,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "fornecedor_documentos",
+      "fornecedor_entregas",
+      "fornecedor_pedidos",
+      "fornecedor_produtos",
+      "fornecedores",
+      "ordens_compra",
+      "produto_fornecedor_config",
+      "produtos"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GsaTvAdvertisingStudio.tsx",
+    "componentName": "GsaTvAdvertisingStudio",
+    "relPathFromRoot": "src/components/admin/gsa-tv/GsaTvAdvertisingStudio.tsx",
+    "relPathFromAdmin": "gsa-tv/GsaTvAdvertisingStudio.tsx",
+    "lines": 36,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [],
+    "rpcs": [
+      "gsa_admin_gsa_tv_advertising_mutate",
+      "gsa_admin_gsa_tv_advertising_snapshot"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "GsaTvAiLab.tsx",
+    "componentName": "GsaTvAiLab",
+    "relPathFromRoot": "src/components/admin/gsa-tv/GsaTvAiLab.tsx",
+    "relPathFromAdmin": "gsa-tv/GsaTvAiLab.tsx",
+    "lines": 950,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [],
+    "rpcs": [
+      "gsa_admin_gsa_tv_domain_mutate",
+      "gsa_admin_gsa_tv_domain_snapshot"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GsaTvAiStudioTab.tsx",
+    "componentName": "GsaTvAiStudioTab",
+    "relPathFromRoot": "src/components/admin/gsa-tv/GsaTvAiStudioTab.tsx",
+    "relPathFromAdmin": "gsa-tv/GsaTvAiStudioTab.tsx",
+    "lines": 758,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [],
+    "rpcs": [
+      "gsa_tv_get_job_progress",
+      "gsa_tv_get_recent_ai_jobs"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GsaTvLibraryTab.tsx",
+    "componentName": "GsaTvLibraryTab",
+    "relPathFromRoot": "src/components/admin/gsa-tv/GsaTvLibraryTab.tsx",
+    "relPathFromAdmin": "gsa-tv/GsaTvLibraryTab.tsx",
+    "lines": 1038,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GsaTvMasterControl.tsx",
+    "componentName": "GsaTvMasterControl",
+    "relPathFromRoot": "src/components/admin/gsa-tv/GsaTvMasterControl.tsx",
+    "relPathFromAdmin": "gsa-tv/GsaTvMasterControl.tsx",
+    "lines": 2811,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [
+      "gsa_tv_graphics"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GsaTvOperations.tsx",
+    "componentName": "GsaTvOperations",
+    "relPathFromRoot": "src/components/admin/gsa-tv/GsaTvOperations.tsx",
+    "relPathFromAdmin": "gsa-tv/GsaTvOperations.tsx",
+    "lines": 31,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GsaTvProductionStatus.tsx",
+    "componentName": "GsaTvProductionStatus",
+    "relPathFromRoot": "src/components/admin/gsa-tv/GsaTvProductionStatus.tsx",
+    "relPathFromAdmin": "gsa-tv/GsaTvProductionStatus.tsx",
+    "lines": 41,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "GsaTvProgrammingStudio.tsx",
+    "componentName": "GsaTvProgrammingStudio",
+    "relPathFromRoot": "src/components/admin/gsa-tv/GsaTvProgrammingStudio.tsx",
+    "relPathFromAdmin": "gsa-tv/GsaTvProgrammingStudio.tsx",
+    "lines": 39,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [],
+    "rpcs": [
+      "gsa_admin_gsa_tv_domain_mutate",
+      "gsa_admin_gsa_tv_domain_snapshot",
+      "gsa_admin_gsa_tv_schedule_mutate"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GsaTvScheduleTab.tsx",
+    "componentName": "GsaTvScheduleTab",
+    "relPathFromRoot": "src/components/admin/gsa-tv/GsaTvScheduleTab.tsx",
+    "relPathFromAdmin": "gsa-tv/GsaTvScheduleTab.tsx",
+    "lines": 500,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GsaTvSettingsTab.tsx",
+    "componentName": "GsaTvSettingsTab",
+    "relPathFromRoot": "src/components/admin/gsa-tv/GsaTvSettingsTab.tsx",
+    "relPathFromAdmin": "gsa-tv/GsaTvSettingsTab.tsx",
+    "lines": 486,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GsaTvControlRoom.tsx",
+    "componentName": "GsaTvControlRoom",
+    "relPathFromRoot": "src/components/admin/GsaTvControlRoom.tsx",
+    "relPathFromAdmin": "GsaTvControlRoom.tsx",
+    "lines": 90,
+    "domain": "Outros",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "GsaTvGraphics.tsx",
+    "componentName": "GsaTvGraphics",
+    "relPathFromRoot": "src/components/admin/GsaTvGraphics.tsx",
+    "relPathFromAdmin": "GsaTvGraphics.tsx",
+    "lines": 27,
+    "domain": "Outros",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GsaTvLiveConsole.tsx",
+    "componentName": "GsaTvLiveConsole",
+    "relPathFromRoot": "src/components/admin/GsaTvLiveConsole.tsx",
+    "relPathFromAdmin": "GsaTvLiveConsole.tsx",
+    "lines": 254,
+    "domain": "Outros",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GsaTvLiveSources.tsx",
+    "componentName": "GsaTvLiveSources",
+    "relPathFromRoot": "src/components/admin/GsaTvLiveSources.tsx",
+    "relPathFromAdmin": "GsaTvLiveSources.tsx",
+    "lines": 23,
+    "domain": "Outros",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GsaTvModule.tsx",
+    "componentName": "GsaTvModule",
+    "relPathFromRoot": "src/components/admin/GsaTvModule.tsx",
+    "relPathFromAdmin": "GsaTvModule.tsx",
+    "lines": 433,
+    "domain": "Outros",
+    "tables": [],
+    "rpcs": [
+      "gsa_admin_gsa_tv_mutate",
+      "gsa_admin_gsa_tv_snapshot"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GsaTvRights.tsx",
+    "componentName": "GsaTvRights",
+    "relPathFromRoot": "src/components/admin/GsaTvRights.tsx",
+    "relPathFromAdmin": "GsaTvRights.tsx",
+    "lines": 227,
+    "domain": "Outros",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "IndicacoesModule.tsx",
+    "componentName": "IndicacoesModule",
+    "relPathFromRoot": "src/components/admin/IndicacoesModule.tsx",
+    "relPathFromAdmin": "IndicacoesModule.tsx",
+    "lines": 641,
+    "domain": "Outros",
+    "tables": [
+      "clientes",
+      "indicacoes",
+      "vouchers"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "CloudflareManager.tsx",
+    "componentName": "CloudflareManager",
+    "relPathFromRoot": "src/components/admin/infra/CloudflareManager.tsx",
+    "relPathFromAdmin": "infra/CloudflareManager.tsx",
+    "lines": 691,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "OracleMetricsPanel.tsx",
+    "componentName": "OracleMetricsPanel",
+    "relPathFromRoot": "src/components/admin/infra/OracleMetricsPanel.tsx",
+    "relPathFromAdmin": "infra/OracleMetricsPanel.tsx",
+    "lines": 123,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "VPSTerminal.tsx",
+    "componentName": "VPSTerminal",
+    "relPathFromRoot": "src/components/admin/infra/VPSTerminal.tsx",
+    "relPathFromAdmin": "infra/VPSTerminal.tsx",
+    "lines": 133,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "WhatsAppQRCodeManager.tsx",
+    "componentName": "WhatsAppQRCodeManager",
+    "relPathFromRoot": "src/components/admin/infra/WhatsAppQRCodeManager.tsx",
+    "relPathFromAdmin": "infra/WhatsAppQRCodeManager.tsx",
+    "lines": 1168,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [
+      "gsa_whatsapp_ramais",
+      "system_settings"
+    ],
+    "rpcs": [
+      "gsa_admin_whatsapp_mutation"
+    ],
+    "edgeFunctions": [
+      "vps-api"
+    ],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "LojaCategoriasModule.tsx",
+    "componentName": "LojaCategoriasModule",
+    "relPathFromRoot": "src/components/admin/LojaCategoriasModule.tsx",
+    "relPathFromAdmin": "LojaCategoriasModule.tsx",
+    "lines": 312,
+    "domain": "E-commerce & Catálogo",
+    "tables": [
+      "loja_categorias"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "LojaTrocasModule.tsx",
+    "componentName": "LojaTrocasModule",
+    "relPathFromRoot": "src/components/admin/LojaTrocasModule.tsx",
+    "relPathFromAdmin": "LojaTrocasModule.tsx",
+    "lines": 795,
+    "domain": "E-commerce & Catálogo",
+    "tables": [
+      "loja_solicitacoes"
+    ],
+    "rpcs": [
+      "gsa_admin_atualizar_solicitacao_loja"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "OrcamentosModule.tsx",
+    "componentName": "OrcamentosModule",
+    "relPathFromRoot": "src/components/admin/OrcamentosModule.tsx",
+    "relPathFromAdmin": "OrcamentosModule.tsx",
+    "lines": 2740,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "assinaturas",
+      "cliente_promocoes",
+      "clientes",
+      "emprestimos",
+      "indicacoes",
+      "orcamentos",
+      "produtos",
+      "promocoes",
+      "servicos",
+      "system_settings"
+    ],
+    "rpcs": [
+      "gsa_admin_approve_budget"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "OrdensAssinaturaModule.tsx",
+    "componentName": "OrdensAssinaturaModule",
+    "relPathFromRoot": "src/components/admin/OrdensAssinaturaModule.tsx",
+    "relPathFromAdmin": "OrdensAssinaturaModule.tsx",
+    "lines": 786,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "assinaturas",
+      "clientes",
+      "faturas",
+      "orcamentos",
+      "ordens_assinatura"
+    ],
+    "rpcs": [
+      "gsa_admin_cancel_subscription",
+      "gsa_admin_extend_subscription"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "OrdensCompraModule.tsx",
+    "componentName": "OrdensCompraModule",
+    "relPathFromRoot": "src/components/admin/OrdensCompraModule.tsx",
+    "relPathFromAdmin": "OrdensCompraModule.tsx",
+    "lines": 1169,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "clientes",
+      "cupons_loja",
+      "extrato_financeiro",
+      "faturas",
+      "orcamentos",
+      "ordens_assinatura",
+      "ordens_compra",
+      "pagamentos",
+      "points_transactions",
+      "pontos_movimentacoes",
+      "produtos"
+    ],
+    "rpcs": [
+      "gsa_admin_update_store_order_notes"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "OrdensServicoModule.tsx",
+    "componentName": "OrdensServicoModule",
+    "relPathFromRoot": "src/components/admin/OrdensServicoModule.tsx",
+    "relPathFromAdmin": "OrdensServicoModule.tsx",
+    "lines": 1058,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "clientes",
+      "ordens_servico",
+      "os_notas",
+      "prestador_demandas"
+    ],
+    "rpcs": [
+      "gsa_admin_finalize_service_order"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "PainelRentabilidade.tsx",
+    "componentName": "PainelRentabilidade",
+    "relPathFromRoot": "src/components/admin/PainelRentabilidade.tsx",
+    "relPathFromAdmin": "PainelRentabilidade.tsx",
+    "lines": 406,
+    "domain": "Outros",
+    "tables": [
+      "clientes",
+      "faturas",
+      "indicacoes",
+      "orcamentos",
+      "ordens_servico",
+      "prestador_demandas"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "PartnersAdminModule.tsx",
+    "componentName": "PartnersAdminModule",
+    "relPathFromRoot": "src/components/admin/PartnersAdminModule.tsx",
+    "relPathFromAdmin": "PartnersAdminModule.tsx",
+    "lines": 455,
+    "domain": "Outros",
+    "tables": [
+      "parceiros"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "PremiosModule.tsx",
+    "componentName": "PremiosModule",
+    "relPathFromRoot": "src/components/admin/PremiosModule.tsx",
+    "relPathFromAdmin": "PremiosModule.tsx",
+    "lines": 865,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "cliente_premios",
+      "clientes"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "AdminPrestadorDocumentos.tsx",
+    "componentName": "AdminPrestadorDocumentos",
+    "relPathFromRoot": "src/components/admin/prestadores/AdminPrestadorDocumentos.tsx",
+    "relPathFromAdmin": "prestadores/AdminPrestadorDocumentos.tsx",
+    "lines": 463,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "documentos_prestador",
+      "prestador_documentos"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "AdminPrestadorPremios.tsx",
+    "componentName": "AdminPrestadorPremios",
+    "relPathFromRoot": "src/components/admin/prestadores/AdminPrestadorPremios.tsx",
+    "relPathFromAdmin": "prestadores/AdminPrestadorPremios.tsx",
+    "lines": 248,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "prestador_premios"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "AdminPrestadorPromocoes.tsx",
+    "componentName": "AdminPrestadorPromocoes",
+    "relPathFromRoot": "src/components/admin/prestadores/AdminPrestadorPromocoes.tsx",
+    "relPathFromAdmin": "prestadores/AdminPrestadorPromocoes.tsx",
+    "lines": 387,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "prestador_promocoes",
+      "prestador_promocoes_ativacoes"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "AdminPrestadorVouchers.tsx",
+    "componentName": "AdminPrestadorVouchers",
+    "relPathFromRoot": "src/components/admin/prestadores/AdminPrestadorVouchers.tsx",
+    "relPathFromAdmin": "prestadores/AdminPrestadorVouchers.tsx",
+    "lines": 241,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "prestador_vouchers"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "PrestadoresCadastro.tsx",
+    "componentName": "PrestadoresCadastro",
+    "relPathFromRoot": "src/components/admin/prestadores/PrestadoresCadastro.tsx",
+    "relPathFromAdmin": "prestadores/PrestadoresCadastro.tsx",
+    "lines": 1624,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "prestador_demandas",
+      "prestador_historico",
+      "prestador_transacoes",
+      "prestadores"
+    ],
+    "rpcs": [
+      "gsa_admin_reset_actor_pin"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "PrestadoresDemandas.tsx",
+    "componentName": "PrestadoresDemandas",
+    "relPathFromRoot": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "relPathFromAdmin": "prestadores/PrestadoresDemandas.tsx",
+    "lines": 3015,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "clientes",
+      "colaboradores",
+      "faturas",
+      "ordens_fiscais",
+      "ordens_servico",
+      "os_notas",
+      "os_suporte_mensagens",
+      "prestador_demandas",
+      "prestador_demandas_historico",
+      "prestador_suporte_demandas",
+      "prestador_transacoes",
+      "prestadores"
+    ],
+    "rpcs": [
+      "gsa_admin_cancelar_demanda"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "PrestadoresFinanceiro.tsx",
+    "componentName": "PrestadoresFinanceiro",
+    "relPathFromRoot": "src/components/admin/prestadores/PrestadoresFinanceiro.tsx",
+    "relPathFromAdmin": "prestadores/PrestadoresFinanceiro.tsx",
+    "lines": 701,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "prestador_saques",
+      "prestadores"
+    ],
+    "rpcs": [
+      "gsa_admin_processar_saque_prestador"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "PrestadoresModule.tsx",
+    "componentName": "PrestadoresModule",
+    "relPathFromRoot": "src/components/admin/PrestadoresModule.tsx",
+    "relPathFromAdmin": "PrestadoresModule.tsx",
+    "lines": 142,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "BarcodeScannerModal.tsx",
+    "componentName": "BarcodeScannerModal",
+    "relPathFromRoot": "src/components/admin/products/BarcodeScannerModal.tsx",
+    "relPathFromAdmin": "products/BarcodeScannerModal.tsx",
+    "lines": 561,
+    "domain": "E-commerce & Catálogo",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "BulkProductImportModal.tsx",
+    "componentName": "BulkProductImportModal",
+    "relPathFromRoot": "src/components/admin/products/BulkProductImportModal.tsx",
+    "relPathFromAdmin": "products/BulkProductImportModal.tsx",
+    "lines": 593,
+    "domain": "E-commerce & Catálogo",
+    "tables": [],
+    "rpcs": [
+      "gsa_admin_import_products_batch_v2"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "ExcelImportSource.tsx",
+    "componentName": "ExcelImportSource",
+    "relPathFromRoot": "src/components/admin/products/import/ExcelImportSource.tsx",
+    "relPathFromAdmin": "products/import/ExcelImportSource.tsx",
+    "lines": 235,
+    "domain": "E-commerce & Catálogo",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "ImportSourceSelector.tsx",
+    "componentName": "ImportSourceSelector",
+    "relPathFromRoot": "src/components/admin/products/import/ImportSourceSelector.tsx",
+    "relPathFromAdmin": "products/import/ImportSourceSelector.tsx",
+    "lines": 87,
+    "domain": "E-commerce & Catálogo",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "ImportSupplierMode.tsx",
+    "componentName": "ImportSupplierMode",
+    "relPathFromRoot": "src/components/admin/products/import/ImportSupplierMode.tsx",
+    "relPathFromAdmin": "products/import/ImportSupplierMode.tsx",
+    "lines": 151,
+    "domain": "E-commerce & Catálogo",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "MediaImportSource.tsx",
+    "componentName": "MediaImportSource",
+    "relPathFromRoot": "src/components/admin/products/import/MediaImportSource.tsx",
+    "relPathFromAdmin": "products/import/MediaImportSource.tsx",
+    "lines": 271,
+    "domain": "E-commerce & Catálogo",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [
+      "gsa-product-import"
+    ],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "TextImportSource.tsx",
+    "componentName": "TextImportSource",
+    "relPathFromRoot": "src/components/admin/products/import/TextImportSource.tsx",
+    "relPathFromAdmin": "products/import/TextImportSource.tsx",
+    "lines": 89,
+    "domain": "E-commerce & Catálogo",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "UrlImportSource.tsx",
+    "componentName": "UrlImportSource",
+    "relPathFromRoot": "src/components/admin/products/import/UrlImportSource.tsx",
+    "relPathFromAdmin": "products/import/UrlImportSource.tsx",
+    "lines": 109,
+    "domain": "E-commerce & Catálogo",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "ProdutosModule.tsx",
+    "componentName": "ProdutosModule",
+    "relPathFromRoot": "src/components/admin/ProdutosModule.tsx",
+    "relPathFromAdmin": "ProdutosModule.tsx",
+    "lines": 2954,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "loja_categorias",
+      "loja_estoque_historico",
+      "produto_fornecedor_config",
+      "produto_variacao_grupos",
+      "produto_variacao_opcoes",
+      "produto_variantes",
+      "produtos"
+    ],
+    "rpcs": [
+      "gsa_admin_check_product_barcode",
+      "gsa_admin_delete_products_by_filter",
+      "gsa_admin_patch_marketplace_product"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "PromoAnalytics.tsx",
+    "componentName": "PromoAnalytics",
+    "relPathFromRoot": "src/components/admin/PromoAnalytics.tsx",
+    "relPathFromAdmin": "PromoAnalytics.tsx",
+    "lines": 157,
+    "domain": "Outros",
+    "tables": [
+      "promocoes_quantidade_uso"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "PromocaoQuantidadeForm.tsx",
+    "componentName": "PromocaoQuantidadeForm",
+    "relPathFromRoot": "src/components/admin/PromocaoQuantidadeForm.tsx",
+    "relPathFromAdmin": "PromocaoQuantidadeForm.tsx",
+    "lines": 470,
+    "domain": "E-commerce & Catálogo",
+    "tables": [
+      "loja_categorias",
+      "produtos",
+      "promocoes_quantidade"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "PromocaoQuantidadeModule.tsx",
+    "componentName": "PromocaoQuantidadeModule",
+    "relPathFromRoot": "src/components/admin/PromocaoQuantidadeModule.tsx",
+    "relPathFromAdmin": "PromocaoQuantidadeModule.tsx",
+    "lines": 191,
+    "domain": "E-commerce & Catálogo",
+    "tables": [
+      "promocoes_quantidade"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "PromocoesModule.tsx",
+    "componentName": "PromocoesModule",
+    "relPathFromRoot": "src/components/admin/PromocoesModule.tsx",
+    "relPathFromAdmin": "PromocoesModule.tsx",
+    "lines": 563,
+    "domain": "Outros",
+    "tables": [
+      "promocoes"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "PromoDetalhesModal.tsx",
+    "componentName": "PromoDetalhesModal",
+    "relPathFromRoot": "src/components/admin/PromoDetalhesModal.tsx",
+    "relPathFromAdmin": "PromoDetalhesModal.tsx",
+    "lines": 316,
+    "domain": "Outros",
+    "tables": [
+      "cliente_promocoes",
+      "orcamentos"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "ProtectionAdminModule.tsx",
+    "componentName": "ProtectionAdminModule",
+    "relPathFromRoot": "src/components/admin/ProtectionAdminModule.tsx",
+    "relPathFromAdmin": "ProtectionAdminModule.tsx",
+    "lines": 366,
+    "domain": "Benefícios, Saúde, Seguros & Suporte",
+    "tables": [],
+    "rpcs": [
+      "gsa_admin_create_protection_proposal",
+      "gsa_admin_list_resource",
+      "gsa_admin_save_protection_entity",
+      "gsa_admin_update_resource_status"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "ReembolsosModule.tsx",
+    "componentName": "ReembolsosModule",
+    "relPathFromRoot": "src/components/admin/ReembolsosModule.tsx",
+    "relPathFromAdmin": "ReembolsosModule.tsx",
+    "lines": 830,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "faturas",
+      "loja_reembolsos"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RelatorioClientes.tsx",
+    "componentName": "RelatorioClientes",
+    "relPathFromRoot": "src/components/admin/relatorios/RelatorioClientes.tsx",
+    "relPathFromAdmin": "relatorios/RelatorioClientes.tsx",
+    "lines": 166,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "client_levels",
+      "clientes",
+      "faturas"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RelatorioCobranca.tsx",
+    "componentName": "RelatorioCobranca",
+    "relPathFromRoot": "src/components/admin/relatorios/RelatorioCobranca.tsx",
+    "relPathFromAdmin": "relatorios/RelatorioCobranca.tsx",
+    "lines": 148,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "cobrancas"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RelatorioCredito.tsx",
+    "componentName": "RelatorioCredito",
+    "relPathFromRoot": "src/components/admin/relatorios/RelatorioCredito.tsx",
+    "relPathFromAdmin": "relatorios/RelatorioCredito.tsx",
+    "lines": 175,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "clientes",
+      "loja_credito_solicitacoes"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RelatorioEmprestimos.tsx",
+    "componentName": "RelatorioEmprestimos",
+    "relPathFromRoot": "src/components/admin/relatorios/RelatorioEmprestimos.tsx",
+    "relPathFromAdmin": "relatorios/RelatorioEmprestimos.tsx",
+    "lines": 174,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "emprestimo_parcelas",
+      "emprestimos"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RelatorioExecutivo.tsx",
+    "componentName": "RelatorioExecutivo",
+    "relPathFromRoot": "src/components/admin/relatorios/RelatorioExecutivo.tsx",
+    "relPathFromAdmin": "relatorios/RelatorioExecutivo.tsx",
+    "lines": 194,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "clientes",
+      "faturas",
+      "ordens_servico",
+      "saques"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RelatorioFinanceiro.tsx",
+    "componentName": "RelatorioFinanceiro",
+    "relPathFromRoot": "src/components/admin/relatorios/RelatorioFinanceiro.tsx",
+    "relPathFromAdmin": "relatorios/RelatorioFinanceiro.tsx",
+    "lines": 211,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "assinaturas",
+      "clientes",
+      "faturas",
+      "ordens_assinatura",
+      "pagamentos",
+      "saques",
+      "transferencias"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RelatorioFiscal.tsx",
+    "componentName": "RelatorioFiscal",
+    "relPathFromRoot": "src/components/admin/relatorios/RelatorioFiscal.tsx",
+    "relPathFromAdmin": "relatorios/RelatorioFiscal.tsx",
+    "lines": 169,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "ordens_fiscais"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RelatorioGamificacao.tsx",
+    "componentName": "RelatorioGamificacao",
+    "relPathFromRoot": "src/components/admin/relatorios/RelatorioGamificacao.tsx",
+    "relPathFromAdmin": "relatorios/RelatorioGamificacao.tsx",
+    "lines": 154,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "client_levels",
+      "cliente_premios",
+      "clientes",
+      "pontos_movimentacoes"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RelatorioLoja.tsx",
+    "componentName": "RelatorioLoja",
+    "relPathFromRoot": "src/components/admin/relatorios/RelatorioLoja.tsx",
+    "relPathFromAdmin": "relatorios/RelatorioLoja.tsx",
+    "lines": 164,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "faturas",
+      "loja_solicitacoes",
+      "produtos"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RelatorioMarketing.tsx",
+    "componentName": "RelatorioMarketing",
+    "relPathFromRoot": "src/components/admin/relatorios/RelatorioMarketing.tsx",
+    "relPathFromAdmin": "relatorios/RelatorioMarketing.tsx",
+    "lines": 139,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "cliente_promocoes",
+      "indicacoes",
+      "promocoes",
+      "vouchers"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RelatorioOperacional.tsx",
+    "componentName": "RelatorioOperacional",
+    "relPathFromRoot": "src/components/admin/relatorios/RelatorioOperacional.tsx",
+    "relPathFromAdmin": "relatorios/RelatorioOperacional.tsx",
+    "lines": 149,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "assinaturas",
+      "colaboradores",
+      "ordens_assinatura",
+      "ordens_compra",
+      "solicitacoes_exclusao"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RelatorioOS.tsx",
+    "componentName": "RelatorioOS",
+    "relPathFromRoot": "src/components/admin/relatorios/RelatorioOS.tsx",
+    "relPathFromAdmin": "relatorios/RelatorioOS.tsx",
+    "lines": 152,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "orcamentos",
+      "ordens_servico"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RelatorioPrestadores.tsx",
+    "componentName": "RelatorioPrestadores",
+    "relPathFromRoot": "src/components/admin/relatorios/RelatorioPrestadores.tsx",
+    "relPathFromAdmin": "relatorios/RelatorioPrestadores.tsx",
+    "lines": 154,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "prestador_demandas",
+      "prestador_faturas",
+      "prestador_saques",
+      "prestadores"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RelatorioRentabilidade.tsx",
+    "componentName": "RelatorioRentabilidade",
+    "relPathFromRoot": "src/components/admin/relatorios/RelatorioRentabilidade.tsx",
+    "relPathFromAdmin": "relatorios/RelatorioRentabilidade.tsx",
+    "lines": 328,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "emprestimos",
+      "faturas"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RelatorioSuporte.tsx",
+    "componentName": "RelatorioSuporte",
+    "relPathFromRoot": "src/components/admin/relatorios/RelatorioSuporte.tsx",
+    "relPathFromAdmin": "relatorios/RelatorioSuporte.tsx",
+    "lines": 135,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "tickets"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RelatoriosModule.tsx",
+    "componentName": "RelatoriosModule",
+    "relPathFromRoot": "src/components/admin/RelatoriosModule.tsx",
+    "relPathFromAdmin": "RelatoriosModule.tsx",
+    "lines": 141,
+    "domain": "Operações & Atendimento",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "ScrapingAdminModule.tsx",
+    "componentName": "ScrapingAdminModule",
+    "relPathFromRoot": "src/components/admin/ScrapingAdminModule.tsx",
+    "relPathFromAdmin": "ScrapingAdminModule.tsx",
+    "lines": 998,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [
+      "automacao_scraping_configs",
+      "automacao_scraping_logs",
+      "loja_categorias",
+      "system_settings",
+      "viagens_categorias"
+    ],
+    "rpcs": [
+      "gsa_admin_save_scraping_config",
+      "gsa_admin_trigger_scraping_now"
+    ],
+    "edgeFunctions": [
+      "gsa-trigger-webhook"
+    ],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "ScrapingExecutionMonitorModal.tsx",
+    "componentName": "ScrapingExecutionMonitorModal",
+    "relPathFromRoot": "src/components/admin/ScrapingExecutionMonitorModal.tsx",
+    "relPathFromAdmin": "ScrapingExecutionMonitorModal.tsx",
+    "lines": 353,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [
+      "automacao_scraping_logs"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "ServicePackagesModule.tsx",
+    "componentName": "ServicePackagesModule",
+    "relPathFromRoot": "src/components/admin/ServicePackagesModule.tsx",
+    "relPathFromAdmin": "ServicePackagesModule.tsx",
+    "lines": 258,
+    "domain": "Outros",
+    "tables": [
+      "servicos",
+      "servicos_pacotes"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "ServicosModule.tsx",
+    "componentName": "ServicosModule",
+    "relPathFromRoot": "src/components/admin/ServicosModule.tsx",
+    "relPathFromAdmin": "ServicosModule.tsx",
+    "lines": 910,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "catalog_services",
+      "loja_categorias",
+      "servicos"
+    ],
+    "rpcs": [
+      "gsa_admin_service_mutation"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "ShopeeOperationsModule.tsx",
+    "componentName": "ShopeeOperationsModule",
+    "relPathFromRoot": "src/components/admin/ShopeeOperationsModule.tsx",
+    "relPathFromAdmin": "ShopeeOperationsModule.tsx",
+    "lines": 305,
+    "domain": "Outros",
+    "tables": [
+      "orcamentos",
+      "ordens_compra",
+      "shopee_automation_workers",
+      "shopee_fulfillment_jobs"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "SiteCampaignAdminModule.tsx",
+    "componentName": "SiteCampaignAdminModule",
+    "relPathFromRoot": "src/components/admin/SiteCampaignAdminModule.tsx",
+    "relPathFromAdmin": "SiteCampaignAdminModule.tsx",
+    "lines": 247,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [
+      "site_campaign_events",
+      "site_campaigns",
+      "system_settings"
+    ],
+    "rpcs": [
+      "gsa_admin_delete_site_campaign",
+      "gsa_admin_duplicate_site_campaign",
+      "gsa_admin_set_site_campaign_status",
+      "gsa_admin_site_campaign_my_permissions",
+      "gsa_admin_site_campaigns_overview",
+      "gsa_admin_upsert_site_campaign"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "SiteCampaignAdminPage.tsx",
+    "componentName": "SiteCampaignAdminPage",
+    "relPathFromRoot": "src/components/admin/SiteCampaignAdminPage.tsx",
+    "relPathFromAdmin": "SiteCampaignAdminPage.tsx",
+    "lines": 17,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "SiteCampaignDeletionPanel.tsx",
+    "componentName": "SiteCampaignDeletionPanel",
+    "relPathFromRoot": "src/components/admin/SiteCampaignDeletionPanel.tsx",
+    "relPathFromAdmin": "SiteCampaignDeletionPanel.tsx",
+    "lines": 111,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [],
+    "rpcs": [
+      "gsa_admin_delete_site_campaign",
+      "gsa_admin_site_campaign_my_permissions",
+      "gsa_admin_site_campaigns_overview"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "SiteCampaignPermissionMatrix.tsx",
+    "componentName": "SiteCampaignPermissionMatrix",
+    "relPathFromRoot": "src/components/admin/SiteCampaignPermissionMatrix.tsx",
+    "relPathFromAdmin": "SiteCampaignPermissionMatrix.tsx",
+    "lines": 154,
+    "domain": "Mídia, GSA TV & Marketing",
+    "tables": [],
+    "rpcs": [
+      "gsa_admin_set_site_campaign_permissions",
+      "gsa_admin_site_campaign_permission_overview"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "AreaVipView.tsx",
+    "componentName": "AreaVipView",
+    "relPathFromRoot": "src/components/admin/super-domains/contratos/AreaVipView.tsx",
+    "relPathFromAdmin": "super-domains/contratos/AreaVipView.tsx",
+    "lines": 479,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "clientes"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "AtendimentoTicketsView.tsx",
+    "componentName": "AtendimentoTicketsView",
+    "relPathFromRoot": "src/components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+    "relPathFromAdmin": "super-domains/contratos/AtendimentoTicketsView.tsx",
+    "lines": 524,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "clientes",
+      "ticket_mensagens",
+      "tickets"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "ContratosDocumentosView.tsx",
+    "componentName": "ContratosDocumentosView",
+    "relPathFromRoot": "src/components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+    "relPathFromAdmin": "super-domains/contratos/ContratosDocumentosView.tsx",
+    "lines": 860,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "contratos"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "ContratosSuperDomain.tsx",
+    "componentName": "ContratosSuperDomain",
+    "relPathFromRoot": "src/components/admin/super-domains/contratos/ContratosSuperDomain.tsx",
+    "relPathFromAdmin": "super-domains/contratos/ContratosSuperDomain.tsx",
+    "lines": 233,
+    "domain": "Operações & Atendimento",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "CrmClientesView.tsx",
+    "componentName": "CrmClientesView",
+    "relPathFromRoot": "src/components/admin/super-domains/contratos/CrmClientesView.tsx",
+    "relPathFromAdmin": "super-domains/contratos/CrmClientesView.tsx",
+    "lines": 1574,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "clientes"
+    ],
+    "rpcs": [
+      "gsa_admin_ajustar_saldo_cliente",
+      "gsa_admin_alterar_status_cliente",
+      "gsa_admin_create_crm_client",
+      "gsa_admin_desbloquear_pin_cliente",
+      "gsa_admin_reset_actor_pin"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GsaSaudeView.tsx",
+    "componentName": "GsaSaudeView",
+    "relPathFromRoot": "src/components/admin/super-domains/contratos/GsaSaudeView.tsx",
+    "relPathFromAdmin": "super-domains/contratos/GsaSaudeView.tsx",
+    "lines": 392,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "saude_contratos"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GsaSegurosView.tsx",
+    "componentName": "GsaSegurosView",
+    "relPathFromRoot": "src/components/admin/super-domains/contratos/GsaSegurosView.tsx",
+    "relPathFromAdmin": "super-domains/contratos/GsaSegurosView.tsx",
+    "lines": 390,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "seguros_apolices"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "HubEmpresasView.tsx",
+    "componentName": "HubEmpresasView",
+    "relPathFromRoot": "src/components/admin/super-domains/contratos/HubEmpresasView.tsx",
+    "relPathFromAdmin": "super-domains/contratos/HubEmpresasView.tsx",
+    "lines": 635,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "clientes"
+    ],
+    "rpcs": [
+      "gsa_admin_criar_cliente"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "CalculadorasGatewayView.tsx",
+    "componentName": "CalculadorasGatewayView",
+    "relPathFromRoot": "src/components/admin/super-domains/financeiro/CalculadorasGatewayView.tsx",
+    "relPathFromAdmin": "super-domains/financeiro/CalculadorasGatewayView.tsx",
+    "lines": 566,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "system_settings",
+      "vouchers"
+    ],
+    "rpcs": [
+      "gsa_admin_calculator_pro_snapshot",
+      "gsa_admin_create_calculator_pro_voucher",
+      "gsa_admin_save_calculator_pro_product",
+      "gsa_admin_save_calculator_pro_runtime_config"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": false,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "CobrancaView.tsx",
+    "componentName": "CobrancaView",
+    "relPathFromRoot": "src/components/admin/super-domains/financeiro/CobrancaView.tsx",
+    "relPathFromAdmin": "super-domains/financeiro/CobrancaView.tsx",
+    "lines": 1100,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "cobranca_acordo_parcelas",
+      "cobranca_historico",
+      "cobrancas",
+      "system_settings"
+    ],
+    "rpcs": [
+      "gsa_admin_baixar_cobranca_manual",
+      "gsa_admin_baixar_parcela_cobranca",
+      "gsa_admin_cancelar_acordo_cobranca",
+      "gsa_admin_gerar_acordo_cobranca",
+      "gsa_admin_protestar_cobranca",
+      "gsa_admin_registrar_cobranca_historico"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "CreditDisputesAdminPanel.tsx",
+    "componentName": "CreditDisputesAdminPanel",
+    "relPathFromRoot": "src/components/admin/super-domains/financeiro/CreditDisputesAdminPanel.tsx",
+    "relPathFromAdmin": "super-domains/financeiro/CreditDisputesAdminPanel.tsx",
+    "lines": 226,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "faturas",
+      "loja_credito_movimentacoes",
+      "notificacoes"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "CreditLimitCancellationsAdminPanel.tsx",
+    "componentName": "CreditLimitCancellationsAdminPanel",
+    "relPathFromRoot": "src/components/admin/super-domains/financeiro/CreditLimitCancellationsAdminPanel.tsx",
+    "relPathFromAdmin": "super-domains/financeiro/CreditLimitCancellationsAdminPanel.tsx",
+    "lines": 141,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "clientes",
+      "loja_credito_movimentacoes",
+      "notificacoes"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "CreditWithdrawalsAdminPanel.tsx",
+    "componentName": "CreditWithdrawalsAdminPanel",
+    "relPathFromRoot": "src/components/admin/super-domains/financeiro/CreditWithdrawalsAdminPanel.tsx",
+    "relPathFromAdmin": "super-domains/financeiro/CreditWithdrawalsAdminPanel.tsx",
+    "lines": 222,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "clientes",
+      "faturas",
+      "loja_credito_movimentacoes",
+      "notificacoes"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "EmprestimosCreditoView.tsx",
+    "componentName": "EmprestimosCreditoView",
+    "relPathFromRoot": "src/components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+    "relPathFromAdmin": "super-domains/financeiro/EmprestimosCreditoView.tsx",
+    "lines": 872,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "emprestimo_parcelas",
+      "emprestimos",
+      "loja_credito_solicitacoes"
+    ],
+    "rpcs": [
+      "gsa_admin_approve_preapproved_credit_100",
+      "gsa_admin_emprestimo_aprovar",
+      "gsa_admin_emprestimo_enviar_oferta_quitacao",
+      "gsa_admin_emprestimo_enviar_proposta",
+      "gsa_admin_preaprovar_credito",
+      "gsa_admin_recusar_credito"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "FaturamentoView.tsx",
+    "componentName": "FaturamentoView",
+    "relPathFromRoot": "src/components/admin/super-domains/financeiro/FaturamentoView.tsx",
+    "relPathFromAdmin": "super-domains/financeiro/FaturamentoView.tsx",
+    "lines": 1351,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "clientes",
+      "cobrancas",
+      "faturas",
+      "ordens_assinatura",
+      "ordens_compra",
+      "ordens_fiscais",
+      "ordens_servico"
+    ],
+    "rpcs": [
+      "fn_marcar_faturas_vencidas",
+      "gsa_admin_baixar_fatura",
+      "gsa_admin_cancelar_fatura",
+      "gsa_admin_criar_fatura_manual",
+      "gsa_admin_enviar_fatura_cobranca"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "FinanceiroSuperDomain.tsx",
+    "componentName": "FinanceiroSuperDomain",
+    "relPathFromRoot": "src/components/admin/super-domains/financeiro/FinanceiroSuperDomain.tsx",
+    "relPathFromAdmin": "super-domains/financeiro/FinanceiroSuperDomain.tsx",
+    "lines": 351,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "cobrancas",
+      "faturas",
+      "ordens_fiscais",
+      "saques"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "FiscalView.tsx",
+    "componentName": "FiscalView",
+    "relPathFromRoot": "src/components/admin/super-domains/financeiro/FiscalView.tsx",
+    "relPathFromAdmin": "super-domains/financeiro/FiscalView.tsx",
+    "lines": 538,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "ordens_fiscais"
+    ],
+    "rpcs": [
+      "gsa_admin_fiscal_update",
+      "gsa_admin_list_resource"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "FluxoCaixaView.tsx",
+    "componentName": "FluxoCaixaView",
+    "relPathFromRoot": "src/components/admin/super-domains/financeiro/FluxoCaixaView.tsx",
+    "relPathFromAdmin": "super-domains/financeiro/FluxoCaixaView.tsx",
+    "lines": 800,
+    "domain": "Financeiro & Fiscal",
+    "tables": [
+      "saques",
+      "transferencias"
+    ],
+    "rpcs": [
+      "gsa_admin_processar_saque",
+      "gsa_admin_processar_transferencia"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "RentabilidadeReembolsosView.tsx",
+    "componentName": "RentabilidadeReembolsosView",
+    "relPathFromRoot": "src/components/admin/super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+    "relPathFromAdmin": "super-domains/financeiro/RentabilidadeReembolsosView.tsx",
+    "lines": 439,
+    "domain": "Financeiro & Fiscal",
+    "tables": [],
+    "rpcs": [
+      "gsa_admin_list_store_refunds",
+      "gsa_admin_process_store_refund"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GovernancaAcessosView.tsx",
+    "componentName": "GovernancaAcessosView",
+    "relPathFromRoot": "src/components/admin/super-domains/governanca/GovernancaAcessosView.tsx",
+    "relPathFromAdmin": "super-domains/governanca/GovernancaAcessosView.tsx",
+    "lines": 963,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "admin_sessoes",
+      "colaboradores",
+      "funcoes",
+      "solicitacoes_exclusao"
+    ],
+    "rpcs": [
+      "gsa_admin_access_snapshot",
+      "gsa_admin_review_deletion_request",
+      "gsa_admin_rotate_collaborator_credential",
+      "gsa_admin_save_collaborator",
+      "gsa_admin_save_function",
+      "gsa_admin_set_collaborator_status"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GovernancaAuditoriaView.tsx",
+    "componentName": "GovernancaAuditoriaView",
+    "relPathFromRoot": "src/components/admin/super-domains/governanca/GovernancaAuditoriaView.tsx",
+    "relPathFromAdmin": "super-domains/governanca/GovernancaAuditoriaView.tsx",
+    "lines": 364,
+    "domain": "Outros",
+    "tables": [
+      "audit_trail",
+      "sistema_logs",
+      "solicitacoes_exclusao",
+      "system_settings"
+    ],
+    "rpcs": [
+      "gsa_admin_access_snapshot"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GovernancaCollaboratorDashboard.tsx",
+    "componentName": "GovernancaCollaboratorDashboard",
+    "relPathFromRoot": "src/components/admin/super-domains/governanca/GovernancaCollaboratorDashboard.tsx",
+    "relPathFromAdmin": "super-domains/governanca/GovernancaCollaboratorDashboard.tsx",
+    "lines": 449,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [],
+    "rpcs": [
+      "gsa_collaborator_dashboard_snapshot"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "GovernancaConfiguracoesView.tsx",
+    "componentName": "GovernancaConfiguracoesView",
+    "relPathFromRoot": "src/components/admin/super-domains/governanca/GovernancaConfiguracoesView.tsx",
+    "relPathFromAdmin": "super-domains/governanca/GovernancaConfiguracoesView.tsx",
+    "lines": 1243,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [
+      "configuracoes",
+      "payment_methods",
+      "system_settings"
+    ],
+    "rpcs": [
+      "gsa_admin_save_company",
+      "gsa_admin_save_payment_method",
+      "gsa_admin_settings_snapshot",
+      "gsa_admin_update_settings_secure"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": false,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GovernancaExecutiveDashboard.tsx",
+    "componentName": "GovernancaExecutiveDashboard",
+    "relPathFromRoot": "src/components/admin/super-domains/governanca/GovernancaExecutiveDashboard.tsx",
+    "relPathFromAdmin": "super-domains/governanca/GovernancaExecutiveDashboard.tsx",
+    "lines": 519,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [
+      "clientes",
+      "colaboradores",
+      "faturas",
+      "ordens_servico",
+      "prestador_demandas",
+      "saques",
+      "sistema_logs"
+    ],
+    "rpcs": [
+      "gsa_admin_baixar_fatura",
+      "gsa_admin_dashboard_snapshot",
+      "gsa_admin_processar_saque"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GovernancaInfraView.tsx",
+    "componentName": "GovernancaInfraView",
+    "relPathFromRoot": "src/components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+    "relPathFromAdmin": "super-domains/governanca/GovernancaInfraView.tsx",
+    "lines": 556,
+    "domain": "Outros",
+    "tables": [
+      "clientes",
+      "colaboradores",
+      "gsa_whatsapp_ramais",
+      "system_settings"
+    ],
+    "rpcs": [
+      "gsa_admin_system_snapshot"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "GovernancaRelatoriosView.tsx",
+    "componentName": "GovernancaRelatoriosView",
+    "relPathFromRoot": "src/components/admin/super-domains/governanca/GovernancaRelatoriosView.tsx",
+    "relPathFromAdmin": "super-domains/governanca/GovernancaRelatoriosView.tsx",
+    "lines": 312,
+    "domain": "Operações & Atendimento",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "GovernancaSuperDomain.tsx",
+    "componentName": "GovernancaSuperDomain",
+    "relPathFromRoot": "src/components/admin/super-domains/governanca/GovernancaSuperDomain.tsx",
+    "relPathFromAdmin": "super-domains/governanca/GovernancaSuperDomain.tsx",
+    "lines": 223,
+    "domain": "Outros",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "AutomacaoOperacoesSubDomain.tsx",
+    "componentName": "AutomacaoOperacoesSubDomain",
+    "relPathFromRoot": "src/components/admin/super-domains/operacoes/AutomacaoOperacoesSubDomain.tsx",
+    "relPathFromAdmin": "super-domains/operacoes/AutomacaoOperacoesSubDomain.tsx",
+    "lines": 58,
+    "domain": "Operações & Atendimento",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "CatalogoSubDomain.tsx",
+    "componentName": "CatalogoSubDomain",
+    "relPathFromRoot": "src/components/admin/super-domains/operacoes/CatalogoSubDomain.tsx",
+    "relPathFromAdmin": "super-domains/operacoes/CatalogoSubDomain.tsx",
+    "lines": 138,
+    "domain": "Operações & Atendimento",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "ComprasAssinaturasWorkstation.tsx",
+    "componentName": "ComprasAssinaturasWorkstation",
+    "relPathFromRoot": "src/components/admin/super-domains/operacoes/ComprasAssinaturasWorkstation.tsx",
+    "relPathFromAdmin": "super-domains/operacoes/ComprasAssinaturasWorkstation.tsx",
+    "lines": 73,
+    "domain": "Operações & Atendimento",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "DemandasWorkstation.tsx",
+    "componentName": "DemandasWorkstation",
+    "relPathFromRoot": "src/components/admin/super-domains/operacoes/DemandasWorkstation.tsx",
+    "relPathFromAdmin": "super-domains/operacoes/DemandasWorkstation.tsx",
+    "lines": 33,
+    "domain": "Operações & Atendimento",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "MidiaOperacoesSubDomain.tsx",
+    "componentName": "MidiaOperacoesSubDomain",
+    "relPathFromRoot": "src/components/admin/super-domains/operacoes/MidiaOperacoesSubDomain.tsx",
+    "relPathFromAdmin": "super-domains/operacoes/MidiaOperacoesSubDomain.tsx",
+    "lines": 107,
+    "domain": "Operações & Atendimento",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "OperacoesSuperDomain.tsx",
+    "componentName": "OperacoesSuperDomain",
+    "relPathFromRoot": "src/components/admin/super-domains/operacoes/OperacoesSuperDomain.tsx",
+    "relPathFromAdmin": "super-domains/operacoes/OperacoesSuperDomain.tsx",
+    "lines": 345,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "orcamentos",
+      "ordens_compra",
+      "ordens_servico",
+      "prestador_demandas"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "OrcamentosWorkstation.tsx",
+    "componentName": "OrcamentosWorkstation",
+    "relPathFromRoot": "src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+    "relPathFromAdmin": "super-domains/operacoes/OrcamentosWorkstation.tsx",
+    "lines": 1165,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "orcamentos",
+      "ordens_servico"
+    ],
+    "rpcs": [
+      "gsa_admin_approve_budget",
+      "gsa_admin_patch_marketplace_budget"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "OrdensServicoWorkstation.tsx",
+    "componentName": "OrdensServicoWorkstation",
+    "relPathFromRoot": "src/components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+    "relPathFromAdmin": "super-domains/operacoes/OrdensServicoWorkstation.tsx",
+    "lines": 900,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "ordens_servico"
+    ],
+    "rpcs": [
+      "gsa_admin_cancelar_os",
+      "gsa_admin_concluir_os_e_faturar"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "ViagensSubDomain.tsx",
+    "componentName": "ViagensSubDomain",
+    "relPathFromRoot": "src/components/admin/super-domains/operacoes/ViagensSubDomain.tsx",
+    "relPathFromAdmin": "super-domains/operacoes/ViagensSubDomain.tsx",
+    "lines": 17,
+    "domain": "Operações & Atendimento",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "AfiliadosSection.tsx",
+    "componentName": "AfiliadosSection",
+    "relPathFromRoot": "src/components/admin/super-domains/pessoas/AfiliadosSection.tsx",
+    "relPathFromAdmin": "super-domains/pessoas/AfiliadosSection.tsx",
+    "lines": 699,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "gsa_afiliado_cliques",
+      "gsa_afiliado_comissoes",
+      "gsa_afiliado_conversoes",
+      "gsa_afiliado_pontos_eventos",
+      "gsa_afiliado_saques",
+      "gsa_afiliado_transferencias",
+      "gsa_afiliados"
+    ],
+    "rpcs": [
+      "gsa_admin_adjust_affiliate_balance",
+      "gsa_admin_affiliate_snapshot",
+      "gsa_admin_decide_affiliate_payout",
+      "gsa_admin_release_affiliate_commissions",
+      "gsa_admin_set_affiliate_status"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "FidelidadePromocoesSection.tsx",
+    "componentName": "FidelidadePromocoesSection",
+    "relPathFromRoot": "src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+    "relPathFromAdmin": "super-domains/pessoas/FidelidadePromocoesSection.tsx",
+    "lines": 1578,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "cliente_premios",
+      "clientes",
+      "cupons_loja",
+      "indicacoes",
+      "loja_solicitacoes",
+      "pontos_movimentacoes",
+      "vouchers"
+    ],
+    "rpcs": [
+      "gsa_admin_adjust_points",
+      "gsa_admin_delete_store_coupon",
+      "gsa_admin_save_store_coupon"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "FornecedoresSection.tsx",
+    "componentName": "FornecedoresSection",
+    "relPathFromRoot": "src/components/admin/super-domains/pessoas/FornecedoresSection.tsx",
+    "relPathFromAdmin": "super-domains/pessoas/FornecedoresSection.tsx",
+    "lines": 2052,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "fornecedores",
+      "parceiros",
+      "parceiros_resgates"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "NovoPrestadorDrawer.tsx",
+    "componentName": "NovoPrestadorDrawer",
+    "relPathFromRoot": "src/components/admin/super-domains/pessoas/NovoPrestadorDrawer.tsx",
+    "relPathFromAdmin": "super-domains/pessoas/NovoPrestadorDrawer.tsx",
+    "lines": 326,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "prestadores"
+    ],
+    "rpcs": [
+      "gsa_admin_create_provider"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": false,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "PartnerRedemptionDetailModal.tsx",
+    "componentName": "PartnerRedemptionDetailModal",
+    "relPathFromRoot": "src/components/admin/super-domains/pessoas/PartnerRedemptionDetailModal.tsx",
+    "relPathFromAdmin": "super-domains/pessoas/PartnerRedemptionDetailModal.tsx",
+    "lines": 1414,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "parceiros_resgates_eventos"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "PayoutClearanceDrawer.tsx",
+    "componentName": "PayoutClearanceDrawer",
+    "relPathFromRoot": "src/components/admin/super-domains/pessoas/PayoutClearanceDrawer.tsx",
+    "relPathFromAdmin": "super-domains/pessoas/PayoutClearanceDrawer.tsx",
+    "lines": 597,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "prestador_saques",
+      "saques"
+    ],
+    "rpcs": [
+      "gsa_admin_processar_saque",
+      "gsa_admin_processar_saque_prestador"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": false,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "PessoasSuperDomain.tsx",
+    "componentName": "PessoasSuperDomain",
+    "relPathFromRoot": "src/components/admin/super-domains/pessoas/PessoasSuperDomain.tsx",
+    "relPathFromAdmin": "super-domains/pessoas/PessoasSuperDomain.tsx",
+    "lines": 310,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "fornecedores",
+      "gsa_afiliados",
+      "gsa_careers_applications",
+      "prestador_saques",
+      "prestadores",
+      "saques"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "PrestadorDetailDrawer.tsx",
+    "componentName": "PrestadorDetailDrawer",
+    "relPathFromRoot": "src/components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+    "relPathFromAdmin": "super-domains/pessoas/PrestadorDetailDrawer.tsx",
+    "lines": 701,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "prestador_demandas",
+      "prestador_historico",
+      "prestadores"
+    ],
+    "rpcs": [
+      "gsa_admin_reset_actor_pin"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "PrestadoresSection.tsx",
+    "componentName": "PrestadoresSection",
+    "relPathFromRoot": "src/components/admin/super-domains/pessoas/PrestadoresSection.tsx",
+    "relPathFromAdmin": "super-domains/pessoas/PrestadoresSection.tsx",
+    "lines": 276,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "prestadores"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "SaquesRepassesSection.tsx",
+    "componentName": "SaquesRepassesSection",
+    "relPathFromRoot": "src/components/admin/super-domains/pessoas/SaquesRepassesSection.tsx",
+    "relPathFromAdmin": "super-domains/pessoas/SaquesRepassesSection.tsx",
+    "lines": 510,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [
+      "prestador_saques",
+      "saques"
+    ],
+    "rpcs": [
+      "gsa_admin_processar_saque",
+      "gsa_admin_processar_saque_prestador"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "TrabalheConoscoSection.tsx",
+    "componentName": "TrabalheConoscoSection",
+    "relPathFromRoot": "src/components/admin/super-domains/pessoas/TrabalheConoscoSection.tsx",
+    "relPathFromAdmin": "super-domains/pessoas/TrabalheConoscoSection.tsx",
+    "lines": 571,
+    "domain": "Pessoas, CRM & Cadastros",
+    "tables": [],
+    "rpcs": [
+      "gsa_admin_get_career_application",
+      "gsa_admin_get_career_resume_reference",
+      "gsa_admin_list_career_applications",
+      "gsa_admin_update_career_application"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "CommandSlideOver.tsx",
+    "componentName": "CommandSlideOver",
+    "relPathFromRoot": "src/components/admin/super-domains/shared/CommandSlideOver.tsx",
+    "relPathFromAdmin": "super-domains/shared/CommandSlideOver.tsx",
+    "lines": 297,
+    "domain": "Outros",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "SplitScreenLayout.tsx",
+    "componentName": "SplitScreenLayout",
+    "relPathFromRoot": "src/components/admin/super-domains/shared/SplitScreenLayout.tsx",
+    "relPathFromAdmin": "super-domains/shared/SplitScreenLayout.tsx",
+    "lines": 263,
+    "domain": "Outros",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "StatusBadge.tsx",
+    "componentName": "getStatusBadgeVariant",
+    "relPathFromRoot": "src/components/admin/super-domains/shared/StatusBadge.tsx",
+    "relPathFromAdmin": "super-domains/shared/StatusBadge.tsx",
+    "lines": 309,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "TacticalDataGrid.tsx",
+    "componentName": "TacticalDataGrid",
+    "relPathFromRoot": "src/components/admin/super-domains/shared/TacticalDataGrid.tsx",
+    "relPathFromAdmin": "super-domains/shared/TacticalDataGrid.tsx",
+    "lines": 575,
+    "domain": "Outros",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "SystemMonitorModule.tsx",
+    "componentName": "SystemMonitorModule",
+    "relPathFromRoot": "src/components/admin/SystemMonitorModule.tsx",
+    "relPathFromAdmin": "SystemMonitorModule.tsx",
+    "lines": 657,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [
+      "clientes",
+      "colaboradores",
+      "fornecedores",
+      "gsa_afiliados",
+      "prestadores",
+      "sistema_logs",
+      "system_settings"
+    ],
+    "rpcs": [
+      "gsa_admin_supplier_snapshot",
+      "gsa_admin_system_snapshot"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": true,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "SystemStatusIndicator.tsx",
+    "componentName": "SystemStatusIndicator",
+    "relPathFromRoot": "src/components/admin/SystemStatusIndicator.tsx",
+    "relPathFromAdmin": "SystemStatusIndicator.tsx",
+    "lines": 170,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [
+      "clientes"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "TicketsModule.tsx",
+    "componentName": "TicketsModule",
+    "relPathFromRoot": "src/components/admin/TicketsModule.tsx",
+    "relPathFromAdmin": "TicketsModule.tsx",
+    "lines": 793,
+    "domain": "Benefícios, Saúde, Seguros & Suporte",
+    "tables": [
+      "clientes",
+      "prestadores",
+      "ticket_mensagens",
+      "tickets"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "TravelAdminModule.tsx",
+    "componentName": "TravelAdminModule",
+    "relPathFromRoot": "src/components/admin/TravelAdminModule.tsx",
+    "relPathFromAdmin": "TravelAdminModule.tsx",
+    "lines": 2406,
+    "domain": "Benefícios, Saúde, Seguros & Suporte",
+    "tables": [
+      "clientes",
+      "viagens_categorias",
+      "viagens_orcamentos",
+      "viagens_pacote_imagens",
+      "viagens_pacotes",
+      "viagens_passageiros",
+      "viagens_propostas",
+      "viagens_transacoes"
+    ],
+    "rpcs": [
+      "gsa_admin_process_travel_refund",
+      "gsa_admin_search_clients",
+      "gsa_admin_travel_create_package",
+      "gsa_admin_travel_create_proposal",
+      "gsa_admin_travel_link_lead",
+      "gsa_admin_travel_list",
+      "gsa_admin_travel_update_status"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "AdminActivityFeed.tsx",
+    "componentName": "AdminActivityFeed",
+    "relPathFromRoot": "src/components/admin/ui/AdminActivityFeed.tsx",
+    "relPathFromAdmin": "ui/AdminActivityFeed.tsx",
+    "lines": 90,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": true,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "AdminCommandPalette.tsx",
+    "componentName": "AdminCommandPalette",
+    "relPathFromRoot": "src/components/admin/ui/AdminCommandPalette.tsx",
+    "relPathFromAdmin": "ui/AdminCommandPalette.tsx",
+    "lines": 195,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "AdminDomainCard.tsx",
+    "componentName": "AdminDomainCard",
+    "relPathFromRoot": "src/components/admin/ui/AdminDomainCard.tsx",
+    "relPathFromAdmin": "ui/AdminDomainCard.tsx",
+    "lines": 54,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "AdminWhatsAppButton.tsx",
+    "componentName": "AdminWhatsAppButton",
+    "relPathFromRoot": "src/components/admin/ui/AdminWhatsAppButton.tsx",
+    "relPathFromAdmin": "ui/AdminWhatsAppButton.tsx",
+    "lines": 270,
+    "domain": "Core, Infraestrutura & Configuração",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "VendasModule.tsx",
+    "componentName": "VendasModule",
+    "relPathFromRoot": "src/components/admin/VendasModule.tsx",
+    "relPathFromAdmin": "VendasModule.tsx",
+    "lines": 355,
+    "domain": "Operações & Atendimento",
+    "tables": [
+      "orcamentos",
+      "ordens_assinatura",
+      "ordens_compra",
+      "ordens_servico",
+      "prestador_demandas"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": false,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  },
+  {
+    "fileName": "ViagensCategoriasModule.tsx",
+    "componentName": "ViagensCategoriasModule",
+    "relPathFromRoot": "src/components/admin/ViagensCategoriasModule.tsx",
+    "relPathFromAdmin": "ViagensCategoriasModule.tsx",
+    "lines": 276,
+    "domain": "Benefícios, Saúde, Seguros & Suporte",
+    "tables": [
+      "viagens_categorias"
+    ],
+    "rpcs": [
+      "gsa_admin_delete_travel_category",
+      "gsa_admin_save_travel_category"
+    ],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": false,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "VouchersModule.tsx",
+    "componentName": "VouchersModule",
+    "relPathFromRoot": "src/components/admin/VouchersModule.tsx",
+    "relPathFromAdmin": "VouchersModule.tsx",
+    "lines": 805,
+    "domain": "Outros",
+    "tables": [
+      "clientes",
+      "extrato_financeiro",
+      "pagamentos",
+      "vouchers"
+    ],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": true,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": true,
+      "hasRealtime": true,
+      "hasExport": true,
+      "hasDelete": true,
+      "hasCreate": true,
+      "hasUpdate": true
+    }
+  },
+  {
+    "fileName": "WhatsAppHealthMonitor.tsx",
+    "componentName": "WhatsAppHealthMonitor",
+    "relPathFromRoot": "src/components/admin/WhatsAppHealthMonitor.tsx",
+    "relPathFromAdmin": "WhatsAppHealthMonitor.tsx",
+    "lines": 528,
+    "domain": "Outros",
+    "tables": [],
+    "rpcs": [],
+    "edgeFunctions": [],
+    "capabilities": {
+      "hasForm": false,
+      "hasTable": false,
+      "hasModal": true,
+      "hasFilter": false,
+      "hasRealtime": false,
+      "hasExport": true,
+      "hasDelete": false,
+      "hasCreate": false,
+      "hasUpdate": false
+    }
+  }
+]

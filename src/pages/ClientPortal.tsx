@@ -70,7 +70,7 @@ import { ClientGSAStore } from '../components/client/ClientGSAStore';
 import { UniversalNotificationBell } from '../components/ui/UniversalNotificationBell';
 import { processGamificationPointsManual } from '../utils/gamification';
 import { useClientNotifications } from '../hooks/useClientNotifications';
-import { createNotification, createWelcomeSequence } from '../lib/notifications';
+import { clientOperationalWrite } from '../lib/clientOperationalWrite';
 import { ClientEmprestimos } from '../components/client/ClientEmprestimos';
 import { logService } from '../lib/logService';
 import { MarketplaceGSAStore } from '../components/client/marketplace/MarketplaceGSAStore';
@@ -287,10 +287,11 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
     : route.module) as Module;
   const isMarketplaceArea = route.area === 'marketplace' || (activeModule as string) === 'gsa_store' || (activeModule as string) === 'classificados';
   const isCheckoutPage = route.submodule === 'loja-checkout' || route.pathname.includes('/marketplace/loja/checkout') || route.pathname.endsWith('/checkout') || route.submodule === 'loja-compras' || route.pathname.includes('/marketplace/loja/compras');
-  const activeTab = route.submodule;
+  const hideClientSidebar = isMarketplaceArea
+    || route.pathname === '/marketplace'
+    || route.pathname.startsWith('/marketplace');
+  const activeTab = route.query?.tab && route.submodule ? `${route.submodule}::${route.query?.tab}` : route.query?.tab || route.submodule;
   const activeItemId = route.itemId;
-  
-  const [moduleKey, setModuleKey] = useState(0);
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [showReferralModal, setShowReferralModal] = useState(false);
@@ -325,7 +326,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
     descricao: 'Para validar a segunda etapa da sua indicação e garantir seu bônus, siga estes passos:',
     acaoBotao: 'url',
     moduloDestino: 'orcamentos',
-    urlBotao: 'https://gsahub.pages.dev/',
+    urlBotao: routes.client.services.root(),
     textoBotao: 'Solicitar Serviços',
     tamanho: 'md'
   });
@@ -346,11 +347,31 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
     } else if (module === 'perfil') {
       path = routes.client.perfil();
     } else if (module === 'servicos_assinaturas' || module === 'orcamentos' || module === 'servicos' || module === 'produtos' || module === 'assinaturas') {
-      if (tab === 'orcamentos') path = routes.client.services.orcamentos();
-      else if (tab === 'servicos') path = routes.client.services.servicos();
-      else if (tab === 'produtos') path = routes.client.services.produtos();
-      else if (tab === 'assinaturas') path = routes.client.services.assinaturas();
+      const activeServicosTab = module === 'servicos_assinaturas' ? tab : module;
+      const childTab = module !== 'servicos_assinaturas' ? tab : undefined;
+      
+      if (activeServicosTab === 'orcamentos') path = routes.client.services.orcamentos();
+      else if (activeServicosTab === 'servicos') path = routes.client.services.servicos();
+      else if (activeServicosTab === 'produtos') path = routes.client.services.produtos();
+      else if (activeServicosTab === 'assinaturas') path = routes.client.services.assinaturas();
       else path = routes.client.services.root();
+      
+      if (childTab) {
+        path += `?tab=${childTab}`;
+      }
+    } else if (LEGACY_FINANCEIRO_MODULE_TABS[module]) {
+      const financeTab = LEGACY_FINANCEIRO_MODULE_TABS[module];
+      if (financeTab === 'transferencias') path = routes.client.finance.transferencias();
+      else if (financeTab === 'emprestimos') path = routes.client.finance.emprestimos();
+      else path = routes.client.finance.credito();
+    } else if (LEGACY_FIDELIDADE_MODULE_TABS[module]) {
+      const loyaltyTab = LEGACY_FIDELIDADE_MODULE_TABS[module];
+      if (loyaltyTab === 'pontos') path = routes.client.loyalty.pontos();
+      else if (loyaltyTab === 'vouchers') path = routes.client.loyalty.vouchers();
+      else if (loyaltyTab === 'promocoes') path = routes.client.loyalty.promocoes();
+      else if (loyaltyTab === 'premios') path = routes.client.loyalty.premios();
+      else if (loyaltyTab === 'indique-ganhe') path = routes.client.loyalty.indiqueGanhe();
+      else path = routes.client.loyalty.vip();
     } else if (module === 'financeiro') {
       if (tab === 'faturas') path = routes.client.finance.faturas();
       else if (tab === 'nf' || tab === 'notas-fiscais') path = routes.client.finance.notas();
@@ -390,7 +411,6 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
 
     if (replaceFlag) replace(path);
     else navigate(path);
-    setModuleKey(prev => prev + 1);
 
     // Auto collapse sidebar if not pinned on desktop
     if (!isSidebarPinned && window.innerWidth >= 1024) {
@@ -400,8 +420,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
   };
 
   const syncRouteToState = (replaceFlag = false) => {
-    // Apenas atualiza a key do módulo para recarregar se necessário
-    setModuleKey(prev => prev + 1);
+    // Sincronização passiva de rota: mantém o estado e formulários do módulo preservados sem desmontagem
   };
 
   useEffect(() => {
@@ -493,12 +512,16 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
   const ClientFinanceiroAny = ClientFinanceiro as any;
 
   useEffect(() => {
-    fetchCliente();
-    checkReferralStatus();
-    checkWelcomeBonus();
-    refreshCounts();
-    fetchVipModuleConfig();
-    verificarLiberacaoCreditoAgendada();
+    // 1. Fetch client first to unblock the UI and remove "Carregando..."
+    fetchCliente().then(() => {
+      // 2. Fire background metrics and checks only after client is loaded
+      checkReferralStatus();
+      checkWelcomeBonus();
+      refreshCounts();
+      fetchVipModuleConfig();
+      fetchModalIndicacaoConfig();
+      verificarLiberacaoCreditoAgendada();
+    });
 
     // Channel 1: client row changes (balance, status, blocking, level IDs)
     const clientChannel = supabase
@@ -635,7 +658,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
           descricao: get('modal_indicacao_descricao', 'Para validar a segunda etapa da sua indicação e garantir seu bônus, siga estes passos:'),
           acaoBotao: get('modal_indicacao_acao_botao', 'url'),
           moduloDestino: get('modal_indicacao_modulo_destino', 'orcamentos'),
-          urlBotao: get('modal_indicacao_url_botao', 'https://gsahub.pages.dev/'),
+          urlBotao: get('modal_indicacao_url_botao', routes.client.services.root()),
           textoBotao: get('modal_indicacao_texto_botao', 'Solicitar Serviços'),
           tamanho: get('modal_indicacao_tamanho', 'md')
         });
@@ -645,23 +668,22 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
     }
   };
 
-  // Listener realtime para sincronizar estado do módulo VIP em tempo real
+  // Realtime subscription para configurações dinâmicas do portal (VIP, Modal de Indicação)
   useEffect(() => {
-    fetchVipModuleConfig();
-    fetchModalIndicacaoConfig();
-    const vipConfigChannel = supabase
-      .channel(`vip-module-config-${clientId}`)
+    const settingsChannel = supabase
+      .channel('client-portal-settings-realtime')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'system_settings',
+        table: 'system_settings'
       }, () => {
-        fetchVipModuleConfig();
-        fetchModalIndicacaoConfig();
+        void fetchVipModuleConfig();
+        void fetchModalIndicacaoConfig();
       })
       .subscribe();
+
     return () => {
-      supabase.removeChannel(vipConfigChannel);
+      supabase.removeChannel(settingsChannel);
     };
   }, []);
 
@@ -682,11 +704,13 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
       }
       
       if (data) {
+        if (data.perfil_cliente_ativo === false) {
+          toast('Ative seu perfil de cliente pelo Portal do Afiliado para acessar esta área.');
+          replace('/afiliados/dashboard');
+          return;
+        }
         setCliente(data);
         setFetchError(null);
-        if (data.status === 'inativo' && data.cadastro_aprovado === false) {
-          navigateClientModule('dashboard', undefined, undefined, true);
-        }
       } else {
         setFetchError('Não foi possível carregar os dados do cliente.');
         toast.error('Não foi possível carregar os dados do cliente.');
@@ -731,120 +755,28 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
   const checkWelcomeBonus = async () => {
     if (isCheckingBonus.current) return;
     isCheckingBonus.current = true;
-
-    console.log('[Bonus] Verificando bônus de boas-vindas...');
-
     try {
-      // 1. Check if client has pending bonus and is active
-      const { data: clientData, error: fetchErr } = await supabase
-        .from('clientes')
-        .select('status, bonus_boas_vindas_pendente, saldo_pontos, saldo_carteira, indicacao_origem_id')
-        .eq('id', clientId)
-        .single();
-      
-      if (fetchErr || !clientData) {
-        isCheckingBonus.current = false;
-        return;
-      }
-      
-      if (clientData.status !== 'ativo') {
-        console.log('[Bonus] Cliente ainda inativo. Aguardando aprovação.');
-        isCheckingBonus.current = false;
-        return;
-      }
+      const result = await callClientRpc<{
+        success?: boolean;
+        processed?: boolean;
+        bonus_tipo?: string;
+        bonus_valor?: number;
+      }>('gsa_client_process_welcome_bonus');
 
-      // Clientes indicados NÃO recebem o bônus de boas-vindas padrão —
-      // eles já recebem o "Bônus de indicação" específico no momento do cadastro.
-      if (clientData.indicacao_origem_id) {
-        console.log('[Bonus] Cliente indicado — bônus de boas-vindas padrão suprimido.');
-        // Garante que a flag fica limpa para não reprocessar
-        if (clientData.bonus_boas_vindas_pendente) {
-          await supabase.from('clientes').update({
-            bonus_boas_vindas_pendente: false
-          }).eq('id', clientId);
-        }
-        isCheckingBonus.current = false;
-        return;
-      }
-      
-      if (!clientData.bonus_boas_vindas_pendente) {
-        console.log('[Bonus] Flag de bônus pendente é false. Nada a processar.');
-        return;
-      }
-
-      console.log('[Bonus] Bônus pendente detectado. Processando...');
-
-      // 1.1 Verificação de Idempotência: Checar se o bônus já foi lançado no extrato (segurança extra)
-      const { data: existingBonusCheck } = await supabase
-        .from('pontos_movimentacoes')
-        .select('id')
-        .eq('cliente_id', clientId)
-        .eq('descricao', 'Bônus de Boas-vindas')
-        .maybeSingle();
-
-      if (existingBonusCheck) {
-        console.log('[Bonus] Bônus já existe no extrato. Limpando flag e exibindo.');
-        await supabase.from('clientes').update({ 
-          bonus_boas_vindas_pendente: false
-        }).eq('id', clientId);
-
-        const { data: settings } = await supabase
-          .from('system_settings')
-          .select('key, value')
-          .in('key', ['bonus_cadastro_tipo', 'bonus_cadastro_valor']);
-        const bonusType = settings?.find(s => s.key === 'bonus_cadastro_tipo')?.value || 'pontos';
-        const bonusValue = parseInt(settings?.find(s => s.key === 'bonus_cadastro_valor')?.value || '100');
-        
-        setWelcomeBonusData({ type: bonusType, value: bonusValue });
-        await createWelcomeSequence(clientId, bonusValue, 'Básico');
-        
+      if (result?.success && result.processed) {
+        setWelcomeBonusData({
+          type: result.bonus_tipo === 'carteira' ? 'carteira' : 'pontos',
+          value: Number(result.bonus_valor || 0),
+        });
         playPremiumBeep();
         setShowWelcomeBonusModal(true);
-        // Atualiza dados locais sem entrar em loading
         fetchCliente();
-        return;
       }
-
-      // 2. Get system settings for bonus
-      const { data: settings } = await supabase
-        .from('system_settings')
-        .select('key, value')
-        .in('key', ['bonus_cadastro_tipo', 'bonus_cadastro_valor']);
-
-      const bonusType = settings?.find(s => s.key === 'bonus_cadastro_tipo')?.value || 'pontos';
-      const bonusValue = parseInt(settings?.find(s => s.key === 'bonus_cadastro_valor')?.value || '100');
-      
-      if (isNaN(bonusValue) || bonusValue <= 0) {
-        console.warn('[Bonus] Valor de bônus inválido nas configurações.');
-        isCheckingBonus.current = false;
-        return;
-      }
-
-      setWelcomeBonusData({ type: bonusType, value: bonusValue });
-      playPremiumBeep();
-
-      // 3. Processar bônus via RPC segura (evita erros de trigger e RLS)
-      const { data: rpcData, error: rpcError } = await supabase.rpc('processar_bonus_boas_vindas_seguro', {
-        p_cliente_id: clientId
-      });
-
-      if (rpcError || !rpcData?.success) {
-        console.error('[Bonus] Erro ao processar bônus via RPC:', rpcError || rpcData?.message);
-        isCheckingBonus.current = false;
-        return;
-      }
-
-      console.log('[Bonus] Bônus processado com sucesso:', rpcData);
-      
-      // 4. Atualizar UI e mostrar modal
-      setShowWelcomeBonusModal(true);
-      fetchCliente();
-
     } catch (error) {
       console.error('[Bonus] Erro crítico ao verificar bônus:', error);
+    } finally {
       isCheckingBonus.current = false;
     }
-    // isCheckingBonus.current permanece true após sucesso para evitar re-trigger na mesma sessão
   };
 
   const verificarLiberacaoCreditoAgendada = async () => {
@@ -859,22 +791,18 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
   };
 
   const handleRequestService = () => {
-    window.open('https://gsahub.pages.dev/', '_blank');
+    navigate(routes.client.services.root());
   };
 
   const currentPoints = cliente?.pontos_totais || 0;
   
-  // Resolve current level using dbId UUID matching (works immediately from realtime payload)
-  // Priority: manual level (nivel_manual_id) > auto level (nivel_id) > points-based fallback
   let currentLevel = null;
   if (levels.length > 0) {
     const manualId = cliente?.nivel_manual_id;
     const autoId = cliente?.nivel_id;
     
     if (manualId) {
-      // Try matching by dbId first (exact UUID match from DB)
       currentLevel = (levels as any[]).find((l: any) => l.dbId === manualId)
-        // Fallback: match by joined relation object name
         || (cliente?.manual_level ? levels.find(l => l.name.toLowerCase() === (cliente.manual_level as any)?.nome_nivel?.toLowerCase()) : null);
     }
     if (!currentLevel && autoId) {
@@ -882,12 +810,10 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
         || (cliente?.auto_level ? levels.find(l => l.name.toLowerCase() === (cliente.auto_level as any)?.nome_nivel?.toLowerCase()) : null);
     }
     if (!currentLevel) {
-      // Final fallback: calculate from points
       currentLevel = levels.find(l => currentPoints >= l.minPoints && (l.maxPoints === null || currentPoints <= l.maxPoints)) || levels[0];
     }
   }
   const currentLevelName = currentLevel?.name || '';
-  
   const isVip = currentLevelName !== 'Básico';
 
   const restrictedModules = ['bloqueado', 'inativo', 'excluido'];
@@ -897,33 +823,16 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
     { id: 'perfil', label: 'Meu Perfil', icon: User, count: pendencies.modulePerfil, locked: false },
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, count: 0, locked: false },
     { id: 'gsa_store' as Module, label: 'Marketplace GSA', icon: Store, count: 0, locked: isBlocked },
-    { id: 'classificados' as Module, label: 'Meus Classificados', icon: Tags, count: 0, locked: isBlocked },
-    { id: 'credito_loja' as Module, label: 'Meu Crédito', icon: Landmark, count: 0, locked: isBlocked },
     { id: 'servicos_assinaturas', label: 'Serviços e Assinaturas', icon: Briefcase, count: pendencies.moduleOrcamentos + pendencies.moduleServicos + pendencies.moduleProdutos + pendencies.moduleAssinaturas, locked: isBlocked },
-    { id: 'orcamentos', label: 'Meus Orçamentos', icon: FileText, count: pendencies.moduleOrcamentos, locked: isBlocked },
-    { id: 'servicos', label: 'Meus Serviços', icon: Briefcase, count: pendencies.moduleServicos, locked: isBlocked },
-    { id: 'produtos', label: 'Meus Produtos', icon: Package, count: pendencies.moduleProdutos, locked: isBlocked },
-    { id: 'assinaturas', label: 'Minhas Assinaturas', icon: Calendar, count: pendencies.moduleAssinaturas, locked: isBlocked },
-    { id: 'emprestimos', label: 'Meus Empréstimos', icon: Landmark, count: pendencies.moduleEmprestimos, locked: isBlocked },
-    { id: 'transferencias', label: 'Transferências', icon: ArrowLeftRight, count: 0, locked: isBlocked },
     { id: 'financeiro', label: 'Financeiro', icon: CreditCard, count: pendencies.moduleFinanceiro, locked: isBlocked },
     { id: 'fidelidade', label: 'Fidelidade', icon: Gift, count: pendencies.moduleVouchers + pendencies.moduleIndiqueGanhe + pendencies.modulePromocoes, locked: isBlocked },
-    { id: 'promocoes', label: 'Promoções', icon: Megaphone, count: pendencies.modulePromocoes, locked: isBlocked },
-    { id: 'premios', label: 'Meus Prêmios', icon: Gift, count: 0, locked: isBlocked },
-    { id: 'vouchers', label: 'Vouchers', icon: Ticket, count: pendencies.moduleVouchers, locked: isBlocked },
-    { id: 'indique-ganhe', label: 'Indique e Ganhe', icon: Users, count: pendencies.moduleIndiqueGanhe, locked: isBlocked },
-    { id: 'pontos', label: 'Meus Pontos', icon: Star, count: 0, locked: isBlocked },
-    // Área VIP: só inclui no menu se não estiver oculto
-    ...(!vipModuleConfig.oculto ? [{ id: 'area_vip' as Module, label: 'Área VIP', icon: Crown, count: 0, locked: isBlocked || !vipModuleConfig.ativo }] : []),
     { id: 'suporte', label: 'Suporte', icon: MessageSquare, count: pendencies.moduleSuporte, locked: false },
   ];
-  menuItems = menuItems.filter(item => !['credito_loja', 'emprestimos', 'transferencias', 'orcamentos', 'servicos', 'produtos', 'assinaturas', 'vouchers', 'pontos', 'promocoes', 'premios', 'indique-ganhe', 'area_vip'].includes(String(item.id)));
 
   const handleOpenTicket = async (assunto: string, descricao: string) => {
     try {
       setIsOpeningTicket(true);
 
-      // Verificação de ticket duplicado
       const { data: existingTickets, error: checkError } = await supabase
         .from('tickets')
         .select('id')
@@ -940,36 +849,12 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
         return;
       }
 
-      const { data: ticket, error: ticketError } = await supabase.from('tickets').insert([{
-        cliente_id: clientId,
+      const ticket = await clientOperationalWrite<{ id: string }>(clientId, 'tickets', 'insert', {
         assunto,
         descricao,
-        status: 'aberto'
-      }]).select('id').single();
+      });
 
-      if (ticketError) throw ticketError;
-
-      // Notify Client (Feedback)
-      await createNotification(
-        clientId,
-        'Ticket de Suporte Aberto! 💬',
-        `Seu chamado "${assunto}" foi registrado e nossa equipe retornará em breve.`,
-        'suporte',
-        'abertos',
-        ticket.id
-      );
-
-      // Notify Admin (Alert)
-      await createNotification(
-        null, // destinatario_tipo = 'admin'
-        'Novo Ticket de Suporte (Bloqueio)',
-        `O cliente ${cliente?.nome || clientId} abriu um ticket sobre bloqueio de conta: "${assunto}"`,
-        'suporte',
-        'abertos',
-        ticket.id,
-        'sistema',
-        { prioridade: 'alta' }
-      );
+      if (!ticket?.id) throw new Error('O ticket não foi registrado.');
 
       await logService.logAction({
         ator_tipo: 'cliente',
@@ -996,7 +881,10 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
           <div className="text-center">
             <p className="text-red-600 font-medium mb-4">{fetchError}</p>
             <button 
-              onClick={() => window.location.reload()} 
+              onClick={() => {
+                setFetchError(null);
+                void fetchCliente();
+              }} 
               className="px-4 py-2 bg-[#1a1a1a] text-white rounded-lg hover:bg-black"
             >
               Tentar Novamente
@@ -1017,7 +905,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
   return (
     <div className={`flex min-h-screen ${isCheckoutPage ? 'bg-[#f8f9fa]' : 'bg-[#f8f7f5]'} overflow-hidden font-sans`}>
       {/* Mobile Overlay */}
-      {!isCheckoutPage && (
+      {!hideClientSidebar && (
         <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div
@@ -1031,8 +919,8 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
         </AnimatePresence>
       )}
 
-      {/* Sidebar - Oculto na tela de Checkout */}
-      {!isCheckoutPage && (
+      {/* A loja do Marketplace possui navegação própria e ocupa toda a largura. */}
+      {!hideClientSidebar && (
         <aside 
           onMouseEnter={() => !isMobile && setIsSidebarHovered(true)}
           onMouseLeave={() => !isMobile && setIsSidebarHovered(false)}
@@ -1042,44 +930,82 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
             !isMobile ? (isEffectiveExpanded ? 'lg:w-72' : 'lg:w-20') : ''
           }`}
         >
-        <div className="flex h-24 items-center justify-between px-6">
+        <div className={`flex h-24 items-center border-b border-black/[0.04] transition-all ${
+          isEffectiveExpanded ? 'justify-between px-5' : 'justify-center px-2'
+        }`}>
           {isEffectiveExpanded ? (
-            <span className="text-xl tracking-tight text-[#1a1a1a] font-medium truncate">Grupo GSA</span>
+            <>
+              {/* Brand Logo & Name */}
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#07101b] text-[#d7b96e] font-black text-xs shadow-sm ring-1 ring-white/10">
+                  GSA
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-black tracking-tight text-[#07101b] truncate">Grupo GSA</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#d7b96e]">Portal do Cliente</span>
+                </div>
+              </div>
+              
+              {!isMobile && (
+                <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/70 shadow-2xs">
+                  {/* Pin Button */}
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      const newPinned = !isSidebarPinned;
+                      setIsSidebarPinned(newPinned);
+                      localStorage.setItem('client_sidebar_pinned', JSON.stringify(newPinned));
+                      if (newPinned) {
+                        setIsSidebarCollapsed(false);
+                        localStorage.setItem('client_sidebar_collapsed', JSON.stringify(false));
+                      }
+                    }}
+                    className={`flex h-7 w-7 items-center justify-center rounded-lg transition-all cursor-pointer ${
+                      isSidebarPinned 
+                        ? 'bg-[#07101b] text-[#d7b96e] shadow-xs' 
+                        : 'text-slate-400 hover:text-slate-700 hover:bg-white'
+                    }`}
+                    title={isSidebarPinned ? "Desafixar menu lateral" : "Fixar menu lateral"}
+                  >
+                    <Pin className={`h-3.5 w-3.5 transition-transform duration-200 ${isSidebarPinned ? 'rotate-0' : 'rotate-45'}`} />
+                  </button>
+                  {/* Collapse Button */}
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      const newCollapsed = !isSidebarCollapsed;
+                      setIsSidebarCollapsed(newCollapsed);
+                      localStorage.setItem('client_sidebar_collapsed', JSON.stringify(newCollapsed));
+                      if (newCollapsed) {
+                        setIsSidebarPinned(false);
+                        localStorage.setItem('client_sidebar_pinned', JSON.stringify(false));
+                      }
+                    }}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 hover:text-[#07101b] hover:bg-white transition-all cursor-pointer"
+                    title="Recolher menu lateral"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
-            <span className="text-xl font-bold tracking-tight text-[#1a1a1a] mx-auto">GSA</span>
-          )}
-          
-          {!isMobile && (
-            <div className="flex items-center gap-1">
+            /* Collapsed State: Perfectly Centered Monogram & Expand Action */
+            <div className="flex items-center justify-center w-full">
               <button 
+                type="button"
                 onClick={() => {
-                  const newPinned = !isSidebarPinned;
-                  setIsSidebarPinned(newPinned);
-                  localStorage.setItem('client_sidebar_pinned', JSON.stringify(newPinned));
-                  if (newPinned) {
-                    setIsSidebarCollapsed(false);
-                    localStorage.setItem('client_sidebar_collapsed', JSON.stringify(false));
-                  }
+                  setIsSidebarCollapsed(false);
+                  localStorage.setItem('client_sidebar_collapsed', JSON.stringify(false));
                 }}
-                className={`rounded-full p-1.5 hover:bg-black/5 transition-colors ${isSidebarPinned ? 'text-indigo-600' : 'text-[#1a1a1a]/30'}`}
-                title={isSidebarPinned ? "Desafixar menu" : "Fixar menu"}
+                className="group flex h-10 w-10 items-center justify-center rounded-xl bg-[#07101b] text-[#d7b96e] shadow-sm ring-1 ring-black/5 hover:bg-[#102441] hover:scale-105 active:scale-95 transition-all cursor-pointer relative"
+                title="Clique para expandir o menu lateral"
               >
-                <Pin className="h-3.5 w-3.5" style={{ transform: isSidebarPinned ? 'rotate(0deg)' : 'rotate(45deg)', transition: 'transform 0.2s' }} />
-              </button>
-              <button 
-                onClick={() => {
-                  const newCollapsed = !isSidebarCollapsed;
-                  setIsSidebarCollapsed(newCollapsed);
-                  localStorage.setItem('client_sidebar_collapsed', JSON.stringify(newCollapsed));
-                  if (newCollapsed) {
-                    setIsSidebarPinned(false);
-                    localStorage.setItem('client_sidebar_pinned', JSON.stringify(false));
-                  }
-                }}
-                className="rounded-full p-1.5 hover:bg-black/5 transition-colors text-[#1a1a1a]/60"
-                title={isSidebarCollapsed ? "Expandir menu" : "Recolher menu"}
-              >
-                {isSidebarCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+                <span className="font-black text-xs tracking-wider group-hover:hidden">GSA</span>
+                <ChevronRight className="h-4 w-4 text-[#d7b96e] hidden group-hover:block transition-transform" />
+                <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white border border-slate-200 text-slate-600 shadow-2xs group-hover:bg-[#d7b96e] group-hover:text-[#07101b] group-hover:border-[#d7b96e]">
+                  <ChevronRight className="h-2.5 w-2.5" />
+                </span>
               </button>
             </div>
           )}
@@ -1233,10 +1159,11 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
                 {menuItems.find(i => i.id === activeModule)?.label}
               </h1>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <button
+                type="button"
                 onClick={toggleFullscreen}
-                className="group hidden sm:flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5 transition-all hover:bg-black/5"
+                className="group hidden sm:flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5 transition-all hover:bg-black/5 cursor-pointer"
                 title={isFullscreen ? "Sair da Tela Cheia" : "Tela Cheia"}
               >
                 {isFullscreen ? (
@@ -1245,6 +1172,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
                   <Maximize className="h-5 w-5 text-[#1a1a1a]/60 group-hover:text-[#1a1a1a]" />
                 )}
               </button>
+
               <UniversalNotificationBell 
                 variant="client"
                 notifications={notifications}
@@ -1255,6 +1183,16 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
                   navigateClientModule(mod, tab, itemId);
                 }}
               />
+
+              <button
+                type="button"
+                onClick={onLogout}
+                className="group flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5 transition-all hover:bg-red-50 hover:ring-red-200 hover:text-red-600 text-slate-600 cursor-pointer"
+                title="Sair do Portal"
+                aria-label="Sair do Portal"
+              >
+                <LogOut className="h-4 w-4 text-slate-500 group-hover:text-red-600 transition-colors" />
+              </button>
             </div>
           </header>
         )}
@@ -1302,7 +1240,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
           )}
 
           <motion.div 
-            key={`${activeModule}-${moduleKey}`}
+            key={activeModule}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
@@ -1311,7 +1249,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
             {activeModule === 'dashboard' && (
               <ClientDashboard 
                 menuItems={menuItems} 
-                onNavigate={(mod) => {
+                onNavigate={(mod, tab) => {
                   const item = menuItems.find(i => i.id === mod);
                   if (item?.locked) {
                     if (!vipModuleConfig.ativo && mod === 'area_vip') {
@@ -1321,7 +1259,7 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
                     }
                     return;
                   }
-                  navigateClientModule(mod as Module);
+                  navigateClientModule(mod as Module, tab);
                 }} 
                 cliente={cliente}
                 vipModuleConfig={vipModuleConfig}
@@ -1465,6 +1403,8 @@ export function ClientPortal({ clientId, onLogout, initialModule, initialStoreTa
                       setShowReferralModal(false);
                       if (modalIndicacaoConfig.acaoBotao === 'modulo') {
                         navigateClientModule(modalIndicacaoConfig.moduloDestino as Module);
+                      } else if (/gsahub\.pages\.dev/i.test(modalIndicacaoConfig.urlBotao)) {
+                        navigate(routes.client.services.root());
                       } else {
                         window.open(modalIndicacaoConfig.urlBotao, '_blank');
                       }

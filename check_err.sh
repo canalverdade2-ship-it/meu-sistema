@@ -1,1 +1,2 @@
-sudo docker exec -i evo-postgres psql -U evo -d n8n -c "SELECT data->'resultData'->'error' FROM execution_entity WHERE id IN (71, 72);"
+sudo docker exec -e PGPASSWORD='evopass' evo-postgres psql -U evo -d n8n -t -c "SELECT CAST(data AS text) FROM execution_data ed JOIN execution_entity ee ON ed.\"executionId\" = ee.id WHERE ee.\"workflowId\" = 'AAAABBBBCCCCDDDD' ORDER BY ee.id DESC LIMIT 1;" > /tmp/n8n_err.json
+cat /tmp/n8n_err.json | head -c 1000

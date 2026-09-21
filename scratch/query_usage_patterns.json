@@ -1,0 +1,2534 @@
+{
+  "tickets": [
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": ".from('tickets') .select('id, assunto, status') .eq('cliente_id', clienteId) .in('status', ['aberto', 'em andamento', 'pendente_cliente']); if (ticket"
+    },
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": ".from('tickets').select('id').eq('cliente_id', cliente.id); if (clientTickets && clientTickets.length > 0) { await supabase.from('ticket_mensagens').d"
+    },
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": ".from('tickets').delete().eq('cliente_id', cliente.id); await supabase.from('faturas').delete().eq('cliente_id', cliente.id); await supabase.from('orc"
+    },
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "snippet": "table: 'tickets', onChange: () => void load(true), debounceMs: 500 }, { table: 'clientes', onChange: () => void"
+    },
+    {
+      "file": "src\\components\\admin\\relatorios\\RelatorioSuporte.tsx",
+      "snippet": ".from('tickets') .select('id, cliente_id, assunto, status, data_abertura, data_fechamento') .gte('data_abertura', inicio) .lte('data_abertura', fim); "
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\contratos\\AtendimentoTicketsView.tsx",
+      "snippet": ".from('tickets') .select('*') .order('created_at', { ascending: false }); if (!error && dbTickets && dbTickets.length > 0) { // Obter dados de cliente"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\contratos\\AtendimentoTicketsView.tsx",
+      "snippet": ".from('tickets').update({ status: 'em_andamento', updated_at: new Date().toISOString() }).eq('id', selectedTicket.id); } catch (err) { console.warn('M"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\contratos\\AtendimentoTicketsView.tsx",
+      "snippet": ".from('tickets').update({ status: 'resolvido', fechado_em: new Date().toISOString() }).eq('id', selectedTicket.id); } catch (err) { console.warn('Stat"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\contratos\\AtendimentoTicketsView.tsx",
+      "snippet": "table: 'tickets', onChange: fetchTickets }, { table: 'ticket_mensagens', onChange: fetchTickets } ]); c"
+    },
+    {
+      "file": "src\\components\\admin\\TicketsModule.tsx",
+      "snippet": ".from('tickets') .select('*, clientes(nome, codigo_cliente)'); if (activeTab === 'abertos') query = query.eq('status', 'aberto'); else if (activeTab ="
+    },
+    {
+      "file": "src\\components\\admin\\TicketsModule.tsx",
+      "snippet": ".from('tickets') .update({ status, data_fechamento: status === 'concluido' ? new Date().toISOString() : null }) .eq('id', id); if (error) { toast.erro"
+    },
+    {
+      "file": "src\\components\\admin\\TicketsModule.tsx",
+      "snippet": "table: 'tickets' }, () => { debouncedFetch(); }) .subscribe(); return () => { "
+    },
+    {
+      "file": "src\\components\\admin\\TicketsModule.tsx",
+      "snippet": "table: 'tickets', filter: `id=eq.${selectedTicket.id}` }, (payload) => { setSelectedT"
+    },
+    {
+      "file": "src\\components\\client\\ClientEmprestimos.tsx",
+      "snippet": ".from('tickets') .select('id') .eq('cliente_id', clientId) .eq('assunto', 'Solicitação de Alteração Cadastral') .neq('status', 'concluido') .limit(1) "
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "snippet": ".from('tickets') .select('id') .eq('cliente_id', clientId) .eq('assunto', 'Solicitação de Liberação Manual de Saque') .in('status', ['aberto', 'em and"
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "snippet": ".from('tickets') .select('id') .eq('cliente_id', clientId) .eq('assunto', 'Solicitação de Saque Abaixo do Mínimo') .in('status', ['aberto', 'em andame"
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "snippet": "table: 'tickets', filter: clientId ? `cliente_id=eq.${clientId}` : undefined, onChange: () => { "
+    },
+    {
+      "file": "src\\components\\client\\ClientPremios.tsx",
+      "snippet": ".from('tickets') .select('id') .eq('cliente_id', clientId) .eq('assunto', assunto) .neq('status', 'concluido') .limit(1); if (checkError) throw checkE"
+    },
+    {
+      "file": "src\\components\\client\\ClientSuporte.tsx",
+      "snippet": ".from('tickets') .select('*') .eq('cliente_id', clientId) .order('data_abertura', { ascending: false }); if (modulo === 'afiliado') { query = query.eq"
+    },
+    {
+      "file": "src\\components\\client\\ClientSuporte.tsx",
+      "snippet": "table: 'tickets', filter: clientId ? `cliente_id=eq.${clientId}` : undefined, onChange: fetchTicke"
+    },
+    {
+      "file": "src\\components\\client\\ClientSuporte.tsx",
+      "snippet": "table: 'tickets', filter: selectedTicket?.id ? `id=eq.${selectedTicket.id}` : undefined, enabled: "
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+      "snippet": ".from('tickets') .select('id,assunto,descricao,status,data_abertura,updated_at') .eq('prestador_id', prestadorId); if (!initialItemId) query = query.e"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+      "snippet": "table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, () => void loadTickets(() => isMounted)) .subsc"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+      "snippet": "table: 'tickets', filter: `id=eq.${selectedTicket.id}` }, (payload) => { setSelectedTicket((current) => cur"
+    },
+    {
+      "file": "src\\hooks\\useProviderNotifications.tsx",
+      "snippet": "table: 'tickets', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh) .on('postgres_changes', { even"
+    },
+    {
+      "file": "src\\lib\\adminRpc.ts",
+      "snippet": ".from('tickets').select('id').eq('cliente_id', entityId); const ticketIds = (tList || []).map((t: any) => t.id).filter(Boolean); const { data: pedList"
+    },
+    {
+      "file": "src\\lib\\adminRpc.ts",
+      "snippet": ".from('tickets').select('id', { count: 'exact', head: true }).in('cliente_id', clientIds), supabase.from('loja_pedidos').select('id', { count: 'exact'"
+    },
+    {
+      "file": "src\\pages\\Afiliado\\AfiliadoDashboard.tsx",
+      "snippet": ".from('tickets') .select('id, data_abertura, status') .eq('cliente_id', clientId) .ilike('assunto', '%exclusão%') .in('status', ['aberto', 'em andamen"
+    },
+    {
+      "file": "src\\pages\\ClientPortal.tsx",
+      "snippet": ".from('tickets') .select('id') .eq('cliente_id', clientId) .eq('assunto', assunto) .neq('status', 'concluido') .limit(1); if (checkError) throw checkE"
+    },
+    {
+      "file": "src\\validation\\master_block2.ts",
+      "snippet": ".from('tickets') .insert([{ cliente_id, assunto: 'DÚVIDA TESTE VALIDAÇÃO', descricao: 'Solicitação de suporte gerada automaticamente.', stat"
+    },
+    {
+      "file": "supabase\\migrations\\20260316000000_realtime_triggers.sql",
+      "snippet": "FROM tickets WHERE id = (v_new WHERE id = (v_new_json->>'ticket_id')::UUID; v_modulo := 'suporte'; v_emoji := '📩💬'; IF (v_new_json->>'tipo' ="
+    },
+    {
+      "file": "supabase\\migrations\\20260317000002_create_prestadores_schema.sql",
+      "snippet": "Update tickets table to suppor table to support prestadores ALTER TABLE tickets ADD COLUMN IF NOT EXISTS prestador_id UUID REFERENCES prestadores(id) "
+    },
+    {
+      "file": "supabase\\migrations\\20260720183000_harden_admin_panel.sql",
+      "snippet": "FROM public.tickets t\r\n        t LEFT JOIN public.clientes c ON c.id = t.cliente_id WHERE t.status IN ('aberto', 'em_andamento') ORDER BY"
+    },
+    {
+      "file": "supabase\\migrations\\20260720200000_private_service_support_documents.sql",
+      "snippet": "FROM public.tickets t\r\n        t WHERE t.id = ((storage.foldername(name))[4])::uuid AND t.cliente_id::text = coalesce(auth.jwt() -> 'app_metadata' ->>"
+    },
+    {
+      "file": "supabase\\migrations\\20260720200000_private_service_support_documents.sql",
+      "snippet": "FROM public.tickets t\r\n        t WHERE t.id = ((storage.foldername(name))[4])::uuid AND t.cliente_id::text = coalesce(auth.jwt() -> 'app_metadata' ->>"
+    },
+    {
+      "file": "supabase\\migrations\\20260720200000_private_service_support_documents.sql",
+      "snippet": "FROM public.tickets t\r\n    WHE t WHERE t.id = ((storage.foldername(name))[4])::uuid AND t.prestador_id::text = coalesce(auth.jwt() -> 'app_metadata' -"
+    },
+    {
+      "file": "supabase\\migrations\\20260720200000_private_service_support_documents.sql",
+      "snippet": "FROM public.tickets t\r\n    WHE t WHERE t.id = ((storage.foldername(name))[4])::uuid AND t.prestador_id::text = coalesce(auth.jwt() -> 'app_metadata' -"
+    },
+    {
+      "file": "supabase\\migrations\\20260720232000_harden_client_portal_audit_findings.sql",
+      "snippet": "FROM public.tickets t WHERE t. t WHERE t.id = v_related_id AND t.cliente_id = v_cliente_id ) THEN RAISE EXCEPTION 'Ticket não pertence ao cliente aute"
+    },
+    {
+      "file": "supabase\\migrations\\20260720232000_harden_client_portal_audit_findings.sql",
+      "snippet": "FROM public.tickets t\r\n    WHE t WHERE t.cliente_id = v_actor_id AND lower(trim(COALESCE(t.assunto, ''))) = lower(trim(COALESCE(NEW.assunto, ''))) AND"
+    },
+    {
+      "file": "supabase\\migrations\\20260720233000_provider_portal_audit_hardening.sql",
+      "snippet": "FROM public.tickets\r\n    WHERE WHERE prestador_id = v_provider_id AND assunto = v_subject AND status <> 'concluido' ORDER BY data_abertura DESC LIMIT "
+    },
+    {
+      "file": "supabase\\migrations\\20260720233000_provider_portal_audit_hardening.sql",
+      "snippet": "FROM public.tickets\r\n  WHERE i WHERE id = p_ticket_id AND prestador_id = v_provider_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Atendimento não "
+    },
+    {
+      "file": "supabase\\migrations\\20260720233000_provider_portal_audit_hardening.sql",
+      "snippet": "UPDATE public.tickets SET upda SET updated_at = now() WHERE id = p_ticket_id; PERFORM public.gsa_provider_insert_admin_notification( 'Nova mensagem de"
+    },
+    {
+      "file": "supabase\\migrations\\20260721003500_ticket_status_compat.sql",
+      "snippet": "UPDATE public.tickets SET stat SET status = 'em andamento' WHERE status = 'em_andamento'; DROP TRIGGER IF EXISTS trg_gsa_normalize_ticket_status ON pu"
+    },
+    {
+      "file": "supabase\\migrations\\20260721003500_ticket_status_compat.sql",
+      "snippet": "FROM public.tickets t\r\n        t LEFT JOIN public.clientes c ON c.id = t.cliente_id WHERE t.status IN ('aberto', 'em andamento', 'em_andamento') ORDE"
+    },
+    {
+      "file": "supabase\\migrations\\20260721130000_harden_collaborator_authorization.sql",
+      "snippet": "FROM public.tickets WHERE lowe WHERE lower(replace(COALESCE(status, ''''), '' '', ''_'')) IN (''aberto'', ''em_andamento'')' INTO v_a; v_metrics := v_"
+    },
+    {
+      "file": "supabase\\migrations\\20260803110000_create_delete_client_cascade_rpc.sql",
+      "snippet": "FROM public.tickets WHERE clie WHERE cliente_id = p_cliente_id; END IF; -- Obter IDs de empréstimos IF to_regclass('public.emprestimos') IS NOT NULL T"
+    },
+    {
+      "file": "supabase\\migrations\\20260803110000_create_delete_client_cascade_rpc.sql",
+      "snippet": "DELETE FROM public.tickets WHE WHERE cliente_id = p_cliente_id; END IF; IF to_regclass('public.notificacoes') IS NOT NULL THEN DELETE FROM public.noti"
+    },
+    {
+      "file": "supabase\\migrations\\20260805151500_update_public_facing_actors.sql",
+      "snippet": "FROM tickets WHERE id = (v_new WHERE id = (v_new_json->>'ticket_id')::UUID; v_modulo := 'suporte'; v_emoji := '📩💬'; IF (v_new_json->>'tipo'"
+    },
+    {
+      "file": "supabase\\migrations\\20260814120000_loja_favoritos_persistence.sql",
+      "snippet": "FROM public.tickets t WHERE t. t WHERE t.id = v_related_id AND t.cliente_id = v_cliente_id ) THEN RAISE EXCEPTION 'Ticket não pertence ao cliente aute"
+    },
+    {
+      "file": "supabase\\migrations\\20260826233000_db_rpc_integrity_remediation.sql",
+      "snippet": "UPDATE public.tickets SET crea SET created_at = COALESCE(data_abertura, now()) WHERE created_at IS NULL; ALTER TABLE public.loja_reembolsos ADD COLUMN"
+    },
+    {
+      "file": "supabase\\migrations\\20260829141000_client_cancel_support_ticket.sql",
+      "snippet": "FROM public.tickets\n  WHERE id WHERE id = p_ticket_id AND cliente_id = v_actor.cliente_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Ticket não en"
+    },
+    {
+      "file": "supabase\\migrations\\20260829141000_client_cancel_support_ticket.sql",
+      "snippet": "UPDATE public.tickets\n  SET st SET status = 'cancelado', data_fechamento = now(), updated_at = now() WHERE id = v_ticket.id; RETURN jsonb_build_object"
+    },
+    {
+      "file": "supabase\\migrations\\20260830030000_admin_panel_security_end_to_end.sql",
+      "snippet": "FROM public.tickets t WHERE t. t WHERE t.id=ticket_id AND ( (public.gsa_jwt_actor_type()='cliente' AND t.cliente_id=public.gsa_jwt_actor_id()) OR (pub"
+    },
+    {
+      "file": "supabase\\migrations\\20260901000000_secure_admin_cascade_delete.sql",
+      "snippet": "FROM public.tickets WHERE clie WHERE cliente_id = ANY(p_client_ids); SELECT coalesce(count(*), 0) INTO v_pedidos_count FROM public.loja_pedidos WHERE "
+    }
+  ],
+  "ticket_mensagens": [
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": ".from('ticket_mensagens').delete().eq('ticket_id', pItem.itemId); } else if (pItem.tableName === 'orcamentos') { await supabase.from('orcamento_timeli"
+    },
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": ".from('ticket_mensagens').delete().in('ticket_id', clientTickets.map(t => t.id)); } await supabase.from('tickets').delete().eq('cliente_id', cliente.i"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\contratos\\AtendimentoTicketsView.tsx",
+      "snippet": ".from('ticket_mensagens') .select('*') .in('ticket_id', ticketIds) .order('data_envio', { ascending: true }); const messagesByTicket: Record<string, T"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\contratos\\AtendimentoTicketsView.tsx",
+      "snippet": ".from('ticket_mensagens').insert([{ ticket_id: selectedTicket.id, autor_tipo: 'atendente', autor_nome: 'Atendente GSA', mensagem: replyMessage.trim() "
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\contratos\\AtendimentoTicketsView.tsx",
+      "snippet": "table: 'ticket_mensagens', onChange: fetchTickets } ]); const selectedTicket = useMemo(() => { return tickets.fi"
+    },
+    {
+      "file": "src\\components\\admin\\TicketsModule.tsx",
+      "snippet": ".from('ticket_mensagens') .update({ lida: true }) .eq('ticket_id', ticketId) .eq('tipo', 'cliente') .eq('lida', false); if (!error) { setUnreadCounts("
+    },
+    {
+      "file": "src\\components\\admin\\TicketsModule.tsx",
+      "snippet": ".from('ticket_mensagens') .select('ticket_id') .in('ticket_id', ticketIds) .eq('lida', false) .eq('tipo', 'cliente'); const counts: Record<string, num"
+    },
+    {
+      "file": "src\\components\\admin\\TicketsModule.tsx",
+      "snippet": ".from('ticket_mensagens') .select('*') .eq('ticket_id', ticketId) .order('data_envio', { ascending: true }); if (data) setMessages(data); setLoadingMe"
+    },
+    {
+      "file": "src\\components\\admin\\TicketsModule.tsx",
+      "snippet": ".from('ticket_mensagens').insert([{ ticket_id: selectedTicket.id, autor_id: colaboradorId || 'admin', autor_nome: colaboradorNome || 'Suporte GSA', me"
+    },
+    {
+      "file": "src\\components\\admin\\TicketsModule.tsx",
+      "snippet": "table: 'ticket_mensagens', filter: `ticket_id=eq.${selectedTicket.id}` }, (payload) => { const"
+    },
+    {
+      "file": "src\\components\\client\\ClientSuporte.tsx",
+      "snippet": ".from('ticket_mensagens') .select('*') .eq('ticket_id', ticketId) .order('data_envio', { ascending: true }); if (data) setMessages(data); setLoadingMe"
+    },
+    {
+      "file": "src\\components\\client\\ClientSuporte.tsx",
+      "snippet": "table: 'ticket_mensagens', filter: selectedTicket?.id ? `ticket_id=eq.${selectedTicket.id}` : undefined, en"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+      "snippet": ".from('ticket_mensagens') .select('id,ticket_id,autor_id,autor_nome,mensagem,anexo_url,anexo_tipo,data_envio,tipo') .eq('ticket_id', ticketId) .order("
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorSuporte.tsx",
+      "snippet": "table: 'ticket_mensagens', filter: `ticket_id=eq.${selectedTicket.id}` }, () => void loadMessages(selectedTicket.id)) "
+    },
+    {
+      "file": "src\\validation\\master_block2.ts",
+      "snippet": ".from('ticket_mensagens') .insert([{ ticket_id: ticket.id, autor_id: cliente_id, autor_nome: 'Cliente Teste', mensagem: 'Olá, gostaria de testar o ch"
+    },
+    {
+      "file": "supabase\\migrations\\20260803110000_create_delete_client_cascade_rpc.sql",
+      "snippet": "DELETE FROM public.ticket_mens WHERE ticket_id = ANY(v_ticket_ids); END IF; IF to_regclass('public.tickets') IS NOT NULL THEN DELETE FROM public.ticke"
+    }
+  ],
+  "pontos_movimentacoes": [
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": ".from('pontos_movimentacoes') .select('*') .eq('cliente_id', cliente.id) .order('data_movimentacao', { ascending: false }); if (errorOld) console.erro"
+    },
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": "table: 'pontos_movimentacoes', filter: `cliente_id=eq.${cliente.id}` }, fetchExtratoPontos) .on('postgres_changes', { even"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+      "snippet": ".from('pontos_movimentacoes') .select('pontos') .eq('cliente_id', ordem.cliente_id) .like('descricao', `%#${orcamento.codigo_orcamento}%`) .limit(1) ."
+    },
+    {
+      "file": "src\\components\\admin\\relatorios\\RelatorioGamificacao.tsx",
+      "snippet": ".from('pontos_movimentacoes').select('tipo, pontos, valor_convertido, data_movimentacao').gte('data_movimentacao', inicio).lte('data_movimentacao', fi"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+      "snippet": "table: 'pontos_movimentacoes', onChange: () => { fetchPremios(); fetchIndicacoes(); } }, { table: 'cupons_loja', onChange: ("
+    },
+    {
+      "file": "src\\components\\client\\ClientAffiliatePanel.tsx",
+      "snippet": "table: 'pontos_movimentacoes', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) }, "
+    },
+    {
+      "file": "src\\components\\client\\ClientFidelidade.tsx",
+      "snippet": "table: 'pontos_movimentacoes', filter: clientId ? `cliente_id=eq.${clientId}` : undefined }, { table: 'system_settings' },"
+    },
+    {
+      "file": "src\\components\\client\\ClientPontos.tsx",
+      "snippet": ".from('pontos_movimentacoes') .select('*') .eq('cliente_id', clienteId) .order('data_movimentacao', { ascending: false }); const { data: dataNew, erro"
+    },
+    {
+      "file": "src\\components\\client\\ClientPontos.tsx",
+      "snippet": "table: 'pontos_movimentacoes', filter: clienteId ? `cliente_id=eq.${clienteId}` : undefined, debounceMs: 150, "
+    },
+    {
+      "file": "src\\components\\client\\ClientTransferencias.tsx",
+      "snippet": "table: 'pontos_movimentacoes', filter: clientId ? `cliente_id=eq.${clientId}` : undefined, onChange: fetchClien"
+    },
+    {
+      "file": "src\\components\\client\\financeiro\\FaturasList.tsx",
+      "snippet": ".from('pontos_movimentacoes') .select('pontos') .eq('cliente_id', clientId) .like('descricao', `%#${code}%`) .limit(1) .maybeSingle(); "
+    },
+    {
+      "file": "src\\components\\client\\StoreHub.tsx",
+      "snippet": ".from('pontos_movimentacoes') .select('pontos') .eq('cliente_id', clientId) .like('descricao', `%#${code}%`) .limit(1) .maybeSingle(); "
+    },
+    {
+      "file": "src\\utils\\gamification.ts",
+      "snippet": ".from('pontos_movimentacoes') .select('pontos') .eq('fatura_id', faturaId) .eq('tipo', 'geracao_fatura') .maybeSingle(); const pontosRemovidos = Numbe"
+    },
+    {
+      "file": "supabase\\migrations\\20260714054000_atomic_invoice_payment_and_points.sql",
+      "snippet": "FROM public.pontos_movimentaco pm WHERE pm.cliente_id = p_cliente_id AND pm.fatura_id = p_fatura_id AND pm.tipo = p_tipo ) THEN RETURN jsonb_build"
+    },
+    {
+      "file": "supabase\\migrations\\20260714054000_atomic_invoice_payment_and_points.sql",
+      "snippet": "UPDATE public.pontos_movimenta SET valor_convertido = v_pontos_deduction WHERE id = ( SELECT id FROM public.pontos_movimentacoes WHERE cliente_id = v_"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "FROM public.pontos_movimentaco WHERE cliente_id = v_client.id AND descricao = 'Bônus de Boas-vindas' UNION ALL SELECT 1 FROM public.carteira_lancament"
+    },
+    {
+      "file": "supabase\\migrations\\20260721010000_harden_products_and_subscriptions.sql",
+      "snippet": "FROM public.pontos_movimentaco WHERE cliente_id = v_ordem.cliente_id AND tipo = 'uso_fatura' AND pontos < 0 AND descricao LIKE '%' || v_codigo ||"
+    },
+    {
+      "file": "supabase\\migrations\\20260803174500_fix_gsa_finalize_paid_invoice_points_type.sql",
+      "snippet": "FROM public.pontos_movimentaco pm WHERE pm.cliente_id = p_cliente_id AND pm.fatura_id = p_fatura_id AND pm.tipo = p_tipo ) THEN RETURN jsonb_"
+    },
+    {
+      "file": "supabase\\migrations\\20260910233000_client_panel_rls_hardening.sql",
+      "snippet": "UPDATE public.pontos_movimenta SET valor_convertido = v_pontos_deduction WHERE id = ( SELECT id FROM public.pontos_movimentacoes WHERE cliente_id = v_"
+    }
+  ],
+  "saques": [
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": ".from('saques') .select('id, valor, status') .eq('cliente_id', clienteId) .in('status', ['solicitado', 'aprovado']); if (saques && saques.length > 0) "
+    },
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": ".from('saques').delete().eq('cliente_id', cliente.id); await supabase.from('classificados_anuncios').delete().eq('cliente_id', cliente.id); await supa"
+    },
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "snippet": "table: 'saques', onChange: () => void load(true), debounceMs: 500 }, { table: 'emprestimos', onChange: () => v"
+    },
+    {
+      "file": "src\\components\\admin\\FinanceiroModule.tsx",
+      "snippet": ".from('saques') .select('*, clientes(id, nome, codigo_cliente, cpf, saldo_carteira)') .order('data_solicitacao', { ascending: false }); if (data) setS"
+    },
+    {
+      "file": "src\\components\\admin\\FinanceiroModule.tsx",
+      "snippet": "table: 'saques' }, () => { debouncedFetch(); }) .on('postgres_changes', { event: '*', schema"
+    },
+    {
+      "file": "src\\components\\admin\\relatorios\\RelatorioExecutivo.tsx",
+      "snippet": ".from('saques').select('id', { count: 'exact' }).eq('status', 'pendente'), supabase.from('faturas').select('valor_pago, data_pagamento').eq('status', "
+    },
+    {
+      "file": "src\\components\\admin\\relatorios\\RelatorioFinanceiro.tsx",
+      "snippet": ".from('saques').select('valor, valor_liquido, taxa_aplicada, status, data_solicitacao').gte('data_solicitacao', inicio).lte('data_solicitacao', fim), "
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+      "snippet": ".from('saques').select('id', { count: 'exact', head: true }).eq('status', 'pendente'), supabase.from('cobrancas').select('id', { count: 'exact', head:"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+      "snippet": "table: 'saques', onChange: fetchTelemetry }, { table: 'cobrancas', onChange: fetchTelemetry }, { table: '"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx",
+      "snippet": ".from('saques') .select('*, clientes(id, nome, codigo_cliente, cpf, saldo_carteira, telefone, email)') .order('data_solicitacao', { ascending: false }"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FluxoCaixaView.tsx",
+      "snippet": "table: 'saques', onChange: fetchSaques }, { table: 'transferencias', onChange: fetchTransferencias } ]); "
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+      "snippet": "table: 'saques', onChange: () => void load(true) }, { table: 'prestador_demandas', onChange: () => void load(t"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\AfiliadosSection.tsx",
+      "snippet": "table: 'saques', onChange: fetchAffiliateSnapshot } ]); // Affiliate Actions const handleToggleAffiliate"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PayoutClearanceDrawer.tsx",
+      "snippet": "table: 'saques', enabled: isOpen } ]); const [isProcessing, setIsProcessing] = useState(false); useEffec"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+      "snippet": ".from('saques') .select('id', { count: 'exact', head: true }) .in('status', ['pendente', 'aguardando', 'em_analise']); // 3. Fornecedores const suppli"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+      "snippet": "table: 'saques', onChange: fetchDomainMetrics }, { table: 'fornecedores', onChange: fetchDomainMetrics }, "
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx",
+      "snippet": ".from('saques') .select(` *, cliente:clientes(nome, email, telefone, cpf, cnpj, tipo_pessoa) `) .order('created_at', { ascending: false }); if (err2) "
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx",
+      "snippet": "table: 'saques', onChange: fetchAllSaques } ]); // Deep linking useEffect(() => { if (initialItemId"
+    },
+    {
+      "file": "src\\components\\client\\ClientAffiliatePanel.tsx",
+      "snippet": "table: 'saques', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) }, "
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "snippet": ".from('saques').select('id').eq('id', initialItemId).eq('cliente_id', clientId).maybeSingle(); if (saque) { setActiveTab('saques'); setIsSubmoduleOpen"
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "snippet": "table: 'saques', filter: clientId ? `cliente_id=eq.${clientId}` : undefined, onChange: fetchSaldo"
+    },
+    {
+      "file": "src\\components\\client\\ClientTransferencias.tsx",
+      "snippet": "table: 'saques', filter: clientId ? `cliente_id=eq.${clientId}` : undefined, onChange: fetchClien"
+    },
+    {
+      "file": "src\\components\\client\\financeiro\\SaquesList.tsx",
+      "snippet": ".from('saques').select('*').eq('cliente_id', clientId).order('data_solicitacao', { ascending: false }); if (data) setSaques(data); }; useEffect(() => "
+    },
+    {
+      "file": "src\\components\\client\\financeiro\\SaquesList.tsx",
+      "snippet": "table: 'saques', filter: clientId ? `cliente_id=eq.${clientId}` : undefined, debounceMs: 300, "
+    },
+    {
+      "file": "src\\hooks\\useRealtime.ts",
+      "snippet": "table: 'saques' }], [deps]) */ export function useRealtime<T = any>( tableOrOptions: string | RealtimeSubscripti"
+    },
+    {
+      "file": "src\\tests\\realtime-hook.test.ts",
+      "snippet": "table: 'saques', event: '*' }, ]; const unsubscribeFaturas = subscribeToTable('faturas', vi.fn(), { ev"
+    },
+    {
+      "file": "src\\tests\\realtime-hook.test.ts",
+      "snippet": "table: 'saques', filter: missingClientId ? `cliente_id=eq.${missingClientId}` : undefined, enab"
+    },
+    {
+      "file": "supabase\\migrations\\20260711160000_financial_client_rpc_hardening.sql",
+      "snippet": "FROM saques WHERE id = p_saque WHERE id = p_saque_id AND cliente_id = p_cliente_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Saque não encontrado"
+    },
+    {
+      "file": "supabase\\migrations\\20260711160000_financial_client_rpc_hardening.sql",
+      "snippet": "UPDATE saques SET status = 'ca SET status = 'cancelado', motivo_cancelamento = coalesce(nullif(p_motivo, ''), 'Cancelado pelo cliente') WHERE id = p_s"
+    },
+    {
+      "file": "supabase\\migrations\\20260714020000_secure_admin_withdrawal_transfer_rpcs.sql",
+      "snippet": "FROM public.saques\n  WHERE id  WHERE id = p_saque_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Saque nao encontrado.'; END IF; IF v_acao = 'aprov"
+    },
+    {
+      "file": "supabase\\migrations\\20260714020000_secure_admin_withdrawal_transfer_rpcs.sql",
+      "snippet": "UPDATE public.saques\n       SE SET status = 'cancelado', motivo_cancelamento = trim(p_motivo) || ' [POR: ' || v_actor.ator_nome || ']' WHERE id = p_sa"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056200_secure_client_wallet_points_transfers.sql",
+      "snippet": "FROM public.saques\n  WHERE id  WHERE id = p_saque_id AND cliente_id = v_actor.cliente_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Saque não enco"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056200_secure_client_wallet_points_transfers.sql",
+      "snippet": "UPDATE public.saques SET statu SET status = 'cancelado', motivo_cancelamento = v_reason WHERE id = p_saque_id; UPDATE public.clientes SET saldo_cartei"
+    },
+    {
+      "file": "supabase\\migrations\\20260720183000_harden_admin_panel.sql",
+      "snippet": "FROM public.saques s\r\n         s LEFT JOIN public.clientes c ON c.id = s.cliente_id WHERE s.status = 'pendente' ORDER BY s.data_solicitac"
+    },
+    {
+      "file": "supabase\\migrations\\20260721130000_harden_collaborator_authorization.sql",
+      "snippet": "FROM public.saques WHERE lower WHERE lower(COALESCE(status, '''')) = ''pendente''' INTO v_a; v_metrics := v_metrics || jsonb_build_object('saques', CO"
+    },
+    {
+      "file": "supabase\\migrations\\20260721194600_restore_admin_dashboard_foundation.sql",
+      "snippet": "FROM public.saques s\r\n         s LEFT JOIN public.clientes c ON c.id = s.cliente_id WHERE s.status = 'pendente' ORDER BY s.data_solicitac"
+    },
+    {
+      "file": "supabase\\migrations\\20260803110000_create_delete_client_cascade_rpc.sql",
+      "snippet": "DELETE FROM public.saques WHER WHERE cliente_id = p_cliente_id; END IF; IF to_regclass('public.transferencia_mensagens') IS NOT NULL THEN DELETE FROM "
+    },
+    {
+      "file": "supabase\\migrations\\20260826233000_db_rpc_integrity_remediation.sql",
+      "snippet": "UPDATE public.saques SET creat SET created_at = COALESCE(data_solicitacao, now()) WHERE created_at IS NULL; -- 3. RPCS RESILIENTES (SOBRECARGAS E PARÂ"
+    },
+    {
+      "file": "supabase\\migrations\\20260910233000_client_panel_rls_hardening.sql",
+      "snippet": "FROM public.saques\n  WHERE id  WHERE id = p_saque_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Saque nao encontrado.'; END IF; IF v_acao = 'aprov"
+    },
+    {
+      "file": "supabase\\migrations\\20260910233000_client_panel_rls_hardening.sql",
+      "snippet": "UPDATE public.saques\n       SE SET status = 'cancelado', motivo_cancelamento = trim(p_motivo) || ' [POR: ' || v_actor.ator_nome || ']' WHERE id = p_sa"
+    }
+  ],
+  "faturas": [
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": ".from('faturas') .select('id, codigo_fatura, valor, status') .eq('cliente_id', clienteId) .in('status', ['pendente', 'vencida', 'pendente_pagamento', "
+    },
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": ".from('faturas').delete().eq('cliente_id', cliente.id); await supabase.from('orcamentos').delete().eq('cliente_id', cliente.id); await supabase.from('"
+    },
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": ".from('faturas') .select('*', { count: 'exact', head: true }) .eq('cliente_id', cliente.id) .eq('status', 'pago'); if (error) throw error; setPaidInvo"
+    },
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": ".from('faturas') .select('*, cobrancas(id), clientes(id, nome, cpf, cnpj, email, telefone, codigo_cliente), ordens_servico(codigo_os, orcamentos(codig"
+    },
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": ".from('faturas') .select(` *, clientes ( nome, telefone ) `) .eq('id', selectedFatura.id) .single(); if (updated"
+    },
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": "table: 'faturas', filter: `cliente_id=eq.${cliente.id}` }, () => { fetchFaturas(); fetchPaidInvoic"
+    },
+    {
+      "file": "src\\components\\admin\\CobrancaModule.tsx",
+      "snippet": ".from('faturas') .select('id, codigo_fatura, cliente_id, valor_total, valor_final_pendente, data_vencimento, status, created_at, clientes(nome, telefo"
+    },
+    {
+      "file": "src\\components\\admin\\CreditoModule.tsx",
+      "snippet": ".from('faturas') .select('valor_total, itens_faturados') .eq('cliente_id', q.cliente_id) .in('status', ['penden"
+    },
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "snippet": "table: 'faturas', onChange: () => void load(true), debounceMs: 500 }, { table: 'cobrancas', onChange: () => voi"
+    },
+    {
+      "file": "src\\components\\admin\\FinanceiroModule.tsx",
+      "snippet": ".from('faturas') .select('*, cobrancas(id), clientes(id, nome, cpf, cnpj, email, telefone, codigo_cliente), ordens_servico(codigo_os, orcamentos(codig"
+    },
+    {
+      "file": "src\\components\\admin\\FinanceiroModule.tsx",
+      "snippet": ".from('faturas') .select(` *, clientes ( nome, telefone ) `) .eq('id', fatura.id) .single(); if (updatedFatura &"
+    },
+    {
+      "file": "src\\components\\admin\\FinanceiroModule.tsx",
+      "snippet": "table: 'faturas' }, () => { debouncedFetch(); }) .subscribe(); const channelSaques = s"
+    },
+    {
+      "file": "src\\components\\admin\\FiscalModule.tsx",
+      "snippet": "table: 'faturas', onChange: load, debounceMs: 300 }, ], [load]); useEffect(() => { if (!initialItemId |"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensAssinaturaModule.tsx",
+      "snippet": "table: 'faturas', onChange: fetchOrdens, debounceMs: 300 }, { table: 'orcamentos', onChange: fetchOrdens, debou"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+      "snippet": ".from('faturas') .select('*') .eq('cliente_id', ordem.cliente_id) .eq('is_amortizacao_credito', true); const filtered = (data || []).filter((f: any) ="
+    },
+    {
+      "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+      "snippet": "table: 'faturas', onChange: fetchOrdens, debounceMs: 300 }, { table: 'cupons_loja', onChange: fetchOrdens, debo"
+    },
+    {
+      "file": "src\\components\\admin\\PainelRentabilidade.tsx",
+      "snippet": ".from('faturas') .select('*, ordens_servico(id, orcamento_id)') .eq('id', faturaId) .single(); if (fatura) { currentOsId = fatura.os_id; curre"
+    },
+    {
+      "file": "src\\components\\admin\\PainelRentabilidade.tsx",
+      "snippet": "table: 'faturas' }, debouncedFetch) .on('postgres_changes', { event: '*', schema: 'public', table: 'ordens_se"
+    },
+    {
+      "file": "src\\components\\admin\\prestadores\\PrestadoresDemandas.tsx",
+      "snippet": ".from('faturas') .insert({ codigo_fatura: generateCode('FAT'), os_id: demanda.os_id, cliente_id: osObj?.cliente_id, valor_total: orcTotal, v"
+    },
+    {
+      "file": "src\\components\\admin\\ReembolsosModule.tsx",
+      "snippet": ".from('faturas') .select(` id, valor_total, valor_pago, status, forma_pagamento_escolhida, data_pagamento, desconto_voucher_aplica"
+    },
+    {
+      "file": "src\\components\\admin\\relatorios\\RelatorioClientes.tsx",
+      "snippet": ".from('faturas').select('cliente_id, valor_pago').eq('status','pago'), ]); const cli = clientes.data || []; const niv = niveis.data || []; const fat ="
+    },
+    {
+      "file": "src\\components\\admin\\relatorios\\RelatorioExecutivo.tsx",
+      "snippet": ".from('faturas').select('valor_pago').eq('status', 'pago').gte('data_pagamento', inicio).lte('data_pagamento', fim), supabase.from('faturas').select('"
+    },
+    {
+      "file": "src\\components\\admin\\relatorios\\RelatorioExecutivo.tsx",
+      "snippet": ".from('faturas').select('id', { count: 'exact' }).eq('status', 'pendente'), supabase.from('saques').select('id', { count: 'exact' }).eq('status', 'pen"
+    },
+    {
+      "file": "src\\components\\admin\\relatorios\\RelatorioFinanceiro.tsx",
+      "snippet": ".from('faturas').select('valor_total, valor_pago, status, tipo, data_pagamento').gte('created_at', inicio).lte('created_at', fim), supabase.from('paga"
+    },
+    {
+      "file": "src\\components\\admin\\relatorios\\RelatorioLoja.tsx",
+      "snippet": ".from('faturas').select(`id, valor_pago, status`).eq('tipo', 'produto').eq('status', 'pago').gte('data_pagamento', inicio).lte('data_pagamento', fim),"
+    },
+    {
+      "file": "src\\components\\admin\\relatorios\\RelatorioRentabilidade.tsx",
+      "snippet": ".from('faturas') .select(` id, valor_total, valor_base_original, status, data_pagamento, codigo_fatura, tipo, is_amortizacao_credito, clientes (nome),"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CreditDisputesAdminPanel.tsx",
+      "snippet": "table: 'faturas', onChange: () => void fetchItems() }, ]); const visibleItems = useMemo(() => items.filter(("
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CreditWithdrawalsAdminPanel.tsx",
+      "snippet": "table: 'faturas', onChange: () => void fetchItems() }, { table: 'loja_credito_movimentacoes', onChange: () => v"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+      "snippet": ".from('faturas') .select(` *, cobrancas(id, status), clientes(id, nome, cpf, cnpj, email, telefone, codigo_cliente), ordens_servico(id, codigo_os, orc"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+      "snippet": ".from('faturas') .select('*, clientes(nome, telefone)') .eq('id', faturaToSettle.id) .single(); if (updatedFatura && updatedFatura.clientes?.telefone)"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+      "snippet": "table: 'faturas', onChange: fetchFaturas }, { table: 'cobrancas', onChange: fetchFaturas }, { table: 'orde"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+      "snippet": ".from('faturas').select('valor_total').in('status', ['pendente', 'vencida', 'pendente_pagamento', 'revisada']), supabase.from('saques').select('id', {"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FinanceiroSuperDomain.tsx",
+      "snippet": "table: 'faturas', onChange: fetchTelemetry }, { table: 'saques', onChange: fetchTelemetry }, { table: 'cob"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaExecutiveDashboard.tsx",
+      "snippet": "table: 'faturas', onChange: () => void load(true) }, { table: 'saques', onChange: () => void load(true) }, "
+    },
+    {
+      "file": "src\\components\\client\\ClientAssinaturas.tsx",
+      "snippet": "table: 'faturas', filter: `cliente_id=eq.${clientId}`, onChange: fetchMinhasAssinaturas }, { table: 'assinatu"
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "snippet": ".from('faturas').select('id').eq('id', initialItemId).eq('cliente_id', clientId).maybeSingle(); if (fatura) { setActiveTab('faturas'); setIsSubmoduleO"
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "snippet": ".from('faturas') .select('*', { count: 'exact', head: true }) .eq('cliente_id', clientId) .eq('status', 'pago'); if (!error) { setHasPaidFatura((count"
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "snippet": "table: 'faturas', filter: clientId ? `cliente_id=eq.${clientId}` : undefined, onChange: () => { "
+    },
+    {
+      "file": "src\\components\\client\\ClientMeuCredito.tsx",
+      "snippet": ".from('faturas') .select('*') .eq('cliente_id', clientId) .eq('is_amortizacao_credito', true) .order('data_vencimento', { ascending: true }); if (rela"
+    },
+    {
+      "file": "src\\components\\client\\ClientMeuCredito.tsx",
+      "snippet": ".from('faturas') .select('*') .eq('cliente_id', clientId) .eq('is_amortizacao_credito', true) .order('data_vencimento', { ascending: true }); if (fatE"
+    },
+    {
+      "file": "src\\components\\client\\ClientMeuCredito.tsx",
+      "snippet": "table: 'faturas', filter: clientId ? `cliente_id=eq.${clientId}` : undefined, onChange: () => { "
+    },
+    {
+      "file": "src\\components\\client\\ClientProdutos.tsx",
+      "snippet": "table: 'faturas', filter: clientId ? `cliente_id=eq.${clientId}` : undefined, onChange: fetchMeusP"
+    },
+    {
+      "file": "src\\components\\client\\financeiro\\FaturasList.tsx",
+      "snippet": ".from('faturas') .select('*') .eq('cliente_id', clientId) .eq('is_amortizacao_credito', true) .order('data_vencimento', { ascending: true })"
+    },
+    {
+      "file": "src\\components\\client\\financeiro\\FaturasList.tsx",
+      "snippet": ".from('faturas') .select(` *, itens_faturados, historico_pagamentos, pagamentos(*), ordens_servico ( codigo_os, orcamentos ( id, "
+    },
+    {
+      "file": "src\\components\\client\\financeiro\\FaturasList.tsx",
+      "snippet": "table: 'faturas', filter: `cliente_id=eq.${clientId}` }, () => { fetchFaturas(); o"
+    },
+    {
+      "file": "src\\components\\client\\store\\CheckoutPixModal.tsx",
+      "snippet": "table: 'faturas', filter: `orcamento_id=eq.${orderId}`, }, (payload) => { const newStatus = String(p"
+    },
+    {
+      "file": "src\\components\\client\\StoreHub.tsx",
+      "snippet": ".from('faturas') .select('*') .eq('cliente_id', clientId) .eq('is_amortizacao_credito', true) .like('codigo_fatura', `%CRE-${cleanCode}%`) .o"
+    },
+    {
+      "file": "src\\components\\client\\StoreHub.tsx",
+      "snippet": ".from('faturas') .select('id, status, forma_pagamento_escolhida, data_pagamento, valor_total') .eq('orcamento_id', selectedOrderDetail.id) .neq('statu"
+    },
+    {
+      "file": "src\\components\\client\\StoreHub.tsx",
+      "snippet": ".from('faturas') .select('id, status, forma_pagamento_escolhida, data_pagamento, valor_total') .or(filters.join(',')) .order('created_at', { ascending"
+    },
+    {
+      "file": "src\\components\\client\\StoreHub.tsx",
+      "snippet": ".from('faturas') .select('id') .eq('codigo_fatura', codigoFatura) .order('c"
+    },
+    {
+      "file": "src\\hooks\\useRealtime.ts",
+      "snippet": "table: 'faturas' }, { table: 'saques' }], [deps]) */ export function useRealtime<T = any>( tableOrOptions: string"
+    },
+    {
+      "file": "src\\lib\\adminRpc.ts",
+      "snippet": ".from('faturas').select('id').eq('cliente_id', entityId); if (fatList1) fatIds = fatList1.map((f: any) => f.id); if (osIds.length > 0) { const { data:"
+    },
+    {
+      "file": "src\\lib\\adminRpc.ts",
+      "snippet": ".from('faturas').select('id').in('ordem_compra_id', ocIds); if (fatList3) fatIds = Array.from(new Set([...fatIds, ...fatList3.map((f: any) => f.id)]))"
+    },
+    {
+      "file": "src\\lib\\adminRpc.ts",
+      "snippet": ".from('faturas').select('id').in('ordem_assinatura_id', oaIds); if (fatList4) fatIds = Array.from(new Set([...fatIds, ...fatList4.map((f: any) => f.id"
+    },
+    {
+      "file": "src\\lib\\adminRpc.ts",
+      "snippet": ".from('faturas').select('id').in('os_id', osIds); if (fList) fatIds = fList.map((f: any) => f.id); } await safeDelete('prestador_faturas', 'demanda_id"
+    },
+    {
+      "file": "src\\lib\\adminRpc.ts",
+      "snippet": ".from('faturas').select('id').eq('os_id', entityId); const fatIds = (fList || []).map((f: any) => f.id).filter(Boolean); await safeDelete('prestador_f"
+    },
+    {
+      "file": "src\\lib\\adminRpc.ts",
+      "snippet": ".from('faturas').select('id').eq('ordem_compra_id', entityId); const fatIds = (fList || []).map((f: any) => f.id).filter(Boolean); await safeDelete('p"
+    },
+    {
+      "file": "src\\lib\\adminRpc.ts",
+      "snippet": ".from('faturas').select('id').eq('ordem_assinatura_id', entityId); const fatIds = (fList || []).map((f: any) => f.id).filter(Boolean); await safeDelet"
+    },
+    {
+      "file": "src\\lib\\adminRpc.ts",
+      "snippet": ".from('faturas').select('valor_total').in('cliente_id', clientIds), supabase.from('clientes').select('id, nome, nome_razao, cpf, cnpj, saldo_carteira,"
+    },
+    {
+      "file": "src\\lib\\pixService.ts",
+      "snippet": ".from('faturas') .select('status') .eq('orcamento_id', orcamentoId) .maybeSingle(); const statusFat = String(fatura?.status || '').toLowerCase(); cons"
+    },
+    {
+      "file": "src\\tests\\realtime-hook.test.ts",
+      "snippet": "table: 'faturas', event: 'INSERT' }, { table: 'cobrancas', event: 'UPDATE' }, { table: 'saques', eve"
+    },
+    {
+      "file": "src\\utils\\promotions.ts",
+      "snippet": ".from('faturas') .select(` id, cliente_id, os_id, ordem_compra_id, ordem_assinatura_id, ordens_servico (orcamento_id, orcamentos(promocao_id)), ordens"
+    },
+    {
+      "file": "src\\utils\\referral.ts",
+      "snippet": ".from('faturas') .select(` *, clientes (id, nome, indicacao_origem_id), ordens_servico (orcamentos (total, desconto)), ordens_compra (orcamentos (tota"
+    },
+    {
+      "file": "src\\utils\\riskProfile.ts",
+      "snippet": ".from('faturas') .select('status') .eq('cliente_id', clienteId), supabase .from('emprestimos') .select('status') .eq('cliente_id', clienteId), supabas"
+    },
+    {
+      "file": "src\\validation\\master_block2.ts",
+      "snippet": ".from('faturas') .insert([{ cliente_id, ordem_assinatura_id: assinatura.id, valor_total: 150.00, status: 'pendente', data_ve"
+    },
+    {
+      "file": "src\\validation\\step2_sales_flow.ts",
+      "snippet": ".from('faturas') .insert([{ codigo_fatura: fatCode, os_id: os.id, cliente_id: TEST_CLIENT_ID, valor_total: 2500, valor_final_pendente: 2500, status: '"
+    },
+    {
+      "file": "src\\validation\\step3_finance_gamification.ts",
+      "snippet": ".from('faturas') .insert([{ codigo_fatura: fatCode, cliente_id: TEST_CLIENT_ID, valor_total: 1000, valor_final_pendente: 1000, status: 'pendente', tip"
+    },
+    {
+      "file": "src\\validation\\step3_finance_gamification.ts",
+      "snippet": ".from('faturas') .update({ status: 'pago', valor_pago: 1000, data_pagamento: new Date().toISOString(), observacoes: 'BAIXA MANUAL - VALIDAÇÃO AUTOMATI"
+    },
+    {
+      "file": "src\\validation\\step6_subscriptions.ts",
+      "snippet": ".from('faturas').insert({ id: initialInvoiceId, codigo_fatura: `FAT-VAL-${suffix}-00`, ordem_assinatura_id: orderId, cliente_id: clienteId, valor_tota"
+    },
+    {
+      "file": "src\\validation\\step6_subscriptions.ts",
+      "snippet": ".from('faturas') .select('id, status, data_vencimento') .eq('ordem_assinatura_id', orderId) .order('data_vencimento', { ascending: true }); if (invoic"
+    },
+    {
+      "file": "src\\validation\\step6_subscriptions.ts",
+      "snippet": ".from('faturas') .update({ status: 'pago', valor_pago: monthlyValue, valor_final_pendente: 0, data_pagamento: new Date().toISOString(), }) .eq('id', p"
+    },
+    {
+      "file": "src\\validation\\step6_subscriptions.ts",
+      "snippet": ".from('faturas') .select('id, status, data_vencimento, valor_final_pendente') .eq('ordem_assinatura_id', orderId); if (invoicesAfterCancellationError)"
+    },
+    {
+      "file": "src\\validation\\step6_subscriptions.ts",
+      "snippet": ".from('faturas').delete().eq('ordem_assinatura_id', orderId)); await cleanup('ordem de assinatura', service.from('ordens_assinatura').delete().eq('id'"
+    },
+    {
+      "file": "supabase\\migrations\\20260525000001_cron_faturas_assinaturas.sql",
+      "snippet": "FROM faturas\n    WHERE codigo_ WHERE codigo_fatura LIKE 'FAT-ASS-' || oa.codigo_ordem || '-%'; IF faturas_ja_geradas < COALESCE(oa.prazo_meses, 12) TH"
+    },
+    {
+      "file": "supabase\\migrations\\20260527000001_auto_revert_quitacao.sql",
+      "snippet": "FROM faturas \n        WHERE st WHERE status IN ('pendente', 'vencida') AND data_vencimento < CURRENT_DATE AND (is_amortizacao_credito = true OR (itens"
+    },
+    {
+      "file": "supabase\\migrations\\20260527000001_auto_revert_quitacao.sql",
+      "snippet": "UPDATE faturas \n        SET st SET status = 'cancelada' WHERE id = q_record.id; -- 2. Restaura faturas originais de Crédito vinculadas a essa qui"
+    },
+    {
+      "file": "supabase\\migrations\\20260527000001_auto_revert_quitacao.sql",
+      "snippet": "UPDATE faturas \n        SET st SET status = 'pendente', quitacao_fatura_id = NULL WHERE quitacao_fatura_id = q_record.id AND status IN ('cancelada', '"
+    },
+    {
+      "file": "supabase\\migrations\\20260711160000_financial_client_rpc_hardening.sql",
+      "snippet": "FROM faturas WHERE id = v_fatu WHERE id = v_fatura_id AND cliente_id = v_cliente_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Fatura não encontra"
+    },
+    {
+      "file": "supabase\\migrations\\20260711163000_client_financial_rpc_more_flows.sql",
+      "snippet": "FROM faturas WHERE codigo_fatu WHERE codigo_fatura = v_codigo AND status <> 'cancelada' LIMIT 1; IF v_fatura_id IS NOT NULL THEN RETURN jsonb_build_ob"
+    },
+    {
+      "file": "supabase\\migrations\\20260711163000_client_financial_rpc_more_flows.sql",
+      "snippet": "FROM faturas WHERE cliente_id  WHERE cliente_id = p_cliente_id AND status NOT IN ('pago', 'cancelado', 'cancelada') AND (ordem_compra_id = v_ordem_com"
+    },
+    {
+      "file": "supabase\\migrations\\20260711163000_client_financial_rpc_more_flows.sql",
+      "snippet": "UPDATE faturas SET status = 'c SET status = 'cancelado', quitacao_fatura_id = v_fatura_id WHERE cliente_id = p_cliente_id AND id <> v_fatura_id AND st"
+    },
+    {
+      "file": "supabase\\migrations\\20260711163000_client_financial_rpc_more_flows.sql",
+      "snippet": "FROM faturas WHERE codigo_fatu WHERE codigo_fatura = v_codigo AND status <> 'cancelado' LIMIT 1; IF v_fatura_id IS NOT NULL THEN RETURN jsonb_build_ob"
+    },
+    {
+      "file": "supabase\\migrations\\20260711163000_client_financial_rpc_more_flows.sql",
+      "snippet": "UPDATE faturas SET status = 'c SET status = 'cancelado' WHERE id IN (SELECT fatura_id FROM emprestimo_parcelas WHERE emprestimo_id = p_emprestimo_id A"
+    },
+    {
+      "file": "supabase\\migrations\\20260711164500_approve_budget_rpc.sql",
+      "snippet": "FROM faturas WHERE ordem_compr WHERE ordem_compra_id = v_oc_id OR ordem_assinatura_id = v_oa_id LIMIT 1; RETURN jsonb_build_object('success', true, 'a"
+    },
+    {
+      "file": "supabase\\migrations\\20260711164500_approve_budget_rpc.sql",
+      "snippet": "FROM faturas WHERE ordem_compr WHERE ordem_compra_id = v_oc_id LIMIT 1; IF v_fatura_id IS NULL THEN INSERT INTO faturas(codigo_fatura, ordem_compra_id"
+    },
+    {
+      "file": "supabase\\migrations\\20260711164500_approve_budget_rpc.sql",
+      "snippet": "FROM faturas WHERE ordem_assin WHERE ordem_assinatura_id = v_oa_id LIMIT 1; IF v_fatura_id IS NULL THEN INSERT INTO faturas(codigo_fatura, ordem_assin"
+    },
+    {
+      "file": "supabase\\migrations\\20260711170000_close_remaining_client_financial_rpcs.sql",
+      "snippet": "FROM faturas WHERE codigo_fatu WHERE codigo_fatura = v_codigo AND cliente_id = p_cliente_id LIMIT 1; IF v_fatura_id IS NULL THEN INSERT INTO faturas( "
+    },
+    {
+      "file": "supabase\\migrations\\20260711171000_approve_budget_negotiation_rpc.sql",
+      "snippet": "FROM faturas WHERE ordem_compr WHERE ordem_compra_id = v_oc_id OR ordem_assinatura_id = v_oa_id LIMIT 1; RETURN jsonb_build_object('success', true, 'a"
+    },
+    {
+      "file": "supabase\\migrations\\20260711171000_approve_budget_negotiation_rpc.sql",
+      "snippet": "FROM faturas WHERE ordem_compr WHERE ordem_compra_id = v_oc_id LIMIT 1; IF v_fatura_id IS NULL THEN INSERT INTO faturas(codigo_fatura, ordem_compra_id"
+    },
+    {
+      "file": "supabase\\migrations\\20260711171000_approve_budget_negotiation_rpc.sql",
+      "snippet": "FROM faturas WHERE ordem_assin WHERE ordem_assinatura_id = v_oa_id LIMIT 1; IF v_fatura_id IS NULL THEN INSERT INTO faturas(codigo_fatura, ordem_assin"
+    },
+    {
+      "file": "supabase\\migrations\\20260711172000_store_invoice_and_subscription_rpcs.sql",
+      "snippet": "FROM faturas\n  WHERE cliente_i WHERE cliente_id = p_cliente_id AND status IN ('pendente', 'pendente_pagamento', 'vencida', 'aguardando_link', 'pago') "
+    },
+    {
+      "file": "supabase\\migrations\\20260711223000_fix_store_invoice_without_order_items.sql",
+      "snippet": "FROM faturas\n  WHERE cliente_i WHERE cliente_id = p_cliente_id AND status IN ('pendente', 'pendente_pagamento', 'vencida', 'aguardando_link', 'pago') "
+    },
+    {
+      "file": "supabase\\migrations\\20260714021000_secure_admin_invoice_payment_rpc.sql",
+      "snippet": "FROM public.faturas\n  WHERE id WHERE id = p_fatura_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Fatura nao encontrada.'; END IF; IF v_fatura.stat"
+    },
+    {
+      "file": "supabase\\migrations\\20260714022000_secure_admin_invoice_collection_cancel_rpcs.sql",
+      "snippet": "FROM public.faturas\n  WHERE id WHERE id = p_fatura_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Fatura nao encontrada.'; END IF; IF v_fatura.stat"
+    },
+    {
+      "file": "supabase\\migrations\\20260714022000_secure_admin_invoice_collection_cancel_rpcs.sql",
+      "snippet": "FROM public.faturas\n  WHERE id WHERE id = p_fatura_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Fatura nao encontrada.'; END IF; IF v_fatura.stat"
+    },
+    {
+      "file": "supabase\\migrations\\20260714023000_secure_admin_collection_basic_rpcs.sql",
+      "snippet": "FROM public.faturas\n  WHERE id WHERE id = p_fatura_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Fatura nao encontrada.'; END IF; IF v_fatura.stat"
+    },
+    {
+      "file": "supabase\\migrations\\20260714024000_secure_admin_collection_payment_rpcs.sql",
+      "snippet": "FROM public.faturas\n  WHERE id WHERE id = p_fatura_id; IF NOT FOUND THEN RETURN jsonb_build_object('success', false, 'reason', 'invoice_not_found'); E"
+    },
+    {
+      "file": "supabase\\migrations\\20260714024000_secure_admin_collection_payment_rpcs.sql",
+      "snippet": "FROM public.faturas\n  WHERE cl WHERE cliente_id = v_cobranca.cliente_id AND valor_total = v_parcela.valor_parcela AND observacoes ILIKE ('%Parcela ' |"
+    },
+    {
+      "file": "supabase\\migrations\\20260714024000_secure_admin_collection_payment_rpcs.sql",
+      "snippet": "FROM public.faturas\n    WHERE  WHERE cliente_id = v_cobranca.cliente_id AND status = 'protestado' AND valor_total = v_cobranca.valor_atualizado FOR UP"
+    },
+    {
+      "file": "supabase\\migrations\\20260714025000_secure_admin_collection_protest_rpc.sql",
+      "snippet": "FROM public.faturas\n  WHERE id WHERE id = v_cobranca.fatura_id; v_fatura_ref := coalesce(v_fatura_ref, left(p_cobranca_id::text, 8)); IF v_cobranca.st"
+    },
+    {
+      "file": "supabase\\migrations\\20260714025000_secure_admin_collection_protest_rpc.sql",
+      "snippet": "FROM public.faturas\n    WHERE  WHERE cliente_id = v_cobranca.cliente_id AND status = 'protestado' AND valor_total = v_cobranca.valor_atualizado ORDER "
+    },
+    {
+      "file": "supabase\\migrations\\20260714025000_secure_admin_collection_protest_rpc.sql",
+      "snippet": "UPDATE public.faturas\n     SET SET status = 'cancelado', observacoes = 'Cancelada por envio a protesto.' WHERE cliente_id = v_cobranca.cliente_id AND "
+    },
+    {
+      "file": "supabase\\migrations\\20260714025000_secure_admin_collection_protest_rpc.sql",
+      "snippet": "UPDATE public.faturas\n       S SET status = 'cancelado', observacoes = 'Substituida por fatura unica de protesto.' WHERE id = v_cobranca.fatura_id; EN"
+    },
+    {
+      "file": "supabase\\migrations\\20260714030000_secure_admin_collection_agreement_rpcs.sql",
+      "snippet": "FROM public.faturas\n  WHERE id WHERE id = v_cobranca.fatura_id; v_fatura_ref := coalesce(v_fatura_ref, left(p_cobranca_id::text, 8)); v_valor_desconto"
+    },
+    {
+      "file": "supabase\\migrations\\20260714030000_secure_admin_collection_agreement_rpcs.sql",
+      "snippet": "UPDATE public.faturas\n     SET SET status = 'cancelado', observacoes = 'Substituida por renegociacao de acordo.' WHERE cliente_id = v_cobranca.cliente"
+    },
+    {
+      "file": "supabase\\migrations\\20260714030000_secure_admin_collection_agreement_rpcs.sql",
+      "snippet": "FROM public.faturas\n  WHERE id WHERE id = v_cobranca.fatura_id; v_fatura_ref := coalesce(v_fatura_ref, left(p_cobranca_id::text, 8)); UPDATE public.fa"
+    },
+    {
+      "file": "supabase\\migrations\\20260714031000_secure_admin_collection_delete_rpc.sql",
+      "snippet": "FROM public.faturas\n  WHERE id WHERE id = v_cobranca.fatura_id; v_fatura_ref := coalesce(v_fatura_ref, left(p_cobranca_id::text, 8)); UPDATE public.fa"
+    },
+    {
+      "file": "supabase\\migrations\\20260714044000_secure_admin_invoice_manual_rpcs.sql",
+      "snippet": "FROM public.faturas\n  WHERE id WHERE id = p_fatura_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Fatura nao encontrada.'; END IF; v_base := CASE W"
+    },
+    {
+      "file": "supabase\\migrations\\20260714045000_secure_admin_store_exchange_rpc.sql",
+      "snippet": "FROM public.faturas\n    WHERE  WHERE codigo_fatura = v_codigo_fatura LIMIT 1; IF v_fatura_id IS NULL THEN INSERT INTO public.faturas( codigo_fatura,"
+    },
+    {
+      "file": "supabase\\migrations\\20260714045000_secure_admin_store_exchange_rpc.sql",
+      "snippet": "FROM public.faturas\n        WH WHERE cliente_id = v_sol.cliente_id AND is_amortizacao_credito = true AND itens_faturados @> jsonb_build_array(jsonb_bu"
+    },
+    {
+      "file": "supabase\\migrations\\20260714054000_atomic_invoice_payment_and_points.sql",
+      "snippet": "FROM public.faturas\n  WHERE id WHERE id = p_fatura_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Fatura nao encontrada.'; END IF; IF v_fatura.stat"
+    },
+    {
+      "file": "supabase\\migrations\\20260714054000_atomic_invoice_payment_and_points.sql",
+      "snippet": "UPDATE public.faturas SET pont SET pontos_gerados = true WHERE id = v_fatura.id; END IF; RETURN jsonb_build_object( 'success', true, 'fatura_id', v_fa"
+    },
+    {
+      "file": "supabase\\migrations\\20260714054000_atomic_invoice_payment_and_points.sql",
+      "snippet": "FROM public.faturas\n  WHERE id WHERE id = v_fatura_id AND cliente_id = v_actor.cliente_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Fatura nao en"
+    },
+    {
+      "file": "supabase\\migrations\\20260714054000_atomic_invoice_payment_and_points.sql",
+      "snippet": "FROM public.faturas\n  WHERE id WHERE id = p_fatura_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Fatura nao encontrada.'; END IF; IF v_fatura.stat"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056100_secure_store_invoice_and_cancellation.sql",
+      "snippet": "FROM public.faturas\n  WHERE cl WHERE cliente_id = v_actor.cliente_id AND ( orcamento_id = p_orcamento_id OR codigo_fatura = 'FAT-LOJA-' || coalesce(v_"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056100_secure_store_invoice_and_cancellation.sql",
+      "snippet": "FROM public.faturas f\n    WHER f WHERE f.orcamento_id = p_orcamento_id AND f.status = 'pago' ) INTO v_has_paid_invoice; IF v_order.forma_pagamento_loj"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056100_secure_store_invoice_and_cancellation.sql",
+      "snippet": "FROM public.faturas f\n  WHERE  f WHERE f.orcamento_id = p_orcamento_id AND f.status <> 'cancelado'; v_points_discount := greatest(v_points_discount, c"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056100_secure_store_invoice_and_cancellation.sql",
+      "snippet": "JOIN public.faturas f ON f.id  f ON f.id = p.fatura_id WHERE f.orcamento_id = p_orcamento_id AND p.metodo NOT IN ('carteira', 'pontos', 'voucher', 'in"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056100_secure_store_invoice_and_cancellation.sql",
+      "snippet": "UPDATE public.faturas\n  SET st SET status = 'cancelado', motivo_cancelamento = v_reason, data_cancelamento = now() WHERE orcamento_id = p_orcamento_id"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056200_secure_client_wallet_points_transfers.sql",
+      "snippet": "FROM public.faturas WHERE clie WHERE cliente_id = v_actor.cliente_id AND status = 'pago') THEN RAISE EXCEPTION 'O saque é liberado após o pagamento da"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "UPDATE public.faturas\n    SET  SET status = 'pago', data_pagamento = now(), valor_pago = v_price WHERE id = v_invoice_id; END IF; v_result := jsonb_bu"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "FROM public.faturas\n  WHERE co WHERE codigo_fatura = v_code AND cliente_id = v_actor.cliente_id AND status <> 'cancelado' LIMIT 1; IF v_invoice_id IS "
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "FROM public.faturas f\n  WHERE  f WHERE f.cliente_id = v_actor.cliente_id AND f.status NOT IN ('pago', 'cancelado') AND coalesce(f.is_amortizacao_credi"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "FROM public.faturas\n  WHERE co WHERE codigo_fatura = v_code AND cliente_id = v_actor.cliente_id AND status <> 'cancelado' LIMIT 1; IF v_invoice_id IS "
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "UPDATE public.faturas\n  SET st SET status = 'cancelado', motivo_cancelamento = 'Substituída por fatura de quitação', data_cancelamento = now() WHERE i"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "FROM public.faturas\n  WHERE co WHERE codigo_fatura = v_code AND cliente_id = v_actor.cliente_id LIMIT 1; IF v_invoice_id IS NULL THEN INSERT INTO publ"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "FROM public.faturas\n  WHERE or WHERE ordem_assinatura_id = v_order.id AND status <> 'cancelado'; FOR v_i IN 1..p_meses LOOP v_due_date := (v_base_date"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "FROM public.faturas f\n    WHER f WHERE f.status IN ('pendente', 'vencida') AND f.data_vencimento < current_date AND EXISTS ( SELECT 1 FROM jsonb_arr"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "UPDATE public.faturas\n    SET  SET status = 'cancelado', motivo_cancelamento = 'Oferta de quitação expirada', data_cancelamento = now() WHERE id = v_i"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056400_secure_client_budget_settlement_and_exchange.sql",
+      "snippet": "FROM public.faturas\n    WHERE  WHERE orcamento_id = v_budget.id AND cliente_id = v_actor.cliente_id AND status <> 'cancelado' ORDER BY created_at LIMI"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056400_secure_client_budget_settlement_and_exchange.sql",
+      "snippet": "FROM public.faturas\n    WHERE  WHERE orcamento_id = v_budget.id AND cliente_id = v_actor.cliente_id AND status <> 'cancelado' ORDER BY created_at LIMI"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056400_secure_client_budget_settlement_and_exchange.sql",
+      "snippet": "FROM public.faturas f\n  WHERE  f WHERE f.cliente_id = v_actor.cliente_id AND f.status NOT IN ('pago', 'cancelado') AND coalesce(f.is_amortizacao_credi"
+    },
+    {
+      "file": "supabase\\migrations\\20260720170000_secure_admin_subscription_lifecycle.sql",
+      "snippet": "FROM public.faturas\r\n  WHERE o WHERE ordem_assinatura_id = v_order.id AND status NOT IN ('cancelado', 'cancelada'); FOR v_i IN 1..p_meses LOOP v_due_d"
+    },
+    {
+      "file": "supabase\\migrations\\20260720183000_harden_admin_panel.sql",
+      "snippet": "FROM public.faturas f\r\n     WH f WHERE f.status = 'pago' AND f.data_pagamento >= date_trunc('month', now()) - interval '5 months'; SELECT COALESCE(sum"
+    },
+    {
+      "file": "supabase\\migrations\\20260720183000_harden_admin_panel.sql",
+      "snippet": "FROM public.faturas f\r\n     WH f WHERE f.status = 'pago' AND f.data_pagamento >= date_trunc('month', now()) AND f.data_pagamento < date_trunc('month',"
+    },
+    {
+      "file": "supabase\\migrations\\20260720183000_harden_admin_panel.sql",
+      "snippet": "FROM public.faturas f\r\n     WH f WHERE f.status = 'pago' AND f.data_pagamento >= date_trunc('month', now()) - interval '1 month' AND f.data_pagamento "
+    },
+    {
+      "file": "supabase\\migrations\\20260720183000_harden_admin_panel.sql",
+      "snippet": "FROM public.faturas f\r\n        f LEFT JOIN public.clientes c ON c.id = f.cliente_id WHERE f.status IN ('pendente', 'vencida') ORDER BY f."
+    },
+    {
+      "file": "supabase\\migrations\\20260720230000_gsa_viagens_parcelamento_checkout.sql",
+      "snippet": "FROM public.faturas\r\n  WHERE t WHERE tipo = 'compra_viagem' AND metadata ->> 'transacao_id' = v_transacao.id::TEXT; IF v_existing_invoice_count > 0 TH"
+    },
+    {
+      "file": "supabase\\migrations\\20260720232000_harden_client_portal_audit_findings.sql",
+      "snippet": "FROM public.faturas f WHERE f. f WHERE f.id = v_related_id AND f.cliente_id = v_cliente_id ) THEN RAISE EXCEPTION 'Fatura não pertence ao cliente.'; E"
+    },
+    {
+      "file": "supabase\\migrations\\20260721010000_harden_products_and_subscriptions.sql",
+      "snippet": "FROM public.faturas\r\n  WHERE o WHERE ordem_compra_id IN ( SELECT id FROM public.ordens_compra WHERE id = p_ordem_compra_id OR (v_ordem.orcamento_id IS"
+    },
+    {
+      "file": "supabase\\migrations\\20260721010000_harden_products_and_subscriptions.sql",
+      "snippet": "FROM public.faturas f\r\n      W f WHERE f.cliente_id = v_ordem.cliente_id AND COALESCE(f.is_amortizacao_credito, false) AND EXISTS ( SELECT 1 FRO"
+    },
+    {
+      "file": "supabase\\migrations\\20260721010000_harden_products_and_subscriptions.sql",
+      "snippet": "FROM public.faturas WHERE orde WHERE ordem_assinatura_id = p_ordem_assinatura_id) AND NOT EXISTS (SELECT 1 FROM public.faturas WHERE ordem_assinatura_"
+    },
+    {
+      "file": "supabase\\migrations\\20260721100000_fix_products_subscriptions_runtime.sql",
+      "snippet": "FROM public.faturas\r\n  WHERE o WHERE ordem_assinatura_id = p_ordem_assinatura_id; IF v_ordem.status <> 'pago' AND v_paid_count = 0 THEN RAISE EXCEPTIO"
+    },
+    {
+      "file": "supabase\\migrations\\20260721130000_harden_collaborator_authorization.sql",
+      "snippet": "FROM public.faturas WHERE lowe WHERE lower(COALESCE(status, '''')) IN (''pendente'', ''vencida'')' INTO v_a; v_metrics := v_metrics || jsonb_build_obj"
+    },
+    {
+      "file": "supabase\\migrations\\20260721150000_gsa_viagens_financial_integrity.sql",
+      "snippet": "FROM public.faturas fatura\r\n   fatura WHERE fatura.tipo = 'compra_viagem' AND public.gsa_travel_safe_uuid(fatura.metadata ->> 'transacao_id') = p_tran"
+    },
+    {
+      "file": "supabase\\migrations\\20260721150000_gsa_viagens_financial_integrity.sql",
+      "snippet": "FROM public.faturas fatura\r\nWH fatura WHERE fatura.tipo = 'compra_viagem' AND public.gsa_travel_safe_uuid(fatura.metadata ->> 'transacao_id') IS NOT N"
+    },
+    {
+      "file": "supabase\\migrations\\20260721150000_gsa_viagens_financial_integrity.sql",
+      "snippet": "UPDATE public.faturas fatura\r\n fatura SET cobranca_suspensa = false, suspensa_em = NULL, motivo_suspensao = NULL WHERE fatura.tipo = 'compra_viagem'"
+    },
+    {
+      "file": "supabase\\migrations\\20260721194600_restore_admin_dashboard_foundation.sql",
+      "snippet": "FROM public.faturas f\r\n     WH f WHERE f.status = 'pago' AND f.data_pagamento >= date_trunc('month', now()) - interval '5 months'; SELECT COALESCE(sum"
+    },
+    {
+      "file": "supabase\\migrations\\20260721194600_restore_admin_dashboard_foundation.sql",
+      "snippet": "FROM public.faturas f\r\n     WH f WHERE f.status = 'pago' AND f.data_pagamento >= date_trunc('month', now()) AND f.data_pagamento < date_trunc('month',"
+    },
+    {
+      "file": "supabase\\migrations\\20260721194600_restore_admin_dashboard_foundation.sql",
+      "snippet": "FROM public.faturas f\r\n     WH f WHERE f.status = 'pago' AND f.data_pagamento >= date_trunc('month', now()) - interval '1 month' AND f.data_pagamento "
+    },
+    {
+      "file": "supabase\\migrations\\20260721194600_restore_admin_dashboard_foundation.sql",
+      "snippet": "FROM public.faturas f\r\n        f LEFT JOIN public.clientes c ON c.id = f.cliente_id WHERE f.status IN ('pendente', 'vencida') ORDER BY f."
+    },
+    {
+      "file": "supabase\\migrations\\20260723233000_free_tools_pro_access.sql",
+      "snippet": "FROM public.faturas f WHERE f. f WHERE f.cliente_id = c.id AND f.status = 'pago' ) ) ORDER BY c.nome), '[]'::jsonb) INTO v_result FROM ( SELECT * FROM"
+    },
+    {
+      "file": "supabase\\migrations\\20260723234500_fix_calculator_pro_client_search.sql",
+      "snippet": "FROM public.faturas f WHERE f. f WHERE f.cliente_id = c.id AND f.status = 'pago' ) ) ORDER BY c.nome), '[]'::jsonb) INTO v_result FROM ( SELECT *"
+    },
+    {
+      "file": "supabase\\migrations\\20260729102000_fix_affiliate_orcamento_commissions_and_notifications.sql",
+      "snippet": "FROM public.faturas WHERE id = WHERE id = c.origem_id) WHEN c.origem_tipo = 'viagens_transacoes' THEN (SELECT codigo_reserva_fornecedor FROM public.vi"
+    },
+    {
+      "file": "supabase\\migrations\\20260729110000_fix_affiliate_all_issues.sql",
+      "snippet": "FROM public.faturas WHERE id = WHERE id = c.origem_id) WHEN c.origem_tipo = 'viagens_transacoes' THEN (SELECT codigo_reserva_fornecedor FROM public.vi"
+    },
+    {
+      "file": "supabase\\migrations\\20260803110000_create_delete_client_cascade_rpc.sql",
+      "snippet": "DELETE FROM public.faturas WHE WHERE cliente_id = p_cliente_id; END IF; IF to_regclass('public.saques') IS NOT NULL THEN DELETE FROM public.saques WHE"
+    },
+    {
+      "file": "supabase\\migrations\\20260803170000_fix_admin_baixar_fatura_saldo_bypass.sql",
+      "snippet": "FROM public.faturas\r\n  WHERE i WHERE id = p_fatura_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Fatura nao encontrada.'; END IF; IF v_fatura.stat"
+    },
+    {
+      "file": "supabase\\migrations\\20260803170000_fix_admin_baixar_fatura_saldo_bypass.sql",
+      "snippet": "UPDATE public.faturas\r\n        SET pontos_gerados = true WHERE id = p_fatura_id; END IF; RETURN jsonb_build_object( 'success', true, 'fatura_id', p_"
+    },
+    {
+      "file": "supabase\\migrations\\20260803170000_fix_admin_baixar_fatura_saldo_bypass.sql",
+      "snippet": "FROM public.faturas\r\n  WHERE i WHERE id = p_fatura_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Fatura nao encontrada.'; END IF; IF v_fatura.stat"
+    },
+    {
+      "file": "supabase\\migrations\\20260803174500_fix_gsa_finalize_paid_invoice_points_type.sql",
+      "snippet": "FROM public.faturas\r\n  WHERE i WHERE id = p_fatura_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Fatura nao encontrada.'; END IF; IF v_fatura.stat"
+    },
+    {
+      "file": "supabase\\migrations\\20260803174500_fix_gsa_finalize_paid_invoice_points_type.sql",
+      "snippet": "UPDATE public.faturas\r\n        SET pontos_gerados = true WHERE id = p_fatura_id; END IF; RETURN jsonb_build_object( 'success', true, 'fatura_id', p_"
+    },
+    {
+      "file": "supabase\\migrations\\20260814120000_loja_favoritos_persistence.sql",
+      "snippet": "FROM public.faturas f WHERE f. f WHERE f.id = v_related_id AND f.cliente_id = v_cliente_id ) THEN RAISE EXCEPTION 'Fatura não pertence ao cliente.'; E"
+    },
+    {
+      "file": "supabase\\migrations\\20260817190000_shopee_hybrid_fulfillment.sql",
+      "snippet": "FROM public.faturas f\n    WHER f WHERE f.orcamento_id = p_orcamento_id AND f.status = 'pago' ) THEN RETURN NULL; END IF; -- Do not create empty jobs f"
+    },
+    {
+      "file": "supabase\\migrations\\20260817203000_zero_balance_store_checkout.sql",
+      "snippet": "FROM public.faturas WHERE orca WHERE orcamento_id = v_order.id) THEN INSERT INTO public.faturas( codigo_fatura, cliente_id, orcamento_id, ordem_compra"
+    },
+    {
+      "file": "supabase\\migrations\\20260829024500_credit_purchase_disputes.sql",
+      "snippet": "FROM public.faturas f\n      WH f WHERE f.orcamento_id=v_order.id AND COALESCE(f.is_amortizacao_credito,false) ) INTO v_has_invoices; SELECT COALESCE(s"
+    },
+    {
+      "file": "supabase\\migrations\\20260829024500_credit_purchase_disputes.sql",
+      "snippet": "FROM public.faturas f\n    WHER f WHERE f.orcamento_id=v_order.id AND COALESCE(f.is_amortizacao_credito,false) AND f.status <> 'cancelado'; END IF; IF "
+    },
+    {
+      "file": "supabase\\migrations\\20260829024500_credit_purchase_disputes.sql",
+      "snippet": "FROM public.faturas f\n      WH f WHERE f.orcamento_id=v_order.id AND COALESCE(f.is_amortizacao_credito,false) AND f.status <> 'cancelado' AND COALESCE"
+    },
+    {
+      "file": "supabase\\migrations\\20260829031500_credit_limit_cancellation_requests.sql",
+      "snippet": "FROM public.faturas\n  WHERE cl WHERE cliente_id=v_actor.cliente_id AND COALESCE(is_amortizacao_credito,false) AND status <> 'cancelado'; IF v_outstand"
+    },
+    {
+      "file": "supabase\\migrations\\20260829031500_credit_limit_cancellation_requests.sql",
+      "snippet": "FROM public.faturas\n  WHERE cl WHERE cliente_id=v_req.cliente_id AND COALESCE(is_amortizacao_credito,false) AND status<>'cancelado'; IF v_outstanding>"
+    },
+    {
+      "file": "supabase\\migrations\\20260829043000_client_cancel_loan_under_review.sql",
+      "snippet": "UPDATE public.faturas SET stat SET status='cancelado',updated_at=now() WHERE id=v_loan.fatura_taxa_id AND cliente_id=v_actor.cliente_id AND status NOT"
+    },
+    {
+      "file": "supabase\\migrations\\20260829233000_harden_service_billing_end_to_end.sql",
+      "snippet": "FROM public.faturas WHERE id=p WHERE id=p_fatura_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Fatura nao encontrada.'; END IF; IF v_fatura.infini"
+    },
+    {
+      "file": "supabase\\migrations\\20260829233000_harden_service_billing_end_to_end.sql",
+      "snippet": "FROM public.faturas\n  WHERE os WHERE os_id = v_os.id LIMIT 1 FOR UPDATE; IF FOUND THEN IF v_os.status <> 'concluido' THEN UPDATE public.ordens_servico"
+    },
+    {
+      "file": "supabase\\migrations\\20260829233000_harden_service_billing_end_to_end.sql",
+      "snippet": "FROM public.faturas WHERE os_i WHERE os_id=p_os_id AND status='pago') THEN RAISE EXCEPTION 'Ordem com fatura paga exige fluxo financeiro de estorno.';"
+    },
+    {
+      "file": "supabase\\migrations\\20260829233000_harden_service_billing_end_to_end.sql",
+      "snippet": "UPDATE public.faturas SET stat SET status='cancelado',motivo_cancelamento='OS cancelada: '||trim(p_motivo),data_cancelamento=now() WHERE os_id=p_os_id"
+    },
+    {
+      "file": "supabase\\migrations\\20260829233000_harden_service_billing_end_to_end.sql",
+      "snippet": "FROM public.faturas WHERE orca WHERE orcamento_id=p_orcamento_id AND status<>'cancelado' ORDER BY created_at DESC NULLS LAST LIMIT 1 FOR UPDATE; IF FO"
+    },
+    {
+      "file": "supabase\\migrations\\20260829233000_harden_service_billing_end_to_end.sql",
+      "snippet": "FROM public.faturas WHERE id=p WHERE id=p_fatura_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Fatura nao encontrada.'; END IF; IF v_fatura.status"
+    },
+    {
+      "file": "supabase\\migrations\\20260830030000_admin_panel_security_end_to_end.sql",
+      "snippet": "FROM public.faturas f WHERE f. f WHERE f.id=fatura_id AND f.cliente_id=public.gsa_jwt_actor_id())); DO $$ DECLARE t text; BEGIN FOREACH t IN ARRAY ARR"
+    },
+    {
+      "file": "supabase\\migrations\\20260901000000_secure_admin_cascade_delete.sql",
+      "snippet": "FROM public.faturas WHERE clie WHERE cliente_id = ANY(p_client_ids); SELECT coalesce(sum(saldo_carteira), 0), coalesce(sum(pontos_fidelidade), 0) INTO"
+    },
+    {
+      "file": "supabase\\migrations\\20260901000000_secure_admin_cascade_delete.sql",
+      "snippet": "FROM public.faturas WHERE clie WHERE cliente_id = c.id), 'is_afiliado', EXISTS(SELECT 1 FROM public.gsa_afiliados WHERE cliente_id = c.id) )), '[]'::j"
+    },
+    {
+      "file": "supabase\\migrations\\20260901000000_secure_admin_cascade_delete.sql",
+      "snippet": "UPDATE public.faturas SET affi SET affiliate_attribution_id = NULL WHERE affiliate_attribution_id IN (SELECT id FROM public.gsa_afiliado_atribuicoes W"
+    },
+    {
+      "file": "supabase\\migrations\\20260901000000_secure_admin_cascade_delete.sql",
+      "snippet": "DELETE FROM public.faturas WHE WHERE id = p_entity_id; ELSE EXECUTE format('DELETE FROM public.%I WHERE id = $1', v_type) USING p_entity_id; END IF; I"
+    },
+    {
+      "file": "supabase\\migrations\\20260910180000_marketplace_acid_concurrency_remediation.sql",
+      "snippet": "FROM public.faturas\n    WHERE  WHERE codigo_fatura = v_codigo_fatura LIMIT 1; IF v_fatura_id IS NULL THEN INSERT INTO public.faturas( codigo_fatura, c"
+    },
+    {
+      "file": "supabase\\migrations\\20260910180000_marketplace_acid_concurrency_remediation.sql",
+      "snippet": "FROM public.faturas\n        WH WHERE cliente_id = v_sol.cliente_id AND is_amortizacao_credito = true AND itens_faturados @> jsonb_build_array(jsonb_bu"
+    },
+    {
+      "file": "supabase\\migrations\\20260910233000_client_panel_rls_hardening.sql",
+      "snippet": "FROM public.faturas\n  WHERE id WHERE id = v_fatura_id AND cliente_id = v_actor.cliente_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Fatura nao en"
+    }
+  ],
+  "vouchers": [
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "snippet": "table: 'vouchers', onChange: () => void load(true), debounceMs: 500 }, { table: 'prestador_demandas', onChange: "
+    },
+    {
+      "file": "src\\components\\admin\\IndicacoesModule.tsx",
+      "snippet": ".from('vouchers').insert([{ codigo_voucher: cleanPhone, tipo_desconto: 'porcentagem', valor_desconto: descPercent, validade: new Date(Date.now() + 15 "
+    },
+    {
+      "file": "src\\components\\admin\\relatorios\\RelatorioMarketing.tsx",
+      "snippet": ".from('vouchers').select('id, tipo, valor, status, categoria, data_uso, created_at').gte('created_at', inicio).lte('created_at', fim), supabase.from('"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\CalculadorasGatewayView.tsx",
+      "snippet": "table: 'vouchers', onChange: loadSnapshot }, { table: 'system_settings', onChange: loadSnapshot } ], [loadSna"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+      "snippet": ".from('vouchers') .select(`*, cliente:clientes(nome, email, cpf)`) .order('created_at', { ascending: false }); if (error) throw error; setVouchers(dat"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+      "snippet": ".from('vouchers').update(payload).eq('id', editingVoucher.id); toast.success('Atualizado!', { id: toastId }); } else { payload.usage_count = 0; await "
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+      "snippet": ".from('vouchers').update({ status: newStatus }).eq('id', voucher.id); toast.success(`Status alterado para ${newStatus}`); fetchVouchers(); if (selecte"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+      "snippet": ".from('vouchers').delete().eq('id', voucher.id); toast.success('Excluído'); setIsVoucherDetailsOpen(false); fetchVouchers(); } catch (err: any) { toas"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+      "snippet": "table: 'vouchers', onChange: () => { fetchVouchers(); fetchPremios(); } }, { table: 'cliente_premios', onChange:"
+    },
+    {
+      "file": "src\\components\\admin\\VouchersModule.tsx",
+      "snippet": ".from('vouchers') .select('*, clientes(nome, telefone)'); const statusMap: Record<string, string> = { 'ativos': 'ativo', 'usados': 'usado', 'cancelado"
+    },
+    {
+      "file": "src\\components\\admin\\VouchersModule.tsx",
+      "snippet": ".from('vouchers') .select('*, clientes(nome, telefone)'); const statusMap: Record<string, string> = { 'ativos': 'ativo', 'usados': 'usado', 'cancelado"
+    },
+    {
+      "file": "src\\components\\admin\\VouchersModule.tsx",
+      "snippet": ".from('vouchers').insert([{ nome: formData.nome, tipo: formData.categoria === 'saque' ? 'valor' : formData.tipo, categoria: formData.categoria, valor:"
+    },
+    {
+      "file": "src\\components\\admin\\VouchersModule.tsx",
+      "snippet": ".from('vouchers').delete().eq('id', id); if (error) throw error; toast.success('Voucher excluído.'); // Log Action await logService.logAction({ acao: "
+    },
+    {
+      "file": "src\\components\\admin\\VouchersModule.tsx",
+      "snippet": ".from('vouchers') .update({ status: 'cancelado', motivo_cancelamento: cancelReason, data_cancelamento: new Date().toISOString() }) .eq('id', selectedV"
+    },
+    {
+      "file": "src\\components\\admin\\VouchersModule.tsx",
+      "snippet": "table: 'vouchers' }, () => { if (isMounted && version === fetchVersion.current) { fetchVou"
+    },
+    {
+      "file": "src\\components\\client\\ClientFidelidade.tsx",
+      "snippet": "table: 'vouchers', filter: clientId ? `cliente_id=eq.${clientId}` : undefined }, { table: 'indicacoes', filter"
+    },
+    {
+      "file": "src\\components\\client\\ClientIndiqueGanhe.tsx",
+      "snippet": "table: 'vouchers', debounceMs: 150, onChange: fetchIndicacoes, }, { table: '"
+    },
+    {
+      "file": "src\\components\\client\\ClientVouchers.tsx",
+      "snippet": ".from('vouchers') .select('*') .order('codigo_voucher', { ascending: false }); if (activeTab === 'ativos') { // Para vouchers ativos, traz os específi"
+    },
+    {
+      "file": "src\\components\\client\\ClientVouchers.tsx",
+      "snippet": "table: 'vouchers', onChange: fetchVouchers, onPayload: (payload) => { fetchVouchers(); "
+    },
+    {
+      "file": "src\\components\\client\\financeiro\\PaymentModal.tsx",
+      "snippet": ".from('vouchers') .select('*') .eq('status', 'ativo') .or(`cliente_id.eq.${fatura.cliente_id},cliente_id.is.null`); if (error) throw error; const now "
+    },
+    {
+      "file": "src\\components\\client\\financeiro\\PaymentModal.tsx",
+      "snippet": ".from('vouchers') .select('*') .eq('codigo_voucher', code.toUpperCase()) .eq('status', 'ativo') .single(); if (error || !data) throw new Error('Vouche"
+    },
+    {
+      "file": "src\\components\\client\\financeiro\\PaymentModal.tsx",
+      "snippet": "table: 'vouchers', enabled: isOpen && Boolean(fatura?.cliente_id), onChange: () => { if "
+    },
+    {
+      "file": "src\\hooks\\useClientNotifications.tsx",
+      "snippet": ".from('vouchers') .select('cliente_id, codigo_voucher') .eq('status', 'ativo') .or(`cliente_id.eq.${clientId},cliente_id.is.null`); const realVouchers"
+    },
+    {
+      "file": "src\\lib\\adminRpc.ts",
+      "snippet": ".from('vouchers').select('id', { count: 'exact', head: true }).in('cliente_id', clientIds), supabase.from('tickets').select('id', { count: 'exact', he"
+    },
+    {
+      "file": "src\\tests\\realtime-hook.test.ts",
+      "snippet": "table: 'vouchers', filter: 'cliente_id=eq.test-client-123', }), expect.any(Function) "
+    },
+    {
+      "file": "src\\validation\\step1_referral.ts",
+      "snippet": ".from('vouchers').update({ cliente_id: indicado.id }).eq('id', indicacao.voucher_id); } // 6. Validar Vínculos logValidation('Validando integridade do"
+    },
+    {
+      "file": "supabase\\migrations\\20260711160000_financial_client_rpc_hardening.sql",
+      "snippet": "FROM vouchers WHERE id = v_vou WHERE id = v_voucher_id FOR UPDATE; IF NOT FOUND OR v_voucher.status <> 'ativo' THEN RAISE EXCEPTION 'Voucher inválido "
+    },
+    {
+      "file": "supabase\\migrations\\20260711170000_close_remaining_client_financial_rpcs.sql",
+      "snippet": "FROM vouchers WHERE id = p_vou WHERE id = p_voucher_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Voucher nao encontrado.'; END IF; IF v_voucher.s"
+    },
+    {
+      "file": "supabase\\migrations\\20260714054000_atomic_invoice_payment_and_points.sql",
+      "snippet": "FROM public.vouchers WHERE id  WHERE id = v_voucher_id FOR UPDATE; IF NOT FOUND OR v_voucher.status <> 'ativo' THEN RAISE EXCEPTION 'Voucher invalido "
+    },
+    {
+      "file": "supabase\\migrations\\20260714055000_secure_public_onboarding_flows.sql",
+      "snippet": "UPDATE public.vouchers SET cli SET cliente_id = v_cliente_id WHERE id = v_indicacao.voucher_id; END IF; SELECT coalesce(value, 'desconto') INTO v_rewa"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "FROM public.vouchers\n  WHERE i WHERE id = p_voucher_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Voucher não encontrado.'; END IF; SELECT * INTO "
+    },
+    {
+      "file": "supabase\\migrations\\20260720215500_fix_public_home_contracts.sql",
+      "snippet": "UPDATE public.vouchers SET cli SET cliente_id = v_cliente_id WHERE id = v_indicacao.voucher_id; END IF; SELECT coalesce(value, 'desconto') INTO v_rewa"
+    },
+    {
+      "file": "supabase\\migrations\\20260803110000_create_delete_client_cascade_rpc.sql",
+      "snippet": "DELETE FROM public.vouchers WH WHERE cliente_id = p_cliente_id; END IF; IF to_regclass('public.promocoes_resgates') IS NOT NULL THEN DELETE FROM publi"
+    },
+    {
+      "file": "supabase\\migrations\\20260901000000_secure_admin_cascade_delete.sql",
+      "snippet": "FROM public.vouchers WHERE cli WHERE cliente_id = ANY(p_client_ids); SELECT coalesce(count(*), 0) INTO v_tickets_count FROM public.tickets WHERE clien"
+    },
+    {
+      "file": "supabase\\migrations\\20260910233000_client_panel_rls_hardening.sql",
+      "snippet": "FROM public.vouchers WHERE id  WHERE id = v_voucher_id FOR UPDATE; IF NOT FOUND OR v_voucher.status <> 'ativo' THEN RAISE EXCEPTION 'Voucher invalido "
+    }
+  ],
+  "gsa_voucher_resgates": [
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "FROM public.gsa_voucher_resgat WHERE voucher_id = v_voucher.id AND cliente_id = v_actor.cliente_id; IF FOUND THEN SELECT saldo_carteira INTO v_new_bal"
+    }
+  ],
+  "ordens_assinatura": [
+    {
+      "file": "src\\components\\admin\\AssinaturasModule.tsx",
+      "snippet": "table: 'ordens_assinatura', onChange: () => void fetchAssinaturas(), debounceMs: 300 }, { table: 'loja_categorias', onCha"
+    },
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": ".from('ordens_assinatura') .select('*, orcamentos(total), assinaturas(nome)') .eq('cliente_id', cliente.id) .order('data_criacao', { ascending: false "
+    },
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": "table: 'ordens_assinatura', filter: `cliente_id=eq.${cliente.id}` }, fetchOrdensGeradas) .on('postgres_changes', { even"
+    },
+    {
+      "file": "src\\components\\admin\\FinanceiroModule.tsx",
+      "snippet": ".from('ordens_assinatura') .select('id, codigo_ordem, orcamentos(total)') .eq('cliente_id', cliente_id) .eq('status', 'em_analise'); setAvailableOrder"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensAssinaturaModule.tsx",
+      "snippet": ".from('ordens_assinatura') .select(selectStr); if (activeTab === 'processamento') { query = query.in('status', ['em_analise', 'pendente', 'pago']); } "
+    },
+    {
+      "file": "src\\components\\admin\\OrdensAssinaturaModule.tsx",
+      "snippet": "table: 'ordens_assinatura', onChange: fetchOrdens, debounceMs: 300 }, { table: 'assinaturas', onChange: fetchOrdens, debo"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+      "snippet": ".from('ordens_assinatura') .select('*, assinaturas(nome, valor, codigo_assinatura, imagem_url)') .eq('orcamento_id', orcamento.id), ]); const ocs = (o"
+    },
+    {
+      "file": "src\\components\\admin\\relatorios\\RelatorioFinanceiro.tsx",
+      "snippet": ".from('ordens_assinatura').select('status, assinatura_id, data_cancelamento'), supabase.from('assinaturas').select('id, valor'), ]); const fat = fatur"
+    },
+    {
+      "file": "src\\components\\admin\\relatorios\\RelatorioOperacional.tsx",
+      "snippet": ".from('ordens_assinatura').select('id, status, data_vencimento, data_criacao'), supabase.from('ordens_compra').select('id, status, data_criacao').gte("
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+      "snippet": ".from('ordens_assinatura').select('id, codigo_ordem, quantidade, assinaturas(valor)').eq('cliente_id', clienteId).eq('status', 'em_analise') ]); setAv"
+    },
+    {
+      "file": "src\\components\\admin\\VendasModule.tsx",
+      "snippet": "table: 'ordens_assinatura', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 }, { table: 'prestador_demandas'"
+    },
+    {
+      "file": "src\\components\\client\\ClientAssinaturas.tsx",
+      "snippet": ".from('ordens_assinatura') .select('*, assinaturas(nome, valor), faturas(*), orcamentos(*)') .eq('cliente_id', clientId) .order('data_criacao', { asce"
+    },
+    {
+      "file": "src\\components\\client\\ClientAssinaturas.tsx",
+      "snippet": "table: 'ordens_assinatura', filter: `cliente_id=eq.${clientId}`, onChange: fetchMinhasAssinaturas }, { table: 'faturas'"
+    },
+    {
+      "file": "src\\components\\client\\store\\PurchasesPage.tsx",
+      "snippet": ".from('ordens_assinatura').select('*, assinaturas(nome, imagem_url, codigo_assinatura, valor), faturas(*)').in('orcamento_id', ids) : Promise.resolve("
+    },
+    {
+      "file": "src\\components\\client\\store\\PurchasesPage.tsx",
+      "snippet": "table: 'ordens_assinatura', filter: clientId ? `cliente_id=eq.${clientId}` : undefined, enabled: Boolean(cli"
+    },
+    {
+      "file": "src\\components\\client\\StoreHub.tsx",
+      "snippet": ".from('ordens_assinatura').select('id').eq('orcamento_id', selectedOrderDetail.id); const ocIds = (ocs || []).map((o: any) => o.id); const oaIds = (oa"
+    },
+    {
+      "file": "src\\components\\client\\StoreHub.tsx",
+      "snippet": ".from('ordens_assinatura').select('*, assinaturas(nome, imagem_url, codigo_assinatura, valor), faturas(*)').in('orcamento_id', ids) : Promise.resolve("
+    },
+    {
+      "file": "src\\lib\\adminRpc.ts",
+      "snippet": ".from('ordens_assinatura').select('id').eq('cliente_id', entityId); const oaIds = (oaList || []).map((o: any) => o.id).filter(Boolean); let fatIds: st"
+    },
+    {
+      "file": "src\\validation\\master_block2.ts",
+      "snippet": ".from('ordens_assinatura') .insert([{ cliente_id, assinatura_id: plano.id, status: 'concluido', prazo_meses: 12 }]) .select() "
+    },
+    {
+      "file": "src\\validation\\step6_subscriptions.ts",
+      "snippet": ".from('ordens_assinatura').insert({ id: orderId, codigo_ordem: `OA-VAL-${suffix}`, assinatura_id: planId, cliente_id: clienteId, status: 'concluido', "
+    },
+    {
+      "file": "src\\validation\\step6_subscriptions.ts",
+      "snippet": ".from('ordens_assinatura') .select('status, prazo_meses, data_vencimento') .eq('id', orderId) .single(); if (extendedOrderError) throw extendedOrderEr"
+    },
+    {
+      "file": "src\\validation\\step6_subscriptions.ts",
+      "snippet": ".from('ordens_assinatura') .select('status, data_cancelamento, valor_proporcional_cancelamento') .eq('id', orderId) .single(); if (cancelledOrderError"
+    },
+    {
+      "file": "src\\validation\\step6_subscriptions.ts",
+      "snippet": ".from('ordens_assinatura').delete().eq('id', orderId)); await cleanup('plano de assinatura', service.from('assinaturas').delete().eq('id', planId)); i"
+    },
+    {
+      "file": "supabase\\migrations\\20260525000001_cron_faturas_assinaturas.sql",
+      "snippet": "FROM ordens_assinatura oa\n     oa JOIN assinaturas a ON a.id = oa.assinatura_id WHERE oa.status = 'concluido' OR oa.status = 'pago' -- ou outro status"
+    },
+    {
+      "file": "supabase\\migrations\\20260711164500_approve_budget_rpc.sql",
+      "snippet": "FROM ordens_assinatura WHERE o WHERE orcamento_id = p_orcamento_id LIMIT 1; SELECT id INTO v_fatura_id FROM faturas WHERE ordem_compra_id = v_oc_id OR"
+    },
+    {
+      "file": "supabase\\migrations\\20260711164500_approve_budget_rpc.sql",
+      "snippet": "FROM ordens_assinatura WHERE o WHERE orcamento_id = p_orcamento_id LIMIT 1; IF v_oa_id IS NULL THEN INSERT INTO ordens_assinatura(codigo_ordem, assina"
+    },
+    {
+      "file": "supabase\\migrations\\20260711171000_approve_budget_negotiation_rpc.sql",
+      "snippet": "FROM ordens_assinatura WHERE o WHERE orcamento_id = p_orcamento_id LIMIT 1; SELECT id INTO v_fatura_id FROM faturas WHERE ordem_compra_id = v_oc_id OR"
+    },
+    {
+      "file": "supabase\\migrations\\20260711171000_approve_budget_negotiation_rpc.sql",
+      "snippet": "FROM ordens_assinatura WHERE o WHERE orcamento_id = p_orcamento_id LIMIT 1; IF v_oa_id IS NULL THEN INSERT INTO ordens_assinatura(codigo_ordem, assina"
+    },
+    {
+      "file": "supabase\\migrations\\20260711172000_store_invoice_and_subscription_rpcs.sql",
+      "snippet": "FROM ordens_assinatura WHERE o WHERE orcamento_id = p_orcamento_id ORDER BY id LIMIT 1; SELECT id INTO v_fatura_id FROM faturas WHERE cliente_id = p_c"
+    },
+    {
+      "file": "supabase\\migrations\\20260711172000_store_invoice_and_subscription_rpcs.sql",
+      "snippet": "FROM ordens_assinatura oa\n  LE oa LEFT JOIN assinaturas a ON a.id = oa.assinatura_id WHERE oa.orcamento_id = p_orcamento_id; v_itens := v_itens_prod |"
+    },
+    {
+      "file": "supabase\\migrations\\20260711172000_store_invoice_and_subscription_rpcs.sql",
+      "snippet": "FROM ordens_assinatura WHERE i WHERE id = p_ordem_assinatura_id AND cliente_id = p_cliente_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Assinatur"
+    },
+    {
+      "file": "supabase\\migrations\\20260711172000_store_invoice_and_subscription_rpcs.sql",
+      "snippet": "UPDATE ordens_assinatura\n  SET SET prazo_meses = coalesce(prazo_meses, 0) + p_meses WHERE id = p_ordem_assinatura_id; FOR v_i IN 1..p_meses LOOP v_ven"
+    },
+    {
+      "file": "supabase\\migrations\\20260711223000_fix_store_invoice_without_order_items.sql",
+      "snippet": "FROM ordens_assinatura WHERE o WHERE orcamento_id = p_orcamento_id ORDER BY id LIMIT 1; SELECT id INTO v_fatura_id FROM faturas WHERE cliente_id = p_c"
+    },
+    {
+      "file": "supabase\\migrations\\20260711223000_fix_store_invoice_without_order_items.sql",
+      "snippet": "FROM ordens_assinatura oa\n  LE oa LEFT JOIN assinaturas a ON a.id = oa.assinatura_id WHERE oa.orcamento_id = p_orcamento_id; v_itens := v_itens_prod |"
+    },
+    {
+      "file": "supabase\\migrations\\20260714024000_secure_admin_collection_payment_rpcs.sql",
+      "snippet": "FROM public.ordens_assinatura  oa LEFT JOIN public.orcamentos o ON o.id = oa.orcamento_id WHERE oa.id = v_fatura.ordem_assinatura_id LIMIT 1; END IF; "
+    },
+    {
+      "file": "supabase\\migrations\\20260714054000_atomic_invoice_payment_and_points.sql",
+      "snippet": "JOIN public.ordens_assinatura  oa ON oa.id = v_fatura.ordem_assinatura_id; IF v_fatura.codigo_fatura LIKE 'FAT-TROCA-%' THEN SELECT ls.id, ls.cliente_"
+    },
+    {
+      "file": "supabase\\migrations\\20260714054000_atomic_invoice_payment_and_points.sql",
+      "snippet": "UPDATE public.ordens_assinatur SET status = 'concluido', data_conclusao = coalesce(data_conclusao, now()) WHERE id = v_fatura.ordem_assinatura_id AND "
+    },
+    {
+      "file": "supabase\\migrations\\20260714056100_secure_store_invoice_and_cancellation.sql",
+      "snippet": "FROM public.ordens_assinatura  oa LEFT JOIN public.assinaturas a ON a.id = oa.assinatura_id WHERE oa.orcamento_id = p_orcamento_id UNION ALL SELECT js"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056100_secure_store_invoice_and_cancellation.sql",
+      "snippet": "FROM public.ordens_assinatura\n WHERE orcamento_id = p_orcamento_id ORDER BY data_criacao, id LIMIT 1; SELECT id INTO v_first_service FROM public.orden"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056100_secure_store_invoice_and_cancellation.sql",
+      "snippet": "FROM public.ordens_assinatura\n WHERE orcamento_id = p_orcamento_id AND status = 'concluido' ) THEN RAISE EXCEPTION 'Este pedido já está em execução ou"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056100_secure_store_invoice_and_cancellation.sql",
+      "snippet": "FROM public.ordens_assinatura\n WHERE orcamento_id = p_orcamento_id ORDER BY data_criacao, id LIMIT 1; IF v_paid_external > 0 THEN v_refund_code := pub"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056100_secure_store_invoice_and_cancellation.sql",
+      "snippet": "UPDATE public.ordens_assinatur SET status = 'cancelado', motivo_cancelamento = v_reason, data_cancelamento = now() WHERE orcamento_id = p_orcamento_id"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "FROM public.ordens_assinatura\n WHERE id = p_ordem_assinatura_id AND cliente_id = v_actor.cliente_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Ass"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "UPDATE public.ordens_assinatur SET prazo_meses = coalesce(prazo_meses, 0) + p_meses, data_vencimento = (v_base_date + make_interval(months => p_meses)"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056400_secure_client_budget_settlement_and_exchange.sql",
+      "snippet": "FROM public.ordens_assinatura\n WHERE orcamento_id = v_budget.id LIMIT 1; IF v_subscription_order_id IS NULL THEN INSERT INTO public.ordens_assinatura("
+    },
+    {
+      "file": "supabase\\migrations\\20260720170000_secure_admin_subscription_lifecycle.sql",
+      "snippet": "FROM public.ordens_assinatura\r WHERE id = p_ordem_assinatura_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Assinatura nao encontrada.'; END IF; IF"
+    },
+    {
+      "file": "supabase\\migrations\\20260720170000_secure_admin_subscription_lifecycle.sql",
+      "snippet": "FROM public.ordens_assinatura\r WHERE id = p_ordem_assinatura_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Assinatura nao encontrada.'; END IF; SE"
+    },
+    {
+      "file": "supabase\\migrations\\20260720170000_secure_admin_subscription_lifecycle.sql",
+      "snippet": "FROM public.ordens_assinatura  oa WHERE oa.status = 'em_cancelamento' AND oa.data_cancelamento IS NOT NULL AND oa.data_cancelamento::date <= current_d"
+    },
+    {
+      "file": "supabase\\migrations\\20260720170000_secure_admin_subscription_lifecycle.sql",
+      "snippet": "UPDATE public.ordens_assinatur SET status = 'cancelado', valor_proporcional_cancelamento = NULL WHERE id = v_order.id AND status = 'em_cancelamento';"
+    },
+    {
+      "file": "supabase\\migrations\\20260720180000_secure_client_subscription_cancellation.sql",
+      "snippet": "FROM public.ordens_assinatura\r WHERE id = p_ordem_assinatura_id AND cliente_id = v_actor.cliente_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Ass"
+    },
+    {
+      "file": "supabase\\migrations\\20260721010000_harden_products_and_subscriptions.sql",
+      "snippet": "FROM public.ordens_assinatura  WHERE id = p_ordem_assinatura_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Ordem de assinatura não encontrada.'; E"
+    },
+    {
+      "file": "supabase\\migrations\\20260721010000_harden_products_and_subscriptions.sql",
+      "snippet": "UPDATE public.ordens_assinatur SET status = 'concluido', motivo_cancelamento = NULL, data_cancelamento = NULL, data_conclusao = NOW() WHERE id = p_ord"
+    },
+    {
+      "file": "supabase\\migrations\\20260721010000_harden_products_and_subscriptions.sql",
+      "snippet": "FROM public.ordens_assinatura\r WHERE status = 'em_cancelamento' AND data_cancelamento IS NOT NULL AND data_cancelamento::DATE <= CURRENT_DATE FOR UPDA"
+    },
+    {
+      "file": "supabase\\migrations\\20260721010000_harden_products_and_subscriptions.sql",
+      "snippet": "UPDATE public.ordens_assinatur SET status = 'cancelado' WHERE id = v_order.id; UPDATE public.faturas SET status = 'cancelado', valor_final_pendente = "
+    },
+    {
+      "file": "supabase\\migrations\\20260721100000_fix_products_subscriptions_runtime.sql",
+      "snippet": "FROM public.ordens_assinatura\r WHERE id = p_ordem_assinatura_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Ordem de assinatura não encontrada.'; E"
+    },
+    {
+      "file": "supabase\\migrations\\20260721100000_fix_products_subscriptions_runtime.sql",
+      "snippet": "UPDATE public.ordens_assinatur SET status = 'concluido', motivo_cancelamento = NULL, data_cancelamento = NULL, data_conclusao = now() WHERE id = p_ord"
+    },
+    {
+      "file": "supabase\\migrations\\20260803170000_fix_admin_baixar_fatura_saldo_bypass.sql",
+      "snippet": "JOIN public.ordens_assinatura  oa ON oa.id = v_fatura.ordem_assinatura_id; IF v_fatura.codigo_fatura LIKE 'FAT-TROCA-%' THEN SELECT ls.id, ls.cliente_"
+    },
+    {
+      "file": "supabase\\migrations\\20260803170000_fix_admin_baixar_fatura_saldo_bypass.sql",
+      "snippet": "UPDATE public.ordens_assinatur SET status = 'concluido', data_conclusao = coalesce(data_conclusao, now()) WHERE id = v_fatura.ordem_assinatura_id AND "
+    },
+    {
+      "file": "supabase\\migrations\\20260803174500_fix_gsa_finalize_paid_invoice_points_type.sql",
+      "snippet": "JOIN public.ordens_assinatura  oa ON oa.id = v_fatura.ordem_assinatura_id; IF v_fatura.codigo_fatura LIKE 'FAT-TROCA-%' THEN SELECT ls.id, ls.cliente_"
+    },
+    {
+      "file": "supabase\\migrations\\20260803174500_fix_gsa_finalize_paid_invoice_points_type.sql",
+      "snippet": "UPDATE public.ordens_assinatur SET status = 'concluido', data_conclusao = coalesce(data_conclusao, now()) WHERE id = v_fatura.ordem_assinatura_id AND "
+    },
+    {
+      "file": "supabase\\migrations\\20260805151500_update_public_facing_actors.sql",
+      "snippet": "FROM public.ordens_assinatura\r WHERE id = p_order_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Ordem de assinatura nao encontrada.'; END IF; IF v"
+    },
+    {
+      "file": "supabase\\migrations\\20260817203000_zero_balance_store_checkout.sql",
+      "snippet": "FROM public.ordens_assinatura\n WHERE orcamento_id = v_order.id ORDER BY id LIMIT 1; SELECT id INTO v_first_service FROM public.ordens_servico WHERE or"
+    },
+    {
+      "file": "supabase\\migrations\\20260829024500_credit_purchase_disputes.sql",
+      "snippet": "FROM public.ordens_assinatura\n WHERE orcamento_id=v_order.id ORDER BY data_criacao,id LIMIT 1; v_refund_code := public.gsa_generate_code('REEMB'); INS"
+    },
+    {
+      "file": "supabase\\migrations\\20260829211500_marketplace_security_refund_checkout_hardening.sql",
+      "snippet": "JOIN public.ordens_assinatura  oa ON oa.id = r.ordem_assinatura_id LEFT JOIN public.assinaturas a ON a.id = oa.assinatura_id LEFT JOIN public.orcament"
+    },
+    {
+      "file": "supabase\\migrations\\20260829211500_marketplace_security_refund_checkout_hardening.sql",
+      "snippet": "JOIN public.ordens_assinatura  oa ON oa.id = r.ordem_assinatura_id ) item; RETURN v_result; END; $$; CREATE OR REPLACE FUNCTION public.gsa_admin_proce"
+    },
+    {
+      "file": "supabase\\migrations\\20260829212500_marketplace_legacy_items_backfill_and_refund_shape.sql",
+      "snippet": "JOIN public.ordens_assinatura  oa ON oa.id = r.ordem_assinatura_id LEFT JOIN public.assinaturas a ON a.id = oa.assinatura_id LEFT JOIN public.orcament"
+    },
+    {
+      "file": "supabase\\migrations\\20260829212500_marketplace_legacy_items_backfill_and_refund_shape.sql",
+      "snippet": "FROM public.ordens_assinatura  oa WHERE oa.orcamento_id = o.id)); -- Normaliza snapshots históricos de produtos sem alterar estoque, saldo ou status. "
+    },
+    {
+      "file": "supabase\\migrations\\20260829212500_marketplace_legacy_items_backfill_and_refund_shape.sql",
+      "snippet": "FROM public.ordens_assinatura  oa JOIN public.orcamentos o ON o.id = oa.orcamento_id JOIN legacy_marketplace_budgets lb ON lb.id = o.id LEFT JOIN publ"
+    }
+  ],
+  "ordens_compra": [
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": ".from('ordens_compra') .select('*, orcamentos(total), produtos(nome)') .eq('cliente_id', cliente.id) .order('data_criacao', { ascending: false }); // "
+    },
+    {
+      "file": "src\\components\\admin\\ClientesModule.tsx",
+      "snippet": "table: 'ordens_compra', filter: `cliente_id=eq.${cliente.id}` }, fetchOrdensGeradas) .on('postgres_changes', { even"
+    },
+    {
+      "file": "src\\components\\admin\\Dashboard.tsx",
+      "snippet": "table: 'ordens_compra', onChange: () => void load(true), debounceMs: 500 }, { table: 'vouchers', onChange: () => void"
+    },
+    {
+      "file": "src\\components\\admin\\FinanceiroModule.tsx",
+      "snippet": ".from('ordens_compra') .select('id, codigo_ordem, orcamentos(total)') .eq('cliente_id', cliente_id) .eq('status', 'em_analise'); // Fetch OA com valor"
+    },
+    {
+      "file": "src\\components\\admin\\FornecedoresModule.tsx",
+      "snippet": "table: 'ordens_compra', onChange: load, debounceMs: 300 }, { table: 'produto_fornecedor_config', onChange: load, debo"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+      "snippet": ".from('ordens_compra').select(selectStr); if (activeTab === 'processamento') { query = query.in('status', ['em_analise', 'pago', 'aprovado', 'em_exped"
+    },
+    {
+      "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+      "snippet": ".from('ordens_compra') .select('*, produtos(nome, valor, codigo_produto, codigo_barras, identificador_preferencial, tipo_codigo_barras, imagem_url)') "
+    },
+    {
+      "file": "src\\components\\admin\\OrdensCompraModule.tsx",
+      "snippet": "table: 'ordens_compra', onChange: fetchOrdens, debounceMs: 300 }, { table: 'produtos', onChange: fetchOrdens, debounc"
+    },
+    {
+      "file": "src\\components\\admin\\relatorios\\RelatorioOperacional.tsx",
+      "snippet": ".from('ordens_compra').select('id, status, data_criacao').gte('data_criacao', inicio).lte('data_criacao', fim), supabase.from('assinaturas').select('i"
+    },
+    {
+      "file": "src\\components\\admin\\ShopeeOperationsModule.tsx",
+      "snippet": "table: 'ordens_compra', onChange: () => void load(true), debounceMs: 500 }, { table: 'orcamentos', onChange: () => vo"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\financeiro\\FaturamentoView.tsx",
+      "snippet": ".from('ordens_compra').select('id, codigo_ordem, quantidade, produtos(valor)').eq('cliente_id', clienteId).eq('status', 'em_analise'), supabase.from('"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+      "snippet": ".from('ordens_compra').select('id', { count: 'exact', head: true }).eq('status', 'processamento') ]); const orcList = orcRes.data || []; const abertos"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\operacoes\\OperacoesSuperDomain.tsx",
+      "snippet": "table: 'ordens_compra', onChange: fetchLiveMetrics, debounceMs: 400 }, ]); return ( <div className=\"w-full sp"
+    },
+    {
+      "file": "src\\components\\admin\\VendasModule.tsx",
+      "snippet": "table: 'ordens_compra', onChange: () => setRtRefreshKey(k => k + 1), debounceMs: 300 }, { table: 'ordens_assinatura',"
+    },
+    {
+      "file": "src\\components\\client\\ClientProdutos.tsx",
+      "snippet": ".from('ordens_compra') .select('*, produtos(nome, valor, imagem_url), faturas(*), orcamentos(*)') .eq('cliente_id', clientId); if (data) setMeusProdut"
+    },
+    {
+      "file": "src\\components\\client\\ClientProdutos.tsx",
+      "snippet": "table: 'ordens_compra', filter: clientId ? `cliente_id=eq.${clientId}` : undefined, onChange: fetchMeusP"
+    },
+    {
+      "file": "src\\components\\client\\store\\PurchasesPage.tsx",
+      "snippet": ".from('ordens_compra').select('*, produtos(nome, imagem_url, codigo_produto, codigo_barras, identificador_preferencial, valor)').in('orcamento_id', id"
+    },
+    {
+      "file": "src\\components\\client\\store\\PurchasesPage.tsx",
+      "snippet": "table: 'ordens_compra', filter: clientId ? `cliente_id=eq.${clientId}` : undefined, enabled: Boolean(cli"
+    },
+    {
+      "file": "src\\components\\client\\StoreHub.tsx",
+      "snippet": ".from('ordens_compra').select('id').eq('orcamento_id', selectedOrderDetail.id); const { data: oas } = await supabase .from('ordens_assinatura').select"
+    },
+    {
+      "file": "src\\components\\client\\StoreHub.tsx",
+      "snippet": ".from('ordens_compra').select('*, produtos(nome, imagem_url, codigo_produto, codigo_barras, identificador_preferencial, valor)').in('orcamento_id', id"
+    },
+    {
+      "file": "src\\components\\client\\StoreHub.tsx",
+      "snippet": ".from('ordens_compra') .select('*, produtos(*)') .in('orcamento_id', ids); const enriched = filteredOrcamentos .map(orc => { const items = (ocs || [])"
+    },
+    {
+      "file": "src\\lib\\adminRpc.ts",
+      "snippet": ".from('ordens_compra').select('id').eq('cliente_id', entityId); const ocIds = (ocList || []).map((o: any) => o.id).filter(Boolean); const { data: oaLi"
+    },
+    {
+      "file": "supabase\\migrations\\20260711163000_client_financial_rpc_more_flows.sql",
+      "snippet": "FROM ordens_compra WHERE orcam WHERE orcamento_id = p_orcamento_id LIMIT 1; SELECT coalesce(sum(valor_total), 0) INTO v_valor_original FROM faturas WH"
+    },
+    {
+      "file": "supabase\\migrations\\20260711164500_approve_budget_rpc.sql",
+      "snippet": "FROM ordens_compra WHERE orcam WHERE orcamento_id = p_orcamento_id LIMIT 1; SELECT id INTO v_oa_id FROM ordens_assinatura WHERE orcamento_id = p_orcam"
+    },
+    {
+      "file": "supabase\\migrations\\20260711164500_approve_budget_rpc.sql",
+      "snippet": "FROM ordens_compra WHERE orcam WHERE orcamento_id = p_orcamento_id LIMIT 1; IF v_oc_id IS NULL THEN INSERT INTO ordens_compra(codigo_ordem, produto_id"
+    },
+    {
+      "file": "supabase\\migrations\\20260711171000_approve_budget_negotiation_rpc.sql",
+      "snippet": "FROM ordens_compra WHERE orcam WHERE orcamento_id = p_orcamento_id LIMIT 1; SELECT id INTO v_oa_id FROM ordens_assinatura WHERE orcamento_id = p_orcam"
+    },
+    {
+      "file": "supabase\\migrations\\20260711171000_approve_budget_negotiation_rpc.sql",
+      "snippet": "FROM ordens_compra WHERE orcam WHERE orcamento_id = p_orcamento_id LIMIT 1; IF v_oc_id IS NULL THEN INSERT INTO ordens_compra(codigo_ordem, produto_id"
+    },
+    {
+      "file": "supabase\\migrations\\20260711172000_store_invoice_and_subscription_rpcs.sql",
+      "snippet": "FROM ordens_compra WHERE orcam WHERE orcamento_id = p_orcamento_id ORDER BY id LIMIT 1; SELECT id INTO v_oa_id FROM ordens_assinatura WHERE orcamento_"
+    },
+    {
+      "file": "supabase\\migrations\\20260711172000_store_invoice_and_subscription_rpcs.sql",
+      "snippet": "FROM ordens_compra oc\n  LEFT J oc LEFT JOIN produtos p ON p.id = oc.produto_id WHERE oc.orcamento_id = p_orcamento_id; SELECT coalesce(jsonb_agg(jsonb"
+    },
+    {
+      "file": "supabase\\migrations\\20260711223000_fix_store_invoice_without_order_items.sql",
+      "snippet": "FROM ordens_compra WHERE orcam WHERE orcamento_id = p_orcamento_id ORDER BY id LIMIT 1; SELECT id INTO v_oa_id FROM ordens_assinatura WHERE orcamento_"
+    },
+    {
+      "file": "supabase\\migrations\\20260711223000_fix_store_invoice_without_order_items.sql",
+      "snippet": "FROM ordens_compra oc\n  LEFT J oc LEFT JOIN produtos p ON p.id = oc.produto_id WHERE oc.orcamento_id = p_orcamento_id; SELECT coalesce(jsonb_agg(jsonb"
+    },
+    {
+      "file": "supabase\\migrations\\20260714024000_secure_admin_collection_payment_rpcs.sql",
+      "snippet": "FROM public.ordens_compra oc\n  oc LEFT JOIN public.orcamentos o ON o.id = oc.orcamento_id WHERE oc.id = v_fatura.ordem_compra_id LIMIT 1; ELSIF v_fatu"
+    },
+    {
+      "file": "supabase\\migrations\\20260714054000_atomic_invoice_payment_and_points.sql",
+      "snippet": "JOIN public.ordens_compra oc O oc ON oc.id = v_fatura.ordem_compra_id LEFT JOIN public.ordens_assinatura oa ON oa.id = v_fatura.ordem_assinatura_id; I"
+    },
+    {
+      "file": "supabase\\migrations\\20260714054000_atomic_invoice_payment_and_points.sql",
+      "snippet": "UPDATE public.ordens_compra SE SET status = 'pago' WHERE id = v_fatura.ordem_compra_id AND status <> 'cancelado'; END IF; IF v_fatura.ordem_assinatura"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056100_secure_store_invoice_and_cancellation.sql",
+      "snippet": "FROM public.ordens_compra oc\n  oc LEFT JOIN public.produtos p ON p.id = oc.produto_id WHERE oc.orcamento_id = p_orcamento_id UNION ALL SELECT jsonb_bu"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056100_secure_store_invoice_and_cancellation.sql",
+      "snippet": "FROM public.ordens_compra\n  WH WHERE orcamento_id = p_orcamento_id ORDER BY data_criacao, id LIMIT 1; SELECT id INTO v_first_subscription FROM public."
+    },
+    {
+      "file": "supabase\\migrations\\20260714056100_secure_store_invoice_and_cancellation.sql",
+      "snippet": "FROM public.ordens_compra\n     WHERE orcamento_id = p_orcamento_id AND status IN ('em_expedicao', 'em_transporte', 'concluido') ) OR EXISTS ( SELECT 1"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056100_secure_store_invoice_and_cancellation.sql",
+      "snippet": "FROM public.ordens_compra oc\n  oc WHERE oc.orcamento_id = p_orcamento_id GROUP BY oc.produto_id ) AS quantities WHERE p.id = quantities.produto_id AND"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056100_secure_store_invoice_and_cancellation.sql",
+      "snippet": "FROM public.ordens_compra\n  WH WHERE orcamento_id = p_orcamento_id ORDER BY data_criacao, id LIMIT 1; SELECT id INTO v_first_subscription FROM public."
+    },
+    {
+      "file": "supabase\\migrations\\20260714056100_secure_store_invoice_and_cancellation.sql",
+      "snippet": "UPDATE public.ordens_compra\n   SET status = 'cancelado', motivo_cancelamento = v_reason WHERE orcamento_id = p_orcamento_id; UPDATE public.ordens_assi"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "FROM public.ordens_compra oc W oc WHERE oc.orcamento_id = v_budget.id ) ); IF v_outstanding <= 0 THEN RAISE EXCEPTION 'Não existem parcelas de crédito"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "FROM public.ordens_compra\n  WH WHERE orcamento_id = v_budget.id ORDER BY data_criacao, id LIMIT 1; INSERT INTO public.faturas( cliente_id, tipo, valor"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "FROM public.ordens_compra oc W oc WHERE oc.orcamento_id = v_budget.id ) ); UPDATE public.orcamentos SET status_quitacao_credito = NULL, valor_quitacao"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056400_secure_client_budget_settlement_and_exchange.sql",
+      "snippet": "FROM public.ordens_compra\n     WHERE orcamento_id = v_budget.id LIMIT 1; IF v_purchase_order_id IS NULL THEN INSERT INTO public.ordens_compra( codigo_"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056400_secure_client_budget_settlement_and_exchange.sql",
+      "snippet": "FROM public.ordens_compra WHER WHERE orcamento_id = v_budget.id )); IF v_count = 0 THEN RAISE EXCEPTION 'Não existem parcelas de crédito pendentes par"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056400_secure_client_budget_settlement_and_exchange.sql",
+      "snippet": "FROM public.ordens_compra oc\n  oc WHERE oc.orcamento_id = v_budget.id AND oc.cliente_id = v_actor.cliente_id AND oc.status = 'concluido'; IF v_deliver"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056400_secure_client_budget_settlement_and_exchange.sql",
+      "snippet": "FROM public.ordens_compra oc\n  oc JOIN public.produtos p ON p.id = oc.produto_id WHERE oc.id = v_item_id AND oc.orcamento_id = v_budget.id AND oc.clie"
+    },
+    {
+      "file": "supabase\\migrations\\20260721010000_harden_products_and_subscriptions.sql",
+      "snippet": "FROM public.ordens_compra WHER WHERE id = p_ordem_compra_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Ordem de compra não encontrada.'; END IF; v"
+    },
+    {
+      "file": "supabase\\migrations\\20260721010000_harden_products_and_subscriptions.sql",
+      "snippet": "FROM public.ordens_compra WHER WHERE id = p_ordem_compra_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Ordem de compra não encontrada.'; END IF; I"
+    },
+    {
+      "file": "supabase\\migrations\\20260721010000_harden_products_and_subscriptions.sql",
+      "snippet": "FROM public.ordens_compra\r\n    WHERE id = p_ordem_compra_id OR (v_ordem.orcamento_id IS NOT NULL AND orcamento_id = v_ordem.orcamento_id) FOR UPDATE L"
+    },
+    {
+      "file": "supabase\\migrations\\20260721010000_harden_products_and_subscriptions.sql",
+      "snippet": "FROM public.ordens_compra\r\n    WHERE id = p_ordem_compra_id OR (v_ordem.orcamento_id IS NOT NULL AND orcamento_id = v_ordem.orcamento_id) ); IF v_wall"
+    },
+    {
+      "file": "supabase\\migrations\\20260721010000_harden_products_and_subscriptions.sql",
+      "snippet": "FROM public.ordens_compra\r\n    WHERE id = p_ordem_compra_id OR (v_ordem.orcamento_id IS NOT NULL AND orcamento_id = v_ordem.orcamento_id) ) AND status"
+    },
+    {
+      "file": "supabase\\migrations\\20260803170000_fix_admin_baixar_fatura_saldo_bypass.sql",
+      "snippet": "JOIN public.ordens_compra oc O oc ON oc.id = v_fatura.ordem_compra_id LEFT JOIN public.ordens_assinatura oa ON oa.id = v_fatura.ordem_assinatura_id; I"
+    },
+    {
+      "file": "supabase\\migrations\\20260803170000_fix_admin_baixar_fatura_saldo_bypass.sql",
+      "snippet": "UPDATE public.ordens_compra SE SET status = 'pago' WHERE id = v_fatura.ordem_compra_id AND status <> 'cancelado'; END IF; IF v_fatura.ordem_assinatura"
+    },
+    {
+      "file": "supabase\\migrations\\20260803174500_fix_gsa_finalize_paid_invoice_points_type.sql",
+      "snippet": "JOIN public.ordens_compra oc O oc ON oc.id = v_fatura.ordem_compra_id LEFT JOIN public.ordens_assinatura oa ON oa.id = v_fatura.ordem_assinatura_id; I"
+    },
+    {
+      "file": "supabase\\migrations\\20260803174500_fix_gsa_finalize_paid_invoice_points_type.sql",
+      "snippet": "UPDATE public.ordens_compra SE SET status = 'pago' WHERE id = v_fatura.ordem_compra_id AND status <> 'cancelado'; END IF; IF v_fatura.ordem_assinatura"
+    },
+    {
+      "file": "supabase\\migrations\\20260817120000_product_variations_marketplace.sql",
+      "snippet": "UPDATE public.ordens_compra\n   SET variacao_selecionada = v_snapshot, produto_variante_id = v_variant.id WHERE orcamento_id = v_order_id AND produto_i"
+    },
+    {
+      "file": "supabase\\migrations\\20260817190000_shopee_hybrid_fulfillment.sql",
+      "snippet": "FROM public.ordens_compra oc\n  oc JOIN public.produto_fornecedor_config pfc ON pfc.produto_id = oc.produto_id WHERE oc.orcamento_id = p_orcamento_id A"
+    },
+    {
+      "file": "supabase\\migrations\\20260817190000_shopee_hybrid_fulfillment.sql",
+      "snippet": "FROM public.ordens_compra oc\n  oc JOIN public.produtos p ON p.id = oc.produto_id JOIN public.produto_fornecedor_config pfc ON pfc.produto_id = oc.prod"
+    },
+    {
+      "file": "supabase\\migrations\\20260817190000_shopee_hybrid_fulfillment.sql",
+      "snippet": "FROM public.ordens_compra WHER WHERE id = NEW.ordem_compra_id; END IF; PERFORM public.gsa_shopee_enqueue_paid_order(v_orcamento_id); RETURN NEW; END; "
+    },
+    {
+      "file": "supabase\\migrations\\20260817203000_zero_balance_store_checkout.sql",
+      "snippet": "FROM public.ordens_compra\n   W WHERE orcamento_id = v_order.id ORDER BY id LIMIT 1; SELECT id INTO v_first_subscription FROM public.ordens_assinatura "
+    },
+    {
+      "file": "supabase\\migrations\\20260829024500_credit_purchase_disputes.sql",
+      "snippet": "FROM public.ordens_compra\n     WHERE orcamento_id=v_order.id ORDER BY data_criacao,id LIMIT 1; SELECT id INTO v_first_subscription FROM public.ordens_"
+    },
+    {
+      "file": "supabase\\migrations\\20260829211500_marketplace_security_refund_checkout_hardening.sql",
+      "snippet": "JOIN public.ordens_compra oc O oc ON oc.id = r.ordem_compra_id LEFT JOIN public.produtos p ON p.id = oc.produto_id LEFT JOIN public.orcamentos o1 ON o"
+    },
+    {
+      "file": "supabase\\migrations\\20260829211500_marketplace_security_refund_checkout_hardening.sql",
+      "snippet": "JOIN public.ordens_compra oc O oc ON oc.id = r.ordem_compra_id LEFT JOIN public.ordens_assinatura oa ON oa.id = r.ordem_assinatura_id ) item; RETURN v"
+    },
+    {
+      "file": "supabase\\migrations\\20260829211500_marketplace_security_refund_checkout_hardening.sql",
+      "snippet": "UPDATE public.ordens_compra\n   SET observacoes_internas=left(coalesce(p_observacoes,''),10000) WHERE id=p_ordem_compra_id; IF NOT FOUND THEN RAISE EXC"
+    },
+    {
+      "file": "supabase\\migrations\\20260829212500_marketplace_legacy_items_backfill_and_refund_shape.sql",
+      "snippet": "JOIN public.ordens_compra oc O oc ON oc.id = r.ordem_compra_id LEFT JOIN public.produtos p ON p.id = oc.produto_id LEFT JOIN public.orcamentos o1 ON o"
+    },
+    {
+      "file": "supabase\\migrations\\20260829212500_marketplace_legacy_items_backfill_and_refund_shape.sql",
+      "snippet": "FROM public.ordens_compra oc W oc WHERE oc.orcamento_id = o.id) OR EXISTS (SELECT 1 FROM public.ordens_assinatura oa WHERE oa.orcamento_id = o.id)); -"
+    },
+    {
+      "file": "supabase\\migrations\\20260829212500_marketplace_legacy_items_backfill_and_refund_shape.sql",
+      "snippet": "FROM public.ordens_compra oc\nJ oc JOIN public.orcamentos o ON o.id = oc.orcamento_id JOIN legacy_marketplace_budgets lb ON lb.id = o.id LEFT JOIN publ"
+    },
+    {
+      "file": "supabase\\migrations\\20260910180000_marketplace_acid_concurrency_remediation.sql",
+      "snippet": "FROM public.ordens_compra\n     WHERE id = v_item_oc_id; END IF; ELSIF jsonb_typeof(v_elem_json) = 'string' THEN v_item_oc_id := (v_e"
+    },
+    {
+      "file": "supabase\\migrations\\20260910180000_marketplace_acid_concurrency_remediation.sql",
+      "snippet": "FROM public.ordens_compra\n     WHERE id = v_item_oc_id; END IF; -- Re-fetch variant parent product if produto_id was not explicitly supplied"
+    }
+  ],
+  "carteira_lancamentos": [
+    {
+      "file": "src\\components\\client\\ClientAffiliatePanel.tsx",
+      "snippet": "table: 'carteira_lancamentos', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) }, "
+    },
+    {
+      "file": "src\\components\\client\\ClientFinanceiro.tsx",
+      "snippet": "table: 'carteira_lancamentos', filter: clientId ? `cliente_id=eq.${clientId}` : undefined, onChange: fetchSaldo"
+    },
+    {
+      "file": "src\\utils\\referral.ts",
+      "snippet": ".from('carteira_lancamentos').insert([{ cliente_id: indicator.id, valor: bonusCarteira, tipo: 'credito', descricao: `Bônus por indicação concluída: ${"
+    },
+    {
+      "file": "src\\utils\\referral.ts",
+      "snippet": ".from('carteira_lancamentos').delete().eq('id', lancData[0].id); } await supabase.from('clientes').update({ saldo_carteira: Number(indicator.saldo_car"
+    },
+    {
+      "file": "src\\validation\\step5_reports_consolidation.ts",
+      "snippet": ".from('carteira_lancamentos') .select('*') .eq('cliente_id', indicadorId) .order('data_lancamento', { ascending: false }); if (errLanc) throw errLanc;"
+    },
+    {
+      "file": "supabase\\migrations\\20260714056300_secure_remaining_client_financial_actions.sql",
+      "snippet": "FROM public.carteira_lancament WHERE cliente_id = v_client.id AND descricao = 'Bônus de Boas-vindas' ) INTO v_existing; IF v_existing THEN UPDATE publ"
+    }
+  ],
+  "parceiros_resgates": [
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\FornecedoresSection.tsx",
+      "snippet": "table: 'parceiros_resgates', onChange: () => { if (selectedPartner?.id) void loadRedemptions(selectedPartner.id"
+    },
+    {
+      "file": "src\\features\\partners\\service.ts",
+      "snippet": ".from('parceiros_resgates'); if (typeof fromObj?.select === 'function') { const { data: currentResgate } = await fromObj .select('parceiro_id') .eq('i"
+    },
+    {
+      "file": "src\\features\\partners\\service.ts",
+      "snippet": ".from('parceiros_resgates') .select('id') .eq('parceiro_id', currentResgate.parceiro_id) .neq('id', payload.resgateId) .neq('status', 'recusado'); if "
+    },
+    {
+      "file": "src\\features\\partners\\service.ts",
+      "snippet": ".from('parceiros_resgates') .select('parceiro_id') .eq('id', payload.resgateId) .maybeSingle(); if (resgData?.parceiro_id) { const { data: parcData } "
+    },
+    {
+      "file": "src\\features\\partners\\service.ts",
+      "snippet": ".from('parceiros_resgates') .select('*') .order('created_at', { ascending: false }); if (partnerId) { query = query.eq('parceiro_id', partnerId); } co"
+    },
+    {
+      "file": "src\\features\\partners\\service.ts",
+      "snippet": ".from('parceiros_resgates') .select('id') .eq('parceiro_id', parceiroId) .neq('status', 'recusado'); // Only count non-rejected as duplicates if (emai"
+    },
+    {
+      "file": "supabase\\migrations\\20260826160000_admin_list_partner_redemptions_rpc.sql",
+      "snippet": "FROM public.parceiros_resgates r JOIN public.parceiros p ON p.id = r.parceiro_id LEFT JOIN public.clientes c ON ( c.id = r.cliente_id OR (c.telefone I"
+    },
+    {
+      "file": "supabase\\migrations\\20260826160000_admin_list_partner_redemptions_rpc.sql",
+      "snippet": "UPDATE public.parceiros_resgat SET link_ativacao = v_clean_link, status = 'concluido', data_ativacao = now() WHERE id = p_resgate_id RETURNING * INTO "
+    },
+    {
+      "file": "supabase\\migrations\\20260826161500_partner_redemption_protocol.sql",
+      "snippet": "UPDATE public.parceiros_resgat SET codigo_gerado = 'PROT-RES-' || to_char(created_at, 'YYYY') || '-' || upper(substr(id::text, 1, 6)) WHERE codigo_ger"
+    },
+    {
+      "file": "supabase\\migrations\\20260826220000_production_remediation_consolidated.sql",
+      "snippet": "UPDATE public.parceiros_resgat SET link_ativacao = v_clean_link, status = 'concluido', data_ativacao = now() WHERE id = p_resgate_id RETURNING * INTO "
+    },
+    {
+      "file": "supabase\\migrations\\20260827180000_public_protocol_consultation.sql",
+      "snippet": "FROM parceiros_resgates\n  WHER WHERE upper(trim(codigo_gerado)) = upper(trim(p_codigo)) LIMIT 1; IF NOT FOUND THEN RETURN jsonb_build_object( 'success"
+    },
+    {
+      "file": "supabase\\migrations\\20260828170000_partner_redemption_appeals.sql",
+      "snippet": "FROM public.parceiros_resgates ON CONFLICT (resgate_id) DO NOTHING; INSERT INTO public.parceiros_resgates_eventos( resgate_id, tipo, titulo, descricao"
+    },
+    {
+      "file": "supabase\\migrations\\20260828170000_partner_redemption_appeals.sql",
+      "snippet": "FROM public.parceiros_resgates r ON CONFLICT (idempotency_key) DO NOTHING; INSERT INTO public.parceiros_resgates_eventos( resgate_id, tipo, titulo, de"
+    },
+    {
+      "file": "supabase\\migrations\\20260828170000_partner_redemption_appeals.sql",
+      "snippet": "FROM public.parceiros_resgates r WHERE r.status <> 'pendente' ON CONFLICT (idempotency_key) DO NOTHING; CREATE OR REPLACE FUNCTION public.gsa_begin_pa"
+    },
+    {
+      "file": "supabase\\migrations\\20260828170000_partner_redemption_appeals.sql",
+      "snippet": "FROM public.parceiros_resgates WHERE upper(trim(codigo_gerado)) = upper(trim(COALESCE(p_codigo, ''))) FOR UPDATE; IF NOT FOUND OR v_resgate.status <> "
+    },
+    {
+      "file": "supabase\\migrations\\20260828170000_partner_redemption_appeals.sql",
+      "snippet": "FROM public.parceiros_resgates WHERE id = v_challenge.resgate_id FOR UPDATE; IF NOT FOUND OR v_resgate.status <> 'recusado' THEN RETURN jsonb_build_ob"
+    },
+    {
+      "file": "supabase\\migrations\\20260828170000_partner_redemption_appeals.sql",
+      "snippet": "FROM public.parceiros_resgates WHERE id = v_recurso.resgate_id FOR UPDATE; BEGIN v_actor_id := NULLIF(COALESCE(v_context ->> 'ator_id', v_context ->> "
+    },
+    {
+      "file": "supabase\\migrations\\20260828170000_partner_redemption_appeals.sql",
+      "snippet": "UPDATE public.parceiros_resgat SET status = 'pendente', alerta_duplicidade = false, updated_at = now() WHERE id = v_resgate.id; INSERT INTO p"
+    },
+    {
+      "file": "supabase\\migrations\\20260828170000_partner_redemption_appeals.sql",
+      "snippet": "UPDATE public.parceiros_resgat SET updated_at = now() WHERE id = v_resgate.id; INSERT INTO public.parceiros_resgates_eventos( resgate_id, recurso_id, "
+    },
+    {
+      "file": "supabase\\migrations\\20260828170000_partner_redemption_appeals.sql",
+      "snippet": "FROM public.parceiros_resgates WHERE id = p_resgate_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Solicitação não encontrada.' USING ERRCODE = 'P0"
+    },
+    {
+      "file": "supabase\\migrations\\20260828170000_partner_redemption_appeals.sql",
+      "snippet": "FROM public.parceiros_resgates WHERE upper(trim(codigo_gerado)) = upper(trim(p_codigo)) LIMIT 1; IF NOT FOUND THEN RETURN jsonb_build_object('success'"
+    },
+    {
+      "file": "supabase\\migrations\\20260828170000_partner_redemption_appeals.sql",
+      "snippet": "FROM public.parceiros_resgates r JOIN public.parceiros p ON p.id = r.parceiro_id LEFT JOIN public.parceiros_resgates_recursos a ON a.resgate_id = r.id"
+    },
+    {
+      "file": "supabase\\migrations\\20260828170000_partner_redemption_appeals.sql",
+      "snippet": "UPDATE public.parceiros_resgat SET link_ativacao = v_clean_link, status = 'concluido', data_ativacao = now(), updated_at = now() WHERE id = p_res"
+    },
+    {
+      "file": "supabase\\migrations\\20260828212500_partner_appeal_admin_notification.sql",
+      "snippet": "FROM public.parceiros_resgates WHERE id = NEW.resgate_id; INSERT INTO public.notificacoes( titulo, mensagem, modulo, tab, item_id, tipo, destinata"
+    },
+    {
+      "file": "supabase\\migrations\\20260828212500_partner_appeal_admin_notification.sql",
+      "snippet": "JOIN public.parceiros_resgates r ON r.id = a.resgate_id WHERE NOT EXISTS ( SELECT 1 FROM public.notificacoes n WHERE n.acao_origem = 'recurso_parceiro"
+    },
+    {
+      "file": "supabase\\migrations\\20260828235500_partner_redemption_duplicate_guard.sql",
+      "snippet": "FROM public.parceiros_resgates r WHERE r.parceiro_id = v_partner.id AND r.status <> 'recusado' AND ( (p_cliente_id IS NOT NULL AND r.cliente_id = p_cl"
+    },
+    {
+      "file": "supabase\\migrations\\20260831143000_admin_cancel_delete_partner_redemptions.sql",
+      "snippet": "FROM public.parceiros_resgates WHERE id=p_resgate_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Resgate não encontrado.' USING ERRCODE='P0002'; EN"
+    },
+    {
+      "file": "supabase\\migrations\\20260831143000_admin_cancel_delete_partner_redemptions.sql",
+      "snippet": "FROM public.parceiros_resgates WHERE id=p_resgate_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Resgate não encontrado.' USING ERRCODE='P0002'; EN"
+    },
+    {
+      "file": "supabase\\migrations\\20260831143000_admin_cancel_delete_partner_redemptions.sql",
+      "snippet": "DELETE FROM public.parceiros_r WHERE id=v_resgate.id; RETURN jsonb_build_object('success',true,'deleted_id',v_resgate.id,'protocol',v_expected); END; "
+    },
+    {
+      "file": "supabase\\migrations\\20260831143000_fix_partner_bot_duplicate_lookup.sql",
+      "snippet": "FROM public.parceiros_resgates r CROSS JOIN input i WHERE r.parceiro_id = p_parceiro_id AND r.status <> 'recusado' AND ( (i.email_norm <> '' AND lower"
+    }
+  ],
+  "produto_variantes": [
+    {
+      "file": "src\\components\\admin\\ProdutosModule.tsx",
+      "snippet": "table: 'produto_variantes', onChange: fetchProdutos, debounceMs: 300 }, { table: 'produto_variacao_grupos', onChange: fet"
+    },
+    {
+      "file": "src\\components\\client\\store\\CheckoutPage.tsx",
+      "snippet": ".from('produto_variantes') .select('id, produto_id, valor, controle_estoque, estoque_disponivel, ativo') .in('id', variantIds) : Promise.resolve({ dat"
+    },
+    {
+      "file": "src\\lib\\productVariations.ts",
+      "snippet": ".from('produto_variantes').select('*').eq('produto_id', productId).eq('ativo', true).order('created_at'), ]); if (groupsError) throw groupsError; if ("
+    },
+    {
+      "file": "src\\lib\\productVariations.ts",
+      "snippet": ".from('produto_variantes').select('*').in('id', uniqueIds); if (error) throw error; return data || []; } export async function fetchAdminProductVariat"
+    },
+    {
+      "file": "supabase\\migrations\\20260716183010_update_checkout_function.sql",
+      "snippet": "FROM public.produto_variantes\n WHERE id = (coalesce(v_item ->> 'variante_id', v_item ->> 'produto_variante_id'))::uuid; IF v_variant_price IS NOT NULL"
+    },
+    {
+      "file": "supabase\\migrations\\20260817120000_product_variations_marketplace.sql",
+      "snippet": "FROM public.produto_variantes  v JOIN public.produtos p ON p.id = v.produto_id WHERE v.id = produto_variante_opcoes.variante_id AND v.ativo AND p.stat"
+    },
+    {
+      "file": "supabase\\migrations\\20260817120000_product_variations_marketplace.sql",
+      "snippet": "DELETE FROM public.produto_var WHERE produto_id = p_produto_id; DELETE FROM public.produto_variacao_grupos WHERE produto_id = p_produto_id; IF v_group"
+    },
+    {
+      "file": "supabase\\migrations\\20260817120000_product_variations_marketplace.sql",
+      "snippet": "UPDATE public.produto_variante SET combinacao = v_combination WHERE id = v_variant_id; END LOOP; UPDATE public.produtos p SET possui_variacoes = true,"
+    },
+    {
+      "file": "supabase\\migrations\\20260817120000_product_variations_marketplace.sql",
+      "snippet": "FROM public.produto_variantes  v WHERE v.produto_id = p.id AND v.ativo AND v.valor IS NOT NULL), p.valor), valor_custo = COALESCE((SELECT min(v.valor_"
+    },
+    {
+      "file": "supabase\\migrations\\20260817120000_product_variations_marketplace.sql",
+      "snippet": "FROM public.produto_variantes  v WHERE v.produto_id = p.id AND v.ativo AND v.controle_estoque) THEN true ELSE p.controle_estoque END, estoque_disponiv"
+    },
+    {
+      "file": "supabase\\migrations\\20260817120000_product_variations_marketplace.sql",
+      "snippet": "FROM public.produto_variantes  v WHERE v.produto_id = p.id AND v.ativo AND v.controle_estoque) THEN (SELECT COALESCE(sum(v.estoque_disponivel), 0) FRO"
+    },
+    {
+      "file": "supabase\\migrations\\20260817120000_product_variations_marketplace.sql",
+      "snippet": "FROM public.produto_variantes  v WHERE v.produto_id = p_produto_id; RETURN jsonb_build_object('grupos', v_groups, 'variantes', v_variants); END; $$; R"
+    },
+    {
+      "file": "supabase\\migrations\\20260817120000_product_variations_marketplace.sql",
+      "snippet": "FROM public.produto_variantes\n WHERE id = v_variant_id AND produto_id = v_product_id AND ativo; IF v_variant.id IS NULL THEN RAISE EXCEPTION 'Variacao"
+    },
+    {
+      "file": "supabase\\migrations\\20260817120000_product_variations_marketplace.sql",
+      "snippet": "FROM public.produto_variantes\n WHERE id = (v_item ->> 'variante_id')::uuid AND produto_id = v_product.id AND ativo FOR UPDATE; IF v_variant.id IS NULL"
+    },
+    {
+      "file": "supabase\\migrations\\20260817120000_product_variations_marketplace.sql",
+      "snippet": "FROM public.produto_variantes\n WHERE id = (v_item ->> 'variante_id')::uuid FOR UPDATE; -- Inclui eventuais unidades-brinde geradas pelo motor de promo"
+    },
+    {
+      "file": "supabase\\migrations\\20260817120000_product_variations_marketplace.sql",
+      "snippet": "UPDATE public.produto_variante SET estoque_disponivel = estoque_disponivel - v_requested WHERE id = v_variant.id; END IF; END LOOP; RETURN v_result; E"
+    },
+    {
+      "file": "supabase\\migrations\\20260817190000_shopee_hybrid_fulfillment.sql",
+      "snippet": "JOIN public.produto_variantes  pv ON pv.id = oc.produto_variante_id WHERE oc.orcamento_id = p_orcamento_id AND pfc.fornecimento_externo_ativo AND pfc."
+    },
+    {
+      "file": "supabase\\migrations\\20260910180000_marketplace_acid_concurrency_remediation.sql",
+      "snippet": "FROM public.produto_variantes\n WHERE id = v_item_var_id; END IF; IF v_item_var_id IS NOT NULL THEN UPDATE public.produto_variantes"
+    },
+    {
+      "file": "supabase\\migrations\\20260910180000_marketplace_acid_concurrency_remediation.sql",
+      "snippet": "UPDATE public.produto_variante SET estoque_disponivel = estoque_disponivel + v_order_item.quantidade WHERE id = v_order_item.produto_variante_id;"
+    }
+  ],
+  "prestador_faturas": [
+    {
+      "file": "src\\components\\admin\\relatorios\\RelatorioPrestadores.tsx",
+      "snippet": ".from('prestador_faturas').select('id, prestador_id, valor, status, data_pagamento').gte('created_at', inicio).lte('created_at', fim), supabase.from('"
+    }
+  ],
+  "prestador_saques": [
+    {
+      "file": "src\\components\\admin\\FinanceiroModule.tsx",
+      "snippet": "table: 'prestador_saques' }, () => { debouncedFetch(); }) .subscribe(); const channelTransferen"
+    },
+    {
+      "file": "src\\components\\admin\\prestadores\\PrestadoresFinanceiro.tsx",
+      "snippet": ".from('prestador_saques') .select(` *, prestador:prestadores!inner(nome_razao, documento, email, telefone) `); if (search) { query = query.or(`nome_ra"
+    },
+    {
+      "file": "src\\components\\admin\\prestadores\\PrestadoresFinanceiro.tsx",
+      "snippet": "table: 'prestador_saques' }, () => { fetchSaquesRef.current?.(); }) .subscribe(); const prestad"
+    },
+    {
+      "file": "src\\components\\admin\\relatorios\\RelatorioPrestadores.tsx",
+      "snippet": ".from('prestador_saques').select('id, prestador_id, valor, status, created_at').gte('created_at', inicio).lte('created_at', fim), ]); const prest = pr"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PayoutClearanceDrawer.tsx",
+      "snippet": "table: 'prestador_saques', enabled: isOpen }, { table: 'saques', enabled: isOpen } ]); const [isProcessing, setIsP"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+      "snippet": ".from('prestador_saques') .select('id', { count: 'exact', head: true }) .in('status', ['pendente', 'aguardando', 'em_analise']); const { count: csCoun"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\PessoasSuperDomain.tsx",
+      "snippet": "table: 'prestador_saques', onChange: fetchDomainMetrics }, { table: 'saques', onChange: fetchDomainMetrics }, { tab"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx",
+      "snippet": ".from('prestador_saques') .select(` *, prestador:prestadores(nome_razao, documento, email, telefone) `) .order('created_at', { ascending: false }); if"
+    },
+    {
+      "file": "src\\components\\admin\\super-domains\\pessoas\\SaquesRepassesSection.tsx",
+      "snippet": "table: 'prestador_saques', onChange: fetchAllSaques }, { table: 'saques', onChange: fetchAllSaques } ]); // Deep"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorFinanceiro.tsx",
+      "snippet": ".from('prestador_saques') .select('id,valor,valor_liquido,taxa_aplicada,tipo_chave_pix,chave_pix,status,data_vencimento,created_at,motivo_cancelamento"
+    },
+    {
+      "file": "src\\components\\prestador\\PrestadorFinanceiro.tsx",
+      "snippet": "table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, () => void loadData()) .subscribe(); retur"
+    },
+    {
+      "file": "src\\hooks\\useProviderNotifications.tsx",
+      "snippet": "table: 'prestador_saques', filter: `prestador_id=eq.${prestadorId}` }, scheduleRefresh) .on('postgres_changes', { even"
+    },
+    {
+      "file": "supabase\\migrations\\20260714050000_secure_admin_provider_withdrawal_rpc.sql",
+      "snippet": "FROM public.prestador_saques\n  WHERE id = p_saque_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Saque de prestador nao encontrado.'; END IF; IF v_"
+    },
+    {
+      "file": "supabase\\migrations\\20260714050000_secure_admin_provider_withdrawal_rpc.sql",
+      "snippet": "UPDATE public.prestador_saques SET status = 'cancelado', observacao = v_motivo, updated_at = now() WHERE id = p_saque_id; v_descricao := 'Estorno de s"
+    },
+    {
+      "file": "supabase\\migrations\\20260720210000_harden_provider_portal.sql",
+      "snippet": "FROM public.prestador_saques\r\n WHERE prestador_id = v_provider_id AND status = 'pendente'; RETURN jsonb_build_object( 'success', true, 'saldo', v_bala"
+    },
+    {
+      "file": "supabase\\migrations\\20260720210000_harden_provider_portal.sql",
+      "snippet": "FROM public.prestador_saques\r\n WHERE prestador_id = v_provider_id AND status = 'pendente' ) THEN RAISE EXCEPTION 'Já existe um saque pendente'; END IF"
+    },
+    {
+      "file": "supabase\\migrations\\20260720210000_harden_provider_portal.sql",
+      "snippet": "FROM public.prestador_saques\r\n WHERE id = p_saque_id AND prestador_id = v_provider_id FOR UPDATE; IF NOT FOUND THEN RAISE EXCEPTION 'Saque não encontr"
+    },
+    {
+      "file": "supabase\\migrations\\20260720210000_harden_provider_portal.sql",
+      "snippet": "UPDATE public.prestador_saques SET status = 'cancelado', motivo_cancelamento = trim(p_motivo), observacao = trim(p_motivo) WHERE id = p_saque_id; INSE"
+    },
+    {
+      "file": "supabase\\migrations\\20260830123000_provider_registration_otp_and_authorization_hardening.sql",
+      "snippet": "FROM public.prestador_saques W WHERE prestador_id=v_provider_id AND status IN ('pendente','em_analise','em_processamento')) THEN RAISE EXCEPTION 'Já e"
+    }
+  ],
+  "loja_credito_saques": [
+    {
+      "file": "supabase\\migrations\\20260829133000_credit_available_withdrawals.sql",
+      "snippet": "FROM public.loja_credito_saque WHERE id=p_request_id AND cliente_id=v_actor.cliente_id; IF v_existing.id IS NOT NULL THEN RETURN to_jsonb(v_existing)|"
+    },
+    {
+      "file": "supabase\\migrations\\20260829133000_credit_available_withdrawals.sql",
+      "snippet": "FROM public.loja_credito_saque WHERE cliente_id=v_actor.cliente_id AND status IN ('aguardando_documentos','em_analise','analise_reforcada','aprovado')"
+    },
+    {
+      "file": "supabase\\migrations\\20260829133000_credit_available_withdrawals.sql",
+      "snippet": "FROM public.loja_credito_saque WHERE protocolo=v_protocol); END LOOP; PERFORM set_config('gsa.credit_release','on',true); PERFORM set_config('gsa.syst"
+    },
+    {
+      "file": "supabase\\migrations\\20260829133000_credit_available_withdrawals.sql",
+      "snippet": "FROM public.loja_credito_saque WHERE id=p_saque_id AND cliente_id=v_actor.cliente_id FOR UPDATE; IF v_req.id IS NULL THEN RAISE EXCEPTION 'Solicitação"
+    },
+    {
+      "file": "supabase\\migrations\\20260829133000_credit_available_withdrawals.sql",
+      "snippet": "FROM public.loja_credito_saque s WHERE s.cliente_id=v_actor.cliente_id; RETURN v_result; END; $$; REVOKE ALL ON FUNCTION public.gsa_client_credit_with"
+    },
+    {
+      "file": "supabase\\migrations\\20260829133000_credit_available_withdrawals.sql",
+      "snippet": "FROM public.loja_credito_saque WHERE id=p_saque_id AND cliente_id=v_actor.cliente_id FOR UPDATE; IF v_req.id IS NULL THEN RAISE EXCEPTION 'Solicitação"
+    },
+    {
+      "file": "supabase\\migrations\\20260829133000_credit_available_withdrawals.sql",
+      "snippet": "UPDATE public.loja_credito_saq SET status='cancelado_cliente',valor_bloqueado=0,updated_at=now() WHERE id=v_req.id; INSERT INTO public.loja_credito_sa"
+    },
+    {
+      "file": "supabase\\migrations\\20260829133000_credit_available_withdrawals.sql",
+      "snippet": "FROM public.loja_credito_saque s JOIN public.clientes c ON c.id=s.cliente_id WHERE p_status IS NULL OR s.status=p_status; RETURN v_result; END; $$;REV"
+    },
+    {
+      "file": "supabase\\migrations\\20260829133000_credit_available_withdrawals.sql",
+      "snippet": "FROM public.loja_credito_saque s JOIN public.clientes c ON c.id=s.cliente_id WHERE s.id=p_saque_id; IF v_data IS NULL THEN RAISE EXCEPTION 'Solicitaçã"
+    },
+    {
+      "file": "supabase\\migrations\\20260829133000_credit_available_withdrawals.sql",
+      "snippet": "FROM public.loja_credito_saque WHERE id=p_saque_id FOR UPDATE; IF v_req.id IS NULL THEN RAISE EXCEPTION 'Solicitação de saque não encontrada.' USING E"
+    },
+    {
+      "file": "supabase\\migrations\\20260829133000_credit_available_withdrawals.sql",
+      "snippet": "FROM public.loja_credito_saque WHERE id=p_saque_id FOR UPDATE; IF v_req.id IS NULL THEN RAISE EXCEPTION 'Solicitação de saque não encontrada.' USING E"
+    }
+  ],
+  "gsa_afiliado_saques": [
+    {
+      "file": "src\\components\\admin\\AffiliateAdminModule.tsx",
+      "snippet": "table: 'gsa_afiliado_saques', onChange: () => void load(true), debounceMs: 500 }, { table: 'gsa_afiliado_links', onChange: "
+    },
+    {
+      "file": "src\\tests\\realtime-hook.test.ts",
+      "snippet": "table: 'gsa_afiliado_saques', expectedFilterKey: 'afiliado_id' }, ]; for (const item of privateTableScopes) { "
+    },
+    {
+      "file": "supabase\\migrations\\20260722233000_complete_affiliate_flow.sql",
+      "snippet": "FROM public.gsa_afiliado_saque s WHERE s.afiliado_id = v_affiliate.id ORDER BY s.solicitado_em DESC LIMIT 200 ) x; END IF; SELECT jsonb_build_obje"
+    },
+    {
+      "file": "supabase\\migrations\\20260722233000_complete_affiliate_flow.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 0 ), 'total_pago', coalesce((SELECT su"
+    },
+    {
+      "file": "supabase\\migrations\\20260722233000_complete_affiliate_flow.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 'saque_minimo', coalesce((SELECT min(p"
+    },
+    {
+      "file": "supabase\\migrations\\20260722233000_complete_affiliate_flow.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 0 ) INTO v_available; IF p_valor > v_a"
+    },
+    {
+      "file": "supabase\\migrations\\20260722233000_complete_affiliate_flow.sql",
+      "snippet": "UPDATE public.gsa_afiliado_saq s SET status = 'cancelado', cancelado_em = now(), updated_at = now() WHERE s.id = p_saque_id AND s.status = 'solicitado"
+    },
+    {
+      "file": "supabase\\migrations\\20260722233000_complete_affiliate_flow.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE status IN ('solicitado','aprovado')) ) INTO v_summary; SELECT coalesce(jsonb_agg(to_jsonb(p) ORDER BY p.nome), '["
+    },
+    {
+      "file": "supabase\\migrations\\20260722233000_complete_affiliate_flow.sql",
+      "snippet": "FROM public.gsa_afiliado_saque s WHERE s.afiliado_id = a.id AND s.status IN ('solicitado','aprovado')), 0), 0 ) AS saldo_disponivel FROM public.gsa_af"
+    },
+    {
+      "file": "supabase\\migrations\\20260722233000_complete_affiliate_flow.sql",
+      "snippet": "FROM public.gsa_afiliado_saque s JOIN public.gsa_afiliados a ON a.id = s.afiliado_id ORDER BY s.solicitado_em DESC LIMIT 500 ) x; RETURN jsonb_build_o"
+    },
+    {
+      "file": "supabase\\migrations\\20260722233000_complete_affiliate_flow.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE id = p_payout_id FOR UPDATE; IF v_payout.id IS NULL THEN RAISE EXCEPTION 'Saque nao encontrado.'; END IF; IF v_ac"
+    },
+    {
+      "file": "supabase\\migrations\\20260722233000_complete_affiliate_flow.sql",
+      "snippet": "UPDATE public.gsa_afiliado_saq SET status = 'aprovado', aprovado_em = now(), notas = nullif(left(trim(coalesce(p_notes, '')), 1000), ''), updated_at ="
+    },
+    {
+      "file": "supabase\\migrations\\20260722233000_complete_affiliate_flow.sql",
+      "snippet": "UPDATE public.gsa_afiliado_saq SET status = 'rejeitado', rejeitado_em = now(), notas = nullif(left(trim(coalesce(p_notes, '')), 1000), ''), updated_at"
+    },
+    {
+      "file": "supabase\\migrations\\20260722233000_complete_affiliate_flow.sql",
+      "snippet": "UPDATE public.gsa_afiliado_saq SET status = 'pago', pago_em = coalesce(p_paid_at, now()), notas = nullif(left(trim(coalesce(p_notes, '')), 1000), ''),"
+    },
+    {
+      "file": "supabase\\migrations\\20260722233100_harden_affiliate_payout_idempotency.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE request_id = p_request_id FOR UPDATE; IF FOUND THEN IF v_payout.afiliado_id <> v_affiliate.id OR v_payout.valor <"
+    },
+    {
+      "file": "supabase\\migrations\\20260722233100_harden_affiliate_payout_idempotency.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado') ), 0), 0 ) INTO v_available; IF v_value > v_"
+    },
+    {
+      "file": "supabase\\migrations\\20260728180000_fix_affiliate_points_redeem_idempotency.sql",
+      "snippet": "FROM public.gsa_afiliado_saque s WHERE s.afiliado_id = v_affiliate.id ORDER BY s.solicitado_em DESC LIMIT 200 ) x; END IF; SELECT jsonb_build_obje"
+    },
+    {
+      "file": "supabase\\migrations\\20260728180000_fix_affiliate_points_redeem_idempotency.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 0 ), 'total_pago', coalesce((SELECT su"
+    },
+    {
+      "file": "supabase\\migrations\\20260728180000_fix_affiliate_points_redeem_idempotency.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 'saque_minimo', coalesce((SELECT min(p"
+    },
+    {
+      "file": "supabase\\migrations\\20260728180000_fix_affiliate_points_redeem_idempotency.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 0 ) INTO v_available; IF p_valor > v_a"
+    },
+    {
+      "file": "supabase\\migrations\\20260728180000_fix_affiliate_points_redeem_idempotency.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE id = p_payout_id FOR UPDATE; IF v_payout.id IS NULL THEN RAISE EXCEPTION 'Saque nao encontrado.'; END IF; IF v_ac"
+    },
+    {
+      "file": "supabase\\migrations\\20260728180000_fix_affiliate_points_redeem_idempotency.sql",
+      "snippet": "UPDATE public.gsa_afiliado_saq SET status = 'aprovado', aprovado_em = now(), notas = nullif(left(trim(coalesce(p_notes, '')), 1000), ''), updated_at ="
+    },
+    {
+      "file": "supabase\\migrations\\20260728180000_fix_affiliate_points_redeem_idempotency.sql",
+      "snippet": "UPDATE public.gsa_afiliado_saq SET status = 'rejeitado', rejeitado_em = now(), notas = nullif(left(trim(coalesce(p_notes, '')), 1000), ''), updated_at"
+    },
+    {
+      "file": "supabase\\migrations\\20260728180000_fix_affiliate_points_redeem_idempotency.sql",
+      "snippet": "UPDATE public.gsa_afiliado_saq SET status = 'pago', pago_em = coalesce(p_paid_at, now()), notas = nullif(left(trim(coalesce(p_notes, '')), 1000), ''),"
+    },
+    {
+      "file": "supabase\\migrations\\20260728190000_manage_saque_minimo_in_saques_tab.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE status IN ('solicitado','aprovado')), 'saque_minimo', coalesce((SELECT value::numeric FROM public.system_settings"
+    },
+    {
+      "file": "supabase\\migrations\\20260728190000_manage_saque_minimo_in_saques_tab.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = a.id AND status IN ('solicitado','aprovado')), 0), 0 ) AS saldo_disponivel, c.nome AS cliente_nome_"
+    },
+    {
+      "file": "supabase\\migrations\\20260728190000_manage_saque_minimo_in_saques_tab.sql",
+      "snippet": "FROM public.gsa_afiliado_saque s JOIN public.gsa_afiliados a ON a.id = s.afiliado_id LEFT JOIN public.clientes c ON c.id = a.cliente_id ) x; RETURN js"
+    },
+    {
+      "file": "supabase\\migrations\\20260728190000_manage_saque_minimo_in_saques_tab.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 0 ) INTO v_available; IF p_valor > v_a"
+    },
+    {
+      "file": "supabase\\migrations\\20260729092000_fix_affiliate_activation_status.sql",
+      "snippet": "FROM public.gsa_afiliado_saque s WHERE s.afiliado_id = v_affiliate.id ORDER BY s.solicitado_em DESC LIMIT 200 ) x; END IF; SELECT jsonb_build_obje"
+    },
+    {
+      "file": "supabase\\migrations\\20260729092000_fix_affiliate_activation_status.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 0 ), 'total_pago', coalesce((SELECT su"
+    },
+    {
+      "file": "supabase\\migrations\\20260729092000_fix_affiliate_activation_status.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 'saque_minimo', coalesce((SELECT min(p"
+    },
+    {
+      "file": "supabase\\migrations\\20260729102000_fix_affiliate_orcamento_commissions_and_notifications.sql",
+      "snippet": "FROM public.gsa_afiliado_saque s WHERE s.afiliado_id = v_affiliate.id ORDER BY s.solicitado_em DESC LIMIT 200 ) x; END IF; SELECT jsonb_build_obje"
+    },
+    {
+      "file": "supabase\\migrations\\20260729102000_fix_affiliate_orcamento_commissions_and_notifications.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 0 ), 'total_pago', coalesce((SELECT su"
+    },
+    {
+      "file": "supabase\\migrations\\20260729102000_fix_affiliate_orcamento_commissions_and_notifications.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 'saque_minimo', coalesce((SELECT min(p"
+    },
+    {
+      "file": "supabase\\migrations\\20260729110000_fix_affiliate_all_issues.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE request_id = p_request_id FOR UPDATE; IF FOUND THEN IF v_payout.afiliado_id <> v_affiliate.id OR v_payout.valor <"
+    },
+    {
+      "file": "supabase\\migrations\\20260729110000_fix_affiliate_all_issues.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 0 ) INTO v_available; IF v_value > v_a"
+    },
+    {
+      "file": "supabase\\migrations\\20260729110000_fix_affiliate_all_issues.sql",
+      "snippet": "FROM public.gsa_afiliado_saque s WHERE s.afiliado_id = v_affiliate.id ORDER BY s.solicitado_em DESC LIMIT 200 ) x; -- Extrato de eventos de pontos"
+    },
+    {
+      "file": "supabase\\migrations\\20260729110000_fix_affiliate_all_issues.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 0 ), 'total_pago', coalesce((SELECT su"
+    },
+    {
+      "file": "supabase\\migrations\\20260729110000_fix_affiliate_all_issues.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 'saque_minimo', coalesce((SELECT min(p"
+    },
+    {
+      "file": "supabase\\migrations\\20260729110000_fix_affiliate_all_issues.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE status IN ('solicitado','aprovado')), 'saque_minimo', coalesce((SELECT min(saque_minimo) FROM public.gsa_afiliado"
+    },
+    {
+      "file": "supabase\\migrations\\20260729110000_fix_affiliate_all_issues.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = a.id AND status IN ('solicitado','aprovado')), 0), 0 ) AS saldo_disponivel FROM public.gsa_afiliado"
+    },
+    {
+      "file": "supabase\\migrations\\20260729110000_fix_affiliate_all_issues.sql",
+      "snippet": "FROM public.gsa_afiliado_saque s JOIN public.gsa_afiliados a ON a.id = s.afiliado_id LEFT JOIN public.clientes c ON c.id = a.cliente_id ) x; RETURN js"
+    },
+    {
+      "file": "supabase\\migrations\\20260803110000_create_delete_client_cascade_rpc.sql",
+      "snippet": "DELETE FROM public.gsa_afiliad WHERE afiliado_id = ANY(v_affiliate_ids); END IF; IF to_regclass('public.gsa_afiliado_comissoes') IS NOT NULL AND v_aff"
+    },
+    {
+      "file": "supabase\\migrations\\20260828214500_affiliate_balance_transfers.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = p_afiliado_id AND status IN ('solicitado','aprovado')), 0), 0 )::numeric(14,2); $$; CREATE OR REPLA"
+    },
+    {
+      "file": "supabase\\migrations\\20260830010000_harden_affiliate_program_end_to_end.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = p_afiliado_id AND status IN ('solicitado','aprovado') ), 0), 0 )::numeric(14,2); $$; -- Toda leitur"
+    },
+    {
+      "file": "supabase\\migrations\\20260830010000_harden_affiliate_program_end_to_end.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE id = p_payout_id FOR UPDATE; IF v_payout.id IS NULL THEN RAISE EXCEPTION 'Saque não encontrado.'; END IF; SELECT "
+    },
+    {
+      "file": "supabase\\migrations\\20260830010000_harden_affiliate_program_end_to_end.sql",
+      "snippet": "UPDATE public.gsa_afiliado_saq SET status='aprovado', aprovado_em=coalesce(p_paid_at,now()), notas=v_reference, updated_at=now() WHERE id=v_payout.id;"
+    },
+    {
+      "file": "supabase\\migrations\\20260830010000_harden_affiliate_program_end_to_end.sql",
+      "snippet": "UPDATE public.gsa_afiliado_saq SET status='rejeitado', rejeitado_em=coalesce(p_paid_at,now()), notas=v_reference, updated_at=now() WHERE id=v_payout.i"
+    },
+    {
+      "file": "supabase\\migrations\\20260830010000_harden_affiliate_program_end_to_end.sql",
+      "snippet": "UPDATE public.gsa_afiliado_saq SET status='pago',pago_em=coalesce(p_paid_at,now()),notas=v_reference,updated_at=now() WHERE id=v_payout.id; INSERT INT"
+    },
+    {
+      "file": "supabase\\migrations\\20260830010000_harden_affiliate_program_end_to_end.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE id=v_payout.id)); END; $$; REVOKE ALL ON FUNCTION public.gsa_admin_decide_affiliate_payout(uuid,text,uuid,text,te"
+    },
+    {
+      "file": "supabase\\migrations\\20260910233000_client_panel_rls_hardening.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE request_id = p_request_id FOR UPDATE; IF FOUND THEN IF v_payout.afiliado_id <> v_affiliate.id OR v_payout.valor <"
+    },
+    {
+      "file": "supabase\\migrations\\20260910233000_client_panel_rls_hardening.sql",
+      "snippet": "FROM public.gsa_afiliado_saque WHERE afiliado_id = v_affiliate.id AND status IN ('solicitado','aprovado')), 0), 0 ) INTO v_comm_available; v_total_ava"
+    }
+  ]
+}

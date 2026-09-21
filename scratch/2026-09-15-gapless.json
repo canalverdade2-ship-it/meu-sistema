@@ -1,0 +1,804 @@
+{
+  "channel": "GSA TV",
+  "date": "2026-09-15",
+  "program": [
+    {
+      "in": 0,
+      "out": 1800,
+      "duration": 1800,
+      "source": "/media/1/program-masters/gsa-historias-da-biblia-o-filho-prodigo-30m.mp4",
+      "title": "GSA Em F\u00c3\u00a9 \u00e2\u20ac\u201d Edi\u00c3\u00a7\u00c3\u00a3o Sagrada de Abertura (30m)"
+    },
+    {
+      "in": 0,
+      "out": 137,
+      "duration": 137,
+      "source": "/media/1/program-masters/gsa-agro-2026-09-15-818ad89d-a679-431d-8962-4e16fb769899-master-1080p.mp4",
+      "title": "GSA Agro \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 164,
+      "duration": 164,
+      "source": "/media/1/program-masters/gsa-tempo-2026-09-15-86ea4013-6e11-46be-a23d-2d1866ba1efe-master-1080p.mp4",
+      "title": "GSA Tempo \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 64,
+      "duration": 64,
+      "source": "/media/1/program-masters/gsa-manha-news-2026-09-15-f7d13b46-f585-4fbd-8dec-7f9ba2fcafdb-master-1080p.mp4",
+      "title": "GSA Manh\u00c3\u00a3 News \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 580,
+      "duration": 580,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-bem-viver-532ddef0-d5c1-40f3-bcdc-4423d0c2073b.mp4",
+      "title": "GSA Bem Viver \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 550,
+      "duration": 550,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-tech-905688bd-435c-4be6-961d-6a5fcabb8eac.mp4",
+      "title": "GSA Tech \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 1800,
+      "duration": 1800,
+      "source": "/media/1/program-masters/gsa-historias-da-biblia-o-filho-prodigo-30m.mp4",
+      "title": "GSA Hist\u00c3\u00b3rias da B\u00c3\u00adblia \u00e2\u20ac\u201d Master 1080p"
+    },
+    {
+      "in": 0,
+      "out": 256,
+      "duration": 256,
+      "source": "/media/1/program-masters/gsa-cidadania-2026-09-15-c4c7db99-2f7a-4500-adb2-60b8bd977a23-master-1080p.mp4",
+      "title": "GSA Cidadania \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 268,
+      "duration": 268,
+      "source": "/media/1/program-masters/gsa-business-2026-09-15-cd0cbcf2-a461-4dd6-94f5-8b06b99cd1c5-master-1080p.mp4",
+      "title": "GSA Business \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 517,
+      "duration": 517,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-sabor-7cb750de-ffda-485a-bdb1-3a2c9774e898.mp4",
+      "title": "GSA Sabor \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 232,
+      "duration": 232,
+      "source": "/media/1/program-masters/gsa-meio-dia-news-2026-09-15-d5f1fc24-445c-499f-82bb-0014124f6547-master-1080p.mp4",
+      "title": "GSA Meio Dia News \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 261,
+      "duration": 261,
+      "source": "/media/1/program-masters/gsa-mercado-2026-09-15-c247dd32-21b8-4ede-92bd-a62ae9c96898-master-1080p.mp4",
+      "title": "GSA Mercado \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 1508,
+      "duration": 1508,
+      "source": "/media/1/entertainment/desenhos/popeye-ali-baba-1937-1080p.mp4",
+      "title": "GSA Desenhos \u00e2\u20ac\u201d O Melhor da Anima\u00c3\u00a7\u00c3\u00a3o Cl\u00c3\u00a1ssica de Dom\u00c3\u00adnio P\u00c3\u00bablico"
+    },
+    {
+      "in": 0,
+      "out": 185,
+      "duration": 185,
+      "source": "/media/1/program-masters/gsa-planeta-terra-2026-09-15-12516662-54a9-4a4e-a213-9ab38e8496b0-master-1080p.mp4",
+      "title": "GSA Planeta Terra \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 511,
+      "duration": 511,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-destinos-254039dd-eef8-4c9e-bdca-8b2e56b20453.mp4",
+      "title": "GSA Destinos \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 538,
+      "duration": 538,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-mundo-5638ea2d-5327-49d0-9036-fc0466e7d9ef.mp4",
+      "title": "GSA Mundo \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 482,
+      "duration": 482,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-hora-da-palavra-67d5fd01-cb53-4baa-b82a-ca3e91017932.mp4",
+      "title": "GSA Hora da Palavra \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 484,
+      "duration": 484,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-motor-5979df92-e5f3-436b-83a6-8a5cf0656b8b.mp4",
+      "title": "GSA Motor \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 460,
+      "duration": 460,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-ta-na-rede-0f2f9292-a83b-462b-aab7-b09cbff27b8a.mp4",
+      "title": "GSA T\u00c3\u00a1 na Rede \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 548,
+      "duration": 548,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-esportes-6c377715-f532-4691-a846-75d8bc685679.mp4",
+      "title": "GSA Esportes \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 132,
+      "duration": 132,
+      "source": "/media/1/program-masters/gsa-news-noite-2026-09-15-09149d77-f6b8-46a1-a438-44899ffe1138-master-1080p.mp4",
+      "title": "GSA News Noite \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 525,
+      "duration": 525,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-cinema-64a32b69-696e-4e84-a316-c493fc4bceac.mp4",
+      "title": "GSA Cinema \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 4646,
+      "duration": 4646,
+      "source": "/media/1/entertainment/pipoca/sessao-pipoca-romance-misterio-1080p.mp4",
+      "title": "GSA Sess\u00c3\u00a3o Pipoca \u00e2\u20ac\u201d Cinema Nostalgia e Aventura"
+    },
+    {
+      "in": 0,
+      "out": 545,
+      "duration": 545,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-misterios-493559c1-2408-43fc-84a4-974066b2e081.mp4",
+      "title": "GSA Mist\u00c3\u00a9rios \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 1800,
+      "duration": 1800,
+      "source": "/media/1/entertainment/cinema/doa-1949-classic-noir-1080p.mp4",
+      "title": "GSA Music \u00e2\u20ac\u201d Edi\u00c3\u00a7\u00c3\u00a3o Noturna Especial (30m)"
+    },
+    {
+      "in": 0,
+      "out": 1120,
+      "duration": 1120,
+      "source": "/media/1/production/autonomous/2026-09-14/pilot-reflection-02/script.mp4",
+      "title": "GSA Em F? \u00e2\u20ac\u201d 2026-09-14"
+    },
+    {
+      "in": 0,
+      "out": 1800,
+      "duration": 1800,
+      "source": "/media/1/program-masters/gsa-historias-da-biblia-o-filho-prodigo-30m.mp4",
+      "title": "GSA Em F\u00c3\u00a9 \u00e2\u20ac\u201d Edi\u00c3\u00a7\u00c3\u00a3o Sagrada de Abertura (30m)"
+    },
+    {
+      "in": 0,
+      "out": 137,
+      "duration": 137,
+      "source": "/media/1/program-masters/gsa-agro-2026-09-15-818ad89d-a679-431d-8962-4e16fb769899-master-1080p.mp4",
+      "title": "GSA Agro \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 164,
+      "duration": 164,
+      "source": "/media/1/program-masters/gsa-tempo-2026-09-15-86ea4013-6e11-46be-a23d-2d1866ba1efe-master-1080p.mp4",
+      "title": "GSA Tempo \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 64,
+      "duration": 64,
+      "source": "/media/1/program-masters/gsa-manha-news-2026-09-15-f7d13b46-f585-4fbd-8dec-7f9ba2fcafdb-master-1080p.mp4",
+      "title": "GSA Manh\u00c3\u00a3 News \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 580,
+      "duration": 580,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-bem-viver-532ddef0-d5c1-40f3-bcdc-4423d0c2073b.mp4",
+      "title": "GSA Bem Viver \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 550,
+      "duration": 550,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-tech-905688bd-435c-4be6-961d-6a5fcabb8eac.mp4",
+      "title": "GSA Tech \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 1800,
+      "duration": 1800,
+      "source": "/media/1/program-masters/gsa-historias-da-biblia-o-filho-prodigo-30m.mp4",
+      "title": "GSA Hist\u00c3\u00b3rias da B\u00c3\u00adblia \u00e2\u20ac\u201d Master 1080p"
+    },
+    {
+      "in": 0,
+      "out": 256,
+      "duration": 256,
+      "source": "/media/1/program-masters/gsa-cidadania-2026-09-15-c4c7db99-2f7a-4500-adb2-60b8bd977a23-master-1080p.mp4",
+      "title": "GSA Cidadania \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 268,
+      "duration": 268,
+      "source": "/media/1/program-masters/gsa-business-2026-09-15-cd0cbcf2-a461-4dd6-94f5-8b06b99cd1c5-master-1080p.mp4",
+      "title": "GSA Business \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 517,
+      "duration": 517,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-sabor-7cb750de-ffda-485a-bdb1-3a2c9774e898.mp4",
+      "title": "GSA Sabor \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 232,
+      "duration": 232,
+      "source": "/media/1/program-masters/gsa-meio-dia-news-2026-09-15-d5f1fc24-445c-499f-82bb-0014124f6547-master-1080p.mp4",
+      "title": "GSA Meio Dia News \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 261,
+      "duration": 261,
+      "source": "/media/1/program-masters/gsa-mercado-2026-09-15-c247dd32-21b8-4ede-92bd-a62ae9c96898-master-1080p.mp4",
+      "title": "GSA Mercado \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 1508,
+      "duration": 1508,
+      "source": "/media/1/entertainment/desenhos/popeye-ali-baba-1937-1080p.mp4",
+      "title": "GSA Desenhos \u00e2\u20ac\u201d O Melhor da Anima\u00c3\u00a7\u00c3\u00a3o Cl\u00c3\u00a1ssica de Dom\u00c3\u00adnio P\u00c3\u00bablico"
+    },
+    {
+      "in": 0,
+      "out": 185,
+      "duration": 185,
+      "source": "/media/1/program-masters/gsa-planeta-terra-2026-09-15-12516662-54a9-4a4e-a213-9ab38e8496b0-master-1080p.mp4",
+      "title": "GSA Planeta Terra \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 511,
+      "duration": 511,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-destinos-254039dd-eef8-4c9e-bdca-8b2e56b20453.mp4",
+      "title": "GSA Destinos \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 538,
+      "duration": 538,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-mundo-5638ea2d-5327-49d0-9036-fc0466e7d9ef.mp4",
+      "title": "GSA Mundo \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 482,
+      "duration": 482,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-hora-da-palavra-67d5fd01-cb53-4baa-b82a-ca3e91017932.mp4",
+      "title": "GSA Hora da Palavra \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 484,
+      "duration": 484,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-motor-5979df92-e5f3-436b-83a6-8a5cf0656b8b.mp4",
+      "title": "GSA Motor \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 460,
+      "duration": 460,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-ta-na-rede-0f2f9292-a83b-462b-aab7-b09cbff27b8a.mp4",
+      "title": "GSA T\u00c3\u00a1 na Rede \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 548,
+      "duration": 548,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-esportes-6c377715-f532-4691-a846-75d8bc685679.mp4",
+      "title": "GSA Esportes \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 132,
+      "duration": 132,
+      "source": "/media/1/program-masters/gsa-news-noite-2026-09-15-09149d77-f6b8-46a1-a438-44899ffe1138-master-1080p.mp4",
+      "title": "GSA News Noite \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 525,
+      "duration": 525,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-cinema-64a32b69-696e-4e84-a316-c493fc4bceac.mp4",
+      "title": "GSA Cinema \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 4646,
+      "duration": 4646,
+      "source": "/media/1/entertainment/pipoca/sessao-pipoca-romance-misterio-1080p.mp4",
+      "title": "GSA Sess\u00c3\u00a3o Pipoca \u00e2\u20ac\u201d Cinema Nostalgia e Aventura"
+    },
+    {
+      "in": 0,
+      "out": 545,
+      "duration": 545,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-misterios-493559c1-2408-43fc-84a4-974066b2e081.mp4",
+      "title": "GSA Mist\u00c3\u00a9rios \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 1800,
+      "duration": 1800,
+      "source": "/media/1/entertainment/cinema/doa-1949-classic-noir-1080p.mp4",
+      "title": "GSA Music \u00e2\u20ac\u201d Edi\u00c3\u00a7\u00c3\u00a3o Noturna Especial (30m)"
+    },
+    {
+      "in": 0,
+      "out": 1120,
+      "duration": 1120,
+      "source": "/media/1/production/autonomous/2026-09-14/pilot-reflection-02/script.mp4",
+      "title": "GSA Em F? \u00e2\u20ac\u201d 2026-09-14"
+    },
+    {
+      "in": 0,
+      "out": 1800,
+      "duration": 1800,
+      "source": "/media/1/program-masters/gsa-historias-da-biblia-o-filho-prodigo-30m.mp4",
+      "title": "GSA Em F\u00c3\u00a9 \u00e2\u20ac\u201d Edi\u00c3\u00a7\u00c3\u00a3o Sagrada de Abertura (30m)"
+    },
+    {
+      "in": 0,
+      "out": 137,
+      "duration": 137,
+      "source": "/media/1/program-masters/gsa-agro-2026-09-15-818ad89d-a679-431d-8962-4e16fb769899-master-1080p.mp4",
+      "title": "GSA Agro \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 164,
+      "duration": 164,
+      "source": "/media/1/program-masters/gsa-tempo-2026-09-15-86ea4013-6e11-46be-a23d-2d1866ba1efe-master-1080p.mp4",
+      "title": "GSA Tempo \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 64,
+      "duration": 64,
+      "source": "/media/1/program-masters/gsa-manha-news-2026-09-15-f7d13b46-f585-4fbd-8dec-7f9ba2fcafdb-master-1080p.mp4",
+      "title": "GSA Manh\u00c3\u00a3 News \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 580,
+      "duration": 580,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-bem-viver-532ddef0-d5c1-40f3-bcdc-4423d0c2073b.mp4",
+      "title": "GSA Bem Viver \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 550,
+      "duration": 550,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-tech-905688bd-435c-4be6-961d-6a5fcabb8eac.mp4",
+      "title": "GSA Tech \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 1800,
+      "duration": 1800,
+      "source": "/media/1/program-masters/gsa-historias-da-biblia-o-filho-prodigo-30m.mp4",
+      "title": "GSA Hist\u00c3\u00b3rias da B\u00c3\u00adblia \u00e2\u20ac\u201d Master 1080p"
+    },
+    {
+      "in": 0,
+      "out": 256,
+      "duration": 256,
+      "source": "/media/1/program-masters/gsa-cidadania-2026-09-15-c4c7db99-2f7a-4500-adb2-60b8bd977a23-master-1080p.mp4",
+      "title": "GSA Cidadania \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 268,
+      "duration": 268,
+      "source": "/media/1/program-masters/gsa-business-2026-09-15-cd0cbcf2-a461-4dd6-94f5-8b06b99cd1c5-master-1080p.mp4",
+      "title": "GSA Business \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 517,
+      "duration": 517,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-sabor-7cb750de-ffda-485a-bdb1-3a2c9774e898.mp4",
+      "title": "GSA Sabor \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 232,
+      "duration": 232,
+      "source": "/media/1/program-masters/gsa-meio-dia-news-2026-09-15-d5f1fc24-445c-499f-82bb-0014124f6547-master-1080p.mp4",
+      "title": "GSA Meio Dia News \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 261,
+      "duration": 261,
+      "source": "/media/1/program-masters/gsa-mercado-2026-09-15-c247dd32-21b8-4ede-92bd-a62ae9c96898-master-1080p.mp4",
+      "title": "GSA Mercado \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 1508,
+      "duration": 1508,
+      "source": "/media/1/entertainment/desenhos/popeye-ali-baba-1937-1080p.mp4",
+      "title": "GSA Desenhos \u00e2\u20ac\u201d O Melhor da Anima\u00c3\u00a7\u00c3\u00a3o Cl\u00c3\u00a1ssica de Dom\u00c3\u00adnio P\u00c3\u00bablico"
+    },
+    {
+      "in": 0,
+      "out": 185,
+      "duration": 185,
+      "source": "/media/1/program-masters/gsa-planeta-terra-2026-09-15-12516662-54a9-4a4e-a213-9ab38e8496b0-master-1080p.mp4",
+      "title": "GSA Planeta Terra \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 511,
+      "duration": 511,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-destinos-254039dd-eef8-4c9e-bdca-8b2e56b20453.mp4",
+      "title": "GSA Destinos \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 538,
+      "duration": 538,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-mundo-5638ea2d-5327-49d0-9036-fc0466e7d9ef.mp4",
+      "title": "GSA Mundo \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 482,
+      "duration": 482,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-hora-da-palavra-67d5fd01-cb53-4baa-b82a-ca3e91017932.mp4",
+      "title": "GSA Hora da Palavra \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 484,
+      "duration": 484,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-motor-5979df92-e5f3-436b-83a6-8a5cf0656b8b.mp4",
+      "title": "GSA Motor \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 460,
+      "duration": 460,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-ta-na-rede-0f2f9292-a83b-462b-aab7-b09cbff27b8a.mp4",
+      "title": "GSA T\u00c3\u00a1 na Rede \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 548,
+      "duration": 548,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-esportes-6c377715-f532-4691-a846-75d8bc685679.mp4",
+      "title": "GSA Esportes \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 132,
+      "duration": 132,
+      "source": "/media/1/program-masters/gsa-news-noite-2026-09-15-09149d77-f6b8-46a1-a438-44899ffe1138-master-1080p.mp4",
+      "title": "GSA News Noite \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 525,
+      "duration": 525,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-cinema-64a32b69-696e-4e84-a316-c493fc4bceac.mp4",
+      "title": "GSA Cinema \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 4646,
+      "duration": 4646,
+      "source": "/media/1/entertainment/pipoca/sessao-pipoca-romance-misterio-1080p.mp4",
+      "title": "GSA Sess\u00c3\u00a3o Pipoca \u00e2\u20ac\u201d Cinema Nostalgia e Aventura"
+    },
+    {
+      "in": 0,
+      "out": 545,
+      "duration": 545,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-misterios-493559c1-2408-43fc-84a4-974066b2e081.mp4",
+      "title": "GSA Mist\u00c3\u00a9rios \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 1800,
+      "duration": 1800,
+      "source": "/media/1/entertainment/cinema/doa-1949-classic-noir-1080p.mp4",
+      "title": "GSA Music \u00e2\u20ac\u201d Edi\u00c3\u00a7\u00c3\u00a3o Noturna Especial (30m)"
+    },
+    {
+      "in": 0,
+      "out": 1120,
+      "duration": 1120,
+      "source": "/media/1/production/autonomous/2026-09-14/pilot-reflection-02/script.mp4",
+      "title": "GSA Em F? \u00e2\u20ac\u201d 2026-09-14"
+    },
+    {
+      "in": 0,
+      "out": 1800,
+      "duration": 1800,
+      "source": "/media/1/program-masters/gsa-historias-da-biblia-o-filho-prodigo-30m.mp4",
+      "title": "GSA Em F\u00c3\u00a9 \u00e2\u20ac\u201d Edi\u00c3\u00a7\u00c3\u00a3o Sagrada de Abertura (30m)"
+    },
+    {
+      "in": 0,
+      "out": 137,
+      "duration": 137,
+      "source": "/media/1/program-masters/gsa-agro-2026-09-15-818ad89d-a679-431d-8962-4e16fb769899-master-1080p.mp4",
+      "title": "GSA Agro \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 164,
+      "duration": 164,
+      "source": "/media/1/program-masters/gsa-tempo-2026-09-15-86ea4013-6e11-46be-a23d-2d1866ba1efe-master-1080p.mp4",
+      "title": "GSA Tempo \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 64,
+      "duration": 64,
+      "source": "/media/1/program-masters/gsa-manha-news-2026-09-15-f7d13b46-f585-4fbd-8dec-7f9ba2fcafdb-master-1080p.mp4",
+      "title": "GSA Manh\u00c3\u00a3 News \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 580,
+      "duration": 580,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-bem-viver-532ddef0-d5c1-40f3-bcdc-4423d0c2073b.mp4",
+      "title": "GSA Bem Viver \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 550,
+      "duration": 550,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-tech-905688bd-435c-4be6-961d-6a5fcabb8eac.mp4",
+      "title": "GSA Tech \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 1800,
+      "duration": 1800,
+      "source": "/media/1/program-masters/gsa-historias-da-biblia-o-filho-prodigo-30m.mp4",
+      "title": "GSA Hist\u00c3\u00b3rias da B\u00c3\u00adblia \u00e2\u20ac\u201d Master 1080p"
+    },
+    {
+      "in": 0,
+      "out": 256,
+      "duration": 256,
+      "source": "/media/1/program-masters/gsa-cidadania-2026-09-15-c4c7db99-2f7a-4500-adb2-60b8bd977a23-master-1080p.mp4",
+      "title": "GSA Cidadania \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 268,
+      "duration": 268,
+      "source": "/media/1/program-masters/gsa-business-2026-09-15-cd0cbcf2-a461-4dd6-94f5-8b06b99cd1c5-master-1080p.mp4",
+      "title": "GSA Business \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 517,
+      "duration": 517,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-sabor-7cb750de-ffda-485a-bdb1-3a2c9774e898.mp4",
+      "title": "GSA Sabor \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 232,
+      "duration": 232,
+      "source": "/media/1/program-masters/gsa-meio-dia-news-2026-09-15-d5f1fc24-445c-499f-82bb-0014124f6547-master-1080p.mp4",
+      "title": "GSA Meio Dia News \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 261,
+      "duration": 261,
+      "source": "/media/1/program-masters/gsa-mercado-2026-09-15-c247dd32-21b8-4ede-92bd-a62ae9c96898-master-1080p.mp4",
+      "title": "GSA Mercado \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 1508,
+      "duration": 1508,
+      "source": "/media/1/entertainment/desenhos/popeye-ali-baba-1937-1080p.mp4",
+      "title": "GSA Desenhos \u00e2\u20ac\u201d O Melhor da Anima\u00c3\u00a7\u00c3\u00a3o Cl\u00c3\u00a1ssica de Dom\u00c3\u00adnio P\u00c3\u00bablico"
+    },
+    {
+      "in": 0,
+      "out": 185,
+      "duration": 185,
+      "source": "/media/1/program-masters/gsa-planeta-terra-2026-09-15-12516662-54a9-4a4e-a213-9ab38e8496b0-master-1080p.mp4",
+      "title": "GSA Planeta Terra \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 511,
+      "duration": 511,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-destinos-254039dd-eef8-4c9e-bdca-8b2e56b20453.mp4",
+      "title": "GSA Destinos \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 538,
+      "duration": 538,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-mundo-5638ea2d-5327-49d0-9036-fc0466e7d9ef.mp4",
+      "title": "GSA Mundo \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 482,
+      "duration": 482,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-hora-da-palavra-67d5fd01-cb53-4baa-b82a-ca3e91017932.mp4",
+      "title": "GSA Hora da Palavra \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 484,
+      "duration": 484,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-motor-5979df92-e5f3-436b-83a6-8a5cf0656b8b.mp4",
+      "title": "GSA Motor \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 460,
+      "duration": 460,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-ta-na-rede-0f2f9292-a83b-462b-aab7-b09cbff27b8a.mp4",
+      "title": "GSA T\u00c3\u00a1 na Rede \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 548,
+      "duration": 548,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-esportes-6c377715-f532-4691-a846-75d8bc685679.mp4",
+      "title": "GSA Esportes \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 132,
+      "duration": 132,
+      "source": "/media/1/program-masters/gsa-news-noite-2026-09-15-09149d77-f6b8-46a1-a438-44899ffe1138-master-1080p.mp4",
+      "title": "GSA News Noite \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 525,
+      "duration": 525,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-cinema-64a32b69-696e-4e84-a316-c493fc4bceac.mp4",
+      "title": "GSA Cinema \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 4646,
+      "duration": 4646,
+      "source": "/media/1/entertainment/pipoca/sessao-pipoca-romance-misterio-1080p.mp4",
+      "title": "GSA Sess\u00c3\u00a3o Pipoca \u00e2\u20ac\u201d Cinema Nostalgia e Aventura"
+    },
+    {
+      "in": 0,
+      "out": 545,
+      "duration": 545,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-misterios-493559c1-2408-43fc-84a4-974066b2e081.mp4",
+      "title": "GSA Mist\u00c3\u00a9rios \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 1800,
+      "duration": 1800,
+      "source": "/media/1/entertainment/cinema/doa-1949-classic-noir-1080p.mp4",
+      "title": "GSA Music \u00e2\u20ac\u201d Edi\u00c3\u00a7\u00c3\u00a3o Noturna Especial (30m)"
+    },
+    {
+      "in": 0,
+      "out": 1120,
+      "duration": 1120,
+      "source": "/media/1/production/autonomous/2026-09-14/pilot-reflection-02/script.mp4",
+      "title": "GSA Em F? \u00e2\u20ac\u201d 2026-09-14"
+    },
+    {
+      "in": 0,
+      "out": 1800,
+      "duration": 1800,
+      "source": "/media/1/program-masters/gsa-historias-da-biblia-o-filho-prodigo-30m.mp4",
+      "title": "GSA Em F\u00c3\u00a9 \u00e2\u20ac\u201d Edi\u00c3\u00a7\u00c3\u00a3o Sagrada de Abertura (30m)"
+    },
+    {
+      "in": 0,
+      "out": 137,
+      "duration": 137,
+      "source": "/media/1/program-masters/gsa-agro-2026-09-15-818ad89d-a679-431d-8962-4e16fb769899-master-1080p.mp4",
+      "title": "GSA Agro \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 164,
+      "duration": 164,
+      "source": "/media/1/program-masters/gsa-tempo-2026-09-15-86ea4013-6e11-46be-a23d-2d1866ba1efe-master-1080p.mp4",
+      "title": "GSA Tempo \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 64,
+      "duration": 64,
+      "source": "/media/1/program-masters/gsa-manha-news-2026-09-15-f7d13b46-f585-4fbd-8dec-7f9ba2fcafdb-master-1080p.mp4",
+      "title": "GSA Manh\u00c3\u00a3 News \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 580,
+      "duration": 580,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-bem-viver-532ddef0-d5c1-40f3-bcdc-4423d0c2073b.mp4",
+      "title": "GSA Bem Viver \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 550,
+      "duration": 550,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-tech-905688bd-435c-4be6-961d-6a5fcabb8eac.mp4",
+      "title": "GSA Tech \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 1800,
+      "duration": 1800,
+      "source": "/media/1/program-masters/gsa-historias-da-biblia-o-filho-prodigo-30m.mp4",
+      "title": "GSA Hist\u00c3\u00b3rias da B\u00c3\u00adblia \u00e2\u20ac\u201d Master 1080p"
+    },
+    {
+      "in": 0,
+      "out": 256,
+      "duration": 256,
+      "source": "/media/1/program-masters/gsa-cidadania-2026-09-15-c4c7db99-2f7a-4500-adb2-60b8bd977a23-master-1080p.mp4",
+      "title": "GSA Cidadania \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 268,
+      "duration": 268,
+      "source": "/media/1/program-masters/gsa-business-2026-09-15-cd0cbcf2-a461-4dd6-94f5-8b06b99cd1c5-master-1080p.mp4",
+      "title": "GSA Business \u00e2\u20ac\u201d 2026-09-15"
+    },
+    {
+      "in": 0,
+      "out": 329.0,
+      "duration": 329.0,
+      "source": "/media/1/production/autonomous/2026-09-15/gsa-sabor-7cb750de-ffda-485a-bdb1-3a2c9774e898.mp4",
+      "title": "GSA Sabor \u00e2\u20ac\u201d 2026-09-15"
+    }
+  ]
+}

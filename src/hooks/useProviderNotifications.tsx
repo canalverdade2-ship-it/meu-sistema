@@ -196,10 +196,17 @@ export function ProviderNotificationProvider({ children, prestadorId }: { childr
 
   const refreshCounts = useCallback(async () => {
     setError(null);
-    const results = await Promise.allSettled([fetchPrestador(), fetchPendencies(), fetchNotifications()]);
-    const failed = results.find((result) => result.status === 'rejected') as PromiseRejectedResult | undefined;
-    if (failed && mountedRef.current) {
-      setError(failed.reason?.message || 'Não foi possível atualizar o painel.');
+    try {
+      // 1. Prioritize critical profile fetch to unblock UI ASAP
+      await fetchPrestador();
+      // 2. Fetch non-critical metrics
+      const results = await Promise.allSettled([fetchPendencies(), fetchNotifications()]);
+      const failed = results.find((result) => result.status === 'rejected') as PromiseRejectedResult | undefined;
+      if (failed && mountedRef.current) {
+        setError(failed.reason?.message || 'Não foi possível atualizar as notificações.');
+      }
+    } catch (err: any) {
+      if (mountedRef.current) setError(err?.message || 'Falha ao carregar prestador.');
     }
   }, [fetchNotifications, fetchPendencies, fetchPrestador]);
 
@@ -279,18 +286,30 @@ export function ProviderNotificationProvider({ children, prestadorId }: { childr
 
   const unreadNotifications = useMemo(() => notifications.filter((item) => !item.lida).length, [notifications]);
 
+  const value = useMemo(() => ({
+    pendencies,
+    notifications,
+    unreadNotifications,
+    prestador,
+    loading,
+    error,
+    markAsRead,
+    markAllAsRead,
+    refreshCounts,
+  }), [
+    pendencies,
+    notifications,
+    unreadNotifications,
+    prestador,
+    loading,
+    error,
+    markAsRead,
+    markAllAsRead,
+    refreshCounts,
+  ]);
+
   return (
-    <ProviderNotificationContext.Provider value={{
-      pendencies,
-      notifications,
-      unreadNotifications,
-      prestador,
-      loading,
-      error,
-      markAsRead,
-      markAllAsRead,
-      refreshCounts,
-    }}>
+    <ProviderNotificationContext.Provider value={value}>
       {children}
     </ProviderNotificationContext.Provider>
   );

@@ -1,0 +1,3 @@
+PGPASSWORD='GSA_SENHA_FORTE_2026' psql -h 127.0.0.1 -p 5433 -U supabase_admin -d gsahub -c "SELECT nome, possui_variacoes FROM produtos WHERE id = '74130dba-9714-40ff-b352-70cfd3af37fd';"
+PGPASSWORD='GSA_SENHA_FORTE_2026' psql -h 127.0.0.1 -p 5433 -U supabase_admin -d gsahub -c "SELECT COUNT(*) FROM produto_variacao_grupos WHERE produto_id = '74130dba-9714-40ff-b352-70cfd3af37fd';"
+PGPASSWORD='GSA_SENHA_FORTE_2026' psql -h 127.0.0.1 -p 5433 -U supabase_admin -d gsahub -c "SELECT COUNT(*) FROM produto_variantes WHERE produto_id = '74130dba-9714-40ff-b352-70cfd3af37fd';"

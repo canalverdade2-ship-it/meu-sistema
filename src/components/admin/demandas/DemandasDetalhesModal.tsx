@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   X, ArrowRightLeft, CheckCircle, CheckCircle2, AlertCircle, Clock, Upload, History, User, Building2,
-  FileText, Flag, MessageSquare, Link, DollarSign, TrendingUp, Paperclip, Send
+  FileText, Flag, MessageSquare, Link, DollarSign, TrendingUp, Paperclip, Send, Trash2
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { toast } from 'react-hot-toast';
@@ -10,13 +10,13 @@ import { ptBR } from 'date-fns/locale';
 import { isPast } from 'date-fns';
 import { notificationService } from '../../../lib/notificationService';
 import { logService } from '../../../lib/logService';
-import { demandService } from '../../../lib/demandService';
-import { callAdminRpc } from '../../../lib/adminRpc';
+import { callAdminRpc, createAdminRequestId, deleteAdminEntityCascade } from '../../../lib/adminRpc';
 import { DemandasComentarios } from './DemandasComentarios';
 import { useFileViewer } from '../../../contexts/FileViewerContext';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { ConfirmDialog } from '../../ui/ConfirmDialog';
-import { uploadToR2, getR2PublicUrl } from '../../../lib/r2Storage';
+import { uploadToR2, removeFromR2 } from '../../../lib/r2Storage';
+import { useRealtimeSubscription } from '../../../hooks/useRealtime';
 
 interface Props {
   demanda: any;
@@ -126,6 +126,25 @@ export function DemandasDetalhesModal({
   const isContrapropAdminFinal = demanda.status === 'contraproposta_admin_final';
   const isInNegociation = isEmNegociacao || isContrapropPrestador || isContrapropAdminFinal;
 
+  useRealtimeSubscription([
+    {
+      table: 'prestador_demandas',
+      filter: `id=eq.${demanda.id}`,
+      onChange: () => {
+        onRefresh();
+      },
+      debounceMs: 300,
+    },
+    {
+      table: 'prestador_demandas_historico',
+      filter: `demanda_id=eq.${demanda.id}`,
+      onChange: () => {
+        onRefreshHistorico?.();
+      },
+      debounceMs: 300,
+    },
+  ], [demanda.id]);
+
   // ─────────────────── HANDLERS ────────────────────
 
   const checkStatusRaceCondition = async () => {
@@ -142,24 +161,69 @@ export function DemandasDetalhesModal({
     return true;
   };
 
+  const updateDemand = async (
+    patch: Record<string, unknown>,
+    history?: {
+      type: 'transferencia' | 'aceite' | 'entrega' | 'ajuste' | 'recusa' | 'negociacao' | 'finalizacao';
+      reason: string;
+      colaboradorDestinoId?: string | null;
+      prestadorOrigemId?: string | null;
+      prestadorDestinoId?: string | null;
+      valorProposto?: number | null;
+    },
+  ) => {
+    const status = String(patch.status || '');
+    const fallbackType = status === 'em_ajuste' ? 'ajuste'
+      : status === 'concluida_interna' || status === 'em_analise' ? 'entrega'
+      : status === 'contraproposta_admin_final' || status === 'em_negociacao' ? 'negociacao'
+      : status === 'aguardando_atribuicao' ? 'recusa'
+      : 'aceite';
+    return callAdminRpc('gsa_admin_transition_provider_demand', {
+      p_demanda_id: demanda.id,
+      p_expected_status: demanda.status,
+      p_patch: patch,
+      p_event_type: history?.type || fallbackType,
+      p_event_reason: history?.reason || `Demanda atualizada pela administração. Novo status: ${status || demanda.status}.`,
+      p_colaborador_destino_id: history?.colaboradorDestinoId || null,
+      p_prestador_origem_id: history?.prestadorOrigemId || null,
+      p_prestador_destino_id: history?.prestadorDestinoId || null,
+      p_valor_proposto: history?.valorProposto ?? null,
+      p_request_id: createAdminRequestId(),
+    });
+  };
+
+  const addOsNote = async (nota: string) => {
+    if (!demanda.os_id) return;
+    await callAdminRpc('gsa_admin_add_os_note', {
+      p_os_id: demanda.os_id,
+      p_nota: nota,
+      p_request_id: createAdminRequestId(),
+    });
+  };
+
+  const sendOsSupportMessage = async (mensagem: string) => {
+    if (!demanda.os_id) return;
+    await callAdminRpc('gsa_admin_send_os_support_message', {
+      p_os_id: demanda.os_id,
+      p_mensagem: mensagem,
+      p_request_id: createAdminRequestId(),
+    });
+  };
   const handleStartService = async () => {
     setIsSubmitting(true);
     try {
       if (!(await checkStatusRaceCondition())) return;
-      await supabase.from('prestador_demandas').update({ status: 'ativa', data_inicio: new Date().toISOString() }).eq('id', demanda.id).throwOnError();
-      await demandService.addDemandHistory({
-        demandaId: demanda.id,
-        tipoEvento: 'aceite',
-        motivo: 'Execução iniciada pela Gestão Interna.',
-        colaboradorOrigemId: colaboradorId || null
-      });
+      await updateDemand(
+        { status: 'ativa', data_inicio: new Date().toISOString() },
+        { type: 'aceite', reason: 'Execução iniciada pela Gestão Interna.' },
+      );
       
       // Log Action
       await logService.logAction({
         acao: 'INICIAR_DEMANDA_INTERNA',
         ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
         ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
+        ator_nome: colaboradorNome || 'Sistema',
         detalhes: `Iniciou a execução da demanda: ${demanda.titulo}`
       });
 
@@ -174,20 +238,17 @@ export function DemandasDetalhesModal({
     setIsSubmitting(true);
     try {
       if (!(await checkStatusRaceCondition())) return;
-      await supabase.from('prestador_demandas').update({ status_aceite: 'aceito', status: 'aberta' }).eq('id', demanda.id).throwOnError();
-      await demandService.addDemandHistory({
-        demandaId: demanda.id,
-        tipoEvento: 'aceite',
-        motivo: 'Demanda aceita pela Gestão Interna.',
-        colaboradorOrigemId: colaboradorId || null
-      });
+      await updateDemand(
+        { status_aceite: 'aceito', status: 'aberta' },
+        { type: 'aceite', reason: 'Demanda aceita pela Gestão Interna.' },
+      );
       
       // Log Action
       await logService.logAction({
         acao: 'ACEITAR_DEMANDA_INTERNA',
         ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
         ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
+        ator_nome: colaboradorNome || 'Sistema',
         detalhes: `Aceitou a demanda: ${demanda.titulo}`
       });
 
@@ -204,20 +265,17 @@ export function DemandasDetalhesModal({
     setIsSubmitting(true);
     try {
       if (!(await checkStatusRaceCondition())) return;
-      await supabase.from('prestador_demandas').update({ status_aceite: 'recusado', motivo_recusa: motivo, colaborador_id: null, status: 'aberta' }).eq('id', demanda.id).throwOnError();
-      await demandService.addDemandHistory({
-        demandaId: demanda.id,
-        tipoEvento: 'recusa',
-        motivo: `Demanda recusada pela Gestão Interna: ${motivo}`,
-        colaboradorOrigemId: colaboradorId || null
-      });
+      await updateDemand(
+        { status_aceite: 'recusado', motivo_recusa: motivo, colaborador_id: null, status: 'aguardando_atribuicao' },
+        { type: 'recusa', reason: `Demanda recusada pela Gestão Interna: ${motivo}` },
+      );
       
       // Log Action
       await logService.logAction({
         acao: 'RECUSAR_DEMANDA_INTERNA',
         ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
         ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
+        ator_nome: colaboradorNome || 'Sistema',
         detalhes: `Recusou a demanda: ${demanda.titulo}. Motivo: ${motivo}`
       });
 
@@ -234,28 +292,20 @@ export function DemandasDetalhesModal({
     try {
       if (!(await checkStatusRaceCondition())) return;
       // 1. Marca como ativa — sem colaborador nem prestador vinculado
-      await supabase.from('prestador_demandas').update({
-        status: 'ativa',
-        data_inicio: new Date().toISOString(),
-        colaborador_id: null,
-        prestador_id: null
-      }).eq('id', demanda.id).throwOnError();
-
-      // 2. Histórico da demanda
-      await demandService.addDemandHistory({
-        demandaId: demanda.id,
-        tipoEvento: 'aceite',
-        motivo: 'Demanda assumida diretamente pela Administração. Execução iniciada internamente.',
-        colaboradorOrigemId: colaboradorId || null
-      });
+      await updateDemand(
+        {
+          status: 'ativa',
+          data_inicio: new Date().toISOString(),
+          colaborador_id: null,
+          prestador_id: null
+        },
+        { type: 'aceite', reason: 'Demanda assumida diretamente pelo Sistema. Execução iniciada internamente.' },
+      );
 
       // 3. Nota na OS + notificação ao cliente
       if (demanda.os_id) {
         try {
-          await supabase.from('os_notas').insert({
-            os_id: demanda.os_id,
-            nota: '✅ Sua demanda foi iniciada e está em atendimento pela equipe interna da GSA.'
-          }).throwOnError();
+          await addOsNote('✅ Sua demanda foi iniciada e está em atendimento pela equipe interna da GSA.');
         } catch (error) {
           console.error('Erro ao adicionar nota na OS:', error);
           toast.error('Erro ao adicionar nota na OS.');
@@ -280,7 +330,7 @@ export function DemandasDetalhesModal({
         acao: 'ASSUMIR_DEMANDA_ADMIN',
         ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
         ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
+        ator_nome: colaboradorNome || 'Sistema',
         detalhes: `Assumiu diretamente a demanda: ${demanda.titulo}`
       });
 
@@ -297,25 +347,19 @@ export function DemandasDetalhesModal({
     try {
       if (!(await checkStatusRaceCondition())) return;
       const valorFinal = demanda.valor_proposto_prestador;
-      const { error } = await supabase
-        .from('prestador_demandas')
-        .update({ 
-          status: 'ativa', 
+      await updateDemand(
+        {
+          status: 'ativa',
           data_inicio: new Date().toISOString(),
           valor_final: valorFinal
-        })
-        .eq('id', demanda.id);
-
-      if (error) throw error;
-
-      await demandService.addDemandHistory({
-        demandaId: demanda.id,
-        tipoEvento: 'aceite',
-        motivo: `Contraproposta do prestador aceita pela administração. Valor final: ${formatCurrency(valorFinal)}. Serviço em execução.`,
-        colaboradorOrigemId: colaboradorId || null,
-        prestadorDestinoId: demanda.prestador_id,
-        valorProposto: valorFinal
-      });
+        },
+        {
+          type: 'aceite',
+          reason: `Contraproposta do prestador aceita pelo Sistema. Valor final: ${formatCurrency(valorFinal)}. Serviço em execução.`,
+          prestadorDestinoId: demanda.prestador_id,
+          valorProposto: valorFinal,
+        },
+      );
 
       // Notificar o prestador que a proposta foi aceita
       if (demanda.prestador_id) {
@@ -332,7 +376,7 @@ export function DemandasDetalhesModal({
       await logService.logAction({
         ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
         ator_id: colaboradorId || 'admin',
-        ator_nome: colaboradorNome || 'Administrador',
+        ator_nome: colaboradorNome || 'Sistema',
         acao: 'ACEITAR_CONTRAPROPOSTA_DEMANDA',
         detalhes: `Aceitou contraproposta da demanda #${demanda.id.slice(0, 8)} no valor de ${formatCurrency(valorFinal)}`
       });
@@ -355,27 +399,26 @@ export function DemandasDetalhesModal({
     setIsSubmitting(true);
     try {
       if (!(await checkStatusRaceCondition())) return;
-      await supabase.from('prestador_demandas').update({
-        status: 'contraproposta_admin_final',
-        valor_proposto_admin: Number(novoValorAdmin),
-        motivo_negociacao: motivoNegociacao,
-      }).eq('id', demanda.id).throwOnError();
-      
-      await demandService.addDemandHistory({
-        demandaId: demanda.id,
-        tipoEvento: 'negociacao',
-        motivo: `Contraproposta enviada ao prestador no valor de ${formatCurrency(Number(novoValorAdmin))}. ${motivoNegociacao || ''}`,
-        colaboradorOrigemId: colaboradorId || null,
-        prestadorDestinoId: demanda.prestador_id,
-        valorProposto: Number(novoValorAdmin)
-      });
+      await updateDemand(
+        {
+          status: 'contraproposta_admin_final',
+          valor_proposto_admin: Number(novoValorAdmin),
+          motivo_negociacao: motivoNegociacao,
+        },
+        {
+          type: 'negociacao',
+          reason: `Contraproposta enviada ao prestador no valor de ${formatCurrency(Number(novoValorAdmin))}. ${motivoNegociacao || ''}`,
+          prestadorDestinoId: demanda.prestador_id,
+          valorProposto: Number(novoValorAdmin),
+        },
+      );
       
       // Notificar prestador da proposta final
       if (demanda.prestador_id) {
         await notificationService.notifyProvider(
           demanda.prestador_id,
-          '📩 Nova Proposta do Administrador',
-          `O administrador enviou uma proposta final de ${formatCurrency(Number(novoValorAdmin))} para a demanda "${demanda.titulo || '#' + demanda.id.slice(0, 6)}". Acesse o painel para aceitar ou recusar.`,
+          '📩 Nova Proposta do Sistema',
+          `O Sistema enviou uma proposta final de ${formatCurrency(Number(novoValorAdmin))} para a demanda "${demanda.titulo || '#' + demanda.id.slice(0, 6)}". Acesse o painel para aceitar ou recusar.`,
           'demandas',
           'demanda_contraproposta',
           { itemId: demanda.id, prioridade: 'alta' }
@@ -387,7 +430,7 @@ export function DemandasDetalhesModal({
         acao: 'ENVIAR_CONTRAPROPOSTA_ADMIN',
         ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
         ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
+        ator_nome: colaboradorNome || 'Sistema',
         detalhes: `Enviou contraproposta para a demanda: ${demanda.titulo}. Novo valor: ${formatCurrency(Number(novoValorAdmin))}. Motivo: ${motivoNegociacao}`
       });
 
@@ -405,18 +448,19 @@ export function DemandasDetalhesModal({
     setIsSubmitting(true);
     try {
       if (!(await checkStatusRaceCondition())) return;
-      await supabase.from('prestador_demandas').update({
-        status: 'aguardando_atribuicao',
-        prestador_id: null,
-        motivo_recusa: motivo,
-        valor_proposto_prestador: null,
-      }).eq('id', demanda.id).throwOnError();
-      await demandService.addDemandHistory({
-        demandaId: demanda.id,
-        tipoEvento: 'recusa',
-        motivo: `Proposta do prestador recusada: ${motivo}. Demanda voltou ao pool central.`,
-        colaboradorOrigemId: colaboradorId || null
-      });
+      await updateDemand(
+        {
+          status: 'aguardando_atribuicao',
+          prestador_id: null,
+          motivo_recusa: motivo,
+          valor_proposto_prestador: null,
+        },
+        {
+          type: 'recusa',
+          reason: `Proposta do prestador recusada: ${motivo}. Demanda voltou ao pool central.`,
+          prestadorOrigemId: demanda.prestador_id,
+        },
+      );
       if (demanda.prestador_id) {
         await notificationService.notifyProvider(
           demanda.prestador_id,
@@ -433,7 +477,7 @@ export function DemandasDetalhesModal({
         acao: 'RECUSAR_PROPOSTA_PRESTADOR',
         ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
         ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
+        ator_nome: colaboradorNome || 'Sistema',
         detalhes: `Recusou a proposta do prestador para a demanda: ${demanda.titulo}. Motivo: ${motivo}`
       });
 
@@ -463,7 +507,7 @@ export function DemandasDetalhesModal({
       if (demanda.colaborador_id) {
         await notificationService.notifyAdmin(
           '❌ Demanda Cancelada',
-          `A demanda "${demanda.titulo || '#' + demanda.id.slice(0, 6)}" foi cancelada pela administração.`,
+          `A demanda "${demanda.titulo || '#' + demanda.id.slice(0, 6)}" foi cancelada pelo Sistema.`,
           'demandas', 'sistema',
           { adminId: demanda.colaborador_id, itemId: demanda.id, prioridade: 'alta' }
         );
@@ -472,7 +516,7 @@ export function DemandasDetalhesModal({
         await notificationService.notifyProvider(
           demanda.prestador_id,
           '❌ Demanda Cancelada',
-          `A demanda "${demanda.titulo || '#' + demanda.id.slice(0, 6)}" foi cancelada pela administração.`,
+          `A demanda "${demanda.titulo || '#' + demanda.id.slice(0, 6)}" foi cancelada pelo Sistema.`,
           'demandas',
           'demanda_cancelada',
           { itemId: demanda.id, prioridade: 'alta' }
@@ -496,6 +540,7 @@ export function DemandasDetalhesModal({
     if (transferTarget === 'prestador' && !valorPropostoTransfer) { toast.error('Informe o valor proposto ao prestador.'); return; }
 
     setIsSubmitting(true);
+    const uploadedPaths: string[] = [];
     try {
       if (!(await checkStatusRaceCondition())) return;
       const urls: string[] = [];
@@ -504,9 +549,8 @@ export function DemandasDetalhesModal({
           const ext = file.name.split('.').pop();
           const path = `transferencias/${demanda.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
           const __up = await uploadToR2(file, 'entregas_demandas', path);
-          const publicUrl = __up.url ?? getR2PublicUrl(__up.path);
-          const r2Path = __up.path;
-          return publicUrl;
+          uploadedPaths.push(__up.path);
+          return __up.path;
         });
         const uploadedUrls = await Promise.all(uploadPromises);
         urls.push(...uploadedUrls);
@@ -523,7 +567,8 @@ export function DemandasDetalhesModal({
       if (transferTarget === 'colaborador') {
         upd.colaborador_id = selectedTargetId;
         upd.prestador_id = null;
-        upd.status = 'ativa'; 
+        upd.status = 'aberta';
+        upd.status_aceite = 'pendente_aceite';
       } else if (transferTarget === 'prestador') {
         upd.prestador_id = selectedTargetId;
         upd.colaborador_id = null;
@@ -537,25 +582,20 @@ export function DemandasDetalhesModal({
       }
 
       try {
-        const { error: updError } = await supabase.from('prestador_demandas').update(upd).eq('id', demanda.id);
-        if (updError) throw updError;
+        await updateDemand(upd, {
+          type: 'transferencia',
+          reason: transferTarget === 'prestador'
+            ? `Demanda enviada para prestador com proposta de ${formatCurrency(Number(valorPropostoTransfer))}. ${transferReason || ''}${urls.length > 0 ? '\n\nArquivos: ' + urls.join(', ') : ''}`
+            : `Transferida para colaborador. ${transferReason || ''}${urls.length > 0 ? '\n\nArquivos: ' + urls.join(', ') : ''}`,
+          colaboradorDestinoId: transferTarget === 'colaborador' ? selectedTargetId : null,
+          prestadorDestinoId: transferTarget === 'prestador' ? selectedTargetId : null,
+          valorProposto: transferTarget === 'prestador' ? Number(valorPropostoTransfer) : null,
+        });
       } catch (error) {
         console.error('Erro ao transferir demanda:', error);
         toast.error('Erro ao transferir demanda.');
         return;
       }
-
-      await demandService.addDemandHistory({
-        demandaId: demanda.id,
-        tipoEvento: 'transferencia',
-        motivo: transferTarget === 'prestador'
-          ? `Demanda enviada para prestador com proposta de ${formatCurrency(Number(valorPropostoTransfer))}. ${transferReason || ''}${urls.length > 0 ? '\n\nArquivos: ' + urls.join(', ') : ''}`
-          : `Transferida para colaborador. ${transferReason || ''}${urls.length > 0 ? '\n\nArquivos: ' + urls.join(', ') : ''}`,
-        colaboradorOrigemId: colaboradorId || null,
-        colaboradorDestinoId: transferTarget === 'colaborador' ? selectedTargetId : null,
-        prestadorDestinoId: transferTarget === 'prestador' ? selectedTargetId : null,
-        valorProposto: transferTarget === 'prestador' ? Number(valorPropostoTransfer) : null
-      });
 
       // Notificações corretas por tipo de destino
       if (transferTarget === 'colaborador' && selectedTargetId) {
@@ -588,19 +628,23 @@ export function DemandasDetalhesModal({
         acao: 'TRANSFERIR_DEMANDA_INTERNA',
         ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
         ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
+        ator_nome: colaboradorNome || 'Sistema',
         detalhes: `Transferiu a demanda ${demanda.titulo} para ${transferTarget} (${selectedTargetId}). Valor proposto: ${valorPropostoTransfer}`
       });
 
       onRefreshHistorico?.();
       onRefresh(); onClose();
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) {
+      await removeFromR2(uploadedPaths);
+      toast.error(err.message || 'Erro ao transferir demanda.');
+    }
     finally { setIsSubmitting(false); }
   };
 
   const handleDelivery = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    const uploadedPaths: string[] = [];
     try {
       if (!(await checkStatusRaceCondition())) return;
       const urls: string[] = [];
@@ -609,38 +653,37 @@ export function DemandasDetalhesModal({
           const ext = file.name.split('.').pop();
           const path = `entregas/${demanda.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
           const __up = await uploadToR2(file, 'entregas_demandas', path);
-          const publicUrl = __up.url ?? getR2PublicUrl(__up.path);
-          const r2Path = __up.path;
-          return publicUrl;
+          uploadedPaths.push(__up.path);
+          return __up.path;
         });
         const uploadedUrls = await Promise.all(uploadPromises);
         urls.push(...uploadedUrls);
       }
       // Usa concluida_interna para sinalizar que a gestão interna concluiu mas a finalização oficial fica no módulo Demandas
       try {
-        const { error: updateError } = await supabase.from('prestador_demandas').update({ 
-          status: 'concluida_interna', 
-          data_conclusao: new Date().toISOString(), 
-          arquivos_resultado: urls,
-          link_resultado: deliveryLink // Ensure it saves link_resultado too
-        }).eq('id', demanda.id);
-        if (updateError) throw updateError;
+        await updateDemand(
+          {
+            status: 'concluida_interna',
+            data_conclusao: new Date().toISOString(),
+            arquivos_resultado: urls,
+            link_resultado: deliveryLink
+          },
+          {
+            type: 'entrega',
+            reason: `Entrega pela Gestão Interna. ${deliveryNotes}. ${urls.length > 0 ? '\n\nAnexos: ' + urls.join(', ') : ''}${deliveryLink ? '\n\nLink: ' + deliveryLink : ''}\nAguardando finalização no módulo Demandas.`,
+          },
+        );
       } catch (error) {
+        await removeFromR2(uploadedPaths);
         console.error('Erro ao concluir demanda:', error);
         toast.error('Erro ao concluir demanda.');
         return;
       }
-      await demandService.addDemandHistory({
-        demandaId: demanda.id,
-        tipoEvento: 'entrega',
-        motivo: `Entrega pela Gestão Interna. ${deliveryNotes}. ${urls.length > 0 ? '\n\nAnexos: ' + urls.join(', ') : ''}${deliveryLink ? '\n\nLink: ' + deliveryLink : ''}\nAguardando finalização no módulo Demandas.`,
-        colaboradorOrigemId: colaboradorId || null
-      });
 
       // Registrar nota na OS
       if (demanda.os_id) {
         try {
-          await supabase.from('os_notas').insert({ os_id: demanda.os_id, nota: 'Gestão Interna concluiu a demanda. Aguardando finalização oficial pela administração.' }).throwOnError();
+          await addOsNote('Gestão Interna concluiu a demanda. Aguardando finalização oficial pelo Sistema.');
         } catch (error) {
           console.error('Erro ao adicionar nota na OS:', error);
           toast.error('Erro ao adicionar nota na OS.');
@@ -676,14 +719,14 @@ export function DemandasDetalhesModal({
         acao: 'ENTREGAR_DEMANDA_INTERNA',
         ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
         ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
+        ator_nome: colaboradorNome || 'Sistema',
         detalhes: `Entregou a execução da demanda: ${demanda.titulo}. Notas: ${deliveryNotes}`
       });
 
       toast.success('Demanda entregue pela Gestão Interna! Aguardando finalização no módulo Demandas.');
       onRefreshHistorico?.();
       onRefresh(); onClose();
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) { toast.error(err.message || 'Erro ao concluir demanda.'); }
     finally { setIsSubmitting(false); }
   };
 
@@ -692,20 +735,17 @@ export function DemandasDetalhesModal({
     setIsSubmitting(true);
     try {
       if (!(await checkStatusRaceCondition())) return;
-      await supabase.from('prestador_demandas').update({ status: 'em_ajuste', ajuste_solicitado: ajusteDesc, prazo_ajuste: ajustePrazo ? new Date(ajustePrazo).toISOString() : null, status_ajuste: 'solicitado' }).eq('id', demanda.id).throwOnError();
-      await demandService.addDemandHistory({
-        demandaId: demanda.id,
-        tipoEvento: 'ajuste',
-        motivo: `Ajuste solicitado: ${ajusteDesc}`,
-        colaboradorOrigemId: colaboradorId || null
-      });
+      await updateDemand(
+        { status: 'em_ajuste', ajuste_solicitado: ajusteDesc, prazo_ajuste: ajustePrazo ? new Date(ajustePrazo).toISOString() : null, status_ajuste: 'solicitado' },
+        { type: 'ajuste', reason: `Ajuste solicitado: ${ajusteDesc}` },
+      );
       if (demanda.colaborador_id) {
-        await notificationService.notifyAdmin('⚠️ Ajuste Solicitado', `O Admin solicitou correções na demanda "${demanda.titulo || '#' + demanda.id.slice(0, 6)}".`, 'demandas', 'sistema', { adminId: demanda.colaborador_id, itemId: demanda.id, prioridade: 'alta' });
+        await notificationService.notifyAdmin('⚠️ Ajuste Solicitado', `O Sistema solicitou correções na demanda "${demanda.titulo || '#' + demanda.id.slice(0, 6)}".`, 'demandas', 'sistema', { adminId: demanda.colaborador_id, itemId: demanda.id, prioridade: 'alta' });
       } else if (demanda.prestador_id) {
         await notificationService.notifyProvider(
           demanda.prestador_id,
           '⚠️ Ajuste Solicitado',
-          `O administrador solicitou ajustes na demanda "${demanda.titulo || '#' + demanda.id.slice(0, 6)}". Acesse para verificar o que precisa ser corrigido.`,
+          `O Sistema solicitou ajustes na demanda "${demanda.titulo || '#' + demanda.id.slice(0, 6)}". Acesse para verificar o que precisa ser corrigido.`,
           'demandas',
           'demanda_ajuste',
           { itemId: demanda.id, prioridade: 'alta', tab: 'ativas' }
@@ -717,7 +757,7 @@ export function DemandasDetalhesModal({
         acao: 'SOLICITAR_AJUSTE_DEMANDA',
         ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
         ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
+        ator_nome: colaboradorNome || 'Sistema',
         detalhes: `Solicitou ajustes na demanda: ${demanda.titulo}. Ajuste: ${ajusteDesc}. Novo prazo: ${ajustePrazo}`
       });
 
@@ -734,23 +774,18 @@ export function DemandasDetalhesModal({
       if (!(await checkStatusRaceCondition())) return;
       // Usa concluida_interna para sinalizar que a gestão interna concluiu. 
       // A finalização oficial (status 'concluida') ocorrerá no módulo de Vendas.
-      const { error: updateError } = await supabase.from('prestador_demandas').update({ 
-        status: 'concluida_interna', 
-        data_conclusao: new Date().toISOString() 
-      }).eq('id', demanda.id);
-
-      if (updateError) throw updateError;
-      await demandService.addDemandHistory({
-        demandaId: demanda.id,
-        tipoEvento: 'entrega',
-        motivo: 'Aprovado pela Gestão Interna. Enviado para finalização oficial no módulo de Vendas.',
-        colaboradorOrigemId: colaboradorId || null
-      });
+      await updateDemand(
+        {
+          status: 'concluida_interna',
+          data_conclusao: new Date().toISOString()
+        },
+        { type: 'entrega', reason: 'Aprovado pela Gestão Interna. Enviado para finalização oficial no módulo de Vendas.' },
+      );
 
       // Registrar nota na OS
       if (demanda.os_id) {
         try {
-          await supabase.from('os_notas').insert({ os_id: demanda.os_id, nota: 'Gestão Interna aprovou e concluiu a demanda. Aguardando finalização oficial pela administração.' }).throwOnError();
+          await addOsNote('Gestão Interna aprovou e concluiu a demanda. Aguardando finalização oficial pelo Sistema.');
         } catch (error) {
           console.error('Erro ao adicionar nota na OS:', error);
           toast.error('Erro ao adicionar nota na OS.');
@@ -768,7 +803,7 @@ export function DemandasDetalhesModal({
         await notificationService.notifyProvider(
           demanda.prestador_id,
           '✅ Demanda Aprovada',
-          `Sua entrega para a demanda "${demanda.titulo || '#' + demanda.id.slice(0, 6)}" foi aprovada pela administração e está sendo finalizada!`,
+          `Sua entrega para a demanda "${demanda.titulo || '#' + demanda.id.slice(0, 6)}" foi aprovada pelo Sistema e está sendo finalizada!`,
           'demandas',
           'demanda_concluida',
           { itemId: demanda.id, prioridade: 'normal' }
@@ -780,7 +815,7 @@ export function DemandasDetalhesModal({
         acao: 'APROVAR_DEMANDA_INTERNA',
         ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
         ator_id: colaboradorId || undefined,
-        ator_nome: colaboradorNome || 'Administrador',
+        ator_nome: colaboradorNome || 'Sistema',
         detalhes: `Aprovou a finalização da demanda: ${demanda.titulo}`
       });
 
@@ -789,6 +824,34 @@ export function DemandasDetalhesModal({
       onRefresh(); onClose();
     } catch { toast.error('Erro ao aprovar.'); }
     finally { setIsSubmitting(false); }
+  };
+
+  // Exclusão de Demanda em Cascata (Administrador Master)
+  const handleDeleteDemandaCascade = async () => {
+    const ok = await confirm({
+      title: 'Excluir Demanda de Ponta a Ponta',
+      message: 'Tem certeza que deseja excluir esta demanda definitivamente? O histórico, anexos, mensagens e vínculos operacionais serão removidos do sistema sem deixar pendências.',
+      confirmLabel: 'Excluir Definitivamente',
+      cancelLabel: 'Voltar',
+      variant: 'danger'
+    });
+    if (!ok) return;
+
+    setIsSubmitting(true);
+    try {
+      const result = await deleteAdminEntityCascade('demanda', demanda.id, 'Exclusão solicitada pelo Administrador Master');
+      if (!result?.success) {
+        throw new Error(result?.message || 'Falha ao excluir demanda.');
+      }
+      toast.success('Demanda excluída com sucesso de ponta a ponta!');
+      onRefresh();
+      onClose();
+    } catch (err: any) {
+      console.error('Erro ao excluir demanda:', err);
+      toast.error(err.message || 'Erro ao excluir demanda.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // ─────────────────── ABAS ────────────────────
@@ -806,8 +869,6 @@ export function DemandasDetalhesModal({
     ...(!isConcluida && (adminType !== 'admin' || (!demanda.prestador_id && !demanda.colaborador_id && demanda.status === 'ativa')) ? [{ id: 'entregar', label: 'Entregar', icon: CheckCircle2 }] : []),
     ...(isAdmin && demanda.status === 'em_analise' ? [{ id: 'ajuste', label: 'Solicitar Ajuste', icon: AlertCircle }] : []),
   ];
-
-  // ─────────────────── RENDER ────────────────────
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end md:items-center justify-center">
@@ -941,7 +1002,7 @@ export function DemandasDetalhesModal({
                       <Paperclip className="h-5 w-5 text-amber-600 shrink-0" />
                       <div className="overflow-hidden">
                         <p className="text-xs font-black text-amber-800 truncate">Anexo de Transferência {i + 1}</p>
-                        <p className="text-[10px] text-amber-500">Documento Administrativo</p>
+                        <p className="text-[10px] text-amber-500">Documento do Sistema</p>
                       </div>
                     </button>
                   );
@@ -1117,10 +1178,11 @@ export function DemandasDetalhesModal({
                   <form onSubmit={handleContrapropostaAdmin} className="space-y-3">
                     <div>
                       <label className="block text-[10px] font-black text-orange-700 uppercase tracking-widest mb-1">Novo Valor (R$) *</label>
-                      <input
+                      <input 
                         type="number" step="0.01" min="0" required
                         value={novoValorAdmin}
-                        onChange={e => setNovoValorAdmin(e.target.value)}
+                        inputMode="numeric"
+onChange={(e) => setNovoValorAdmin(e.target.value)}
                         placeholder="0,00"
                         className="w-full rounded-xl bg-white border border-orange-200 px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-orange-400 outline-none"
                       />
@@ -1195,10 +1257,11 @@ export function DemandasDetalhesModal({
                       <label className="block text-[10px] font-black text-neutral-500 uppercase tracking-widest mb-2">
                         💰 Valor Proposto (R$) *
                       </label>
-                      <input
+                      <input 
                         type="number" step="0.01" min="0" required
                         value={valorPropostoTransfer}
-                        onChange={e => setValorPropostoTransfer(e.target.value)}
+                        inputMode="numeric"
+onChange={(e) => setValorPropostoTransfer(e.target.value)}
                         placeholder="0,00"
                         className="w-full rounded-2xl bg-neutral-100 border-none px-5 py-4 text-sm font-bold focus:ring-2 focus:ring-amber-400 outline-none"
                       />
@@ -1350,7 +1413,7 @@ export function DemandasDetalhesModal({
 
         {/* Footer de ações rápidas */}
         <div className="border-t border-neutral-100 bg-neutral-50/50 px-8 py-5 flex flex-wrap items-center gap-3 shrink-0">
-          {demanda.status === 'pendente_aceite' && (
+          {demanda.status_aceite === 'pendente_aceite' && Boolean(demanda.colaborador_id) && (
             <>
               <button onClick={handleAceitarDemanda} disabled={isSubmitting} className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-xs font-black uppercase tracking-widest text-white hover:bg-emerald-700 transition-all">
                 <CheckCircle2 className="h-4 w-4" /> Aceitar Demanda
@@ -1433,45 +1496,40 @@ function AdminOSSuporteChat({ osId, remetenteId, remetenteNome, clienteId, isCon
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const { openFile } = useFileViewer();
 
-  React.useEffect(() => {
-    let isMounted = true;
-    const fetchMensagensLocal = async () => {
-      const { data } = await supabase
-        .from('os_suporte_mensagens')
-        .select('*')
-        .eq('os_id', osId)
-        .order('created_at', { ascending: true });
-      if (data && isMounted) {
-        setMensagens(data);
-        setTimeout(() => {
-          if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }, 100);
-      }
-    };
-    fetchMensagensLocal();
+  const fetchMensagensLocal = React.useCallback(async () => {
+    const { data } = await supabase
+      .from('os_suporte_mensagens')
+      .select('*')
+      .eq('os_id', osId)
+      .order('created_at', { ascending: true });
+    if (data) {
+      setMensagens(data);
+      setTimeout(() => {
+        if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }, 100);
+    }
+  }, [osId]);
 
-    const channel = supabase
-      .channel('admin-os-suporte-chat-detalhes')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'os_suporte_mensagens',
-        filter: `os_id=eq.${osId}`
-      }, (payload) => {
+  React.useEffect(() => {
+    void fetchMensagensLocal();
+  }, [fetchMensagensLocal]);
+
+  useRealtimeSubscription({
+    table: 'os_suporte_mensagens',
+    filter: `os_id=eq.${osId}`,
+    onChange: fetchMensagensLocal,
+    onPayload: (payload) => {
+      if (payload.new) {
         setMensagens((prev) => {
-          if (prev.find(m => m.id === payload.new.id)) return prev;
+          if (prev.find(m => m.id === (payload.new as any).id)) return prev;
           return [...prev, payload.new];
         });
         setTimeout(() => {
           if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }, 100);
-      })
-      .subscribe();
-
-    return () => {
-      isMounted = false;
-      supabase.removeChannel(channel);
-    };
+      }
+    },
+    debounceMs: 100,
   }, [osId]);
 
   const handleEnviar = async (e: React.FormEvent) => {
@@ -1488,25 +1546,15 @@ function AdminOSSuporteChat({ osId, remetenteId, remetenteNome, clienteId, isCon
         const path = `suporte/${osId}/${fileName}`;
         
         const __up = await uploadToR2(anexoFile, 'entregas_demandas', path);
-        const publicUrl = __up.url ?? getR2PublicUrl(__up.path);
-        const r2Path = __up.path;
-        
-        
-        const anexoStr = `[ANEXO|${anexoFile.name}|${publicUrl}]`;
+        const anexoStr = `[ANEXO|${anexoFile.name}|${__up.path}]`;
         mensagemTexto = mensagemTexto ? `${mensagemTexto}\n\n${anexoStr}` : anexoStr;
       }
 
-      const { error } = await supabase
-        .from('os_suporte_mensagens')
-        .insert({
-          os_id: osId,
-          remetente_tipo: 'admin',
-          remetente_id: remetenteId,
-          remetente_nome: remetenteNome,
-          mensagem: mensagemTexto
-        });
-      
-      if (error) throw error;
+      await callAdminRpc('gsa_admin_send_os_support_message', {
+        p_os_id: osId,
+        p_mensagem: mensagemTexto,
+        p_request_id: createAdminRequestId(),
+      });
       setNovaMensagem('');
       setAnexoFile(null);
       

@@ -1,0 +1,2 @@
+const puppeteer=require('/usr/lib/node_modules/@wonderwhy-er/desktop-commander/node_modules/puppeteer');
+(async()=>{const b=await puppeteer.connect({browserURL:'http://127.0.0.1:9228'});for(const p of await b.pages())if(p.url().includes('flow.google.com'))console.log('\nURL',p.url(),'\n',await p.evaluate(()=>document.body.innerText.slice(0,5000)));await b.disconnect()})().catch(e=>{console.error(e);process.exit(1)});

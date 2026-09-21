@@ -1,0 +1,828 @@
+{
+  "src/components/admin": [
+    {
+      "file": "src/components/admin/AcessosModule.tsx",
+      "importedBy": [],
+      "scriptMatches": [
+        "scripts/check-admin-panel-contracts.ts",
+        "scripts/check-provider-portal-security-contracts.ts"
+      ],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/AffiliateAdminModule.tsx",
+      "importedBy": [
+        "src/components/admin/FinanceiroModule.tsx"
+      ],
+      "scriptMatches": [
+        "scripts/check-affiliate-contracts.ts"
+      ],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/AreaVIPModule.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/CadastroModule.tsx",
+      "importedBy": [],
+      "scriptMatches": [
+        "scripts/check-admin-panel-contracts.ts"
+      ],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/CareersAdminModule.tsx",
+      "importedBy": [],
+      "scriptMatches": [
+        "scripts/check-careers-contracts.ts"
+      ],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/ClientesModule.tsx",
+      "importedBy": [
+        "src/components/admin/CadastroModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/CobrancaModule.tsx",
+      "importedBy": [
+        "src/components/admin/FinanceiroModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/ConfiguracoesModule.tsx",
+      "importedBy": [],
+      "scriptMatches": [
+        "scripts/check-admin-panel-contracts.ts"
+      ],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/CreditoModule.tsx",
+      "importedBy": [
+        "src/components/admin/VendasModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/CuponsLojaModule.tsx",
+      "importedBy": [
+        "src/components/admin/CadastroModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/Dashboard.tsx",
+      "importedBy": [],
+      "scriptMatches": [
+        "scripts/check-admin-panel-contracts.ts",
+        "scripts/check-affiliate-contracts.ts",
+        "scripts/check-client-audience-portals.ts",
+        "scripts/check-collaborator-boundaries-runtime.cjs",
+        "scripts/check-collaborator-boundary-contracts.ts",
+        "scripts/check-provider-portal-security-contracts.ts",
+        "scripts/check-supplier-procurement-contracts.ts"
+      ],
+      "testMatches": [
+        "src/tests/governanca-super-domain.test.ts",
+        "src/tests/super-domains-e2e.test.ts"
+      ]
+    },
+    {
+      "file": "src/components/admin/EmpresaModule.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/EmprestimosModule.tsx",
+      "importedBy": [
+        "src/components/admin/VendasModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/FinanceiroModule.tsx",
+      "importedBy": [
+        "src/components/admin/ClientesModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/FiscalModule.tsx",
+      "importedBy": [
+        "src/components/admin/FinanceiroModule.tsx"
+      ],
+      "scriptMatches": [
+        "scripts/check-admin-panel-contracts.ts"
+      ],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/IndicacoesModule.tsx",
+      "importedBy": [
+        "src/components/admin/CadastroModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/LojaTrocasModule.tsx",
+      "importedBy": [
+        "src/components/admin/CadastroModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/OrcamentosModule.tsx",
+      "importedBy": [
+        "src/components/admin/VendasModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/OrdensServicoModule.tsx",
+      "importedBy": [
+        "src/components/admin/ClientesModule.tsx",
+        "src/components/admin/VendasModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/PartnersAdminModule.tsx",
+      "importedBy": [],
+      "scriptMatches": [
+        "scripts/check-partners-contracts.ts"
+      ],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/PremiosModule.tsx",
+      "importedBy": [
+        "src/components/admin/CadastroModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/PrestadoresModule.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/PromoAnalytics.tsx",
+      "importedBy": [
+        "src/components/admin/PromocaoQuantidadeModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/PromocaoQuantidadeForm.tsx",
+      "importedBy": [
+        "src/components/admin/PromocaoQuantidadeModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/PromocaoQuantidadeModule.tsx",
+      "importedBy": [
+        "src/components/admin/CadastroModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/PromocoesModule.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/PromoDetalhesModal.tsx",
+      "importedBy": [
+        "src/components/admin/PromocoesModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/ProtectionAdminModule.tsx",
+      "importedBy": [],
+      "scriptMatches": [
+        "scripts/check-admin-panel-contracts.ts",
+        "scripts/check-protection-direct-quote-contracts.ts"
+      ],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/ReembolsosModule.tsx",
+      "importedBy": [
+        "src/components/admin/CadastroModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/RelatoriosModule.tsx",
+      "importedBy": [],
+      "scriptMatches": [
+        "scripts/check-admin-panel-contracts.ts"
+      ],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/SystemMonitorModule.tsx",
+      "importedBy": [],
+      "scriptMatches": [
+        "scripts/check-admin-panel-contracts.ts"
+      ],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/TicketsModule.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/VendasModule.tsx",
+      "importedBy": [],
+      "scriptMatches": [
+        "scripts/check-admin-panel-contracts.ts"
+      ],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/VouchersModule.tsx",
+      "importedBy": [
+        "src/components/admin/CadastroModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src/components/admin/clientes": [
+    {
+      "file": "src/components/admin/clientes/AdminClienteDocumentos.tsx",
+      "importedBy": [
+        "src/components/admin/ClientesModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src/components/admin/ecommerce": [
+    {
+      "file": "src/components/admin/ecommerce/EcommerceAnalytics.tsx",
+      "importedBy": [
+        "src/components/admin/CadastroModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/ecommerce/PricingPanel.tsx",
+      "importedBy": [
+        "src/components/admin/CadastroModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src/components/admin/prestadores": [
+    {
+      "file": "src/components/admin/prestadores/PrestadoresCadastro.tsx",
+      "importedBy": [
+        "src/components/admin/CadastroModule.tsx",
+        "src/components/admin/PrestadoresModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+      "importedBy": [
+        "src/components/admin/VendasModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/admin/prestadores/PrestadoresFinanceiro.tsx",
+      "importedBy": [
+        "src/components/admin/FinanceiroModule.tsx",
+        "src/components/admin/PrestadoresModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src/components/admin/products": [
+    {
+      "file": "src/components/admin/products/ProductVariationsEditor.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src/components": [
+    {
+      "file": "src/components/AppClientShell.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src/components/auth": [
+    {
+      "file": "src/components/auth/RestrictedAccessModal.tsx",
+      "importedBy": [],
+      "scriptMatches": [
+        "scripts/check-home-public-contracts.ts",
+        "scripts/check-restricted-access-hub.ts",
+        "scripts/check-supplier-procurement-contracts.ts"
+      ],
+      "testMatches": []
+    }
+  ],
+  "src/components/business": [
+    {
+      "file": "src/components/business/BusinessDashboard.tsx",
+      "importedBy": [],
+      "scriptMatches": [
+        "scripts/check-client-audience-portals.ts"
+      ],
+      "testMatches": []
+    }
+  ],
+  "src/components/campaigns": [
+    {
+      "file": "src/components/campaigns/SiteCampaignBootstrap.tsx",
+      "importedBy": [],
+      "scriptMatches": [
+        "scripts/check-site-campaign-contracts.ts"
+      ],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/campaigns/SiteCampaignLayer.tsx",
+      "importedBy": [
+        "src/components/campaigns/SiteCampaignBootstrap.tsx"
+      ],
+      "scriptMatches": [
+        "scripts/check-site-campaign-contracts.ts"
+      ],
+      "testMatches": []
+    }
+  ],
+  "src/components/client/marketplace": [
+    {
+      "file": "src/components/client/marketplace/MarketplaceLanding.tsx",
+      "importedBy": [],
+      "scriptMatches": [
+        "scripts/check-protection-identity-contracts.ts"
+      ],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/client/marketplace/MarketplaceModuleCard.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/client/marketplace/TravelPackagesPage.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src/components/client/store": [
+    {
+      "file": "src/components/client/store/HeroBannerCarousel.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/client/store/StoreHubCancelOrder.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/client/store/StoreHubExchanges.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/client/store/StoreHubRefunds.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/client/store/StoreHubVipPromos.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src/components/common": [
+    {
+      "file": "src/components/common/SupportConversationModal.tsx",
+      "importedBy": [
+        "src/components/admin/prestadores/PrestadoresDemandas.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src/components/public": [
+    {
+      "file": "src/components/public/BrandPortfolioDialog.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/components/public/FreeToolsCalculatorDialog.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src/components/ui": [
+    {
+      "file": "src/components/ui/CommandSlideOver.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": [
+        "src/tests/foundations-shared-components.test.ts",
+        "src/tests/super-domains-e2e.test.ts"
+      ]
+    },
+    {
+      "file": "src/components/ui/TacticalDataGrid.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": [
+        "src/tests/foundations-shared-components.test.ts",
+        "src/tests/super-domains-e2e.test.ts"
+      ]
+    }
+  ],
+  "src/data": [
+    {
+      "file": "src/data/publicProjectTypes.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src/hooks": [
+    {
+      "file": "src/hooks/use-mobile.tsx",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/hooks/useStoreCart.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/hooks/useStoreOrders.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/hooks/useStoreProducts.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src/lib": [
+    {
+      "file": "src/lib/error-capture.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/lib/lovable-error-reporting.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/lib/pdfSharingService.ts",
+      "importedBy": [
+        "src/components/admin/FinanceiroModule.tsx",
+        "src/components/admin/OrcamentosModule.tsx",
+        "src/components/admin/OrdensServicoModule.tsx"
+      ],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/lib/siteCampaigns.ts",
+      "importedBy": [
+        "src/components/campaigns/SiteCampaignLayer.tsx"
+      ],
+      "scriptMatches": [
+        "scripts/check-site-campaign-contracts.ts"
+      ],
+      "testMatches": []
+    }
+  ],
+  "src/routing": [
+    {
+      "file": "src/routing/adminNavigation.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src/tests": [
+    {
+      "file": "src/tests/contratos-super-domain.test.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/tests/finance.test.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/tests/financeiro-super-domain.test.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/tests/foundations-shared-components.test.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/tests/governanca-super-domain.test.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/tests/operacoes-super-domain.test.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/tests/pessoas-super-domain.test.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/tests/productVariations.test.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/tests/super-domains-adversarial-challenger.test.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/tests/super-domains-e2e.test.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/tests/wishlist.test.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src/types": [
+    {
+      "file": "src/types/react-input-mode.d.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/types/react-jsx-key-compat.d.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/types/react-namespace.d.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src/utils": [
+    {
+      "file": "src/utils/paymentPropagation.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/utils/promotions.ts",
+      "importedBy": [],
+      "scriptMatches": [
+        "scripts/check-free-tools-contracts.ts"
+      ],
+      "testMatches": []
+    },
+    {
+      "file": "src/utils/referral.ts",
+      "importedBy": [
+        "src/validation/step3_finance_gamification.ts"
+      ],
+      "scriptMatches": [
+        "scripts/check-home-public-contracts.ts"
+      ],
+      "testMatches": [
+        "tests/e2e/0-stress-real-data.spec.ts"
+      ]
+    },
+    {
+      "file": "src/utils/vipStyles.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src/validation": [
+    {
+      "file": "src/validation/base.ts",
+      "importedBy": [
+        "src/validation/find_prestador.ts",
+        "src/validation/find_records.ts",
+        "src/validation/master_block2.ts",
+        "src/validation/master_block3.ts",
+        "src/validation/master_block4.ts",
+        "src/validation/step1_referral.ts",
+        "src/validation/step2_sales_flow.ts",
+        "src/validation/step3_finance_gamification.ts",
+        "src/validation/step4_integrity_audit.ts",
+        "src/validation/step5_reports_consolidation.ts",
+        "src/validation/step6_subscriptions.ts"
+      ],
+      "scriptMatches": [
+        "scripts/audit-production-real.mjs",
+        "scripts/backup-storage.mjs",
+        "scripts/check-admin-migrations-runtime.cjs",
+        "scripts/check-admin-panel-contracts.ts",
+        "scripts/check-advertising-completion.ts",
+        "scripts/check-advertising-foundation.ts",
+        "scripts/check-affiliate-contracts.ts",
+        "scripts/check-calculator-pro-panel-contracts.ts",
+        "scripts/check-careers-contracts.ts",
+        "scripts/check-classifieds-production-contracts.ts",
+        "scripts/check-client-portal-security-contracts.ts",
+        "scripts/check-client-session-restore-contract.ts",
+        "scripts/check-collaborator-boundaries-runtime.cjs",
+        "scripts/check-collaborator-boundary-contracts.ts",
+        "scripts/check-database-inventory.mjs",
+        "scripts/check-free-tools-contracts.ts",
+        "scripts/check-free-tools-pdf-contracts.ts",
+        "scripts/check-free-tools-pro-security-contracts.ts",
+        "scripts/check-gsa-travel-contracts.ts",
+        "scripts/check-home-public-contracts.ts",
+        "scripts/check-partners-contracts.ts",
+        "scripts/check-products-subscriptions-contracts.ts",
+        "scripts/check-protection-direct-quote-contracts.ts",
+        "scripts/check-protection-identity-contracts.ts",
+        "scripts/check-provider-portal-security-contracts.ts",
+        "scripts/check-realtime-contracts.ts",
+        "scripts/check-restored-admin-foundations.ts",
+        "scripts/check-site-campaign-contracts.ts",
+        "scripts/check-site-campaign-migrations-runtime.cjs",
+        "scripts/check-supplier-procurement-contracts.ts",
+        "scripts/manage-hero-banners.mjs",
+        "scripts/run-admin-migrations-runtime.cjs",
+        "scripts/test-storage-restore.mjs"
+      ],
+      "testMatches": [
+        "src/tests/operacoes-super-domain.test.ts",
+        "src/tests/productVariations.test.ts",
+        "src/tests/super-domains-adversarial-challenger.test.ts",
+        "src/tests/super-domains-e2e.test.ts",
+        "src/tests/wishlist.test.ts",
+        "tests/e2e/1-auth-e-publico.spec.ts",
+        "tests/utils/db-setup.ts"
+      ]
+    },
+    {
+      "file": "src/validation/find_prestador.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/validation/find_records.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/validation/master_block2.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/validation/master_block3.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/validation/master_block4.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/validation/step1_referral.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/validation/step2_sales_flow.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/validation/step3_finance_gamification.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/validation/step4_integrity_audit.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/validation/step5_reports_consolidation.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    },
+    {
+      "file": "src/validation/step6_subscriptions.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ],
+  "src": [
+    {
+      "file": "src/vite-env.d.ts",
+      "importedBy": [],
+      "scriptMatches": [],
+      "testMatches": []
+    }
+  ]
+}

@@ -1,16 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Ticket, TicketMensagem } from '../../types';
 import { formatDateTime } from '../../lib/utils';
-import { MessageSquare, Plus, Clock, CheckCircle, Send, Paperclip, X, File as FileIcon, Image as ImageIcon, Download } from 'lucide-react';
+import { MessageSquare, Plus, Clock, CheckCircle, Send, Paperclip, X, XCircle, File as FileIcon, Image as ImageIcon, Download } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { toast } from 'react-hot-toast';
 import { createNotification } from '../../lib/notifications';
 import { notificationService } from '../../lib/notificationService';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
 import { removePrivateDocument, uploadPrivateDocument } from '../../lib/privateStorage';
 import { SecureAttachmentButton } from '../ui/SecureAttachmentButton';
+import { callClientRpc } from '../../lib/clientRpc';
 
 export function ClientSuporte({ clientId, initialItemId, modulo = 'cliente' }: { clientId: string, initialItemId?: string, modulo?: 'cliente' | 'afiliado' }) {
   const { containerRef: suporteTabsRef, setButtonRef: setSuporteTabButtonRef } = useAutoFitTabs(16, 10);
@@ -23,6 +25,7 @@ export function ClientSuporte({ clientId, initialItemId, modulo = 'cliente' }: {
   const [messages, setMessages] = useState<TicketMensagem[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [isCancellingTicket, setIsCancellingTicket] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -41,7 +44,7 @@ export function ClientSuporte({ clientId, initialItemId, modulo = 'cliente' }: {
         hasAutoOpened.current = initialItemId;
         
         if (item.status === 'aberto' || item.status === 'em andamento') setActiveTab('aberto');
-        else if (item.status === 'concluido') setActiveTab('concluido');
+        else if (item.status === 'concluido' || item.status === 'cancelado') setActiveTab('concluido');
         
         setSelectedTicket(item);
         setIsChatOpen(true);
@@ -73,54 +76,56 @@ export function ClientSuporte({ clientId, initialItemId, modulo = 'cliente' }: {
     };
 
     window.addEventListener('open-stock-ticket', handleOpenStockTicket);
-
-    const channel = supabase
-      .channel(`tickets-updates-${modulo}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'tickets',
-        filter: `cliente_id=eq.${clientId}`
-      }, () => {
-        fetchTickets();
-      })
-      .subscribe();
-
     return () => {
-      supabase.removeChannel(channel);
       window.removeEventListener('open-stock-ticket', handleOpenStockTicket);
     };
   }, [activeTab, clientId, modulo]);
 
+  useRealtimeSubscription(
+    [
+      {
+        table: 'tickets',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: fetchTickets,
+      },
+    ],
+    [clientId, activeTab, modulo]
+  );
+
   useEffect(() => {
     if (selectedTicket?.id && isChatOpen) {
       fetchMessages(selectedTicket.id);
-      
-      const channel = supabase
-        .channel(`ticket_${selectedTicket.id}`)
-        .on('postgres_changes', { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'ticket_mensagens',
-          filter: `ticket_id=eq.${selectedTicket.id}`
-        }, (payload) => {
-          setMessages(prev => [...prev, payload.new as TicketMensagem]);
-        })
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'tickets',
-          filter: `id=eq.${selectedTicket.id}`
-        }, (payload) => {
-          setSelectedTicket(prev => prev ? { ...prev, ...payload.new } as Ticket : null);
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
     }
   }, [selectedTicket?.id, isChatOpen]);
+
+  useRealtimeSubscription(
+    [
+      {
+        table: 'ticket_mensagens',
+        filter: selectedTicket?.id ? `ticket_id=eq.${selectedTicket.id}` : undefined,
+        enabled: Boolean(selectedTicket?.id && isChatOpen),
+        onPayload: (payload) => {
+          if (payload.eventType === 'INSERT' && payload.new) {
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === (payload.new as any).id)) return prev;
+              return [...prev, payload.new as TicketMensagem];
+            });
+          }
+        },
+      },
+      {
+        table: 'tickets',
+        filter: selectedTicket?.id ? `id=eq.${selectedTicket.id}` : undefined,
+        enabled: Boolean(selectedTicket?.id && isChatOpen),
+        onPayload: (payload) => {
+          if (payload.new) {
+            setSelectedTicket((prev) => (prev ? ({ ...prev, ...payload.new } as Ticket) : null));
+          }
+        },
+      },
+    ],
+    [selectedTicket?.id, isChatOpen]
+  );
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -128,7 +133,7 @@ export function ClientSuporte({ clientId, initialItemId, modulo = 'cliente' }: {
     }
   }, [messages]);
 
-  const fetchTickets = async () => {
+  async function fetchTickets() {
     setLoading(true);
     let query = supabase
       .from('tickets')
@@ -145,7 +150,7 @@ export function ClientSuporte({ clientId, initialItemId, modulo = 'cliente' }: {
     if (activeTab === 'aberto') {
       query = query.in('status', ['aberto', 'em andamento']);
     } else {
-      query = query.eq('status', activeTab);
+      query = query.in('status', ['concluido', 'cancelado']);
     }
     
     const { data } = await query;
@@ -166,6 +171,10 @@ export function ClientSuporte({ clientId, initialItemId, modulo = 'cliente' }: {
 
   const handleSendMessage = async () => {
     if ((!newMessage.trim() && !attachment) || !selectedTicket || isSendingMessage) return;
+    if (!['aberto', 'em andamento'].includes(selectedTicket.status)) {
+      toast.error('Este ticket já está encerrado.');
+      return;
+    }
 
     setIsSendingMessage(true);
     let uploadedReference: string | null = null;
@@ -242,6 +251,20 @@ export function ClientSuporte({ clientId, initialItemId, modulo = 'cliente' }: {
     } finally {
       setIsSendingMessage(false);
     }
+  };
+
+  const handleCancelTicket = async () => {
+    if (!selectedTicket || !['aberto', 'em andamento'].includes(selectedTicket.status) || isCancellingTicket) return;
+    if (!window.confirm('Cancelar este ticket? A conversa será encerrada e ficará disponível apenas para consulta.')) return;
+    setIsCancellingTicket(true);
+    try {
+      const result = await callClientRpc<any>('gsa_client_cancel_support_ticket', { p_ticket_id: selectedTicket.id });
+      setSelectedTicket((current) => current ? ({ ...current, status: 'cancelado', data_fechamento: result?.data_fechamento || new Date().toISOString() } as Ticket) : current);
+      setNewMessage(''); setAttachment(null);
+      toast.success(result?.already_cancelled ? 'Este ticket já estava cancelado.' : 'Ticket cancelado com sucesso.');
+      setActiveTab('concluido');
+    } catch (error: any) { toast.error(error?.message || 'Não foi possível cancelar o ticket.'); }
+    finally { setIsCancellingTicket(false); }
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -358,8 +381,8 @@ export function ClientSuporte({ clientId, initialItemId, modulo = 'cliente' }: {
             >
               <div className="mb-3 flex items-center justify-between">
                 <div className={isAffiliate
-                  ? `flex h-9 w-9 items-center justify-center ${ticket.status === 'aberto' ? 'bg-[#f8f3e8] text-[#8d6829] border border-[#d8c9aa]' : ticket.status === 'em andamento' ? 'bg-[#0e1b2a] text-[#ddc28d] border border-[#1b2b3f]' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`
-                  : `flex h-10 w-10 items-center justify-center rounded-xl ${ticket.status === 'aberto' ? 'bg-amber-50 text-amber-600' : ticket.status === 'em andamento' ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'}`
+                  ? `flex h-9 w-9 items-center justify-center ${ticket.status === 'aberto' ? 'bg-[#f8f3e8] text-[#8d6829] border border-[#d8c9aa]' : ticket.status === 'em andamento' ? 'bg-[#0e1b2a] text-[#ddc28d] border border-[#1b2b3f]' : ticket.status === 'cancelado' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`
+                  : `flex h-10 w-10 items-center justify-center rounded-xl ${ticket.status === 'aberto' ? 'bg-amber-50 text-amber-600' : ticket.status === 'em andamento' ? 'bg-indigo-50 text-indigo-600' : ticket.status === 'cancelado' ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`
                 }>
                   <MessageSquare className="h-4 w-4" />
                 </div>
@@ -370,10 +393,10 @@ export function ClientSuporte({ clientId, initialItemId, modulo = 'cliente' }: {
               
               <div className={`mt-5 flex items-center gap-3 border-t pt-4 ${isAffiliate ? 'border-[#e5dec9]' : 'border-neutral-100'}`}>
                 <span className={isAffiliate
-                  ? `px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${ticket.status === 'aberto' ? 'bg-[#f8f3e8] text-[#8d6829] border border-[#d8c9aa]' : ticket.status === 'em andamento' ? 'bg-[#0e1b2a] text-[#ddc28d] border border-[#1b2b3f]' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`
-                  : `rounded-full px-2 py-1 text-[10px] font-black uppercase ${ticket.status === 'aberto' ? 'bg-amber-100 text-amber-700' : ticket.status === 'em andamento' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'}`
+                  ? `px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${ticket.status === 'aberto' ? 'bg-[#f8f3e8] text-[#8d6829] border border-[#d8c9aa]' : ticket.status === 'em andamento' ? 'bg-[#0e1b2a] text-[#ddc28d] border border-[#1b2b3f]' : ticket.status === 'cancelado' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`
+                  : `rounded-full px-2 py-1 text-[10px] font-black uppercase ${ticket.status === 'aberto' ? 'bg-amber-100 text-amber-700' : ticket.status === 'em andamento' ? 'bg-indigo-100 text-indigo-700' : ticket.status === 'cancelado' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`
                 }>
-                  {ticket.status}
+                  {ticket.status === 'cancelado' ? 'cancelado por você' : ticket.status}
                 </span>
                 {ticket.status === 'em andamento' && (
                   <span className={`text-[11px] font-semibold ${isAffiliate ? 'text-[#8d6829]' : 'text-indigo-600'}`}>Um atendente está analisando seu caso. Clique para conversar.</span>
@@ -405,6 +428,12 @@ export function ClientSuporte({ clientId, initialItemId, modulo = 'cliente' }: {
             <div className={isAffiliate ? "bg-[#f8f3e8] p-4 border border-[#d8c9aa] mb-4" : "rounded-2xl bg-neutral-100 p-4 ring-1 ring-neutral-300 mb-4"}>
               <h4 className={`font-bold ${isAffiliate ? 'text-[#0b1522]' : 'text-neutral-900'}`}>{selectedTicket.assunto}</h4>
               <p className={`mt-1 text-xs ${isAffiliate ? 'text-[#69717c]' : 'text-neutral-500'}`}>{selectedTicket.descricao}</p>
+              {['aberto', 'em andamento'].includes(selectedTicket.status) && (
+                <button type="button" onClick={() => void handleCancelTicket()} disabled={isCancellingTicket} className="mt-3 inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 transition hover:bg-rose-100 disabled:opacity-50">
+                  <XCircle className="h-4 w-4" />{isCancellingTicket ? 'Cancelando ticket...' : 'Cancelar ticket'}
+                </button>
+              )}
+              {selectedTicket.status === 'cancelado' && <p className="mt-3 text-xs font-bold text-rose-700">Ticket cancelado por você. A conversa permanece disponível somente para consulta.</p>}
             </div>
 
             <div 
@@ -447,7 +476,7 @@ export function ClientSuporte({ clientId, initialItemId, modulo = 'cliente' }: {
               )}
             </div>
 
-            {selectedTicket.status !== 'concluido' ? (
+            {['aberto', 'em andamento'].includes(selectedTicket.status) ? (
               <div className="flex flex-col gap-2">
                 {attachment && (
                   <div className="flex items-center gap-2 bg-neutral-100 p-2 border border-neutral-200 self-start text-xs">
@@ -508,7 +537,7 @@ export function ClientSuporte({ clientId, initialItemId, modulo = 'cliente' }: {
                 </div>
               </div>
             ) : (
-              <p className="text-center text-sm font-bold text-neutral-400 py-4">Este ticket foi encerrado.</p>
+              <p className="text-center text-sm font-bold text-neutral-400 py-4">{selectedTicket.status === 'cancelado' ? 'Este ticket foi cancelado por você.' : 'Este ticket foi encerrado.'}</p>
             )}
           </div>
         )}

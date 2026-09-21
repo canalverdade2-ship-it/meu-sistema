@@ -1,0 +1,290 @@
+[
+  {
+    "file": "src\\components\\admin\\AcessosModule.tsx",
+    "input": "<input value={collaboratorForm.telefone} onChange={(event) =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\ClientesModule.tsx",
+    "input": "<input \r\n            type=\"text\" \r\n            inputMode=\"numeric\"\r\n            pattern=\"[0-9]*\"\r\n            required\r\n            value={formData.tipo_pessoa === 'pf' ? formData.cpf : formData.cnpj}\r\n            onChange={e =>",
+    "pat": "/cpf/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\ClientesModule.tsx",
+    "input": "<input \r\n            type=\"text\" \r\n            inputMode=\"numeric\"\r\n            pattern=\"[0-9]*\"\r\n            value={formData.telefone}\r\n            onChange={e =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\ClientesModule.tsx",
+    "input": "<input \r\n                        type=\"text\" \r\n                        inputMode=\"numeric\"\r\n                        pattern=\"[0-9]*\"\r\n                        value={editData.cpf_cnpj || ''} \r\n                        onChange={e =>",
+    "pat": "/cpf/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\ClientesModule.tsx",
+    "input": "<input \r\n                        type=\"text\" \r\n                        value={editData.telefone || ''} \r\n                        onChange={e =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\CreditoModule.tsx",
+    "input": "<input\r\n                type=\"text\"\r\n                placeholder=\"Buscar por cliente, CPF ou CNPJ...\"\r\n                value={searchQuery}\r\n                onChange={e =>",
+    "pat": "/cpf/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\EmpresaModule.tsx",
+    "input": "<input \r\n                type=\"text\" \r\n                inputMode=\"numeric\"\r\n                pattern=\"[0-9]*\"\r\n                value={formData.telefone}\r\n                onChange={e =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\gsa-tv\\GsaTvOperations.tsx",
+    "input": "<input inputMode=\"tel\" value={alert.whatsapp_number} onChange={e=>",
+    "pat": "/whatsapp/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\IndicacoesModule.tsx",
+    "input": "<input\r\n                  type=\"text\"\r\n                  required\r\n                  placeholder=\"(00) 00000-0000\"\r\n                  value={newFormData.whatsapp_indicado}\r\n                  onChange={e =>",
+    "pat": "/whatsapp/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\OrcamentosModule.tsx",
+    "input": "<input \r\n                  type=\"text\"\r\n                  placeholder=\"Ex: CNH, CPF, Comprovante de Residência...\"\r\n                  value={doc}\r\n                  onChange={(e) =>",
+    "pat": "/cpf/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\prestadores\\PrestadoresCadastro.tsx",
+    "input": "<input \r\n                              type=\"text\" \r\n                              inputMode=\"numeric\"\r\n                              pattern=\"[0-9]*\"\r\n                              value={editData.telefone || ''} \r\n                              onChange={e =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\prestadores\\PrestadoresCadastro.tsx",
+    "input": "<input\r\n                              type=\"text\"\r\n                              inputMode=\"numeric\"\r\n                              pattern=\"[0-9]*\"\r\n                              required\r\n                              value={newPrestadorData.telefone}\r\n                              onChange={e =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\products\\import\\ImportSupplierMode.tsx",
+    "input": "<input \n                type=\"text\" \n                value={telefone} \n                onChange={e =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\contratos\\CrmClientesView.tsx",
+    "input": "<input\n                    type=\"text\"\n                    required\n                    value={newClientForm.cpf_cnpj}\n                    onChange={(e) =>",
+    "pat": "/cpf/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\contratos\\CrmClientesView.tsx",
+    "input": "<input\n                    type=\"text\"\n                    required\n                    value={newClientForm.telefone}\n                    onChange={(e) =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\contratos\\HubEmpresasView.tsx",
+    "input": "<input\n                    type=\"text\"\n                    required\n                    placeholder=\"00.000.000/0000-00\"\n                    value={formEmpresa.cnpj}\n                    onChange={(e) =>",
+    "pat": "/cnpj/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\contratos\\HubEmpresasView.tsx",
+    "input": "<input\n                    type=\"text\"\n                    placeholder=\"(11) 3000-0000\"\n                    value={formEmpresa.telefone_corporativo}\n                    onChange={(e) =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaAcessosView.tsx",
+    "input": "<input\n                    type=\"text\"\n                    value={collaboratorForm.telefone}\n                    onChange={(e) =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaConfiguracoesView.tsx",
+    "input": "<input\n                  type=\"text\"\n                  value={value('whatsapp_admin_notificacoes', '5511920857756')}\n                  onChange={(e) =>",
+    "pat": "/whatsapp/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaConfiguracoesView.tsx",
+    "input": "<input\n                  type=\"text\"\n                  value={value('whatsapp_n8n_webhook_url', 'http://147.15.43.141:5678/webhook/send-whatsapp')}\n                  onChange={(e) =>",
+    "pat": "/whatsapp/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaConfiguracoesView.tsx",
+    "input": "<input\n                  type=\"text\"\n                  value={value('whatsapp_float_telefone', '')}\n                  onChange={(e) =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\governanca\\GovernancaConfiguracoesView.tsx",
+    "input": "<input\n                  type=\"text\"\n                  value={value('whatsapp_float_tooltip', 'Falar no WhatsApp')}\n                  onChange={(e) =>",
+    "pat": "/whatsapp/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\pessoas\\FidelidadePromocoesSection.tsx",
+    "input": "<input\n              type=\"text\"\n              value={voucherForm.cpf_cliente}\n              onChange={(e) =>",
+    "pat": "/cpf/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\admin\\super-domains\\pessoas\\PrestadorDetailDrawer.tsx",
+    "input": "<input\n                    type=\"text\"\n                    value={editForm.telefone}\n                    onChange={(e) =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\auth\\ClientAccessModal.tsx",
+    "input": "<input required name=\"telefone\" autoComplete=\"tel\" value={registrationData.telefone} onChange={(event) =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\auth\\RestrictedAccessModal.tsx",
+    "input": "<input required name=\"nome-razao\" autoComplete={providerData.tipo_cadastro === 'cpf' ? 'name' : 'organization'} value={providerData.nome_razao} onChange={(event) =>",
+    "pat": "/cpf/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\auth\\RestrictedAccessModal.tsx",
+    "input": "<input required name=\"telefone\" autoComplete=\"tel\" value={providerData.telefone} onChange={(event) =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\client\\ClientEmprestimos.tsx",
+    "input": "<input inputMode={['cpf', 'telefone'].includes(dadosBancarios.pix_tipo_chave) ? 'numeric' : 'text'} pattern={['cpf', 'telefone'].includes(dadosBancarios.pix_tipo_chave) ? '[0-9]*' : undefined} value={dadosBancarios.pix_chave || ''} onChange={e =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\client\\ClientIndiqueGanhe.tsx",
+    "input": "<input \r\n                    type=\"text\" \r\n                    inputMode=\"numeric\"\r\n                    pattern=\"[0-9]*\"\r\n                    placeholder=\"(00) 00000-0000\" \r\n                    value={formData.whatsapp_indicado}\r\n                    onChange={e =>",
+    "pat": "/whatsapp/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\client\\ClientMeuCredito.tsx",
+    "input": "<input \r\n                  type=\"text\"\r\n                  inputMode=\"numeric\"\r\n                  required\r\n                  value={profileData.telefone}\r\n                  onChange={e =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\client\\ClientMeuCredito.tsx",
+    "input": "<input \r\n                    type=\"text\"\r\n                    inputMode=\"numeric\"\r\n                    required\r\n                    value={profileData.cpf}\r\n                    onChange={e =>",
+    "pat": "/cpf/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\client\\ClientMeuCredito.tsx",
+    "input": "<input \r\n                    type=\"text\"\r\n                    inputMode=\"numeric\"\r\n                    required\r\n                    value={profileData.cnpj}\r\n                    onChange={e =>",
+    "pat": "/cnpj/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\client\\ClientProfile.tsx",
+    "input": "<input\r\n            type=\"text\"\r\n            inputMode={['Documento (CPF)', 'Contato (Telefone)', 'CEP'].includes(editingField?.label || '') ? 'numeric' : 'text'}\r\n            pattern={['Documento (CPF)', 'Contato (Telefone)', 'CEP'].includes(editingField?.label || '') ? '[0-9]*' : undefined}\r\n            placeholder={`Novo valor para ${editingField?.label}`}\r\n            value={newValue}\r\n            onChange={e =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\client\\emprestimo\\EmprestimoFormSteps.tsx",
+    "input": "<input type=\"text\" value={dados.cpf} readOnly className={readonlyClass} />",
+    "pat": "/cpf/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\client\\emprestimo\\EmprestimoFormSteps.tsx",
+    "input": "<input type=\"text\" value={dados.telefone} readOnly className={readonlyClass} />",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\client\\financeiro\\SaquesList.tsx",
+    "input": "<input \r\n                          type=\"text\" \r\n                          inputMode={['cpf', 'cnpj', 'telefone'].includes(formData.tipo_chave_pix) ? 'numeric' : 'text'}\r\n                          pattern={['cpf', 'cnpj', 'telefone'].includes(formData.tipo_chave_pix) ? '[0-9]*' : undefined}\r\n                          placeholder=\"Informe sua chave PIX...\" \r\n                          value={formData.chave_pix} \r\n                          onChange={e =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\client\\marketplace\\travel\\TravelQuoteRequestPage.tsx",
+    "input": "<input type=\"tel\" name=\"telefone\" value={formData.telefone} onChange={handleChange} autoComplete=\"tel\" placeholder=\"(00) 00000-0000\" required className={iconFieldClassName} />",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\client\\store\\GroupBuyModal.tsx",
+    "input": "<input \r\n                          type=\"tel\" \r\n                          required\r\n                          value={formData.organizadorTelefone}\r\n                          onChange={e =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\client\\store\\VaquinhaPublicPage.tsx",
+    "input": "<input\r\n                      type=\"tel\"\r\n                      placeholder=\"(11) 99999-9999\"\r\n                      value={telefoneContribuinte}\r\n                      onChange={(e) =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\public\\FreeToolsAdditionalCalculators.tsx",
+    "input": "<input type=\"checkbox\" checked={familyCpf} onChange={(event) =>",
+    "pat": "/cpf/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\public\\FreeToolsProUnlockDialog.tsx",
+    "input": "<input\r\n                      type=\"tel\"\r\n                      value={whatsAppPhone}\r\n                      onChange={(e) =>",
+    "pat": "/whatsapp/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\public\\PartnerBenefitRedeemModal.tsx",
+    "input": "<input\n                      type=\"tel\"\n                      required\n                      value={telefone}\n                      onChange={(e) =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\components\\public\\SystemsBudgetModal.tsx",
+    "input": "<input id=\"budget-phone\" required type=\"tel\" inputMode=\"tel\" autoComplete=\"tel\" value={form.telefone} onChange={(event) =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\pages\\Afiliado\\AffiliateAccessPage.tsx",
+    "input": "<input required inputMode=\"tel\" autoComplete=\"tel\" value={form.telefone} onChange={(event) =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\pages\\BusinessRegistrationPage.tsx",
+    "input": "<input\r\n                          id=\"business-cnpj\"\r\n                          name=\"cnpj\"\r\n                          type=\"text\"\r\n                          inputMode=\"numeric\"\r\n                          autoComplete=\"off\"\r\n                          required\r\n                          value={cnpj}\r\n                          onChange={(event) =>",
+    "pat": "/cnpj/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\pages\\BusinessRegistrationPage.tsx",
+    "input": "<input\r\n                          id=\"business-phone\"\r\n                          name=\"telefone\"\r\n                          type=\"tel\"\r\n                          inputMode=\"tel\"\r\n                          autoComplete=\"tel\"\r\n                          required\r\n                          maxLength={15}\r\n                          value={registrationData.telefone}\r\n                          onChange={(event) =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\pages\\ProviderAccessPage.tsx",
+    "input": "<input\r\n                        id=\"provider-name\"\r\n                        name=\"nome-razao\"\r\n                        type=\"text\"\r\n                        autoComplete={providerData.tipo_cadastro === 'cpf' ? 'name' : 'organization'}\r\n                        required\r\n                        maxLength={180}\r\n                        value={providerData.nome_razao}\r\n                        onChange={(event) =>",
+    "pat": "/cpf/i",
+    "hasMask": false
+  },
+  {
+    "file": "src\\pages\\ProviderAccessPage.tsx",
+    "input": "<input\r\n                        id=\"provider-phone\"\r\n                        name=\"telefone\"\r\n                        type=\"tel\"\r\n                        inputMode=\"tel\"\r\n                        autoComplete=\"tel\"\r\n                        required\r\n                        maxLength={15}\r\n                        value={providerData.telefone}\r\n                        onChange={(event) =>",
+    "pat": "/telefone/i",
+    "hasMask": false
+  }
+]

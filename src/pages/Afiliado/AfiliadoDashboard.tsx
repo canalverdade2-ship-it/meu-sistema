@@ -37,6 +37,7 @@ import { toast } from 'react-hot-toast';
 import { Modal } from '../../components/ui/Modal';
 import { LogoGSA } from '../../components/ui/LogoGSA';
 import {
+  activateClientProfileFromAffiliate,
   cancelAffiliatePayout,
   createAffiliateLink,
   fetchAffiliateSnapshot,
@@ -46,12 +47,14 @@ import {
   updateAffiliateProfile,
 } from '../../features/affiliates/service';
 import type { AffiliateCommission, AffiliateSnapshot } from '../../features/affiliates/types';
+import { AFFILIATE_CURRENT_TERMS_VERSION } from '../../features/affiliates/types';
 import { supabase } from '../../lib/supabase';
 import { copyToClipboard, formatCurrency, formatDateTime, generateUUID, maskCNPJ, maskCPF } from '../../lib/utils';
 import { navigate } from '../../routing/navigationService';
 import { routes } from '../../routing/routeCatalog';
 import { UniversalNotificationBell } from '../../components/ui/UniversalNotificationBell';
 import { useClientNotifications } from '../../hooks/useClientNotifications';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import '../../affiliates.css';
 
 interface AfiliadoDashboardProps {
@@ -318,6 +321,7 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
         if (data) setStoreProducts(data);
       } catch (err) {
         console.error('Erro ao carregar produtos da loja para links:', err);
+        toast.error('Não foi possível carregar as opções de produtos. Tente novamente mais tarde.');
       }
     };
     fetchStoreProducts();
@@ -379,14 +383,17 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
 
   useEffect(() => {
     void load();
-    const interval = window.setInterval(() => void load(true), 30000);
-    const refreshOnFocus = () => void load(true);
-    window.addEventListener('focus', refreshOnFocus);
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener('focus', refreshOnFocus);
-    };
   }, [load]);
+
+  const affiliateId = snapshot.affiliate?.id || null;
+  useRealtimeSubscription([
+    { table: 'gsa_afiliados', filter: `cliente_id=eq.${clientId}`, onChange: () => load(true), debounceMs: 250 },
+    { table: 'gsa_afiliado_comissoes', filter: affiliateId ? `afiliado_id=eq.${affiliateId}` : undefined, enabled: Boolean(affiliateId), onChange: () => load(true), debounceMs: 250 },
+    { table: 'gsa_afiliado_saques', filter: affiliateId ? `afiliado_id=eq.${affiliateId}` : undefined, enabled: Boolean(affiliateId), onChange: () => load(true), debounceMs: 250 },
+    { table: 'gsa_afiliado_links', filter: affiliateId ? `afiliado_id=eq.${affiliateId}` : undefined, enabled: Boolean(affiliateId), onChange: () => load(true), debounceMs: 250 },
+    { table: 'gsa_afiliado_pontos_eventos', filter: affiliateId ? `afiliado_id=eq.${affiliateId}` : undefined, enabled: Boolean(affiliateId), onChange: () => load(true), debounceMs: 250 },
+    { table: 'gsa_afiliado_transferencias', enabled: Boolean(affiliateId), onChange: () => load(true), debounceMs: 250 },
+  ], [clientId, affiliateId, load]);
 
   const navigateToTab = (tab: TabType) => navigate(resolvePathFromTab(tab));
 
@@ -418,7 +425,7 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
       nomeDivulgacao: joinName.trim(),
       pixTipo: joinPixType,
       pixChave: joinPixKey.trim(),
-      termosVersao: '2026-07-22',
+      termosVersao: AFFILIATE_CURRENT_TERMS_VERSION,
     }), 'Perfil de afiliado ativado.');
     if (ok) {
       await load(true);
@@ -492,13 +499,10 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
         pixChave: profilePixKey.trim(),
       });
       if (clientId) {
-        await supabase
-          .from('clientes')
-          .update({
-            email: profileEmail.trim(),
-            telefone: profilePhone.trim(),
-          })
-          .eq('id', clientId);
+        await clientOperationalWrite(clientId, 'clientes', 'update', {
+          email: profileEmail.trim(),
+          telefone: profilePhone.trim(),
+        });
       }
       return nextSnapshot;
     }, 'Perfil atualizado.');
@@ -1235,14 +1239,14 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
                   <form onSubmit={redeemPoints} className="mt-7 space-y-5">
                     <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
                       Quantidade de pontos
-                      <input
+                      <input 
                         required
                         type="number"
                         step="any"
                         min={snapshot.summary.pontosMinimo}
                         max={snapshot.summary.pontos}
                         value={pointsValue}
-                        onChange={(event) => setPointsValue(event.target.value)}
+                        inputMode="numeric" onChange={(event) => setPointsValue(event.target.value)}
                         className="affiliate-input mt-2 font-mono text-base"
                       />
                     </label>
@@ -1278,7 +1282,7 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
                       </label>
                       <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
                         Telefone / WhatsApp
-                        <input type="tel" value={profilePhone} onChange={(event) => setProfilePhone(event.target.value)} placeholder="(11) 99999-9999" className="affiliate-input mt-2" />
+                        <input  type="tel" value={profilePhone} inputMode="numeric" onChange={(event) => setProfilePhone(event.target.value)} placeholder="(11) 99999-9999" className="affiliate-input mt-2" />
                       </label>
                     </div>
                     <div className="grid gap-5 sm:grid-cols-[0.8fr_1.2fr]">
@@ -1326,6 +1330,33 @@ export function AfiliadoDashboard({ clientId, onLogout, activeSubRoute }: Afilia
                     <p className="mt-2 text-xs leading-6 text-white/55">
                       A chave PIX completa é utilizada somente nas operações autorizadas. Históricos exibem dados protegidos sempre que aplicável.
                     </p>
+                  </div>
+
+                  <div className="border border-[#c9c2b6] bg-white p-5 sm:p-6">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#7a828c]">Perfil de Cliente</p>
+                    <h3 className="mt-2 text-sm font-semibold text-[#0b1522]">Acesso à Loja e Painel do Cliente</h3>
+                    <p className="mt-1 text-xs leading-5 text-[#727a84]">
+                      Ative seu perfil de cliente para realizar compras, acumular pontos e gerenciar pedidos na loja oficial.
+                    </p>
+                    <button
+                      type="button"
+                      disabled={working}
+                      onClick={async () => {
+                        setWorking(true);
+                        try {
+                          await activateClientProfileFromAffiliate();
+                          toast.success('Perfil de cliente ativado com sucesso!');
+                          await load(true);
+                        } catch (err: any) {
+                          toast.error(err?.message || 'Erro ao ativar perfil de cliente.');
+                        } finally {
+                          setWorking(false);
+                        }
+                      }}
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 bg-[#c59a4a] px-4 py-2.5 text-xs font-bold text-[#0b1522] hover:bg-[#ddc28d] transition-colors disabled:opacity-50"
+                    >
+                      <User className="h-4 w-4" /> Ativar perfil de cliente
+                    </button>
                   </div>
 
                   {pendingDeletionTicket ? (

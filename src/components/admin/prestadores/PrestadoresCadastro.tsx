@@ -736,10 +736,11 @@ export function PrestadoresCadastro({
                             <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest ml-1">Telefone</label>
                             <input 
                               type="text" 
-                              inputMode="numeric"
-                              pattern="[0-9]*"
+                              inputMode="tel"
+                              maxLength={15}
+                              placeholder="(00) 00000-0000"
                               value={editData.telefone || ''} 
-                              onChange={e => setEditData({...editData, telefone: e.target.value})}
+                              onChange={e => setEditData({...editData, telefone: maskPhone(e.target.value)})}
                               className="w-full rounded-xl bg-neutral-50 border-transparent px-4 py-3 text-sm font-bold focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none ring-1 ring-neutral-200"
                             />
                           </div>
@@ -763,6 +764,8 @@ export function PrestadoresCadastro({
                             <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest ml-1">Número</label>
                             <input 
                               type="text" 
+                              inputMode="numeric"
+                              pattern="[0-9]*"
                               value={editData.numero || ''} 
                               onChange={e => setEditData({...editData, numero: e.target.value})}
                               className="w-full rounded-xl bg-neutral-50 border-transparent px-4 py-3 text-sm font-bold focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none ring-1 ring-neutral-200"

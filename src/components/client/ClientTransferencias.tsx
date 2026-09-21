@@ -6,6 +6,7 @@ import { formatCurrency, formatDateTime, maskCNPJ, maskCPF, generateUUID } from 
 import { Modal } from '../ui/Modal';
 import { Cliente } from '../../types';
 import { callClientRpc } from '../../lib/clientRpc';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 type TransferType = 'saldo' | 'pontos';
 
@@ -34,7 +35,6 @@ export function ClientTransferencias({
   const [valor, setValor] = useState('');
   const [motivo, setMotivo] = useState('');
   const [loading, setLoading] = useState(false);
-  const [canceling, setCanceling] = useState(false);
   const [isEstornando, setIsEstornando] = useState(false);
   const hasAutoOpened = useRef<string | null>(null);
   const transferRequestId = useRef<string>(generateUUID());
@@ -61,16 +61,35 @@ export function ClientTransferencias({
   useEffect(() => {
     fetchClienteData();
     fetchTransferencias();
-
-    const channel = supabase
-      .channel(`client-transferencias-${clientId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'transferencias' }, fetchTransferencias)
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [clientId]);
+
+  useRealtimeSubscription(
+    [
+      {
+        table: 'transferencias',
+        onChange: () => {
+          fetchClienteData();
+          fetchTransferencias();
+        },
+      },
+      {
+        table: 'clientes',
+        filter: clientId ? `id=eq.${clientId}` : undefined,
+        onChange: fetchClienteData,
+      },
+      {
+        table: 'pontos_movimentacoes',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: fetchClienteData,
+      },
+      {
+        table: 'saques',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: fetchClienteData,
+      },
+    ],
+    [clientId]
+  );
 
   useEffect(() => {
     if (!initialItemId || hasAutoOpened.current === initialItemId || transferencias.length === 0) return;
@@ -149,36 +168,18 @@ export function ClientTransferencias({
         p_motivo: motivo.trim(),
       });
 
-      if (!data?.success) throw new Error('Não foi possível solicitar a transferência.');
+      if (!data?.success) throw new Error('Não foi possível concluir a transferência.');
 
-      toast.success('Transferencia enviada para analise.');
+      toast.success('Transferência concluída instantaneamente.');
       setIsConfirmModalOpen(false);
       setIsModalOpen(false);
       resetForm();
       fetchClienteData();
       fetchTransferencias();
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao solicitar transferencia.');
+      toast.error(error.message || 'Erro ao concluir transferência.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCancelTransferencia = async (transferencia: any) => {
-    setCanceling(true);
-    try {
-      await callClientRpc('gsa_client_cancel_transfer', {
-        p_transferencia_id: transferencia.id,
-      });
-
-      toast.success('Transferencia cancelada e valor estornado.');
-      setIsDetailModalOpen(false);
-      fetchClienteData();
-      fetchTransferencias();
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao cancelar transferencia.');
-    } finally {
-      setCanceling(false);
     }
   };
 
@@ -226,7 +227,7 @@ export function ClientTransferencias({
           onClick={() => { resetForm(); setIsModalOpen(true); }}
           className="flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-indigo-700"
         >
-          <Send className="h-4 w-4" /> Solicitar Transferencia
+          <Send className="h-4 w-4" /> Transferir Agora
         </button>
       </div>
 
@@ -263,7 +264,7 @@ export function ClientTransferencias({
         )}
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Solicitar Transferencia">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Transferência Instantânea">
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-2 rounded-2xl bg-neutral-100 p-1">
             {(['saldo', 'pontos'] as TransferType[]).map(option => (
@@ -327,12 +328,7 @@ export function ClientTransferencias({
               <p>Destino: {selectedTransferencia.cliente_destino?.nome}</p>
               <p>Motivo: {selectedTransferencia.motivo || '-'}</p>
             </div>
-            {selectedTransferencia.cliente_origem_id === clientId && selectedTransferencia.status === 'em_analise' && (
-              <button onClick={() => handleCancelTransferencia(selectedTransferencia)} disabled={canceling} className="w-full rounded-2xl bg-rose-600 py-3 text-sm font-black text-white disabled:bg-neutral-300">
-                {canceling ? 'Processando...' : 'Cancelar Solicitacao'}
-              </button>
-            )}
-            {selectedTransferencia.status === 'aprovado' && (
+            {selectedTransferencia.cliente_destino_id === clientId && ['aprovado', 'concluido'].includes(selectedTransferencia.status) && (
               <button onClick={() => setIsEstornoModalOpen(true)} className="w-full rounded-2xl bg-neutral-950 py-3 text-sm font-black text-white">
                 Solicitar Estorno
               </button>

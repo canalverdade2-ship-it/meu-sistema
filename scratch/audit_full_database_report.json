@@ -1,0 +1,5563 @@
+{
+  "summary": {
+    "totalMigrations": 397,
+    "totalTables": 286,
+    "totalFunctions": 701,
+    "totalTriggers": 120
+  },
+  "tablesWithoutRLS": [
+    {
+      "table": "promocoes",
+      "createdIn": "20260315000002_fix_promocoes_schema.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "cliente_promocoes",
+      "createdIn": "20260315000002_fix_promocoes_schema.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "sistema_logs",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "saude_configuracoes",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "saude_parceiros",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "saude_produtos",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "saude_produto_redes",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "saude_cotacoes",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "saude_cotacao_beneficiarios",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "saude_propostas",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "saude_aceites",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "saude_contratos",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "saude_dependentes",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "saude_documentos",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "saude_assessorias",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "saude_comissoes",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "saude_atendimentos",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "saude_atendimento_mensagens",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "saude_auditoria",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "storage.objects",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_configuracoes",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_parceiros",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_produtos",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_ofertas",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_cotacoes",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_cotacao_dados",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_propostas",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_aceites",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_apolices",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_documentos",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_assessorias",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_comissoes",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_assistencias",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_sinistros",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_sinistro_mensagens",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_atendimentos",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_atendimento_mensagens",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "seguros_auditoria",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_advertisers",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_ad_placements",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_ad_requests",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_ad_request_placements",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_ad_proposals",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_ad_proposal_versions",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_ad_negotiations",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_ad_campaigns",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_ad_creatives",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_ad_campaign_placements",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_ad_daily_metrics",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_ad_audit_logs",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_ad_payments",
+      "createdIn": "20260721223100_complete_advertising_platform.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_ad_payment_events",
+      "createdIn": "20260721223100_complete_advertising_platform.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_ad_delivery_events",
+      "createdIn": "20260721223100_complete_advertising_platform.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "fornecedores",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "fornecedor_produtos",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "fornecedor_produto_solicitacoes",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "pedidos_compra_fornecedor",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "pedido_compra_fornecedor_itens",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "fornecedor_entregas",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "fornecedor_entrega_itens",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "contas_pagar",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "fornecedor_auditoria",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "fornecedor_notificacoes",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_afiliado_programas",
+      "createdIn": "20260722040000_affiliate_program.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_afiliado_cliques",
+      "createdIn": "20260722040000_affiliate_program.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_afiliado_atribuicoes",
+      "createdIn": "20260722040000_affiliate_program.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_afiliado_comissoes",
+      "createdIn": "20260722040000_affiliate_program.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_afiliado_saques",
+      "createdIn": "20260722040000_affiliate_program.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_afiliado_comissao_eventos",
+      "createdIn": "20260722040000_affiliate_program.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_ad_rate_limit_buckets",
+      "createdIn": "20260722040000_harden_advertising_backend.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_ad_maintenance_state",
+      "createdIn": "20260722040000_harden_advertising_backend.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "loja_credito_movimentacoes",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "loja_credito_documentos",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "produtos",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "cupons_loja",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "ordens_servico",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "indicacoes",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "level_history",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "points_transactions",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "loja_reembolsos",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "prestador_premios",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "prestador_promocoes",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "prestador_promocoes_ativacoes",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "ticket_mensagens",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "emprestimo_comentarios",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "emprestimo_historico",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "promocoes_quantidade_uso",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_programs",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_series",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_episodes",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_schedule_versions",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_program_blocks",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_rights_records",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_comments",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_ad_campaigns",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_ad_assets",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_live_sources",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_identity_assets",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_graphic_templates",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_on_air_graphics",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_as_run",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_ai_presenters",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_ai_projects",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_ai_jobs",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_ai_assets",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_execution_log",
+      "createdIn": "20260831203000_gsa_tv_master_operations.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_watchdog_samples",
+      "createdIn": "20260831203000_gsa_tv_master_operations.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_graphics",
+      "createdIn": "20260831203000_gsa_tv_master_operations.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_live_source_secrets",
+      "createdIn": "20260831203000_gsa_tv_master_operations.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_rights_documents",
+      "createdIn": "20260831203000_gsa_tv_master_operations.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_campaigns",
+      "createdIn": "20260831203000_gsa_tv_master_operations.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_virtual_presenters",
+      "createdIn": "20260831203000_gsa_tv_master_operations.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_editorial_policies",
+      "createdIn": "20260831203000_gsa_tv_master_operations.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_live_recordings",
+      "createdIn": "20260901014500_gsa_tv_operational_completeness.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_alert_settings",
+      "createdIn": "20260901014500_gsa_tv_operational_completeness.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_alert_deliveries",
+      "createdIn": "20260901014500_gsa_tv_operational_completeness.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_backup_runs",
+      "createdIn": "20260901014500_gsa_tv_operational_completeness.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_ai_usage",
+      "createdIn": "20260901014500_gsa_tv_operational_completeness.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_ai_memory",
+      "createdIn": "20260901014500_gsa_tv_operational_completeness.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_weekly_grid_slots",
+      "createdIn": "20260903223000_gsa_tv_fixed_weekly_grid_and_free_sources.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_editorial_sources",
+      "createdIn": "20260903223000_gsa_tv_fixed_weekly_grid_and_free_sources.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_program_source_links",
+      "createdIn": "20260903223000_gsa_tv_fixed_weekly_grid_and_free_sources.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "gsa_tv_editorial_items",
+      "createdIn": "20260903223000_gsa_tv_fixed_weekly_grid_and_free_sources.sql",
+      "rlsStatus": "NEVER ENABLED"
+    },
+    {
+      "table": "os_notas",
+      "createdIn": null,
+      "rlsStatus": "NEVER ENABLED"
+    }
+  ],
+  "tablesWithRLSNoPolicies": [
+    {
+      "table": "prestador_faturas",
+      "rlsFile": "20260830030000_admin_panel_security_end_to_end.sql"
+    },
+    {
+      "table": "prestador_transacoes",
+      "rlsFile": "20260830030000_admin_panel_security_end_to_end.sql"
+    },
+    {
+      "table": "prestador_saques",
+      "rlsFile": "20260830030000_admin_panel_security_end_to_end.sql"
+    },
+    {
+      "table": "gsa_auth_attempts",
+      "rlsFile": "20260830030000_admin_panel_security_end_to_end.sql"
+    },
+    {
+      "table": "debug_admin_rpc",
+      "rlsFile": "20260714052000_secure_session_account_admin_config.sql"
+    },
+    {
+      "table": "gsa_auth_identities",
+      "rlsFile": "20260830030000_admin_panel_security_end_to_end.sql"
+    },
+    {
+      "table": "gsa_public_rate_limits",
+      "rlsFile": "20260714055000_secure_public_onboarding_flows.sql"
+    },
+    {
+      "table": "gsa_client_operation_requests",
+      "rlsFile": "20260714056200_secure_client_wallet_points_transfers.sql"
+    },
+    {
+      "table": "produto_fornecedor_config",
+      "rlsFile": "20260829234000_secure_supplier_product_config_tables.sql"
+    },
+    {
+      "table": "produto_importacao_origem",
+      "rlsFile": "20260715212051_universal_product_import.sql"
+    },
+    {
+      "table": "produto_desconto_cota_movimentos",
+      "rlsFile": "20260716184000_product_discount_quantity_limit.sql"
+    },
+    {
+      "table": "classificados_configuracoes",
+      "rlsFile": "20260717200000_hub_classificados_schema.sql"
+    },
+    {
+      "table": "classificados_anuncio_midias",
+      "rlsFile": "20260717200000_hub_classificados_schema.sql"
+    },
+    {
+      "table": "classificados_comprovantes",
+      "rlsFile": "20260717200000_hub_classificados_schema.sql"
+    },
+    {
+      "table": "viagens_configuracoes",
+      "rlsFile": "20260720110000_gsa_viagens_custom_session_security.sql"
+    },
+    {
+      "table": "viagens_fornecedores",
+      "rlsFile": "20260720110000_gsa_viagens_custom_session_security.sql"
+    },
+    {
+      "table": "viagens_pacotes",
+      "rlsFile": "20260720110000_gsa_viagens_custom_session_security.sql"
+    },
+    {
+      "table": "viagens_pacote_imagens",
+      "rlsFile": "20260720110000_gsa_viagens_custom_session_security.sql"
+    },
+    {
+      "table": "viagens_orcamentos",
+      "rlsFile": "20260720110000_gsa_viagens_custom_session_security.sql"
+    },
+    {
+      "table": "viagens_solicitacoes_reserva",
+      "rlsFile": "20260720110000_gsa_viagens_custom_session_security.sql"
+    },
+    {
+      "table": "viagens_passageiros",
+      "rlsFile": "20260720110000_gsa_viagens_custom_session_security.sql"
+    },
+    {
+      "table": "viagens_passageiro_documentos",
+      "rlsFile": "20260720110000_gsa_viagens_custom_session_security.sql"
+    },
+    {
+      "table": "viagens_transacoes",
+      "rlsFile": "20260720110000_gsa_viagens_custom_session_security.sql"
+    },
+    {
+      "table": "viagens_vouchers",
+      "rlsFile": "20260720110000_gsa_viagens_custom_session_security.sql"
+    },
+    {
+      "table": "viagens_cancelamentos",
+      "rlsFile": "20260720110000_gsa_viagens_custom_session_security.sql"
+    },
+    {
+      "table": "gsa_admin_operation_requests",
+      "rlsFile": "20260830030000_admin_panel_security_end_to_end.sql"
+    },
+    {
+      "table": "gsa_admin_audit_events",
+      "rlsFile": "20260830030000_admin_panel_security_end_to_end.sql"
+    },
+    {
+      "table": "gsa_admin_notification_state",
+      "rlsFile": "20260830030000_admin_panel_security_end_to_end.sql"
+    },
+    {
+      "table": "gsa_auth_rate_limits",
+      "rlsFile": "20260830030000_admin_panel_security_end_to_end.sql"
+    },
+    {
+      "table": "gsa_client_recovery_challenges",
+      "rlsFile": "20260720232000_harden_client_portal_audit_findings.sql"
+    },
+    {
+      "table": "gsa_public_budget_rate_limits",
+      "rlsFile": "20260720232000_secure_public_sites_systems_budget.sql"
+    },
+    {
+      "table": "gsa_provider_audit_events",
+      "rlsFile": "20260720233000_provider_portal_audit_hardening.sql"
+    },
+    {
+      "table": "viagens_transacao_parcelas",
+      "rlsFile": "20260721150000_gsa_viagens_financial_integrity.sql"
+    },
+    {
+      "table": "gsa_travel_operation_requests",
+      "rlsFile": "20260830043000_admin_security_residual_end_to_end.sql"
+    },
+    {
+      "table": "servicos_pacotes",
+      "rlsFile": "20260722030000_service_catalog_packages.sql"
+    },
+    {
+      "table": "gsa_service_packages",
+      "rlsFile": "20260722170000_restore_real_service_packages.sql"
+    },
+    {
+      "table": "gsa_service_package_items",
+      "rlsFile": "20260722170000_restore_real_service_packages.sql"
+    },
+    {
+      "table": "gsa_careers_applications",
+      "rlsFile": "20260722235959_harden_gsa_careers_flow.sql"
+    },
+    {
+      "table": "gsa_careers_application_history",
+      "rlsFile": "20260722235959_harden_gsa_careers_flow.sql"
+    },
+    {
+      "table": "cliente_notas_admin",
+      "rlsFile": "20260830030000_admin_panel_security_end_to_end.sql"
+    },
+    {
+      "table": "gsa_calculator_pro_products",
+      "rlsFile": "20260723233000_free_tools_pro_access.sql"
+    },
+    {
+      "table": "gsa_calculator_pro_payments",
+      "rlsFile": "20260723233000_free_tools_pro_access.sql"
+    },
+    {
+      "table": "gsa_calculator_pro_vouchers",
+      "rlsFile": "20260723233000_free_tools_pro_access.sql"
+    },
+    {
+      "table": "gsa_calculator_pro_grants",
+      "rlsFile": "20260723233000_free_tools_pro_access.sql"
+    },
+    {
+      "table": "gsa_calculator_pro_sessions",
+      "rlsFile": "20260723233000_free_tools_pro_access.sql"
+    },
+    {
+      "table": "gsa_calculator_pro_events",
+      "rlsFile": "20260723233000_free_tools_pro_access.sql"
+    },
+    {
+      "table": "gsa_calculator_pro_runtime_config",
+      "rlsFile": "20260724163000_harden_calculator_pro_voucher_payment.sql"
+    },
+    {
+      "table": "gsa_catalogo_legado_arquivo",
+      "rlsFile": "20260724213000_saude_direct_quote_cleanup.sql"
+    },
+    {
+      "table": "gsa_site_campaigns",
+      "rlsFile": "20260724223000_site_campaigns_schema.sql"
+    },
+    {
+      "table": "gsa_site_campaign_events",
+      "rlsFile": "20260724223000_site_campaigns_schema.sql"
+    },
+    {
+      "table": "gsa_site_campaign_history",
+      "rlsFile": "20260724223000_site_campaigns_schema.sql"
+    },
+    {
+      "table": "gsa_site_campaign_permissions",
+      "rlsFile": "20260724223500_site_campaigns_action_permissions.sql"
+    },
+    {
+      "table": "gsa_whatsapp_ramais",
+      "rlsFile": "20260807123000_create_whatsapp_ramais_table.sql"
+    },
+    {
+      "table": "gsa_hero_banners",
+      "rlsFile": "20260826220000_production_remediation_consolidated.sql"
+    },
+    {
+      "table": "loja_avaliacoes",
+      "rlsFile": "20260812140000_product_reviews_and_ratings_system.sql"
+    },
+    {
+      "table": "loja_vaquinhas",
+      "rlsFile": "20260826220000_production_remediation_consolidated.sql"
+    },
+    {
+      "table": "loja_vaquinha_contribuicoes",
+      "rlsFile": "20260826220000_production_remediation_consolidated.sql"
+    },
+    {
+      "table": "shopee_automation_workers",
+      "rlsFile": "20260817190000_shopee_hybrid_fulfillment.sql"
+    },
+    {
+      "table": "shopee_fulfillment_jobs",
+      "rlsFile": "20260817190000_shopee_hybrid_fulfillment.sql"
+    },
+    {
+      "table": "shopee_fulfillment_job_items",
+      "rlsFile": "20260817190000_shopee_hybrid_fulfillment.sql"
+    },
+    {
+      "table": "shopee_fulfillment_events",
+      "rlsFile": "20260817190000_shopee_hybrid_fulfillment.sql"
+    },
+    {
+      "table": "parceiros_resgates_recursos",
+      "rlsFile": "20260828170000_partner_redemption_appeals.sql"
+    },
+    {
+      "table": "parceiros_resgates_eventos",
+      "rlsFile": "20260828170000_partner_redemption_appeals.sql"
+    },
+    {
+      "table": "parceiros_resgates_recurso_desafios",
+      "rlsFile": "20260828170000_partner_redemption_appeals.sql"
+    },
+    {
+      "table": "parceiros_resgates_notificacoes",
+      "rlsFile": "20260828170000_partner_redemption_appeals.sql"
+    },
+    {
+      "table": "clientes_identidades_historicas",
+      "rlsFile": "20260829113000_client_open_registration_and_identity_lifecycle.sql"
+    },
+    {
+      "table": "payment_webhook_events",
+      "rlsFile": "20260830235500_system_end_to_end_security_remediation.sql"
+    },
+    {
+      "table": "produtos_fornecedores_config",
+      "rlsFile": "20260829234000_secure_supplier_product_config_tables.sql"
+    },
+    {
+      "table": "gsa_admin_mutation_requests",
+      "rlsFile": "20260830030000_admin_panel_security_end_to_end.sql"
+    },
+    {
+      "table": "sistema_sessoes",
+      "rlsFile": "20260830030000_admin_panel_security_end_to_end.sql"
+    },
+    {
+      "table": "prestador_vouchers",
+      "rlsFile": "20260830030000_admin_panel_security_end_to_end.sql"
+    },
+    {
+      "table": "automacao_scraping_configs",
+      "rlsFile": "20260830030000_admin_panel_security_end_to_end.sql"
+    },
+    {
+      "table": "automacao_scraping_logs",
+      "rlsFile": "20260830030000_admin_panel_security_end_to_end.sql"
+    },
+    {
+      "table": "solicitacoes_exclusao",
+      "rlsFile": "20260830030000_admin_panel_security_end_to_end.sql"
+    },
+    {
+      "table": "gsa_careers_vacancies",
+      "rlsFile": "20260831103000_careers_vacancies_and_notifications.sql"
+    },
+    {
+      "table": "gsa_careers_notification_outbox",
+      "rlsFile": "20260831103000_careers_vacancies_and_notifications.sql"
+    }
+  ],
+  "wildcardPolicies": [
+    {
+      "table": "blog_posts",
+      "policy": "blog_posts_public_read",
+      "cmd": "SELECT",
+      "roles": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ],
+      "qual": "true",
+      "withCheck": "",
+      "file": "20260826220000_production_remediation_consolidated.sql",
+      "line": 77,
+      "isPublicOrAnon": true
+    },
+    {
+      "table": "orcamento_timeline",
+      "policy": "orcamento_timeline_select_authenticated",
+      "cmd": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "qual": "true",
+      "withCheck": "",
+      "file": "20260711080000_create_orcamento_timeline_compat.sql",
+      "line": 42,
+      "isPublicOrAnon": false
+    },
+    {
+      "table": "orcamento_timeline",
+      "policy": "orcamento_timeline_insert_authenticated",
+      "cmd": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "qual": "",
+      "withCheck": "true",
+      "file": "20260711080000_create_orcamento_timeline_compat.sql",
+      "line": 49,
+      "isPublicOrAnon": false
+    },
+    {
+      "table": "orcamento_timeline",
+      "policy": "orcamento_timeline_select_public",
+      "cmd": "SELECT",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "qual": "true",
+      "withCheck": "",
+      "file": "20260711081000_fix_orcamento_timeline_rls.sql",
+      "line": 2,
+      "isPublicOrAnon": true
+    },
+    {
+      "table": "orcamento_timeline",
+      "policy": "orcamento_timeline_insert_public",
+      "cmd": "INSERT",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "qual": "",
+      "withCheck": "true",
+      "file": "20260711081000_fix_orcamento_timeline_rls.sql",
+      "line": 9,
+      "isPublicOrAnon": true
+    },
+    {
+      "table": "orcamento_timeline",
+      "policy": "orcamento_timeline_update_public",
+      "cmd": "UPDATE",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "qual": "true",
+      "withCheck": "true",
+      "file": "20260711081000_fix_orcamento_timeline_rls.sql",
+      "line": 16,
+      "isPublicOrAnon": true
+    },
+    {
+      "table": "sistema_logs",
+      "policy": "sistema_logs_select_public_temp",
+      "cmd": "SELECT",
+      "roles": [
+        "public"
+      ],
+      "qual": "true",
+      "withCheck": "",
+      "file": "20260714014000_reduce_public_session_log_writes.sql",
+      "line": 66,
+      "isPublicOrAnon": true
+    },
+    {
+      "table": "whatsapp_pendencias_ativas",
+      "policy": "whatsapp_pendencias_auth_read",
+      "cmd": "SELECT",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ],
+      "qual": "true",
+      "withCheck": "",
+      "file": "20260826220000_production_remediation_consolidated.sql",
+      "line": 227,
+      "isPublicOrAnon": false
+    },
+    {
+      "table": "whatsapp_pendencias_ativas",
+      "policy": "whatsapp_pendencias_all_access",
+      "cmd": "ALL",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ],
+      "qual": "true",
+      "withCheck": "true",
+      "file": "20260826220000_production_remediation_consolidated.sql",
+      "line": 234,
+      "isPublicOrAnon": false
+    },
+    {
+      "table": "contratos",
+      "policy": "contratos_anon_select",
+      "cmd": "SELECT",
+      "roles": [
+        "anon"
+      ],
+      "qual": "true",
+      "withCheck": "",
+      "file": "20260826220000_production_remediation_consolidated.sql",
+      "line": 52,
+      "isPublicOrAnon": true
+    },
+    {
+      "table": "gsa_tv_channels",
+      "policy": "gsa_tv_channels_public_read",
+      "cmd": "SELECT",
+      "roles": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ],
+      "qual": "true",
+      "withCheck": "",
+      "file": "20260826233000_db_rpc_integrity_remediation.sql",
+      "line": 23,
+      "isPublicOrAnon": true
+    },
+    {
+      "table": "gsa_tv_media_items",
+      "policy": "gsa_tv_media_public_read",
+      "cmd": "SELECT",
+      "roles": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ],
+      "qual": "true",
+      "withCheck": "",
+      "file": "20260826233000_db_rpc_integrity_remediation.sql",
+      "line": 55,
+      "isPublicOrAnon": true
+    },
+    {
+      "table": "gsa_tv_schedule_slots",
+      "policy": "gsa_tv_schedule_public_read",
+      "cmd": "SELECT",
+      "roles": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ],
+      "qual": "true",
+      "withCheck": "",
+      "file": "20260826233000_db_rpc_integrity_remediation.sql",
+      "line": 73,
+      "isPublicOrAnon": true
+    },
+    {
+      "table": "parceiros_resgates_public_status",
+      "policy": "parceiros_resgates_public_status_read",
+      "cmd": "SELECT",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "qual": "true",
+      "withCheck": "",
+      "file": "20260828170000_partner_redemption_appeals.sql",
+      "line": 120,
+      "isPublicOrAnon": true
+    },
+    {
+      "table": "produtos",
+      "policy": "marketplace_products_read",
+      "cmd": "SELECT",
+      "roles": [
+        "public"
+      ],
+      "qual": "true",
+      "withCheck": "",
+      "file": "20260829211500_marketplace_security_refund_checkout_hardening.sql",
+      "line": 551,
+      "isPublicOrAnon": true
+    },
+    {
+      "table": "cupons_loja",
+      "policy": "marketplace_coupons_read",
+      "cmd": "SELECT",
+      "roles": [
+        "public"
+      ],
+      "qual": "true",
+      "withCheck": "",
+      "file": "20260829211500_marketplace_security_refund_checkout_hardening.sql",
+      "line": 554,
+      "isPublicOrAnon": true
+    },
+    {
+      "table": "ordens_servico",
+      "policy": "ordens_servico_public_read",
+      "cmd": "SELECT",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "qual": "true",
+      "withCheck": "",
+      "file": "20260829233000_harden_service_billing_end_to_end.sql",
+      "line": 206,
+      "isPublicOrAnon": true
+    }
+  ],
+  "secDefinerWithoutSearchPath": [
+    {
+      "function": "gsa_generate_unique_product_code",
+      "file": "20260716000000_product_barcode_support.sql",
+      "line": 30
+    },
+    {
+      "function": "sync_cliente_pontos_e_saldo",
+      "file": "20260728040000_fix_exception_handlers.sql",
+      "line": 3285
+    }
+  ],
+  "secDefinerWithoutAuth": [
+    {
+      "function": "gsa_generate_code",
+      "file": "20260711160000_financial_client_rpc_hardening.sql",
+      "line": 1,
+      "grants": []
+    },
+    {
+      "function": "suprimir_bonus_boas_vindas_cliente",
+      "file": "20260711173000_client_portal_credit_bonus_rpcs.sql",
+      "line": 1,
+      "grants": []
+    },
+    {
+      "function": "cliente_operational_write",
+      "file": "20260814120000_loja_favoritos_persistence.sql",
+      "line": 17,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "increment_comentarios",
+      "file": "20260714010000_fix_db_dependency_gaps.sql",
+      "line": 4,
+      "grants": []
+    },
+    {
+      "function": "gsa_start_session",
+      "file": "20260714013500_fix_secure_session_pgcrypto_schema.sql",
+      "line": 12,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_validate_session",
+      "file": "20260714013000_secure_session_rpc_foundation.sql",
+      "line": 86,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_end_session",
+      "file": "20260714013000_secure_session_rpc_foundation.sql",
+      "line": 126,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_ping_session",
+      "file": "20260714013000_secure_session_rpc_foundation.sql",
+      "line": 150,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_force_end_session",
+      "file": "20260714013000_secure_session_rpc_foundation.sql",
+      "line": 173,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_check_active_session",
+      "file": "20260714013000_secure_session_rpc_foundation.sql",
+      "line": 195,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_admin_clear_access_history",
+      "file": "20260714014000_reduce_public_session_log_writes.sql",
+      "line": 4,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_log_action",
+      "file": "20260714014500_secure_log_action_rpc.sql",
+      "line": 3,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_admin_session_actor",
+      "file": "20260714020000_secure_admin_withdrawal_transfer_rpcs.sql",
+      "line": 1,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_admin_emprestimo_add_historico",
+      "file": "20260714043000_secure_admin_loan_flow_rpcs.sql",
+      "line": 1,
+      "grants": []
+    },
+    {
+      "function": "gsa_assert_auth_rate_limit",
+      "file": "20260714051000_secure_atomic_login_sessions.sql",
+      "line": 60,
+      "grants": []
+    },
+    {
+      "function": "gsa_record_auth_attempt",
+      "file": "20260714051000_secure_atomic_login_sessions.sql",
+      "line": 98,
+      "grants": []
+    },
+    {
+      "function": "gsa_create_session_internal",
+      "file": "20260722021000_supplier_auth_and_onboarding.sql",
+      "line": 115,
+      "grants": []
+    },
+    {
+      "function": "gsa_lookup_portal_account",
+      "file": "20260714051000_secure_atomic_login_sessions.sql",
+      "line": 180,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_login_colaborador",
+      "file": "20260728040000_fix_exception_handlers.sql",
+      "line": 2526,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_upsert_settings",
+      "file": "20260714053200_protect_system_settings_secrets.sql",
+      "line": 4,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_verify_own_pin",
+      "file": "20260714052000_secure_session_account_admin_config.sql",
+      "line": 129,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_change_own_pin",
+      "file": "20260716180000_secure_client_pin_recovery.sql",
+      "line": 73,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_provision_auth_identity_internal",
+      "file": "20260722021000_supplier_auth_and_onboarding.sql",
+      "line": 41,
+      "grants": []
+    },
+    {
+      "function": "gsa_client_session_actor",
+      "file": "20260716180000_secure_client_pin_recovery.sql",
+      "line": 41,
+      "grants": []
+    },
+    {
+      "function": "gsa_provider_session_actor",
+      "file": "20260714054000_atomic_invoice_payment_and_points.sql",
+      "line": 40,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_notify_invoice_payment_started",
+      "file": "20260714054400_invoice_payment_admin_notification.sql",
+      "line": 4,
+      "grants": []
+    },
+    {
+      "function": "gsa_notify_invoice_paid",
+      "file": "20260714054500_invoice_paid_client_notification.sql",
+      "line": 4,
+      "grants": []
+    },
+    {
+      "function": "gsa_assert_public_rate_limit",
+      "file": "20260714055000_secure_public_onboarding_flows.sql",
+      "line": 17,
+      "grants": []
+    },
+    {
+      "function": "gsa_public_lookup_referral",
+      "file": "20260720215530_minimize_public_referral_lookup.sql",
+      "line": 3,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_public_create_enterprise_budget",
+      "file": "20260721124500_finalize_public_home_budget.sql",
+      "line": 5,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_client_checkout_store",
+      "file": "20260817203000_zero_balance_store_checkout.sql",
+      "line": 19,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_client_cancel_store_order",
+      "file": "20260817211500_fix_client_store_cancellation_guard.sql",
+      "line": 19,
+      "grants": [
+        "authenticated",
+        "service_role",
+        "anon"
+      ]
+    },
+    {
+      "function": "gsa_recuperar_senha_cliente",
+      "file": "20260714101500_recovery_login_and_update_pin.sql",
+      "line": 2,
+      "grants": []
+    },
+    {
+      "function": "gsa_update_client_pin",
+      "file": "20260716180000_secure_client_pin_recovery.sql",
+      "line": 141,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_admin_import_products_batch_v2",
+      "file": "20260830190000_admin_full_audit_security_remediation.sql",
+      "line": 204,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_generate_unique_product_code",
+      "file": "20260716000000_product_barcode_support.sql",
+      "line": 30,
+      "grants": []
+    },
+    {
+      "function": "gsa_get_client_session_access_state",
+      "file": "20260716180000_secure_client_pin_recovery.sql",
+      "line": 2,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_client_saude_criar_cotacao",
+      "file": "20260724213000_saude_direct_quote_cleanup.sql",
+      "line": 70,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_client_saude_listar",
+      "file": "20260718120000_gsa_saude_complete.sql",
+      "line": 168,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_client_saude_abrir_atendimento",
+      "file": "20260718120000_gsa_saude_complete.sql",
+      "line": 187,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_saude_registrar_comissao_ativacao",
+      "file": "20260718120000_gsa_saude_complete.sql",
+      "line": 221,
+      "grants": []
+    },
+    {
+      "function": "gsa_client_saude_registrar_documento",
+      "file": "20260718120000_gsa_saude_complete.sql",
+      "line": 233,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_client_seguros_criar_cotacao",
+      "file": "20260728040000_fix_exception_handlers.sql",
+      "line": 2128,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_client_seguros_listar",
+      "file": "20260718121000_gsa_seguros_complete.sql",
+      "line": 159,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_client_seguros_abrir_atendimento",
+      "file": "20260718121000_gsa_seguros_complete.sql",
+      "line": 179,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_seguros_registrar_comissao_ativacao",
+      "file": "20260718121000_gsa_seguros_complete.sql",
+      "line": 213,
+      "grants": []
+    },
+    {
+      "function": "gsa_client_seguros_registrar_documento",
+      "file": "20260718121000_gsa_seguros_complete.sql",
+      "line": 225,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_client_seguros_criar_ocorrencia",
+      "file": "20260718121000_gsa_seguros_complete.sql",
+      "line": 236,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_request_travel_cancellation",
+      "file": "20260721150000_gsa_viagens_financial_integrity.sql",
+      "line": 660,
+      "grants": [
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_set_travel_proposal_passenger_count",
+      "file": "20260720140000_gsa_viagens_hardening.sql",
+      "line": 131,
+      "grants": []
+    },
+    {
+      "function": "gsa_cleanup_deleted_travel_document_metadata",
+      "file": "20260720140000_gsa_viagens_hardening.sql",
+      "line": 346,
+      "grants": []
+    },
+    {
+      "function": "gsa_public_registration_settings",
+      "file": "20260720170000_secure_home_public_access.sql",
+      "line": 33,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_admin_context",
+      "file": "20260720234500_admin_identity_permissions_hardening.sql",
+      "line": 16,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_has_module",
+      "file": "20260721130000_harden_collaborator_authorization.sql",
+      "line": 5,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_assert_module",
+      "file": "20260720234500_admin_identity_permissions_hardening.sql",
+      "line": 263,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_write_audit",
+      "file": "20260720235300_admin_security_state_restore.sql",
+      "line": 37,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_get_pendency_counts_secure",
+      "file": "20260721194600_restore_admin_dashboard_foundation.sql",
+      "line": 8,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_set_notification_state",
+      "file": "20260720235300_admin_security_state_restore.sql",
+      "line": 67,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_search_clients",
+      "file": "20260721194800_restore_admin_search_clients.sql",
+      "line": 3,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_travel_list",
+      "file": "20260721194900_restore_admin_travel_rpcs.sql",
+      "line": 11,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_travel_link_lead",
+      "file": "20260721194900_restore_admin_travel_rpcs.sql",
+      "line": 100,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_travel_update_status",
+      "file": "20260721194900_restore_admin_travel_rpcs.sql",
+      "line": 136,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_travel_create_package",
+      "file": "20260721194900_restore_admin_travel_rpcs.sql",
+      "line": 294,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_process_due_store_credit_releases",
+      "file": "20260728040000_fix_exception_handlers.sql",
+      "line": 2328,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_revoke_client_sessions_on_access_change",
+      "file": "20260720202000_revoke_client_sessions_on_access_change.sql",
+      "line": 4,
+      "grants": []
+    },
+    {
+      "function": "gsa_assert_current_provider",
+      "file": "20260830123000_provider_registration_otp_and_authorization_hardening.sql",
+      "line": 261,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_provider_mark_notification_read",
+      "file": "20260720210000_harden_provider_portal.sql",
+      "line": 85,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_provider_mark_all_notifications_read",
+      "file": "20260720210000_harden_provider_portal.sql",
+      "line": 114,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_provider_financial_snapshot",
+      "file": "20260720210000_harden_provider_portal.sql",
+      "line": 136,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_provider_activate_promotion",
+      "file": "20260720210000_harden_provider_portal.sql",
+      "line": 335,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_provider_update_profile",
+      "file": "20260830123000_provider_registration_otp_and_authorization_hardening.sql",
+      "line": 392,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_provider_create_schedule",
+      "file": "20260720210000_harden_provider_portal.sql",
+      "line": 388,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_provider_complete_schedule",
+      "file": "20260720210000_harden_provider_portal.sql",
+      "line": 433,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_provider_delete_schedule",
+      "file": "20260720210000_harden_provider_portal.sql",
+      "line": 453,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_collaborator_has_module",
+      "file": "20260720213000_secure_collaborator_panel.sql",
+      "line": 105,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_hash_collaborator_credential",
+      "file": "20260720213000_secure_collaborator_panel.sql",
+      "line": 123,
+      "grants": []
+    },
+    {
+      "function": "gsa_get_collaborator_session_access_state",
+      "file": "20260720213000_secure_collaborator_panel.sql",
+      "line": 139,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_close_collaborator_sessions",
+      "file": "20260720213000_secure_collaborator_panel.sql",
+      "line": 160,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_replace_collaborator_modules",
+      "file": "20260720213000_secure_collaborator_panel.sql",
+      "line": 177,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_revoke_collaborator_session_on_status",
+      "file": "20260720213000_secure_collaborator_panel.sql",
+      "line": 205,
+      "grants": []
+    },
+    {
+      "function": "gsa_revoke_collaborator_session_on_modules",
+      "file": "20260720213000_secure_collaborator_panel.sql",
+      "line": 218,
+      "grants": []
+    },
+    {
+      "function": "gsa_begin_client_recovery",
+      "file": "20260720232000_harden_client_portal_audit_findings.sql",
+      "line": 20,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_assert_current_provider_active",
+      "file": "20260720233000_provider_portal_audit_hardening.sql",
+      "line": 84,
+      "grants": []
+    },
+    {
+      "function": "gsa_provider_write_audit",
+      "file": "20260720233000_provider_portal_audit_hardening.sql",
+      "line": 96,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_provider_insert_admin_notification",
+      "file": "20260720233000_provider_portal_audit_hardening.sql",
+      "line": 123,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_guard_provider_direct_write",
+      "file": "20260720233000_provider_portal_audit_hardening.sql",
+      "line": 159,
+      "grants": []
+    },
+    {
+      "function": "gsa_guard_provider_schedule",
+      "file": "20260720233000_provider_portal_audit_hardening.sql",
+      "line": 223,
+      "grants": []
+    },
+    {
+      "function": "gsa_validate_provider_operational_row",
+      "file": "20260720233000_provider_portal_audit_hardening.sql",
+      "line": 263,
+      "grants": []
+    },
+    {
+      "function": "gsa_emit_provider_operational_event",
+      "file": "20260720233000_provider_portal_audit_hardening.sql",
+      "line": 330,
+      "grants": []
+    },
+    {
+      "function": "gsa_provider_dashboard_snapshot",
+      "file": "20260720233000_provider_portal_audit_hardening.sql",
+      "line": 452,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_provider_create_ticket",
+      "file": "20260720233000_provider_portal_audit_hardening.sql",
+      "line": 487,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_provider_request_profile_change",
+      "file": "20260720233000_provider_portal_audit_hardening.sql",
+      "line": 598,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_provider_request_demand_support",
+      "file": "20260720233000_provider_portal_audit_hardening.sql",
+      "line": 629,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_provider_pendency_snapshot",
+      "file": "20260720233100_provider_portal_secure_snapshots.sql",
+      "line": 3,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_revoke_provider_sessions_on_access_change",
+      "file": "20260720233200_provider_portal_final_guards.sql",
+      "line": 81,
+      "grants": []
+    },
+    {
+      "function": "gsa_admin_notification_visible",
+      "file": "20260720234500_admin_identity_permissions_hardening.sql",
+      "line": 300,
+      "grants": []
+    },
+    {
+      "function": "gsa_sync_colaborador_modules",
+      "file": "20260720235500_admin_secure_operations.sql",
+      "line": 6,
+      "grants": []
+    },
+    {
+      "function": "gsa_sync_colaborador_modules_trigger",
+      "file": "20260720235500_admin_secure_operations.sql",
+      "line": 33,
+      "grants": []
+    },
+    {
+      "function": "gsa_admin_resource_config",
+      "file": "20260724213000_saude_direct_quote_cleanup.sql",
+      "line": 166,
+      "grants": []
+    },
+    {
+      "function": "gsa_admin_restrict_collaborator_to_module",
+      "file": "20260721000500_admin_module_rls_boundaries.sql",
+      "line": 3,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_enforce_admin_log_identity",
+      "file": "20260721000500_admin_module_rls_boundaries.sql",
+      "line": 129,
+      "grants": []
+    },
+    {
+      "function": "gsa_admin_private_document_allowed",
+      "file": "20260721001500_private_admin_documents.sql",
+      "line": 9,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_private_document_read_allowed",
+      "file": "20260721001500_private_admin_documents.sql",
+      "line": 41,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_generate_internal_collaborator_code",
+      "file": "20260721003000_hash_collaborator_credentials.sql",
+      "line": 28,
+      "grants": []
+    },
+    {
+      "function": "gsa_admin_sensitive_change_audit",
+      "file": "20260830030000_admin_panel_security_end_to_end.sql",
+      "line": 242,
+      "grants": []
+    },
+    {
+      "function": "gsa_snapshot_store_order",
+      "file": "20260721010000_harden_products_and_subscriptions.sql",
+      "line": 83,
+      "grants": []
+    },
+    {
+      "function": "gsa_snapshot_subscription_order",
+      "file": "20260721010000_harden_products_and_subscriptions.sql",
+      "line": 119,
+      "grants": []
+    },
+    {
+      "function": "gsa_admin_archive_catalog_items",
+      "file": "20260721010100_secure_product_subscription_catalog.sql",
+      "line": 141,
+      "grants": [
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_sync_admin_operation_request_columns",
+      "file": "20260721100000_fix_products_subscriptions_runtime.sql",
+      "line": 18,
+      "grants": []
+    },
+    {
+      "function": "gsa_public_resgatar_beneficio_parceiro",
+      "file": "20260828235500_partner_redemption_duplicate_guard.sql",
+      "line": 166,
+      "grants": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_block_collaborator_access_module",
+      "file": "20260721130000_harden_collaborator_authorization.sql",
+      "line": 72,
+      "grants": []
+    },
+    {
+      "function": "gsa_collaborator_can_access_demand",
+      "file": "20260721130000_harden_collaborator_authorization.sql",
+      "line": 129,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_sync_travel_invoice_financials",
+      "file": "20260721150100_gsa_viagens_admin_refund_queue.sql",
+      "line": 4,
+      "grants": []
+    },
+    {
+      "function": "gsa_admin_travel_cancellation_list",
+      "file": "20260721150100_gsa_viagens_admin_refund_queue.sql",
+      "line": 82,
+      "grants": [
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_provider_session_access_state",
+      "file": "20260721170000_provider_portal_production_finalization.sql",
+      "line": 6,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_client_classified_context",
+      "file": "20260721191000_classifieds_real_proposals.sql",
+      "line": 32,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_client_classified_create_proposal",
+      "file": "20260721191000_classifieds_real_proposals.sql",
+      "line": 92,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_client_classified_list_messages",
+      "file": "20260721191000_classifieds_real_proposals.sql",
+      "line": 190,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_client_classified_send_message",
+      "file": "20260721191000_classifieds_real_proposals.sql",
+      "line": 234,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_dashboard_snapshot_pre_ticket_compat",
+      "file": "20260721194600_restore_admin_dashboard_foundation.sql",
+      "line": 108,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_update_classified_commission",
+      "file": "20260721203000_classifieds_commission_config.sql",
+      "line": 57,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_public_submit_advertising_request",
+      "file": "20260722040000_harden_advertising_backend.sql",
+      "line": 603,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_public_list_active_ads",
+      "file": "20260721210100_create_advertising_foundation.sql",
+      "line": 307,
+      "grants": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_list_ad_requests",
+      "file": "20260721210100_create_advertising_foundation.sql",
+      "line": 347,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_update_ad_request_status",
+      "file": "20260721210100_create_advertising_foundation.sql",
+      "line": 387,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "rpc_criar_anuncio_classificado",
+      "file": "20260721213000_classifieds_create_listing_rpc.sql",
+      "line": 45,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_ads_refresh_campaign_states",
+      "file": "20260830003000_harden_advertising_end_to_end.sql",
+      "line": 120,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_get_advertiser_invite_target",
+      "file": "20260721223100_complete_advertising_platform.sql",
+      "line": 267,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_link_advertiser_auth",
+      "file": "20260721223100_complete_advertising_platform.sql",
+      "line": 294,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_advertiser_portal_snapshot",
+      "file": "20260830003000_harden_advertising_end_to_end.sql",
+      "line": 364,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_ads_process_payment_event",
+      "file": "20260830003000_harden_advertising_end_to_end.sql",
+      "line": 479,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_advertising_overview",
+      "file": "20260721223100_complete_advertising_platform.sql",
+      "line": 635,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_ads_serve",
+      "file": "20260830003000_harden_advertising_end_to_end.sql",
+      "line": 165,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_get_classified_detail",
+      "file": "20260721233000_classifieds_review_adjustment_flow.sql",
+      "line": 35,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_request_classified_adjustments",
+      "file": "20260728040000_fix_exception_handlers.sql",
+      "line": 2823,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_assert_current_supplier",
+      "file": "20260722021000_supplier_auth_and_onboarding.sql",
+      "line": 307,
+      "grants": []
+    },
+    {
+      "function": "gsa_supplier_session_access_state",
+      "file": "20260722021000_supplier_auth_and_onboarding.sql",
+      "line": 332,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_supplier_document_allowed",
+      "file": "20260722021000_supplier_auth_and_onboarding.sql",
+      "line": 357,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_supplier_dashboard_snapshot",
+      "file": "20260722022000_supplier_procurement_operations.sql",
+      "line": 5,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_supplier_mark_order_seen",
+      "file": "20260722022000_supplier_procurement_operations.sql",
+      "line": 130,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_supplier_mark_notifications_read",
+      "file": "20260722022000_supplier_procurement_operations.sql",
+      "line": 235,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_service_catalog_payload",
+      "file": "20260722030000_service_catalog_packages.sql",
+      "line": 57,
+      "grants": []
+    },
+    {
+      "function": "gsa_public_service_catalog",
+      "file": "20260722170000_restore_real_service_packages.sql",
+      "line": 81,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_affiliate_destination_allowed",
+      "file": "20260722040000_affiliate_program.sql",
+      "line": 295,
+      "grants": []
+    },
+    {
+      "function": "gsa_affiliate_current_attribution",
+      "file": "20260722040000_affiliate_program.sql",
+      "line": 319,
+      "grants": []
+    },
+    {
+      "function": "gsa_public_affiliate_programs",
+      "file": "20260722040000_affiliate_program.sql",
+      "line": 345,
+      "grants": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_public_track_affiliate_click",
+      "file": "20260729093000_fix_affiliate_click_tracking_validation.sql",
+      "line": 7,
+      "grants": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_affiliate_freeze_attribution",
+      "file": "20260722040000_affiliate_program.sql",
+      "line": 532,
+      "grants": []
+    },
+    {
+      "function": "gsa_affiliate_release_due_commissions",
+      "file": "20260722040000_affiliate_program.sql",
+      "line": 812,
+      "grants": []
+    },
+    {
+      "function": "gsa_ads_consume_rate_limit",
+      "file": "20260722040000_harden_advertising_backend.sql",
+      "line": 381,
+      "grants": []
+    },
+    {
+      "function": "gsa_ads_validate_creative_object",
+      "file": "20260722040000_harden_advertising_backend.sql",
+      "line": 415,
+      "grants": []
+    },
+    {
+      "function": "gsa_ads_apply_payment_state",
+      "file": "20260722040000_harden_advertising_backend.sql",
+      "line": 579,
+      "grants": []
+    },
+    {
+      "function": "gsa_ads_list_orphan_creative_paths",
+      "file": "20260722090100_cleanup_orphan_ad_creatives.sql",
+      "line": 3,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_service_catalog_package_json",
+      "file": "20260722170000_restore_real_service_packages.sql",
+      "line": 44,
+      "grants": []
+    },
+    {
+      "function": "gsa_seed_default_service_catalog",
+      "file": "20260722170000_restore_real_service_packages.sql",
+      "line": 238,
+      "grants": []
+    },
+    {
+      "function": "gsa_public_submit_career_application",
+      "file": "20260831103000_careers_vacancies_and_notifications.sql",
+      "line": 171,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_public_register_affiliate",
+      "file": "20260722233200_secure_affiliate_activation.sql",
+      "line": 6,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_affiliate_award_points",
+      "file": "20260729102000_fix_affiliate_orcamento_commissions_and_notifications.sql",
+      "line": 81,
+      "grants": []
+    },
+    {
+      "function": "gsa_affiliate_reverse_points",
+      "file": "20260722233000_complete_affiliate_flow.sql",
+      "line": 837,
+      "grants": []
+    },
+    {
+      "function": "gsa_affiliate_conversion_from_business_event",
+      "file": "20260729102000_fix_affiliate_orcamento_commissions_and_notifications.sql",
+      "line": 120,
+      "grants": []
+    },
+    {
+      "function": "gsa_public_validate_advertising_protocol",
+      "file": "20260722235900_fix_gsa_advertising_flow.sql",
+      "line": 3,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_careers_resume_path_is_expected",
+      "file": "20260722235959_harden_gsa_careers_flow.sql",
+      "line": 145,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_public_confirm_career_resume",
+      "file": "20260722235959_harden_gsa_careers_flow.sql",
+      "line": 385,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_public_get_career_application",
+      "file": "20260831093000_careers_end_to_end_remediation.sql",
+      "line": 105,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_admin_list_career_applications",
+      "file": "20260722235959_harden_gsa_careers_flow.sql",
+      "line": 474,
+      "grants": [
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_admin_get_career_application",
+      "file": "20260722235959_harden_gsa_careers_flow.sql",
+      "line": 522,
+      "grants": [
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_admin_get_career_resume_reference",
+      "file": "20260722235959_harden_gsa_careers_flow.sql",
+      "line": 599,
+      "grants": [
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_supplier_mark_notification_read",
+      "file": "20260723051000_supplier_product_adjustments.sql",
+      "line": 107,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "sync_cliente_pontos_e_saldo",
+      "file": "20260728040000_fix_exception_handlers.sql",
+      "line": 3285,
+      "grants": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_search_calculator_pro_clients",
+      "file": "20260723235000_secure_calculator_pro_admin_module.sql",
+      "line": 101,
+      "grants": [
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_admin_revoke_calculator_pro_grant",
+      "file": "20260723235000_secure_calculator_pro_admin_module.sql",
+      "line": 137,
+      "grants": [
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_calculator_pro_enforce_product_state",
+      "file": "20260723234000_free_tools_pro_hardening.sql",
+      "line": 3,
+      "grants": []
+    },
+    {
+      "function": "gsa_calculator_pro_limit_checkout_attempts",
+      "file": "20260723234000_free_tools_pro_hardening.sql",
+      "line": 29,
+      "grants": []
+    },
+    {
+      "function": "gsa_calculator_pro_expire_records",
+      "file": "20260723234000_free_tools_pro_hardening.sql",
+      "line": 57,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_site_campaign_refresh_states",
+      "file": "20260724223000_site_campaigns_schema.sql",
+      "line": 153,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_site_campaign_has_action",
+      "file": "20260724223700_site_campaigns_permission_hardening.sql",
+      "line": 3,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_site_campaign_assert_action",
+      "file": "20260724223500_site_campaigns_action_permissions.sql",
+      "line": 63,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "delete_client_cascade",
+      "file": "20260803110000_create_delete_client_cascade_rpc.sql",
+      "line": 4,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_registrar_pendencia_whatsapp",
+      "file": "20260826220000_production_remediation_consolidated.sql",
+      "line": 758,
+      "grants": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_consume_auth_rate_limit",
+      "file": "20260807085800_fix_rate_limit_rpc_alias.sql",
+      "line": 2,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "get_system_metrics",
+      "file": "20260807104500_create_get_system_metrics_realtime.sql",
+      "line": 2,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_delete_products_bulk",
+      "file": "20260810161000_admin_bulk_product_delete.sql",
+      "line": 4,
+      "grants": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_criar_vaquinha",
+      "file": "20260826220000_production_remediation_consolidated.sql",
+      "line": 586,
+      "grants": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_obter_vaquinha",
+      "file": "20260826220000_production_remediation_consolidated.sql",
+      "line": 642,
+      "grants": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_confirmar_contribuicao_vaquinha",
+      "file": "20260826220000_production_remediation_consolidated.sql",
+      "line": 694,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_replace_product_variations",
+      "file": "20260817120000_product_variations_marketplace.sql",
+      "line": 186,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_save_product_catalog_v2",
+      "file": "20260817120000_product_variations_marketplace.sql",
+      "line": 504,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_import_products_batch_v3",
+      "file": "20260817120000_product_variations_marketplace.sql",
+      "line": 539,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_shopee_worker_by_token",
+      "file": "20260817190000_shopee_hybrid_fulfillment.sql",
+      "line": 113,
+      "grants": []
+    },
+    {
+      "function": "gsa_shopee_enqueue_paid_order",
+      "file": "20260817190000_shopee_hybrid_fulfillment.sql",
+      "line": 140,
+      "grants": []
+    },
+    {
+      "function": "gsa_shopee_enqueue_from_paid_invoice",
+      "file": "20260817190000_shopee_hybrid_fulfillment.sql",
+      "line": 229,
+      "grants": []
+    },
+    {
+      "function": "gsa_shopee_worker_heartbeat",
+      "file": "20260817190000_shopee_hybrid_fulfillment.sql",
+      "line": 360,
+      "grants": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_public_consultar_protocolo",
+      "file": "20260828170000_partner_redemption_appeals.sql",
+      "line": 781,
+      "grants": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_touch_partner_redemption_public_status",
+      "file": "20260828170000_partner_redemption_appeals.sql",
+      "line": 136,
+      "grants": []
+    },
+    {
+      "function": "gsa_partner_redemption_touch_trigger",
+      "file": "20260828170000_partner_redemption_appeals.sql",
+      "line": 151,
+      "grants": []
+    },
+    {
+      "function": "gsa_schedule_partner_appeal_sla_notifications",
+      "file": "20260828170000_partner_redemption_appeals.sql",
+      "line": 563,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_finish_partner_appeal_notification",
+      "file": "20260828170000_partner_redemption_appeals.sql",
+      "line": 653,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_notify_admin_partner_appeal",
+      "file": "20260828212500_partner_appeal_admin_notification.sql",
+      "line": 3,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_affiliate_available_balance",
+      "file": "20260830010000_harden_affiliate_program_end_to_end.sql",
+      "line": 27,
+      "grants": []
+    },
+    {
+      "function": "gsa_client_transfer_affiliate_balance",
+      "file": "20260830010000_harden_affiliate_program_end_to_end.sql",
+      "line": 339,
+      "grants": [
+        "authenticated",
+        "service_role",
+        "anon"
+      ]
+    },
+    {
+      "function": "gsa_partner_redemption_create_internal",
+      "file": "20260828235500_partner_redemption_duplicate_guard.sql",
+      "line": 22,
+      "grants": []
+    },
+    {
+      "function": "gsa_public_resgatar_beneficio_parceiro_em_analise",
+      "file": "20260828235500_partner_redemption_duplicate_guard.sql",
+      "line": 191,
+      "grants": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_credit_dispute_order_id",
+      "file": "20260829024500_credit_purchase_disputes.sql",
+      "line": 89,
+      "grants": []
+    },
+    {
+      "function": "gsa_apply_credit_dispute_block",
+      "file": "20260829040000_store_credit_blocked_balance.sql",
+      "line": 33,
+      "grants": []
+    },
+    {
+      "function": "gsa_reactivate_client_after_pin",
+      "file": "20260829113000_client_open_registration_and_identity_lifecycle.sql",
+      "line": 90,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_mark_historical_client_ineligible",
+      "file": "20260829113000_client_open_registration_and_identity_lifecycle.sql",
+      "line": 142,
+      "grants": []
+    },
+    {
+      "function": "gsa_guard_preapproved_credit_eligibility",
+      "file": "20260829124500_preapproved_100_is_total_limit.sql",
+      "line": 3,
+      "grants": []
+    },
+    {
+      "function": "gsa_credit_withdrawal_fee",
+      "file": "20260829133000_credit_available_withdrawals.sql",
+      "line": 129,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_list_store_refunds",
+      "file": "20260829211500_marketplace_security_refund_checkout_hardening.sql",
+      "line": 149,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_admin_patch_marketplace_product",
+      "file": "20260829211500_marketplace_security_refund_checkout_hardening.sql",
+      "line": 308,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_admin_patch_marketplace_budget",
+      "file": "20260829211500_marketplace_security_refund_checkout_hardening.sql",
+      "line": 347,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_admin_update_store_order_notes",
+      "file": "20260829211500_marketplace_security_refund_checkout_hardening.sql",
+      "line": 378,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_admin_save_store_coupon",
+      "file": "20260829211500_marketplace_security_refund_checkout_hardening.sql",
+      "line": 400,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_admin_delete_store_coupon",
+      "file": "20260829211500_marketplace_security_refund_checkout_hardening.sql",
+      "line": 462,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_advertiser_payment_checkout_context",
+      "file": "20260830003000_harden_advertising_end_to_end.sql",
+      "line": 421,
+      "grants": []
+    },
+    {
+      "function": "gsa_admin_claim_mutation",
+      "file": "20260830030000_admin_panel_security_end_to_end.sql",
+      "line": 45,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_complete_mutation",
+      "file": "20260830030000_admin_panel_security_end_to_end.sql",
+      "line": 68,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_session_change_audit",
+      "file": "20260830190000_admin_full_audit_security_remediation.sql",
+      "line": 285,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_delete_travel_category",
+      "file": "20260830030000_admin_panel_security_end_to_end.sql",
+      "line": 330,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_whatsapp_mutation",
+      "file": "20260830030000_admin_panel_security_end_to_end.sql",
+      "line": 344,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_update_provider_demand",
+      "file": "20260830043000_admin_security_residual_end_to_end.sql",
+      "line": 113,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_create_provider",
+      "file": "20260830030000_admin_panel_security_end_to_end.sql",
+      "line": 446,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_service_mutation",
+      "file": "20260830043000_admin_security_residual_end_to_end.sql",
+      "line": 29,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_create_crm_client",
+      "file": "20260830030000_admin_panel_security_end_to_end.sql",
+      "line": 535,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_notification_has_access",
+      "file": "20260830030000_admin_panel_security_end_to_end.sql",
+      "line": 768,
+      "grants": []
+    },
+    {
+      "function": "gsa_admin_save_scraping_config",
+      "file": "20260830050000_fix_admin_session_bound_saves.sql",
+      "line": 77,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_save_travel_category",
+      "file": "20260830050000_fix_admin_session_bound_saves.sql",
+      "line": 6,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_add_demand_history",
+      "file": "20260830043000_admin_security_residual_end_to_end.sql",
+      "line": 172,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_add_os_note",
+      "file": "20260830043000_admin_security_residual_end_to_end.sql",
+      "line": 204,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_send_os_support_message",
+      "file": "20260830043000_admin_security_residual_end_to_end.sql",
+      "line": 226,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_public_create_vaquinha_contribution",
+      "file": "20260830043000_admin_security_residual_end_to_end.sql",
+      "line": 259,
+      "grants": [
+        "anon",
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_create_provider_demand",
+      "file": "20260830060000_harden_demand_transfer_end_to_end.sql",
+      "line": 4,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_add_demand_comment",
+      "file": "20260830060000_harden_demand_transfer_end_to_end.sql",
+      "line": 237,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_sync_demand_comment_count",
+      "file": "20260830060000_harden_demand_transfer_end_to_end.sql",
+      "line": 268,
+      "grants": []
+    },
+    {
+      "function": "gsa_normalize_provider_pix_key",
+      "file": "20260830123000_provider_registration_otp_and_authorization_hardening.sql",
+      "line": 84,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_solicitar_pin_whatsapp",
+      "file": "20260830123000_provider_registration_otp_and_authorization_hardening.sql",
+      "line": 236,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_validar_pin_whatsapp",
+      "file": "20260830123000_provider_registration_otp_and_authorization_hardening.sql",
+      "line": 246,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_trigger_scraping_now",
+      "file": "20260830190000_admin_full_audit_security_remediation.sql",
+      "line": 233,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_log_scraping_step",
+      "file": "20260830190000_admin_full_audit_security_remediation.sql",
+      "line": 262,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_expire_stale_admin_sessions",
+      "file": "20260830190000_admin_full_audit_security_remediation.sql",
+      "line": 323,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_careers_rate_limit",
+      "file": "20260831093000_careers_end_to_end_remediation.sql",
+      "line": 63,
+      "grants": []
+    },
+    {
+      "function": "gsa_public_list_career_vacancies",
+      "file": "20260831103000_careers_vacancies_and_notifications.sql",
+      "line": 65,
+      "grants": [
+        "anon",
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_admin_list_career_vacancies",
+      "file": "20260831103000_careers_vacancies_and_notifications.sql",
+      "line": 76,
+      "grants": [
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_admin_upsert_career_vacancy",
+      "file": "20260831103000_careers_vacancies_and_notifications.sql",
+      "line": 87,
+      "grants": [
+        "authenticated"
+      ]
+    },
+    {
+      "function": "gsa_careers_enqueue_status_notification",
+      "file": "20260831103000_careers_vacancies_and_notifications.sql",
+      "line": 125,
+      "grants": []
+    },
+    {
+      "function": "gsa_tv_write_audit",
+      "file": "20260831124500_gsa_tv_end_to_end_hardening.sql",
+      "line": 79,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_gsa_tv_snapshot",
+      "file": "20260831124500_gsa_tv_end_to_end_hardening.sql",
+      "line": 103,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_gsa_tv_mutate",
+      "file": "20260902170000_gsa_tv_media_purge_cascade.sql",
+      "line": 4,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_tv_enqueue_media_probe",
+      "file": "20260831133000_gsa_tv_media_probe_queue.sql",
+      "line": 3,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_bot_find_partner_redemption",
+      "file": "20260831143000_fix_partner_bot_duplicate_lookup.sql",
+      "line": 4,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_gsa_tv_extended",
+      "file": "20260831203000_gsa_tv_master_operations.sql",
+      "line": 173,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_gsa_tv_extended_mutate",
+      "file": "20260831203000_gsa_tv_master_operations.sql",
+      "line": 196,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_gsa_tv_domain_snapshot",
+      "file": "20260831211500_gsa_tv_domain_admin_api.sql",
+      "line": 3,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_gsa_tv_domain_mutate",
+      "file": "20260831220000_gsa_tv_ai_schema_reconciliation.sql",
+      "line": 37,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_gsa_tv_schedule_mutate",
+      "file": "20260831223000_gsa_tv_published_schedule_runtime.sql",
+      "line": 17,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_gsa_tv_advertising_snapshot",
+      "file": "20260831223000_gsa_tv_published_schedule_runtime.sql",
+      "line": 83,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_gsa_tv_advertising_mutate",
+      "file": "20260831223000_gsa_tv_published_schedule_runtime.sql",
+      "line": 95,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_gsa_tv_operations_snapshot",
+      "file": "20260901014500_gsa_tv_operational_completeness.sql",
+      "line": 150,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_gsa_tv_operations_mutate",
+      "file": "20260901014500_gsa_tv_operational_completeness.sql",
+      "line": 163,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_admin_gsa_tv_live_command",
+      "file": "20260901160000_gsa_tv_live_control_console.sql",
+      "line": 3,
+      "grants": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_tv_materialize_fixed_schedule",
+      "file": "20260903223000_gsa_tv_fixed_weekly_grid_and_free_sources.sql",
+      "line": 277,
+      "grants": [
+        "service_role"
+      ]
+    },
+    {
+      "function": "gsa_tv_refresh_fixed_schedule_horizon",
+      "file": "20260903223000_gsa_tv_fixed_weekly_grid_and_free_sources.sql",
+      "line": 353,
+      "grants": [
+        "service_role"
+      ]
+    }
+  ],
+  "anonCallableSecDefiner": [
+    {
+      "function": "pagar_fatura_cliente",
+      "file": "20260711160000_financial_client_rpc_hardening.sql",
+      "line": 12,
+      "authChecks": [
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_start_session",
+      "file": "20260714013500_fix_secure_session_pgcrypto_schema.sql",
+      "line": 12,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_validate_session",
+      "file": "20260714013000_secure_session_rpc_foundation.sql",
+      "line": 86,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_end_session",
+      "file": "20260714013000_secure_session_rpc_foundation.sql",
+      "line": 126,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_ping_session",
+      "file": "20260714013000_secure_session_rpc_foundation.sql",
+      "line": 150,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_force_end_session",
+      "file": "20260714013000_secure_session_rpc_foundation.sql",
+      "line": 173,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_check_active_session",
+      "file": "20260714013000_secure_session_rpc_foundation.sql",
+      "line": 195,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_admin_clear_access_history",
+      "file": "20260714014000_reduce_public_session_log_writes.sql",
+      "line": 4,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_log_action",
+      "file": "20260714014500_secure_log_action_rpc.sql",
+      "line": 3,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_admin_session_actor",
+      "file": "20260714020000_secure_admin_withdrawal_transfer_rpcs.sql",
+      "line": 1,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_admin_baixar_fatura",
+      "file": "20260803170000_fix_admin_baixar_fatura_saldo_bypass.sql",
+      "line": 286,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "bypass_saldo_check",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_enviar_fatura_cobranca",
+      "file": "20260829233000_harden_service_billing_end_to_end.sql",
+      "line": 252,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_cancelar_fatura",
+      "file": "20260714022000_secure_admin_invoice_collection_cancel_rpcs.sql",
+      "line": 82,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_criar_cobranca_fatura",
+      "file": "20260714023000_secure_admin_collection_basic_rpcs.sql",
+      "line": 1,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_registrar_cobranca_historico",
+      "file": "20260826233000_db_rpc_integrity_remediation.sql",
+      "line": 438,
+      "authChecks": [
+        "gsa_admin_validate_context()"
+      ]
+    },
+    {
+      "function": "gsa_admin_mudar_status_cobranca",
+      "file": "20260714023000_secure_admin_collection_basic_rpcs.sql",
+      "line": 144,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_mark_promotion_usage_for_invoice",
+      "file": "20260714024000_secure_admin_collection_payment_rpcs.sql",
+      "line": 1,
+      "authChecks": [
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_baixar_parcela_cobranca",
+      "file": "20260714024000_secure_admin_collection_payment_rpcs.sql",
+      "line": 87,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_baixar_cobranca_manual",
+      "file": "20260714024000_secure_admin_collection_payment_rpcs.sql",
+      "line": 199,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_protestar_cobranca",
+      "file": "20260826233000_db_rpc_integrity_remediation.sql",
+      "line": 403,
+      "authChecks": [
+        "gsa_admin_validate_context()"
+      ]
+    },
+    {
+      "function": "gsa_admin_gerar_acordo_cobranca",
+      "file": "20260826233000_db_rpc_integrity_remediation.sql",
+      "line": 278,
+      "authChecks": [
+        "gsa_admin_validate_context()"
+      ]
+    },
+    {
+      "function": "gsa_admin_cancelar_acordo_cobranca",
+      "file": "20260826233000_db_rpc_integrity_remediation.sql",
+      "line": 479,
+      "authChecks": [
+        "gsa_admin_validate_context()"
+      ]
+    },
+    {
+      "function": "gsa_admin_excluir_cobranca",
+      "file": "20260714031000_secure_admin_collection_delete_rpc.sql",
+      "line": 1,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_atualizar_status_cliente",
+      "file": "20260714033000_secure_admin_client_status_rpc.sql",
+      "line": 1,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_desbloquear_pin_cliente",
+      "file": "20260714034000_secure_admin_client_profile_rpcs.sql",
+      "line": 47,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_atualizar_dados_cliente",
+      "file": "20260714034000_secure_admin_client_profile_rpcs.sql",
+      "line": 83,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_criar_cliente",
+      "file": "20260714035000_secure_admin_create_client_rpc.sql",
+      "line": 1,
+      "authChecks": [
+        "gsa_admin_session_actor()"
+      ]
+    },
+    {
+      "function": "gsa_admin_aprovar_aumento_credito",
+      "file": "20260714040000_secure_admin_credit_limit_rpcs.sql",
+      "line": 1,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_liberar_credito_contrato",
+      "file": "20260714040000_secure_admin_credit_limit_rpcs.sql",
+      "line": 94,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_ajustar_limite_credito_cliente",
+      "file": "20260714040000_secure_admin_credit_limit_rpcs.sql",
+      "line": 190,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_definir_parcelamento_credito",
+      "file": "20260714040000_secure_admin_credit_limit_rpcs.sql",
+      "line": 265,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_preaprovar_credito",
+      "file": "20260714041000_secure_admin_credit_request_rpcs.sql",
+      "line": 1,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_recusar_credito",
+      "file": "20260714041000_secure_admin_credit_request_rpcs.sql",
+      "line": 61,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_solicitar_documento_credito",
+      "file": "20260714041000_secure_admin_credit_request_rpcs.sql",
+      "line": 110,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_atualizar_documento_credito",
+      "file": "20260714041000_secure_admin_credit_request_rpcs.sql",
+      "line": 173,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_rejeitar_contrato_credito",
+      "file": "20260714041000_secure_admin_credit_request_rpcs.sql",
+      "line": 222,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_enviar_oferta_quitacao_credito",
+      "file": "20260714042000_secure_admin_credit_settlement_offer_rpc.sql",
+      "line": 1,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_emprestimo_salvar_observacao",
+      "file": "20260714043000_secure_admin_loan_flow_rpcs.sql",
+      "line": 37,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_emprestimo_enviar_comentario",
+      "file": "20260714043000_secure_admin_loan_flow_rpcs.sql",
+      "line": 76,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_emprestimo_enviar_proposta",
+      "file": "20260826233000_db_rpc_integrity_remediation.sql",
+      "line": 513,
+      "authChecks": [
+        "gsa_admin_validate_context()"
+      ]
+    },
+    {
+      "function": "gsa_admin_emprestimo_enviar_contrato",
+      "file": "20260805151500_update_public_facing_actors.sql",
+      "line": 218,
+      "authChecks": [
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_emprestimo_aprovar",
+      "file": "20260714043000_secure_admin_loan_flow_rpcs.sql",
+      "line": 218,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_emprestimo_atualizar_status",
+      "file": "20260805151500_update_public_facing_actors.sql",
+      "line": 263,
+      "authChecks": [
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_emprestimo_atualizar_documento",
+      "file": "20260714043000_secure_admin_loan_flow_rpcs.sql",
+      "line": 391,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_emprestimo_enviar_oferta_quitacao",
+      "file": "20260826233000_db_rpc_integrity_remediation.sql",
+      "line": 555,
+      "authChecks": [
+        "gsa_admin_validate_context()"
+      ]
+    },
+    {
+      "function": "gsa_admin_criar_fatura_manual",
+      "file": "20260714044000_secure_admin_invoice_manual_rpcs.sql",
+      "line": 1,
+      "authChecks": [
+        "gsa_admin_session_actor()"
+      ]
+    },
+    {
+      "function": "gsa_admin_aplicar_ajuste_fatura",
+      "file": "20260714044000_secure_admin_invoice_manual_rpcs.sql",
+      "line": 103,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_atualizar_solicitacao_loja",
+      "file": "20260910180000_marketplace_acid_concurrency_remediation.sql",
+      "line": 19,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_processar_saque_prestador",
+      "file": "20260714050000_secure_admin_provider_withdrawal_rpc.sql",
+      "line": 1,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_lookup_portal_account",
+      "file": "20260714051000_secure_atomic_login_sessions.sql",
+      "line": 180,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_login_admin",
+      "file": "20260714051000_secure_atomic_login_sessions.sql",
+      "line": 450,
+      "authChecks": [
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_upsert_settings",
+      "file": "20260714053200_protect_system_settings_secrets.sql",
+      "line": 4,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_verify_own_pin",
+      "file": "20260714052000_secure_session_account_admin_config.sql",
+      "line": 129,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_change_own_pin",
+      "file": "20260716180000_secure_client_pin_recovery.sql",
+      "line": 73,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_admin_reset_actor_pin",
+      "file": "20260714052000_secure_session_account_admin_config.sql",
+      "line": 225,
+      "authChecks": [
+        "gsa_admin_session_actor()"
+      ]
+    },
+    {
+      "function": "gsa_admin_delete_record_secure",
+      "file": "20260714052000_secure_session_account_admin_config.sql",
+      "line": 280,
+      "authChecks": [
+        "gsa_admin_session_actor()"
+      ]
+    },
+    {
+      "function": "gsa_public_affiliate_programs",
+      "file": "20260722040000_affiliate_program.sql",
+      "line": 345,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_public_track_affiliate_click",
+      "file": "20260729093000_fix_affiliate_click_tracking_validation.sql",
+      "line": 7,
+      "authChecks": []
+    },
+    {
+      "function": "sync_cliente_pontos_e_saldo",
+      "file": "20260728040000_fix_exception_handlers.sql",
+      "line": 3285,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_registrar_pendencia_whatsapp",
+      "file": "20260826220000_production_remediation_consolidated.sql",
+      "line": 758,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_admin_delete_products_bulk",
+      "file": "20260810161000_admin_bulk_product_delete.sql",
+      "line": 4,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_criar_vaquinha",
+      "file": "20260826220000_production_remediation_consolidated.sql",
+      "line": 586,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_obter_vaquinha",
+      "file": "20260826220000_production_remediation_consolidated.sql",
+      "line": 642,
+      "authChecks": []
+    },
+    {
+      "function": "gsa_admin_concluir_os_e_faturar",
+      "file": "20260829233000_harden_service_billing_end_to_end.sql",
+      "line": 81,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_cancelar_os",
+      "file": "20260829233000_harden_service_billing_end_to_end.sql",
+      "line": 182,
+      "authChecks": [
+        "gsa_admin_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_client_sync_pix_invoice",
+      "file": "20260829233000_harden_service_billing_end_to_end.sql",
+      "line": 211,
+      "authChecks": [
+        "gsa_client_session_actor()",
+        "FOR UPDATE"
+      ]
+    },
+    {
+      "function": "gsa_admin_get_client_deletion_inventory",
+      "file": "20260901000000_secure_admin_cascade_delete.sql",
+      "line": 69,
+      "authChecks": [
+        "gsa_admin_session_actor()"
+      ]
+    },
+    {
+      "function": "gsa_admin_delete_entity_cascade",
+      "file": "20260901000000_secure_admin_cascade_delete.sql",
+      "line": 156,
+      "authChecks": [
+        "gsa_admin_session_actor()"
+      ]
+    },
+    {
+      "function": "gsa_admin_delete_batch",
+      "file": "20260901000000_secure_admin_cascade_delete.sql",
+      "line": 230,
+      "authChecks": [
+        "gsa_admin_session_actor()"
+      ]
+    }
+  ],
+  "financialDirectWritePolicies": [],
+  "allTables": [
+    {
+      "name": "promocoes",
+      "createdIn": "20260315000002_fix_promocoes_schema.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "cliente_promocoes",
+      "createdIn": "20260315000002_fix_promocoes_schema.sql",
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "prestadores",
+      "createdIn": "20260317000002_create_prestadores_schema.sql",
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "prestador_demandas",
+      "createdIn": "20260317000002_create_prestadores_schema.sql",
+      "rls": true,
+      "policiesCount": 3
+    },
+    {
+      "name": "prestador_faturas",
+      "createdIn": "20260317000002_create_prestadores_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "prestador_documentos",
+      "createdIn": "20260317000002_create_prestadores_schema.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "prestador_historico",
+      "createdIn": "20260317000002_create_prestadores_schema.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "prestador_suporte_demandas",
+      "createdIn": "20260318000000_update_prestador_demandas.sql",
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "prestador_transacoes",
+      "createdIn": "20260318000000_update_prestador_demandas.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "prestador_saques",
+      "createdIn": "20260318000000_update_prestador_demandas.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "suporte_mensagens",
+      "createdIn": "20260318000001_support_and_adjustments.sql",
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "prestador_agendamentos",
+      "createdIn": "20260318000006_create_agendamentos.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "blog_posts",
+      "createdIn": "20260320000000_create_blog_posts.sql",
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "prestador_demandas_historico",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "loja_solicitacoes",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "os_suporte_mensagens",
+      "createdIn": "20260602000000_create_os_suporte_mensagens.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "promocoes_quantidade_ativadas",
+      "createdIn": "20260609000002_add_promocoes_quantidade_ativadas.sql",
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "orcamento_timeline",
+      "createdIn": "20260711080000_create_orcamento_timeline_compat.sql",
+      "rls": true,
+      "policiesCount": 6
+    },
+    {
+      "name": "sistema_logs",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "saques",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "transferencias",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_auth_attempts",
+      "createdIn": "20260714051000_secure_atomic_login_sessions.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "debug_admin_rpc",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_auth_identities",
+      "createdIn": "20260714053000_supabase_auth_session_bridge.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "system_settings",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "gsa_public_rate_limits",
+      "createdIn": "20260714055000_secure_public_onboarding_flows.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "loja_pedido_itens",
+      "createdIn": "20260714056000_atomic_session_store_checkout.sql",
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "gsa_client_operation_requests",
+      "createdIn": "20260714056200_secure_client_wallet_points_transfers.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_voucher_resgates",
+      "createdIn": "20260714056300_secure_remaining_client_financial_actions.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "produto_fornecedor_config",
+      "createdIn": "20260715155500_secure_admin_product_supplier_config.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "produto_importacao_origem",
+      "createdIn": "20260715212051_universal_product_import.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "produto_desconto_cota_movimentos",
+      "createdIn": "20260716184000_product_discount_quantity_limit.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "classificados_configuracoes",
+      "createdIn": "20260717200000_hub_classificados_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "classificados_comissoes_config",
+      "createdIn": "20260717200000_hub_classificados_schema.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "classificados_anuncios",
+      "createdIn": "20260717200000_hub_classificados_schema.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "classificados_anuncio_midias",
+      "createdIn": "20260717200000_hub_classificados_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "classificados_propostas",
+      "createdIn": "20260717200000_hub_classificados_schema.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "classificados_transacoes",
+      "createdIn": "20260717200000_hub_classificados_schema.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "classificados_comprovantes",
+      "createdIn": "20260717200000_hub_classificados_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "classificados_mensagens",
+      "createdIn": "20260717200000_hub_classificados_schema.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "classificados_comissoes",
+      "createdIn": "20260717200000_hub_classificados_schema.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "viagens_configuracoes",
+      "createdIn": "20260717220000_gsa_viagens_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "viagens_fornecedores",
+      "createdIn": "20260717220000_gsa_viagens_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "viagens_pacotes",
+      "createdIn": "20260717220000_gsa_viagens_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "viagens_pacote_imagens",
+      "createdIn": "20260717220000_gsa_viagens_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "viagens_orcamentos",
+      "createdIn": "20260717220000_gsa_viagens_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "viagens_solicitacoes_reserva",
+      "createdIn": "20260717220000_gsa_viagens_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "viagens_propostas",
+      "createdIn": "20260717220000_gsa_viagens_schema.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "viagens_passageiros",
+      "createdIn": "20260717220000_gsa_viagens_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "viagens_passageiro_documentos",
+      "createdIn": "20260717220000_gsa_viagens_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "viagens_transacoes",
+      "createdIn": "20260717220000_gsa_viagens_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "viagens_vouchers",
+      "createdIn": "20260717220000_gsa_viagens_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "viagens_cancelamentos",
+      "createdIn": "20260717220000_gsa_viagens_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "saude_configuracoes",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "saude_parceiros",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "saude_produtos",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "saude_produto_redes",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "saude_cotacoes",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "saude_cotacao_beneficiarios",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "saude_propostas",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "saude_aceites",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "saude_contratos",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "saude_dependentes",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "saude_documentos",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "saude_assessorias",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "saude_comissoes",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "saude_atendimentos",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "saude_atendimento_mensagens",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "saude_auditoria",
+      "createdIn": "20260718120000_gsa_saude_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "storage.objects",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 35
+    },
+    {
+      "name": "seguros_configuracoes",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_parceiros",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_produtos",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_ofertas",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_cotacoes",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_cotacao_dados",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_propostas",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_aceites",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_apolices",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_documentos",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_assessorias",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_comissoes",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_assistencias",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_sinistros",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_sinistro_mensagens",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_atendimentos",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_atendimento_mensagens",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "seguros_auditoria",
+      "createdIn": "20260718121000_gsa_seguros_complete.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_admin_operation_requests",
+      "createdIn": "20260720170000_secure_admin_subscription_lifecycle.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_admin_audit_events",
+      "createdIn": "20260720183000_harden_admin_panel.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_admin_notification_state",
+      "createdIn": "20260720183000_harden_admin_panel.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_auth_rate_limits",
+      "createdIn": "20260720193000_auth_gateway_rate_limit.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "notificacao_leituras",
+      "createdIn": "20260720210000_harden_provider_portal.sql",
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "colaboradores",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 5
+    },
+    {
+      "name": "colaborador_modulos",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 5
+    },
+    {
+      "name": "admin_notificacoes",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 5
+    },
+    {
+      "name": "notificacoes",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "gsa_client_recovery_challenges",
+      "createdIn": "20260720232000_harden_client_portal_audit_findings.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_public_budget_rate_limits",
+      "createdIn": "20260720232000_secure_public_sites_systems_budget.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_provider_audit_events",
+      "createdIn": "20260720233000_provider_portal_audit_hardening.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "parceiros",
+      "createdIn": "20260721110000_create_public_partners.sql",
+      "rls": true,
+      "policiesCount": 4
+    },
+    {
+      "name": "parceiros_resgates",
+      "createdIn": "20260721120000_partner_benefit_redemption.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "viagens_transacao_parcelas",
+      "createdIn": "20260721150000_gsa_viagens_financial_integrity.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_travel_operation_requests",
+      "createdIn": "20260721150000_gsa_viagens_financial_integrity.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_advertisers",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_ad_placements",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_ad_requests",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_ad_request_placements",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_ad_proposals",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_ad_proposal_versions",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_ad_negotiations",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_ad_campaigns",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_ad_creatives",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_ad_campaign_placements",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_ad_daily_metrics",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_ad_audit_logs",
+      "createdIn": "20260721210100_create_advertising_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 6
+    },
+    {
+      "name": "classificados_midias",
+      "createdIn": "20260721212500_classifieds_base_tables.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_ad_payments",
+      "createdIn": "20260721223100_complete_advertising_platform.sql",
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_ad_payment_events",
+      "createdIn": "20260721223100_complete_advertising_platform.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_ad_delivery_events",
+      "createdIn": "20260721223100_complete_advertising_platform.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "classificados_ajustes",
+      "createdIn": "20260721233000_classifieds_review_adjustment_flow.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "fornecedores",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "fornecedor_produtos",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "fornecedor_produto_solicitacoes",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "pedidos_compra_fornecedor",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "pedido_compra_fornecedor_itens",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "fornecedor_entregas",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "fornecedor_entrega_itens",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "contas_pagar",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "fornecedor_auditoria",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "fornecedor_notificacoes",
+      "createdIn": "20260722020000_supplier_procurement_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "servicos_pacotes",
+      "createdIn": "20260722030000_service_catalog_packages.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_afiliado_programas",
+      "createdIn": "20260722040000_affiliate_program.sql",
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_afiliados",
+      "createdIn": "20260722040000_affiliate_program.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_afiliado_links",
+      "createdIn": "20260722040000_affiliate_program.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_afiliado_cliques",
+      "createdIn": "20260722040000_affiliate_program.sql",
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_afiliado_atribuicoes",
+      "createdIn": "20260722040000_affiliate_program.sql",
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_afiliado_conversoes",
+      "createdIn": "20260722040000_affiliate_program.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_afiliado_comissoes",
+      "createdIn": "20260722040000_affiliate_program.sql",
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_afiliado_saques",
+      "createdIn": "20260722040000_affiliate_program.sql",
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_afiliado_comissao_eventos",
+      "createdIn": "20260722040000_affiliate_program.sql",
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_ad_rate_limit_buckets",
+      "createdIn": "20260722040000_harden_advertising_backend.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_ad_maintenance_state",
+      "createdIn": "20260722040000_harden_advertising_backend.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_service_packages",
+      "createdIn": "20260722170000_restore_real_service_packages.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_service_package_items",
+      "createdIn": "20260722170000_restore_real_service_packages.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_careers_applications",
+      "createdIn": "20260722180000_create_gsa_careers_foundation.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_afiliado_pontos_eventos",
+      "createdIn": "20260722233000_complete_affiliate_flow.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_careers_application_history",
+      "createdIn": "20260722235959_harden_gsa_careers_flow.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "cliente_notas_admin",
+      "createdIn": "20260723120000_system_db_alignment.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_calculator_pro_products",
+      "createdIn": "20260723233000_free_tools_pro_access.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_calculator_pro_payments",
+      "createdIn": "20260723233000_free_tools_pro_access.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_calculator_pro_vouchers",
+      "createdIn": "20260723233000_free_tools_pro_access.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_calculator_pro_grants",
+      "createdIn": "20260723233000_free_tools_pro_access.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_calculator_pro_sessions",
+      "createdIn": "20260723233000_free_tools_pro_access.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_calculator_pro_events",
+      "createdIn": "20260723233000_free_tools_pro_access.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_calculator_pro_runtime_config",
+      "createdIn": "20260724163000_harden_calculator_pro_voucher_payment.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_catalogo_legado_arquivo",
+      "createdIn": "20260724213000_saude_direct_quote_cleanup.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_site_campaigns",
+      "createdIn": "20260724223000_site_campaigns_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_site_campaign_events",
+      "createdIn": "20260724223000_site_campaigns_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_site_campaign_history",
+      "createdIn": "20260724223000_site_campaigns_schema.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_site_campaign_permissions",
+      "createdIn": "20260724223500_site_campaigns_action_permissions.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "whatsapp_pendencias_ativas",
+      "createdIn": "20260803172000_whatsapp_bidirectional_pendencies.sql",
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "gsa_whatsapp_ramais",
+      "createdIn": "20260807123000_create_whatsapp_ramais_table.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_hero_banners",
+      "createdIn": "20260812090000_create_gsa_hero_banners.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "loja_avaliacoes",
+      "createdIn": "20260812140000_product_reviews_and_ratings_system.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "loja_vaquinhas",
+      "createdIn": "20260814103000_setup_group_gift_vaquinhas.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "loja_vaquinha_contribuicoes",
+      "createdIn": "20260814103000_setup_group_gift_vaquinhas.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "loja_favoritos",
+      "createdIn": "20260814120000_loja_favoritos_persistence.sql",
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "produto_variacao_grupos",
+      "createdIn": "20260817120000_product_variations_marketplace.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "produto_variacao_opcoes",
+      "createdIn": "20260817120000_product_variations_marketplace.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "produto_variantes",
+      "createdIn": "20260817120000_product_variations_marketplace.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "produto_variante_opcoes",
+      "createdIn": "20260817120000_product_variations_marketplace.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "shopee_automation_workers",
+      "createdIn": "20260817190000_shopee_hybrid_fulfillment.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "shopee_fulfillment_jobs",
+      "createdIn": "20260817190000_shopee_hybrid_fulfillment.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "shopee_fulfillment_job_items",
+      "createdIn": "20260817190000_shopee_hybrid_fulfillment.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "shopee_fulfillment_events",
+      "createdIn": "20260817190000_shopee_hybrid_fulfillment.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "contratos",
+      "createdIn": "20260826220000_production_remediation_consolidated.sql",
+      "rls": true,
+      "policiesCount": 3
+    },
+    {
+      "name": "gsa_tv_channels",
+      "createdIn": "20260826233000_db_rpc_integrity_remediation.sql",
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "gsa_tv_media_items",
+      "createdIn": "20260826233000_db_rpc_integrity_remediation.sql",
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "gsa_tv_schedule_slots",
+      "createdIn": "20260826233000_db_rpc_integrity_remediation.sql",
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "gsa_tv_playlists",
+      "createdIn": "20260826233000_db_rpc_integrity_remediation.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_tv_incidents",
+      "createdIn": "20260826233000_db_rpc_integrity_remediation.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_tv_audit_log",
+      "createdIn": "20260826233000_db_rpc_integrity_remediation.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_tv_jobs",
+      "createdIn": "20260826233000_db_rpc_integrity_remediation.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "parceiros_resgates_recursos",
+      "createdIn": "20260828170000_partner_redemption_appeals.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "parceiros_resgates_eventos",
+      "createdIn": "20260828170000_partner_redemption_appeals.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "parceiros_resgates_public_status",
+      "createdIn": "20260828170000_partner_redemption_appeals.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "parceiros_resgates_recurso_desafios",
+      "createdIn": "20260828170000_partner_redemption_appeals.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "parceiros_resgates_notificacoes",
+      "createdIn": "20260828170000_partner_redemption_appeals.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_afiliado_transferencias",
+      "createdIn": "20260828214500_affiliate_balance_transfers.sql",
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "clientes",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "faturas",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "pagamentos",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "cobrancas",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "cobranca_historico",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "carteira_lancamentos",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "extrato_financeiro",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "loja_credito_solicitacoes",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "loja_credito_movimentacoes",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 2
+    },
+    {
+      "name": "loja_credito_documentos",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 2
+    },
+    {
+      "name": "loja_credito_contestacoes",
+      "createdIn": "20260829024500_credit_purchase_disputes.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "loja_credito_contestacao_eventos",
+      "createdIn": "20260829024500_credit_purchase_disputes.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "loja_credito_cancelamentos_limite",
+      "createdIn": "20260829031500_credit_limit_cancellation_requests.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "clientes_identidades_historicas",
+      "createdIn": "20260829113000_client_open_registration_and_identity_lifecycle.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "loja_credito_saques",
+      "createdIn": "20260829133000_credit_available_withdrawals.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "loja_credito_saque_eventos",
+      "createdIn": "20260829133000_credit_available_withdrawals.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "cupons_ativados",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "produtos",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "orcamentos",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "ordens_compra",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "cupons_loja",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "payment_webhook_events",
+      "createdIn": "20260829233000_harden_service_billing_end_to_end.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "ordens_servico",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 2
+    },
+    {
+      "name": "produtos_fornecedores_config",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "pontos_movimentacoes",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "emprestimos",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "tickets",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "cliente_documentos",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_admin_mutation_requests",
+      "createdIn": "20260830030000_admin_panel_security_end_to_end.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "sistema_sessoes",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "emprestimo_documentos",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "emprestimo_parcelas",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "ordens_assinatura",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "prestador_vouchers",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "automacao_scraping_configs",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "automacao_scraping_logs",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "solicitacoes_exclusao",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "indicacoes",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "level_history",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "points_transactions",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "loja_reembolsos",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "prestador_premios",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "prestador_promocoes",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "prestador_promocoes_ativacoes",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "ticket_mensagens",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "emprestimo_comentarios",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "emprestimo_historico",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "promocoes_quantidade_uso",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 1
+    },
+    {
+      "name": "fatura_contestacoes",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 3
+    },
+    {
+      "name": "gsa_provider_registration_challenges",
+      "createdIn": "20260830123000_provider_registration_otp_and_authorization_hardening.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_calculator_pro_whatsapp_requests",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_careers_vacancies",
+      "createdIn": "20260831103000_careers_vacancies_and_notifications.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_careers_notification_outbox",
+      "createdIn": "20260831103000_careers_vacancies_and_notifications.sql",
+      "rls": true,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_channel_secrets",
+      "createdIn": "20260831155000_gsa_tv_channel_secrets.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_tv_programs",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_series",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_episodes",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_schedule_versions",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_program_blocks",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_rights_records",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_comments",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_ad_campaigns",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_ad_assets",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_live_sources",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_identity_assets",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_graphic_templates",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_on_air_graphics",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_as_run",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_ai_presenters",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_ai_projects",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_ai_jobs",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_ai_assets",
+      "createdIn": "20260831203000_gsa_tv_editorial_control_room_ai_foundation.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_execution_log",
+      "createdIn": "20260831203000_gsa_tv_master_operations.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_watchdog_samples",
+      "createdIn": "20260831203000_gsa_tv_master_operations.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_graphics",
+      "createdIn": "20260831203000_gsa_tv_master_operations.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_live_source_secrets",
+      "createdIn": "20260831203000_gsa_tv_master_operations.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_rights_documents",
+      "createdIn": "20260831203000_gsa_tv_master_operations.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_campaigns",
+      "createdIn": "20260831203000_gsa_tv_master_operations.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_virtual_presenters",
+      "createdIn": "20260831203000_gsa_tv_master_operations.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_editorial_policies",
+      "createdIn": "20260831203000_gsa_tv_master_operations.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_ai_provider_secrets",
+      "createdIn": "20260831220500_gsa_tv_ai_provider_security.sql",
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "gsa_tv_live_recordings",
+      "createdIn": "20260901014500_gsa_tv_operational_completeness.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_alert_settings",
+      "createdIn": "20260901014500_gsa_tv_operational_completeness.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_alert_deliveries",
+      "createdIn": "20260901014500_gsa_tv_operational_completeness.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_backup_runs",
+      "createdIn": "20260901014500_gsa_tv_operational_completeness.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_ai_usage",
+      "createdIn": "20260901014500_gsa_tv_operational_completeness.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_ai_memory",
+      "createdIn": "20260901014500_gsa_tv_operational_completeness.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_weekly_grid_slots",
+      "createdIn": "20260903223000_gsa_tv_fixed_weekly_grid_and_free_sources.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_editorial_sources",
+      "createdIn": "20260903223000_gsa_tv_fixed_weekly_grid_and_free_sources.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_program_source_links",
+      "createdIn": "20260903223000_gsa_tv_fixed_weekly_grid_and_free_sources.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "gsa_tv_editorial_items",
+      "createdIn": "20260903223000_gsa_tv_fixed_weekly_grid_and_free_sources.sql",
+      "rls": false,
+      "policiesCount": 0
+    },
+    {
+      "name": "vouchers",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 1
+    },
+    {
+      "name": "loja_carrinhos",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "cliente_premios",
+      "createdIn": null,
+      "rls": true,
+      "policiesCount": 2
+    },
+    {
+      "name": "os_notas",
+      "createdIn": null,
+      "rls": false,
+      "policiesCount": 1
+    }
+  ]
+}

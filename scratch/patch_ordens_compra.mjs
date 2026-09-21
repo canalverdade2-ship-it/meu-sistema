@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+const p='src/components/admin/OrdensCompraModule.tsx';
+let s=fs.readFileSync(p,'utf8').replace(/\r\n/g,'\n');
+s=s.replace("import { getAdminProductSupplierConfig } from '../../lib/adminRpc';", "import { callAdminRpc, getAdminProductSupplierConfig } from '../../lib/adminRpc';");
+const old=`      const { error } = await supabase.from('ordens_compra').update({ observacoes_internas: observacoesInternas }).eq('id', ordem.id);\n      if (error) throw error;`;
+const neu=`      await callAdminRpc('gsa_admin_update_store_order_notes', {\n        p_ordem_compra_id: ordem.id,\n        p_observacoes: observacoesInternas,\n      });`;
+if(!s.includes(old)) throw new Error('save notes block missing');
+s=s.replace(old,neu);
+fs.writeFileSync(p,s,'utf8');
+console.log('ORDENS_COMPRA_PATCHED');

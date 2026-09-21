@@ -6,6 +6,7 @@ import { Modal } from '../ui/Modal';
 import { formatCurrency, formatDate, generateCode } from '../../lib/utils';
 import { toast } from 'react-hot-toast';
 import { logService } from '../../lib/logService';
+import { callAdminRpc } from '../../lib/adminRpc';
 
 export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaboradorId?: string, colaboradorNome?: string }) {
   const [activeTab, setActiveTab] = useState<'ativos' | 'inativos'>('ativos');
@@ -87,9 +88,10 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
   const handleSaveCupom = async (formData: any) => {
     if (editingCupom) {
       try {
-        const { error } = await supabase.from('cupons_loja').update({
-          ...formData,
-        }).eq('id', editingCupom.id);
+        const { error } = await callAdminRpc('gsa_admin_save_store_coupon', {
+          p_cupom_id: editingCupom.id,
+          p_payload: formData
+        }) as { error?: any };
 
         if (error) throw error;
         
@@ -106,7 +108,7 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
         fetchCupons();
         return true;
       } catch (error: any) {
-        if (error.code === '23505') {
+        if (error.code === '23505' || String(error.message).includes('unique')) {
           toast.error('Já existe um cupom com este código.');
         } else {
           toast.error(error.message || 'Erro ao atualizar cupom.');
@@ -120,12 +122,12 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
 
   const handleCreate = async (formData: any) => {
     try {
-      const { data, error } = await supabase.from('cupons_loja').insert([{
-        ...formData,
-        status: 'ativo'
-      }]).select().single();
+      const payload = { ...formData, status: 'ativo' };
+      const result = await callAdminRpc('gsa_admin_save_store_coupon', {
+        p_payload: payload
+      }) as { error?: any };
 
-      if (error) throw error;
+      if (result?.error) throw result.error;
       
       toast.success('Cupom cadastrado com sucesso.');
       await logService.logAction({
@@ -139,7 +141,7 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
       fetchCupons();
       return true;
     } catch (error: any) {
-      if (error.code === '23505') {
+      if (error.code === '23505' || String(error.message).includes('unique')) {
         toast.error('Já existe um cupom com este código.');
       } else {
         toast.error(error.message || 'Erro ao cadastrar cupom.');
@@ -152,12 +154,15 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
     if (!selectedCupom || isSubmittingAction) return;
     setIsSubmittingAction(true);
     try {
-      const { error } = await supabase.from('cupons_loja').update({ 
-        status: 'inativo',
-        motivo_cancelamento: `Inativado administrativamente por ${colaboradorNome || 'Admin'}`
-      }).eq('id', selectedCupom.id);
+      const result = await callAdminRpc('gsa_admin_save_store_coupon', {
+        p_cupom_id: selectedCupom.id,
+        p_payload: {
+          status: 'inativo',
+          motivo_cancelamento: `Inativado administrativamente por ${colaboradorNome || 'Admin'}`
+        }
+      }) as { error?: any };
 
-      if (error) {
+      if (result?.error) {
         toast.error('Erro ao inativar cupom.');
       } else {
         toast.success('Cupom inativado com sucesso. Pode ser reativado a qualquer momento.');
@@ -180,12 +185,15 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
     if (!selectedCupom || isSubmittingAction) return;
     setIsSubmittingAction(true);
     try {
-      const { error } = await supabase.from('cupons_loja').update({ 
-        status: 'ativo',
-        motivo_cancelamento: null
-      }).eq('id', selectedCupom.id);
+      const result = await callAdminRpc('gsa_admin_save_store_coupon', {
+        p_cupom_id: selectedCupom.id,
+        p_payload: {
+          status: 'ativo',
+          motivo_cancelamento: null
+        }
+      }) as { error?: any };
 
-      if (error) {
+      if (result?.error) {
         toast.error('Erro ao reativar cupom.');
       } else {
         toast.success('Cupom reativado com sucesso!');
@@ -209,8 +217,10 @@ export function CuponsLojaModule({ colaboradorId, colaboradorNome }: { colaborad
     if (!selectedCupom || isSubmittingAction) return;
     setIsSubmittingAction(true);
     try {
-      const { error } = await supabase.from('cupons_loja').delete().eq('id', selectedCupom.id);
-      if (error) {
+      const result = await callAdminRpc('gsa_admin_delete_store_coupon', {
+        p_cupom_id: selectedCupom.id
+      }) as { error?: any };
+      if (result?.error) {
         toast.error('Erro ao excluir cupom.');
       } else {
         toast.success('Cupom excluído com sucesso.');
@@ -652,7 +662,7 @@ function CupomForm({ onSubmit, onCancel, clientes, produtos, initialData }: { on
               <label className="mb-1 block text-sm font-bold text-neutral-700">
                 {formData.tipo_desconto === 'porcentagem' ? 'Porcentagem de Desconto *' : 'Valor do Desconto (R$) *'}
               </label>
-              <input type="number" step="0.01" required min="0.01" value={formData.valor_desconto} onChange={e => setFormData({...formData, valor_desconto: e.target.value})} className="w-full rounded-xl border border-indigo-200 bg-white px-4 py-3 focus:border-indigo-500 focus:outline-none" />
+              <input type="number" step="0.01" inputMode="decimal" required min="0.01" value={formData.valor_desconto} onChange={e => setFormData({...formData, valor_desconto: e.target.value})} className="w-full rounded-xl border border-indigo-200 bg-white px-4 py-3 focus:border-indigo-500 focus:outline-none" />
             </div>
           </div>
         ) : (
@@ -668,13 +678,13 @@ function CupomForm({ onSubmit, onCancel, clientes, produtos, initialData }: { on
             {formData.tipo_entrega === 'frete_gratis_minimo' && (
               <div>
                 <label className="mb-1 block text-sm font-bold text-neutral-700">Valor Mínimo da Compra (R$) *</label>
-                <input type="number" step="0.01" required min="0" value={formData.valor_minimo_compra} onChange={e => setFormData({...formData, valor_minimo_compra: e.target.value})} className="w-full rounded-xl border border-indigo-200 bg-white px-4 py-3 focus:border-indigo-500 focus:outline-none" />
+                <input type="number" step="0.01" inputMode="decimal" required min="0" value={formData.valor_minimo_compra} onChange={e => setFormData({...formData, valor_minimo_compra: e.target.value})} className="w-full rounded-xl border border-indigo-200 bg-white px-4 py-3 focus:border-indigo-500 focus:outline-none" />
               </div>
             )}
             {formData.tipo_entrega === 'taxa_fixa' && (
               <div>
                 <label className="mb-1 block text-sm font-bold text-neutral-700">Taxa de Entrega Fixa (R$) *</label>
-                <input type="number" step="0.01" required min="0" value={formData.taxa_fixa_entrega} onChange={e => setFormData({...formData, taxa_fixa_entrega: e.target.value})} className="w-full rounded-xl border border-indigo-200 bg-white px-4 py-3 focus:border-indigo-500 focus:outline-none" />
+                <input type="number" step="0.01" inputMode="decimal" required min="0" value={formData.taxa_fixa_entrega} onChange={e => setFormData({...formData, taxa_fixa_entrega: e.target.value})} className="w-full rounded-xl border border-indigo-200 bg-white px-4 py-3 focus:border-indigo-500 focus:outline-none" />
               </div>
             )}
           </div>
@@ -686,13 +696,13 @@ function CupomForm({ onSubmit, onCancel, clientes, produtos, initialData }: { on
           <label className="mb-1 block text-sm font-bold text-neutral-700">
             Limite de Usos Globais *
           </label>
-          <input type="number" required min="1" value={formData.limite_usos} onChange={e => setFormData({...formData, limite_usos: e.target.value})} className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none" />
+          <input type="number" inputMode="numeric" required min="1" value={formData.limite_usos} onChange={e => setFormData({...formData, limite_usos: e.target.value})} className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none" />
         </div>
         <div>
           <label className="mb-1 block text-sm font-bold text-neutral-700">
             Usos por Cliente *
           </label>
-          <input type="number" required min="1" value={formData.limite_usos_por_cliente} onChange={e => setFormData({...formData, limite_usos_por_cliente: e.target.value})} className="w-full rounded-xl border border-indigo-200 bg-indigo-50/40 px-4 py-3 focus:border-indigo-500 focus:outline-none" placeholder="Ex: 1" />
+          <input type="number" inputMode="numeric" required min="1" value={formData.limite_usos_por_cliente} onChange={e => setFormData({...formData, limite_usos_por_cliente: e.target.value})} className="w-full rounded-xl border border-indigo-200 bg-indigo-50/40 px-4 py-3 focus:border-indigo-500 focus:outline-none" placeholder="Ex: 1" />
         </div>
         <div>
           <label className="mb-1 block text-sm font-bold text-neutral-700">Data de Validade (Opcional)</label>

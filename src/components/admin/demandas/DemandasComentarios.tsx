@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, X, Upload, CheckCircle2, Clock } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
-import { uploadToR2, getR2PublicUrl, removeFromR2, getPrivateR2Url } from '../../../lib/r2Storage';
+import { uploadToR2, removeFromR2, getPrivateR2Url } from '../../../lib/r2Storage';
+import { callAdminRpc, createAdminRequestId } from '../../../lib/adminRpc';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { notificationService } from '../../../lib/notificationService';
+import { useRealtimeSubscription } from '../../../hooks/useRealtime';
 
 interface Props {
   demandaId: string;
@@ -22,33 +24,6 @@ export function DemandasComentarios({ demandaId, autorId, autorNome, autorTipo, 
   const [enviando, setEnviando] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchComentariosLocal = async () => {
-      const { data } = await supabase
-        .from('demanda_comentarios')
-        .select('*')
-        .eq('demanda_id', demandaId)
-        .order('created_at', { ascending: true });
-      if (isMounted) setComentarios(data || []);
-    };
-    
-    fetchComentariosLocal();
-
-    const channel = supabase
-      .channel(`demanda-comentarios-${demandaId}`)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'demanda_comentarios',
-        filter: `demanda_id=eq.${demandaId}`
-      }, () => { fetchComentariosLocal(); })
-      .subscribe();
-
-    return () => { 
-      isMounted = false;
-      supabase.removeChannel(channel); 
-    };
-  }, [demandaId]);
-
   const fetchComentarios = async () => {
     const { data } = await supabase
       .from('demanda_comentarios')
@@ -58,11 +33,23 @@ export function DemandasComentarios({ demandaId, autorId, autorNome, autorTipo, 
     setComentarios(data || []);
   };
 
+  useEffect(() => {
+    void fetchComentarios();
+  }, [demandaId]);
+
+  useRealtimeSubscription({
+    table: 'demanda_comentarios',
+    filter: `demanda_id=eq.${demandaId}`,
+    onChange: fetchComentarios,
+    debounceMs: 100,
+  }, [demandaId]);
+
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (enviando) return;
     if (!mensagem.trim() && arquivos.length === 0) return;
     setEnviando(true);
+    const uploadedPaths: string[] = [];
     try {
       const urls: string[] = [];
       if (arquivos.length > 0) {
@@ -70,28 +57,19 @@ export function DemandasComentarios({ demandaId, autorId, autorNome, autorTipo, 
           const ext = file.name.split('.').pop();
           const path = `comentarios/${demandaId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
           const __up = await uploadToR2(file, 'entregas_demandas', path);
-          const publicUrl = __up.url ?? getR2PublicUrl(__up.path);
-          const r2Path = __up.path;
-          return publicUrl;
+          uploadedPaths.push(__up.path);
+          return __up.path;
         });
         const uploadedUrls = await Promise.all(uploadPromises);
         urls.push(...uploadedUrls);
       }
 
-      const { error: insertError } = await supabase.from('demanda_comentarios').insert({
-        demanda_id: demandaId,
-        autor_id: autorId,
-        autor_nome: autorNome,
-        autor_tipo: autorTipo,
-        mensagem: mensagem.trim() || '—',
-        arquivos_urls: urls,
+      await callAdminRpc('gsa_admin_add_demand_comment', {
+        p_demanda_id: demandaId,
+        p_mensagem: mensagem.trim() || '—',
+        p_arquivos_urls: urls,
+        p_request_id: createAdminRequestId(),
       });
-
-      if (insertError) throw insertError;
-
-      // Incrementa contador de forma segura
-      const { error: rpcError } = await supabase.rpc('increment_comentarios', { demanda_id_param: demandaId });
-      if (rpcError) throw rpcError;
 
       // Notificar a outra parte
       const { data: demandaData } = await supabase
@@ -126,6 +104,7 @@ export function DemandasComentarios({ demandaId, autorId, autorNome, autorTipo, 
       setMensagem('');
       setArquivos([]);
     } catch (err) {
+      await removeFromR2(uploadedPaths);
       toast.error('Erro ao enviar comentário.');
     } finally {
       setEnviando(false);

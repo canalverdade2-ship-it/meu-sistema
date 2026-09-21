@@ -1,0 +1,54 @@
+FROM debian:trixie-slim AS fetch
+
+ARG FFPLAYOUT_VERSION=2.1.0
+ARG FFPLAYOUT_RPM_SHA256=60d00d5a676d45cb3265aa0bf3f411c33b72e5f9a93258282c3fb2b1268e0171
+
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends ca-certificates cpio curl rpm2cpio \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /tmp/ffplayout
+
+RUN curl --fail --location --retry 5 \
+      --output ffplayout.rpm \
+      "https://github.com/ffplayout/ffplayout/releases/download/v${FFPLAYOUT_VERSION}/ffplayout-v${FFPLAYOUT_VERSION}-1.aarch64.rpm" \
+    && echo "${FFPLAYOUT_RPM_SHA256}  ffplayout.rpm" | sha256sum --check --strict \
+    && rpm2cpio ffplayout.rpm | cpio --extract --make-directories
+
+FROM debian:trixie-slim
+
+ARG FFPLAYOUT_VERSION=2.1.0
+
+LABEL org.opencontainers.image.title="GSA TV ffplayout" \
+      org.opencontainers.image.description="Pinned ARM64 ffplayout runtime for GSA TV" \
+      org.opencontainers.image.version="${FFPLAYOUT_VERSION}" \
+      org.opencontainers.image.source="https://github.com/ffplayout/ffplayout"
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    TZ=America/Sao_Paulo
+
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends ca-certificates curl ffmpeg sqlite3 tzdata \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 986 gsa-tv \
+    && useradd --uid 986 --gid 986 --home-dir /var/lib/gsa-tv --create-home --shell /usr/sbin/nologin gsa-tv \
+    && install -d -o gsa-tv -g gsa-tv -m 0750 \
+       /var/lib/gsa-tv/config \
+       /var/lib/gsa-tv/playlists \
+       /var/lib/gsa-tv/media \
+       /var/lib/gsa-tv/public \
+       /var/log/gsa-tv
+
+COPY --from=fetch /tmp/ffplayout/usr/bin/ffplayout /usr/local/bin/ffplayout
+COPY --from=fetch /tmp/ffplayout/usr/share/ffplayout/dummy.vtt /usr/share/gsa-tv/dummy.vtt
+COPY --from=fetch /tmp/ffplayout/usr/share/ffplayout/logo.png /usr/share/gsa-tv/logo.png
+
+RUN chmod 0755 /usr/local/bin/ffplayout
+
+USER gsa-tv:gsa-tv
+WORKDIR /var/lib/gsa-tv
+
+EXPOSE 8787
+
+ENTRYPOINT ["/usr/local/bin/ffplayout"]
+CMD ["--help"]

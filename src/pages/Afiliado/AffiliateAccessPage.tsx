@@ -15,7 +15,6 @@ import {
 import { toast } from 'react-hot-toast';
 import { LogoGSA } from '../../components/ui/LogoGSA';
 import { PinInput } from '../../components/ui/PinInput';
-import { joinAffiliate } from '../../features/affiliates/service';
 import { logService } from '../../lib/logService';
 import { sessionService } from '../../lib/sessionService';
 import { maskCNPJ, maskCPF, maskPhone } from '../../lib/utils';
@@ -34,10 +33,14 @@ interface AffiliateAccessPageProps {
 
 const EMPTY_REGISTRATION = {
   documento: '',
+  nome: '',
+  email: '',
+  telefone: '',
   nome_divulgacao: '',
   pix_tipo: 'cpf' as PixType,
   pix_chave: '',
   pin: '',
+  pin_confirmacao: '',
   termos_aceitos: false,
 };
 
@@ -140,30 +143,39 @@ export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: 
 
   const register = async (event: FormEvent) => {
     event.preventDefault();
-    if (!validateDocument(form.documento)) return toast.error('Informe o CPF ou CNPJ válido da sua conta GSA.');
+    if (!validateDocument(form.documento)) return toast.error('Informe um CPF ou CNPJ válido.');
+    if (form.nome.trim().length < 3) return toast.error('Informe seu nome completo ou razão social.');
+    if (!validarEmail(form.email.trim())) return toast.error('Informe um e-mail válido.');
+    if (form.telefone.replace(/\D/g, '').length < 10) return toast.error('Informe um telefone válido.');
     if (form.nome_divulgacao.trim().length < 3) return toast.error('Informe um nome de divulgação com pelo menos 3 caracteres.');
     if (!validatePixKey(form.pix_tipo, form.pix_chave)) return toast.error(`Informe uma chave PIX do tipo ${PIX_LABELS[form.pix_tipo]} válida.`);
     if (!/^\d{4}$/.test(form.pin)) return toast.error('Informe o PIN de 4 dígitos da sua conta GSA.');
+    if (form.pin_confirmacao !== form.pin) return toast.error('A confirmação do PIN não corresponde ao PIN informado.');
     if (!form.termos_aceitos) return toast.error('É necessário concordar com os termos do programa.');
 
     setLoading(true);
     try {
-      const data = await authenticate(form.documento, form.pin);
-      await joinAffiliate({
-        nomeDivulgacao: form.nome_divulgacao.trim(),
-        pixTipo: form.pix_tipo,
-        pixChave: form.pix_chave.trim(),
-        termosVersao: '2026-07-22',
+      const data = await sessionService.registerAffiliate({
+        documento: form.documento.replace(/\D/g, ''),
+        nome: form.nome.trim(),
+        nome_divulgacao: form.nome_divulgacao.trim(),
+        email: form.email.trim().toLowerCase(),
+        telefone: form.telefone.replace(/\D/g, ''),
+        pin: form.pin,
+        pix_tipo: form.pix_tipo,
+        pix_chave: form.pix_chave.trim(),
+        termos_versao: '2026-08-29',
+        termos_aceitos: form.termos_aceitos,
       });
       await logService.logAction({
         ator_tipo: 'cliente',
-        ator_id: data.clientId,
-        ator_nome: data.clientName,
+        ator_id: data?.id || data?.session?.ator_id || '',
+        ator_nome: data?.nome || data?.session?.ator_nome || form.nome.trim(),
         acao: 'ATIVAR_AFILIADO',
         detalhes: 'Perfil ativado após autenticação pelo Portal do Afiliado',
       });
       toast.success('Perfil de afiliado ativado com segurança.');
-      onLogin(data.clientId);
+      onLogin(data?.id || data?.session?.ator_id);
     } catch (error: any) {
       await sessionService.endSession().catch(() => undefined);
       toast.error(error?.message || 'Não foi possível ativar o perfil de afiliado.');
@@ -202,7 +214,7 @@ export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: 
                 Um acesso único para links, comissões e recebimentos.
               </h1>
               <p className="mt-6 max-w-xl text-sm leading-7 text-white/62 sm:text-base">
-                Entre com os mesmos dados da sua conta GSA. A ativação do perfil não cria uma conta paralela e não solicita senha adicional.
+                Entre com seus dados GSA ou crie seu acesso diretamente como afiliado. Se depois quiser, ative também o perfil de cliente.
               </p>
             </div>
 
@@ -360,15 +372,15 @@ export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: 
                 <div className="flex items-start gap-4 border-b border-[#e0dacf] pb-6">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#0b1522] text-[#ddc28d]"><BadgeDollarSign className="h-5 w-5" /></span>
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8d6829]">Ativação vinculada à conta</p>
-                    <h3 className="mt-1 text-xl font-semibold text-[#0b1522]">Dados essenciais do perfil</h3>
-                    <p className="mt-2 text-sm leading-6 text-[#626a74]">Seus dados pessoais e de contato permanecem os mesmos da conta GSA. Aqui você informa apenas o necessário para operar como afiliado.</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8d6829]">Cadastro aberto</p>
+                    <h3 className="mt-1 text-xl font-semibold text-[#0b1522]">Crie seu perfil de afiliado</h3>
+                    <p className="mt-2 text-sm leading-6 text-[#626a74]">Você não precisa ter um perfil de cliente. Se já possuir uma conta GSA, os perfis serão vinculados automaticamente pelo documento.</p>
                   </div>
                 </div>
 
                 <div className="mt-7 grid gap-5 sm:grid-cols-2">
                   <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
-                    CPF ou CNPJ da conta GSA
+                    CPF ou CNPJ
                     <input
                       required
                       autoComplete="username"
@@ -381,18 +393,36 @@ export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: 
                   </label>
 
                   <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
-                    PIN de 4 dígitos da sua conta GSA
+                    Nome completo ou razão social
                     <input
                       required
-                      type="password"
-                      autoComplete="current-password"
-                      inputMode="numeric"
-                      maxLength={4}
-                      value={form.pin}
-                      onChange={(event) => updateForm('pin', event.target.value.replace(/\D/g, '').slice(0, 4))}
-                      placeholder="••••"
-                      className="affiliate-input mt-2 tracking-[0.35em]"
+                      autoComplete="name"
+                      maxLength={180}
+                      value={form.nome}
+                      onChange={(event) => updateForm('nome', event.target.value)}
+                      placeholder="Seu nome completo"
+                      className="affiliate-input mt-2"
                     />
+                  </label>
+
+                  <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
+                    E-mail
+                    <input required type="email" autoComplete="email" value={form.email} onChange={(event) => updateForm('email', event.target.value)} placeholder="seu@email.com" className="affiliate-input mt-2" />
+                  </label>
+
+                  <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
+                    Telefone ou WhatsApp
+                    <input required inputMode="tel" autoComplete="tel" value={form.telefone} onChange={(event) => updateForm('telefone', maskPhone(event.target.value))} placeholder="(00) 00000-0000" className="affiliate-input mt-2" />
+                  </label>
+
+                  <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
+                    Crie um PIN de 4 dígitos
+                    <input required type="password" autoComplete="new-password" inputMode="numeric" maxLength={4} value={form.pin} onChange={(event) => updateForm('pin', event.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="••••" className="affiliate-input mt-2 tracking-[0.35em]" />
+                  </label>
+
+                  <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864]">
+                    Confirme o PIN
+                    <input required type="password" autoComplete="new-password" inputMode="numeric" maxLength={4} value={form.pin_confirmacao} onChange={(event) => updateForm('pin_confirmacao', event.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="••••" className="affiliate-input mt-2 tracking-[0.35em]" />
                   </label>
 
                   <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[#4f5864] sm:col-span-2">
@@ -462,13 +492,13 @@ export function AffiliateAccessPage({ onLogin, onBack, initialMode = 'login' }: 
                 </label>
 
                 <div className="mt-7 flex flex-col gap-3 border-t border-[#e0dacf] pt-6 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="flex items-start gap-2 text-xs leading-5 text-[#777f89]"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#8d6829]" /> A ativação será concluída somente após a autenticação da conta.</p>
+                  <p className="flex items-start gap-2 text-xs leading-5 text-[#777f89]"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#8d6829]" /> Seu documento será usado para evitar contas duplicadas e vincular perfis existentes.</p>
                   <button
                     type="submit"
                     disabled={loading}
                     className="inline-flex min-h-13 shrink-0 items-center justify-center gap-2 bg-[#0b1522] px-7 text-sm font-bold text-white transition-colors hover:bg-[#24364b] disabled:cursor-not-allowed disabled:opacity-45"
                   >
-                    {loading ? 'Autenticando e ativando...' : 'Autenticar e ativar perfil'} <ArrowRight className="h-4 w-4" />
+                    {loading ? 'Criando e ativando...' : 'Criar perfil de afiliado'} <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
               </form>

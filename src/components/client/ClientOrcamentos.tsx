@@ -11,6 +11,7 @@ import { useClientNotifications } from '../../hooks/useClientNotifications';
 import { validarCPF } from '../../utils/cpfValidator';
 import { logService } from '../../lib/logService';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
 import { useWhatsAppDocument } from '../../hooks/useWhatsAppDocument';
 import { generateOrcamentoPDF } from '../../lib/pdf';
@@ -194,46 +195,43 @@ export function ClientOrcamentos({
     fetchOrcamentosRef.current = fetchOrcamentos;
   });
 
-  // Stable Realtime Subscription
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    const debouncedFetch = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        fetchOrcamentosRef.current();
-      }, 300);
-    };
-
-    const channel = supabase
-      .channel(`client-orc-rt-${clientId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
+  useRealtimeSubscription(
+    [
+      {
         table: 'orcamentos',
-        filter: `cliente_id=eq.${clientId}`
-      }, (payload) => {
-        debouncedFetch();
-        if (payload.new && selectedOrcamentoRef.current && (payload.new as any).id === selectedOrcamentoRef.current.id) {
-          const updatedOrc = payload.new as any;
-          // Se o status mudou externamente, fechamos o modal e avisamos o usuário
-          if (updatedOrc.status !== selectedOrcamentoRef.current?.status) {
-            toast(`O orçamento ${updatedOrc.codigo_orcamento} foi atualizado para "${updatedOrc.status}".`);
-            setIsNegotiateModalOpen(false);
-            setIsRequestDiscountOpen(false);
-            setSelectedOrcamento(null);
-          } else {
-            setSelectedOrcamento(prev => prev ? { ...prev, ...payload.new } as any : null);
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        debounceMs: 300,
+        onChange: () => {
+          fetchOrcamentosRef.current();
+        },
+        onPayload: (payload) => {
+          if (payload.new && selectedOrcamentoRef.current && (payload.new as any).id === selectedOrcamentoRef.current.id) {
+            const updatedOrc = payload.new as any;
+            // Se o status mudou externamente, fechamos o modal e avisamos o usuário
+            if (updatedOrc.status !== selectedOrcamentoRef.current?.status) {
+              toast(`O orçamento ${updatedOrc.codigo_orcamento} foi atualizado para "${updatedOrc.status}".`);
+              setIsNegotiateModalOpen(false);
+              setIsRequestDiscountOpen(false);
+              setSelectedOrcamento(null);
+            } else {
+              setSelectedOrcamento((prev) => (prev ? ({ ...prev, ...payload.new } as any) : null));
+            }
           }
-        }
-      })
-      .subscribe();
-
-    return () => {
-      clearTimeout(timeoutId);
-      supabase.removeChannel(channel);
-    };
-  }, [clientId]); // Dependency only on clientId
+        },
+      },
+      {
+        table: 'loja_avaliacoes',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: () => fetchOrcamentosRef.current(),
+      },
+      {
+        table: 'loja_solicitacoes',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: () => fetchOrcamentosRef.current(),
+      },
+    ],
+    [clientId]
+  );
 
   const fetchOrcamentos = async () => {
     setIsLoading(true);
@@ -702,170 +700,192 @@ export function ClientOrcamentos({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         {orcamentos.map((orc) => (
-          <div id={`budget-${orc.id}`} key={orc.id} className={`group relative overflow-hidden rounded-2xl bg-white p-4 sm:p-5 transition-all duration-500 ${highlightedItemId === orc.id ? 'ring-4 ring-indigo-500 shadow-2xl shadow-indigo-500/20 scale-[1.02] z-10' : 'shadow-sm hover:shadow-md ring-1 ring-neutral-200/60'}`}>
+          <div 
+            id={`budget-${orc.id}`} 
+            key={orc.id} 
+            className={`group relative flex flex-col justify-between overflow-hidden rounded-3xl bg-white p-5 sm:p-6 transition-all duration-300 ${
+              highlightedItemId === orc.id 
+                ? 'ring-2 ring-indigo-500 shadow-xl shadow-indigo-500/10 scale-[1.01]' 
+                : 'border border-neutral-200/80 shadow-sm hover:shadow-md hover:border-neutral-300'
+            }`}
+          >
             {highlightedItemId === orc.id && (
-              <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 ring-4 ring-white animate-pulse z-20 flex items-center justify-center">
-                <span className="h-2 w-2 rounded-full bg-white" />
+              <span className="absolute top-3 right-3 flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-600"></span>
               </span>
             )}
             
-            <div className="flex items-start justify-between pb-3 border-b border-neutral-100">
-               <div className="flex items-center gap-3">
-                  <div className={`flex h-8 w-8 items-center justify-center rounded-lg shadow-inner ${
-                    orc.status === 'aberto' ? 'bg-amber-100/50 text-amber-600 ring-1 ring-amber-200/50' : 
-                    orc.status === 'negociação' ? 'bg-indigo-100/50 text-indigo-600 ring-1 ring-indigo-200/50' :
-                    orc.status === 'pendência documentos' ? 'bg-rose-100/50 text-rose-600 ring-1 ring-rose-200/50' :
-                    orc.status === 'aprovado' ? 'bg-emerald-100/50 text-emerald-600 ring-1 ring-emerald-200/50' : 'bg-red-100/50 text-red-600 ring-1 ring-red-200/50'
+            {/* Header com Metadados */}
+            <div>
+              <div className="flex items-center justify-between gap-3 pb-4 border-b border-neutral-100">
+                <div className="flex items-center gap-3">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
+                    orc.status === 'aberto' ? 'bg-amber-50 text-amber-600 ring-1 ring-amber-200/60' : 
+                    orc.status === 'negociação' ? 'bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200/60' :
+                    orc.status === 'pendência documentos' ? 'bg-rose-50 text-rose-600 ring-1 ring-rose-200/60' :
+                    orc.status === 'aprovado' ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200/60' : 'bg-neutral-100 text-neutral-600 ring-1 ring-neutral-200'
                   }`}>
-                    <FileText className="h-4 w-4" />
+                    <FileText className="h-5 w-5" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400 block mb-0.5">Orçamento Nº</span>
-                    <span className="font-mono text-xs sm:text-sm font-black text-neutral-800 leading-none">{orc.codigo_orcamento}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">Orçamento</span>
+                    <span className="font-mono text-xs sm:text-sm font-bold text-neutral-800 tracking-tight">#{orc.codigo_orcamento}</span>
                   </div>
-               </div>
-               <div className="text-right">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400 block mb-0.5">Data de Solicitação</span>
-                  <span className="font-mono text-xs sm:text-sm font-black text-neutral-800 leading-none">{formatDate(orc.data_criacao)}</span>
-               </div>
-            </div>
-
-            <h3 className={`mt-4 text-sm sm:text-lg font-black text-neutral-900 leading-tight transition-all ${orc.status === 'em revisão' ? 'text-center px-4' : 'text-left'}`}>
-              {orc.titulo_solicitacao || (orc.categoria === 'servico' 
-                ? (orc as any).servicos?.nome 
-                : orc.categoria === 'produto'
-                ? (orc as any).produtos?.nome
-                : (orc as any).assinaturas?.nome) || 'Solicitação de Orçamento'}
-              {orc.categoria && <span className="inline-flex items-center justify-center h-5 px-2 ml-2 bg-neutral-100 text-neutral-500 text-[10px] font-black rounded-md rounded-tl-none ring-1 ring-neutral-200/50">x{orc.quantidade || 1}</span>}
-            </h3>
-
-            {orc.nivel_prioridade && (
-              <div className={`mt-2 ${orc.status === 'em revisão' ? 'text-center' : ''}`}>
-                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                  orc.nivel_prioridade === 'alta' 
-                    ? 'bg-red-100 text-red-700 ring-1 ring-red-200' 
-                    : orc.nivel_prioridade === 'media'
-                    ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-200'
-                    : 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200'
-                }`}>
-                  {orc.nivel_prioridade === 'alta' ? '🔴 Alta' 
-                   : orc.nivel_prioridade === 'media' ? '🟡 Média' 
-                   : '🟢 Baixa'}
-                </span>
-              </div>
-            )}
-            
-            <div className={`mt-3 space-y-3 ${(orc.status === 'em revisão' || orc.status === 'pendência documentos') ? 'hidden' : ''}`}>
-              <div>
-                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-0.5">Observações</p>
-                <p className="text-xs text-neutral-600 leading-relaxed">{orc.descricao_solicitacao || orc.observacoes_servico || 'Sem observações.'}</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">Solicitação</span>
+                  <span className="text-xs sm:text-sm font-medium text-neutral-600">{formatDate(orc.data_criacao)}</span>
+                </div>
               </div>
 
-              <div className="space-y-1.5 rounded-xl bg-neutral-50 p-3 ring-1 ring-neutral-200">
-                <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-neutral-500">
-                    {orc.categoria === 'servico' ? 'Valor do Serviço' : orc.categoria === 'produto' ? 'Valor do Produto' : 'Valor da Assinatura'}
-                  </span>
-                  <span className="font-bold text-neutral-900">
-                    {formatCurrency(orc.categoria === 'servico' ? orc.valor_servico : orc.categoria === 'produto' ? (orc.valor_produto || orc.valor_servico) : (orc.valor_assinatura || orc.valor_servico))}
-                  </span>
+              {/* Título e Tags */}
+              <div className="mt-4 flex flex-col gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-base sm:text-lg font-bold text-neutral-900 tracking-tight">
+                    {orc.titulo_solicitacao || (orc.categoria === 'servico' 
+                      ? (orc as any).servicos?.nome 
+                      : orc.categoria === 'produto'
+                      ? (orc as any).produtos?.nome
+                      : (orc as any).assinaturas?.nome) || 'Solicitação de Orçamento'}
+                  </h3>
+                  {orc.categoria && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-neutral-100 text-neutral-600 text-[10px] font-bold tracking-wider">
+                      x{orc.quantidade || 1}
+                    </span>
+                  )}
                 </div>
 
-                {orc.categoria === 'assinatura' && (
-                  <div className="flex justify-between text-[10px] -mt-1.5 pb-1">
-                    <span className="text-neutral-400 uppercase font-black tracking-widest">Duração Contratada</span>
-                    <span className="font-black text-indigo-600 uppercase">
-                      {orc.quantidade_meses ? `${orc.quantidade_meses} Meses` : 'Prazo Indeterminado'}
+                {orc.nivel_prioridade && (
+                  <div>
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                      orc.nivel_prioridade === 'alta' 
+                        ? 'bg-rose-50 text-rose-700 ring-1 ring-rose-200/70' 
+                        : orc.nivel_prioridade === 'media'
+                        ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200/70'
+                        : 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/70'
+                    }`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${
+                        orc.nivel_prioridade === 'alta' ? 'bg-rose-500' : orc.nivel_prioridade === 'media' ? 'bg-amber-500' : 'bg-emerald-500'
+                      }`} />
+                      Prioridade {orc.nivel_prioridade === 'alta' ? 'Alta' : orc.nivel_prioridade === 'media' ? 'Média' : 'Baixa'}
                     </span>
                   </div>
                 )}
-                
-                {orc.quantidade && orc.quantidade > 1 && (
-                  <div className="flex justify-between text-sm border-t border-neutral-100 pt-2">
-                    <span className="text-neutral-500">Subtotal ({orc.quantidade}x)</span>
+              </div>
+              
+              {/* Detalhamento de Itens e Valores (se não for revisão / pendência) */}
+              <div className={`mt-4 space-y-3 ${(orc.status === 'em revisão' || orc.status === 'pendência documentos') ? 'hidden' : ''}`}>
+                {orc.descricao_solicitacao || orc.observacoes_servico ? (
+                  <div className="rounded-2xl bg-neutral-50/80 p-3.5 border border-neutral-100">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 mb-1">Observações</p>
+                    <p className="text-xs text-neutral-600 leading-relaxed">{orc.descricao_solicitacao || orc.observacoes_servico}</p>
+                  </div>
+                ) : null}
+
+                <div className="space-y-2 rounded-2xl bg-neutral-50 p-3.5 border border-neutral-100">
+                  <div className="flex justify-between items-center text-xs sm:text-sm">
+                    <span className="text-neutral-500 font-medium">
+                      {orc.categoria === 'servico' ? 'Valor do Serviço' : orc.categoria === 'produto' ? 'Valor do Produto' : 'Valor da Assinatura'}
+                    </span>
                     <span className="font-bold text-neutral-900">
-                      {formatCurrency((orc.categoria === 'servico' ? orc.valor_servico : orc.categoria === 'produto' ? (orc.valor_produto || orc.valor_servico) : (orc.valor_assinatura || orc.valor_servico)) * orc.quantidade)}
+                      {formatCurrency(orc.categoria === 'servico' ? orc.valor_servico : orc.categoria === 'produto' ? (orc.valor_produto || orc.valor_servico) : (orc.valor_assinatura || orc.valor_servico))}
                     </span>
                   </div>
-                )}
-                
-                {orc.valor_adicional > 0 && (
-                  <div className="space-y-1 border-t border-neutral-100 pt-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-neutral-500">Valor Adicional</span>
-                      <span className="font-bold text-neutral-900">{formatCurrency(orc.valor_adicional)}</span>
-                    </div>
-                    {orc.descricao_adicional && (
-                      <p className="text-[10px] text-neutral-400 italic leading-tight bg-white/50 p-1.5 rounded-lg">
-                        <span className="font-bold uppercase mr-1">Detalhes:</span>
-                        {orc.descricao_adicional}
-                      </p>
-                    )}
-                  </div>
-                )}
 
-                {orc.acrescimo > 0 && (
-                  <div className="space-y-1 border-t border-neutral-100 pt-2">
-                    <div className="flex justify-between text-sm text-amber-600">
-                      <span className="font-bold">
-                        {(orc.categoria as string) === 'loja' ? 'Juros do Crédito GSA' : 'Acréscimo'}
+                  {orc.categoria === 'assinatura' && (
+                    <div className="flex justify-between items-center text-[11px] pt-1 border-t border-neutral-200/60">
+                      <span className="text-neutral-500 font-medium">Duração Contratada</span>
+                      <span className="font-bold text-indigo-600">
+                        {orc.quantidade_meses ? `${orc.quantidade_meses} Meses` : 'Prazo Indeterminado'}
                       </span>
-                      <span className="font-bold">+ {formatCurrency(orc.acrescimo)}</span>
                     </div>
-                    {(orc.categoria as string) === 'loja' && orc.descricao_adicional && (
-                      <p className="text-[10px] text-neutral-400 italic leading-tight bg-white/50 p-1.5 rounded-lg">
-                        <span className="font-bold uppercase mr-1">Taxa:</span>
-                        {orc.descricao_adicional}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {orc.desconto > 0 && !(orc as any).promocoes && (
-                  <div className="flex justify-between text-sm text-emerald-600 border-t border-neutral-100 pt-2">
-                    <span className="font-bold">Desconto</span>
-                    <span className="font-bold">- {formatCurrency(orc.desconto)}</span>
-                  </div>
-                )}
-                
-                {(orc as any).promocoes && (
-                  <div className="mt-3 bg-indigo-50/40 p-3 rounded-xl border border-indigo-100/60">
-                    <p className="text-[11px] font-bold text-indigo-900 mb-2 uppercase tracking-wider">Detalhes da Promoção</p>
-                    <div className="space-y-1.5 text-[10px]">
-                      <div className="flex justify-between">
-                        <span className="text-indigo-700/70">Promoção Aplicada:</span>
-                        <span className="font-medium text-indigo-900">{(orc as any).promocoes.titulo}</span>
+                  )}
+                  
+                  {orc.quantidade && orc.quantidade > 1 && (
+                    <div className="flex justify-between items-center text-xs sm:text-sm border-t border-neutral-200/60 pt-1.5">
+                      <span className="text-neutral-500 font-medium">Subtotal ({orc.quantidade}x)</span>
+                      <span className="font-bold text-neutral-900">
+                        {formatCurrency((orc.categoria === 'servico' ? orc.valor_servico : orc.categoria === 'produto' ? (orc.valor_produto || orc.valor_servico) : (orc.valor_assinatura || orc.valor_servico)) * orc.quantidade)}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {orc.valor_adicional > 0 && (
+                    <div className="space-y-1 border-t border-neutral-200/60 pt-1.5">
+                      <div className="flex justify-between items-center text-xs sm:text-sm">
+                        <span className="text-neutral-500 font-medium">Valor Adicional</span>
+                        <span className="font-bold text-neutral-900">{formatCurrency(orc.valor_adicional)}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-indigo-700/70">Código da Promoção:</span>
-                        <span className="font-medium text-indigo-900">{(orc as any).promocoes.codigo_promocao}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-indigo-700/70">Desconto da Promoção:</span>
-                        <span className="font-bold text-emerald-600">-{formatCurrency(orc.desconto)}</span>
-                      </div>
-                      {(orc as any).promocoes.descricao && (
-                        <div className="pt-1">
-                          <span className="text-indigo-700/70 block mb-0.5">Descrição da Promoção:</span>
-                          <span className="font-medium text-indigo-900 block bg-white/60 p-1.5 rounded border border-indigo-100/50 leading-relaxed">{(orc as any).promocoes.descricao}</span>
-                        </div>
+                      {orc.descricao_adicional && (
+                        <p className="text-[10px] text-neutral-500 bg-white p-1.5 rounded-lg border border-neutral-200/60">
+                          <span className="font-bold mr-1">Detalhes:</span>
+                          {orc.descricao_adicional}
+                        </p>
                       )}
                     </div>
-                  </div>
-                )}
+                  )}
+
+                  {orc.acrescimo > 0 && (
+                    <div className="space-y-1 border-t border-neutral-200/60 pt-1.5">
+                      <div className="flex justify-between items-center text-xs sm:text-sm text-amber-600">
+                        <span className="font-medium">
+                          {(orc.categoria as string) === 'loja' ? 'Juros do Crédito GSA' : 'Acréscimo'}
+                        </span>
+                        <span className="font-bold">+ {formatCurrency(orc.acrescimo)}</span>
+                      </div>
+                      {(orc.categoria as string) === 'loja' && orc.descricao_adicional && (
+                        <p className="text-[10px] text-neutral-500 bg-white p-1.5 rounded-lg border border-neutral-200/60">
+                          <span className="font-bold mr-1">Taxa:</span>
+                          {orc.descricao_adicional}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {orc.desconto > 0 && !(orc as any).promocoes && (
+                    <div className="flex justify-between items-center text-xs sm:text-sm text-emerald-600 border-t border-neutral-200/60 pt-1.5">
+                      <span className="font-medium">Desconto</span>
+                      <span className="font-bold">- {formatCurrency(orc.desconto)}</span>
+                    </div>
+                  )}
+                  
+                  {(orc as any).promocoes && (
+                    <div className="mt-2 bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100">
+                      <p className="text-[10px] font-bold text-indigo-900 mb-1.5 uppercase tracking-wider">Promoção Aplicada</p>
+                      <div className="space-y-1 text-[11px]">
+                        <div className="flex justify-between">
+                          <span className="text-indigo-700/80">Título:</span>
+                          <span className="font-bold text-indigo-900">{(orc as any).promocoes.titulo}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-indigo-700/80">Desconto:</span>
+                          <span className="font-bold text-emerald-600">-{formatCurrency(orc.desconto)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            <div className="mt-3 flex items-center justify-between border-t border-neutral-100 pt-3 gap-3 flex-wrap">
-              {orc.status !== 'em revisão' && (
-                <div>
-                  <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest">Total do Orçamento</p>
-                  <p className="text-lg font-black text-indigo-600">{formatCurrency(orc.total)}</p>
-                </div>
-              )}
-              <div className="flex-1 flex justify-end">
+            {/* Total e Ações */}
+            <div className="mt-5 pt-4 border-t border-neutral-100">
+              <div className="flex items-center justify-between gap-3">
+                {orc.status !== 'em revisão' ? (
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Total Previsto</p>
+                    <p className="text-xl font-black text-neutral-900 tracking-tight">{formatCurrency(orc.total)}</p>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-400">
+                    <Clock className="h-4 w-4 text-amber-500" />
+                    <span>Em análise técnica</span>
+                  </div>
+                )}
+                
                 <button
                   onClick={async () => {
                     try {
@@ -894,112 +914,111 @@ export function ClientOrcamentos({
                     }
                   }}
                   disabled={isSendingWhatsApp}
-                  className="flex items-center justify-center gap-1.5 rounded-lg bg-emerald-100 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-200 border border-emerald-200 transition-all disabled:opacity-50 whitespace-nowrap"
+                  className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 border border-emerald-200/60 transition-colors disabled:opacity-50"
                 >
                   {isSendingWhatsApp ? <div className="h-3.5 w-3.5 animate-spin rounded-full border border-emerald-800 border-t-transparent" /> : <Send className="h-3.5 w-3.5" />}
                   WhatsApp
                 </button>
               </div>
-            </div>
 
-            {orc.status === 'aberto' && (
-              <div className="mt-4 flex gap-2 flex-wrap">
-                <button 
-                  onClick={() => handleApprove(orc)}
-                  className="flex-1 min-w-[100px] rounded-lg bg-emerald-600 py-2.5 text-xs font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700"
-                >
-                  Aprovar
-                </button>
-                {orc.desconto <= 0 && (
+              {/* Status específicos */}
+              {orc.status === 'aberto' && (
+                <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                   <button 
-                    onClick={() => { setSelectedOrcamento(orc); setIsNegotiateModalOpen(true); }}
-                    className="flex-1 min-w-[100px] rounded-lg bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-700"
+                    onClick={() => handleApprove(orc)}
+                    className="col-span-2 sm:flex-1 rounded-xl bg-emerald-600 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors"
                   >
-                    Negociar
+                    Aprovar Orçamento
                   </button>
-                )}
-                <button 
-                  onClick={() => handleCancelNegotiation(orc)}
-                  className="flex-1 min-w-[100px] rounded-lg bg-red-50 py-2.5 text-xs font-bold text-red-600 hover:bg-red-100 border border-red-100"
-                >
-                  Cancelar
-                </button>
-              </div>
-            )}
+                  {orc.desconto <= 0 && (
+                    <button 
+                      onClick={() => { setSelectedOrcamento(orc); setIsNegotiateModalOpen(true); }}
+                      className="rounded-xl bg-indigo-50 py-2.5 text-xs font-bold text-indigo-600 hover:bg-indigo-100 border border-indigo-100 transition-colors"
+                    >
+                      Negociar
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => handleCancelNegotiation(orc)}
+                    className="rounded-xl bg-rose-50 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-100 border border-rose-100 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              )}
 
-            {orc.status === 'negociação' && (
-              <div className="mt-4 space-y-3">
-                <div className="rounded-xl bg-indigo-50 p-3 ring-1 ring-indigo-100">
-                  <p className="text-[10px] sm:text-xs font-bold text-indigo-700 flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5" />
-                    {orc.fase_negociacao === 'admin' ? 'Aguardando análise do sistema' : 'Proposta recebida do sistema'}
-                  </p>
-                  {orc.fase_negociacao === 'cliente' && orc.proposta_admin_porcentagem && (
-                    <div className="mt-3">
-                      <p className="text-sm text-indigo-900">O sistema propôs um desconto de <strong>{orc.proposta_admin_porcentagem}%</strong>.</p>
-                      <p className="text-lg font-black text-indigo-600 mt-1">{formatCurrency(orc.total * (1 - orc.proposta_admin_porcentagem / 100))}</p>
+              {orc.status === 'negociação' && (
+                <div className="mt-4 space-y-3">
+                  <div className="rounded-2xl bg-indigo-50/70 p-3.5 border border-indigo-100">
+                    <p className="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
+                      <Clock className="h-4 w-4 text-indigo-600" />
+                      {orc.fase_negociacao === 'admin' ? 'Aguardando resposta da equipe' : 'Proposta disponível'}
+                    </p>
+                    {orc.fase_negociacao === 'cliente' && orc.proposta_admin_porcentagem && (
+                      <div className="mt-2.5 pt-2 border-t border-indigo-100">
+                        <p className="text-xs text-indigo-700">Desconto proposto: <strong className="text-indigo-950">{orc.proposta_admin_porcentagem}%</strong></p>
+                        <p className="text-base font-bold text-indigo-600 mt-0.5">{formatCurrency(orc.total * (1 - orc.proposta_admin_porcentagem / 100))}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {orc.fase_negociacao === 'cliente' && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <button 
+                        onClick={() => handleApproveAdminProposal(orc)}
+                        className="rounded-xl bg-emerald-600 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors"
+                      >
+                        Aceitar Proposta
+                      </button>
+                      <button 
+                        onClick={() => handleCancelNegotiation(orc)}
+                        className="rounded-xl bg-rose-50 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-100 border border-rose-100 transition-colors"
+                      >
+                        Recusar
+                      </button>
                     </div>
                   )}
                 </div>
-                
-                {orc.fase_negociacao === 'cliente' && (
-                  <div className="flex gap-3">
-                    <button 
-                      onClick={() => handleApproveAdminProposal(orc)}
-                      className="flex-1 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white hover:bg-emerald-700"
-                    >
-                      Aprovar Proposta
-                    </button>
-                    <button 
-                      onClick={() => handleCancelNegotiation(orc)}
-                      className="flex-1 rounded-xl bg-red-50 py-3 text-sm font-bold text-red-600 hover:bg-red-100"
-                    >
-                      Cancelar
-                    </button>
+              )}
+
+              {orc.status === 'em revisão' && (
+                <div className="mt-4 space-y-3">
+                  <div className="rounded-2xl bg-amber-50/60 p-4 border border-amber-200/70">
+                    <div className="flex items-center gap-2 text-amber-900 font-bold text-xs sm:text-sm">
+                      <Clock className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                      <span>Orçamento em Análise</span>
+                    </div>
+                    <p className="mt-1.5 text-xs text-amber-800/90 leading-relaxed">
+                      Sua solicitação <span className="font-semibold text-amber-950">#{orc.codigo_orcamento}</span> foi recebida e está sendo avaliada. Em até 24 horas úteis você receberá a proposta detalhada.
+                    </p>
                   </div>
-                )}
-              </div>
-            )}
-
-            {orc.status === 'em revisão' && (
-              <div className="mt-6">
-                <div className="rounded-2xl bg-amber-50 p-6 ring-1 ring-amber-100 mb-4">
-                  <p className="text-sm font-black text-amber-900 flex items-center gap-2 mb-2">
-                    <Clock className="h-5 w-5" />
-                    Orçamento em Análise
-                  </p>
-                  <p className="text-xs font-medium text-amber-700 leading-relaxed">
-                    A Solicitação de Orçamento foi gerada com sucesso sob nº <span className="font-black">#{orc.codigo_orcamento}</span> e está em análise, aguarde o prazo de até 24 horas para o envio da proposta completa.
-                  </p>
+                  <button 
+                    onClick={() => handleCancelNegotiation(orc)}
+                    className="w-full rounded-xl bg-neutral-100 py-2.5 text-xs font-bold text-neutral-600 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border border-transparent transition-all"
+                  >
+                    Cancelar Solicitação
+                  </button>
                 </div>
-                <button 
-                  onClick={() => handleCancelNegotiation(orc)}
-                  className="w-full rounded-xl bg-red-50 py-3 text-sm font-bold text-red-600 hover:bg-red-100"
-                >
-                  Cancelar Solicitação
-                </button>
-              </div>
-            )}
+              )}
 
-            {orc.status === 'pendência documentos' && (
-              <div className="mt-6 space-y-4">
-                <div className="rounded-2xl bg-rose-50 p-6 ring-1 ring-rose-100">
-                  <p className="text-sm font-black text-rose-900 flex items-center gap-2 mb-2">
-                    <Info className="h-5 w-5" />
-                    Pendência de Documentos
-                  </p>
-                  <p className="text-xs font-medium text-rose-700 leading-relaxed mb-4">
-                    O sistema solicitou os seguintes documentos para prosseguir com seu orçamento:
-                  </p>
-                  <div className="space-y-3">
-                    {((orc as any).documentos_solicitados || []).map((doc: string, idx: number) => (
-                      <div key={idx} className="flex flex-col gap-2">
-                        <label className="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm ring-1 ring-neutral-200 cursor-pointer hover:ring-indigo-500 transition-all">
-                          <div className="flex items-center gap-3 overflow-hidden">
-                            <div className="h-8 w-8 flex-shrink-0 bg-neutral-50 rounded-lg flex items-center justify-center text-neutral-400">
-                              {pendencyFiles[orc.id]?.[doc] ? <CheckCircle className="h-4 w-4 text-emerald-500" /> : <Upload className="h-4 w-4" />}
+              {orc.status === 'pendência documentos' && (
+                <div className="mt-4 space-y-3">
+                  <div className="rounded-2xl bg-rose-50/70 p-4 border border-rose-200/70">
+                    <p className="text-xs sm:text-sm font-bold text-rose-900 flex items-center gap-2 mb-1.5">
+                      <Info className="h-4 w-4 text-rose-600" />
+                      Documentos Solicitados
+                    </p>
+                    <p className="text-xs text-rose-700/90 leading-relaxed mb-3">
+                      Envie os itens abaixo para darmos andamento à aprovação:
+                    </p>
+                    <div className="space-y-2">
+                      {((orc as any).documentos_solicitados || []).map((doc: string, idx: number) => (
+                        <label key={idx} className="flex items-center justify-between rounded-xl bg-white p-2.5 border border-rose-200/60 shadow-sm cursor-pointer hover:border-rose-300 transition-all">
+                          <div className="flex items-center gap-2.5 overflow-hidden">
+                            <div className="h-7 w-7 flex-shrink-0 bg-neutral-50 rounded-lg flex items-center justify-center text-neutral-400">
+                              {pendencyFiles[orc.id]?.[doc] ? <CheckCircle className="h-4 w-4 text-emerald-500" /> : <Upload className="h-3.5 w-3.5" />}
                             </div>
-                            <p className="text-xs font-bold text-neutral-900 truncate">{doc}</p>
+                            <p className="text-xs font-medium text-neutral-800 truncate">{doc}</p>
                           </div>
                           <input 
                             type="file" 
@@ -1010,52 +1029,52 @@ export function ClientOrcamentos({
                             }}
                           />
                           {pendencyFiles[orc.id]?.[doc] && (
-                            <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg font-black uppercase">Pronto</span>
+                            <span className="text-[9px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider border border-emerald-200">Enviado</span>
                           )}
                         </label>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <button 
+                      onClick={() => handleCancelNegotiation(orc)}
+                      className="rounded-xl border border-neutral-200 py-2.5 text-xs font-bold text-neutral-500 hover:bg-neutral-50 transition-colors"
+                    >
+                      Desistir
+                    </button>
+                    <button 
+                      onClick={() => handleSubmitPendency(orc)}
+                      disabled={isSubmitting || !pendencyFiles[orc.id] || Object.keys(pendencyFiles[orc.id]).length < ((orc as any).documentos_solicitados || []).length}
+                      className="rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                    >
+                      {isSubmitting ? 'Enviando...' : 'Enviar'}
+                    </button>
                   </div>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <button 
-                    onClick={() => handleCancelNegotiation(orc)}
-                    className="rounded-xl border border-neutral-200 py-3 text-sm font-bold text-neutral-400 hover:bg-neutral-50"
-                  >
-                    Desistir
-                  </button>
-                  <button 
-                    onClick={() => handleSubmitPendency(orc)}
-                    disabled={isSubmitting || !pendencyFiles[orc.id] || Object.keys(pendencyFiles[orc.id]).length < ((orc as any).documentos_solicitados || []).length}
-                    className="rounded-xl bg-indigo-600 py-3 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 disabled:opacity-50"
-                  >
-                    {isSubmitting ? 'Enviando...' : 'Enviar Documentos'}
-                  </button>
-                </div>
-              </div>
-            )}
+              )}
 
-            {orc.status === 'aprovado' && (
-              <div className="mt-6">
-                {orc.origem_gsa_store && orc.categoria === 'produto' ? (
-                  <button 
-                    onClick={() => { setSelectedTrackingOrcamento(orc); setIsTrackingModalOpen(true); }}
-                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#1a1a1a] py-3 text-xs font-black uppercase tracking-widest text-white shadow-xl shadow-black/20 hover:bg-black hover:scale-[1.02] transition-all"
-                  >
-                    <ShoppingBag className="h-4 w-4" />
-                    Acompanhar Pedido
-                  </button>
-                ) : (
-                  <div className="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
-                    <p className="flex items-center gap-2 text-xs font-bold text-emerald-700">
-                      <CheckCircle className="h-4 w-4" />
-                      Este orçamento foi aprovado e gerou uma Ordem de Serviço.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
+              {orc.status === 'aprovado' && (
+                <div className="mt-4">
+                  {orc.origem_gsa_store && orc.categoria === 'produto' ? (
+                    <button 
+                      onClick={() => { setSelectedTrackingOrcamento(orc); setIsTrackingModalOpen(true); }}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-neutral-900 py-2.5 text-xs font-bold text-white hover:bg-black transition-colors"
+                    >
+                      <ShoppingBag className="h-4 w-4" />
+                      Acompanhar Pedido
+                    </button>
+                  ) : (
+                    <div className="rounded-2xl bg-emerald-50/70 p-3.5 border border-emerald-200/60">
+                      <p className="flex items-center gap-2 text-xs font-bold text-emerald-800">
+                        <CheckCircle className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                        Orçamento aprovado. Ordem de serviço em execução.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         ))}
         {orcamentos.length === 0 && (
@@ -1693,6 +1712,8 @@ function ModalSolicitarOrcamento({ clientId, prefill, onFinish, onCancel }: { cl
       return;
     }
     setIsSubmitting(true);
+    const uploadedPaths: string[] = [];
+    let quoteCreated = false;
 
     try {
       const uploadedAnexos: { nome: string, url: string }[] = [];
@@ -1708,6 +1729,7 @@ function ModalSolicitarOrcamento({ clientId, prefill, onFinish, onCancel }: { cl
           .upload(filePath, file);
 
         if (uploadError) throw uploadError;
+        uploadedPaths.push(filePath);
 
         const { data: { publicUrl } } = supabase.storage
           .from('documentos_cliente')
@@ -1737,6 +1759,7 @@ function ModalSolicitarOrcamento({ clientId, prefill, onFinish, onCancel }: { cl
         attachments: uploadedAnexos,
         promotionId: promocaoAplicadaId,
       });
+      quoteCreated = true;
 
       // Se houve promoção aplicada, notificar admin com destaque especial
       const tituloNotif = promocaoAplicadaId
@@ -1751,17 +1774,27 @@ function ModalSolicitarOrcamento({ clientId, prefill, onFinish, onCancel }: { cl
         ? `Um cliente solicitou orçamento de "${tituloSolicitacao}" e possui a promoção ativa "${promocaoAplicadaInfo?.titulo} (${promocaoAplicadaInfo?.codigo_promocao})" — Prioridade: ${nivelPrioridade === 'baixa' ? 'Baixa' : nivelPrioridade === 'media' ? 'Média' : 'Alta'}`
         : `Um cliente enviou uma solicitação: "${tituloSolicitacao}" — Prioridade: ${nivelPrioridade === 'baixa' ? 'Baixa' : nivelPrioridade === 'media' ? 'Média' : 'Alta'}`;
 
-      await notificationService.notifyAdmin(
-        tituloNotif,
-        msgNotif,
-        'vendas',
-        'orcamento_criado',
-        { itemId: newBudget.id, tab: 'abertos', prioridade: (nivelPrioridade === 'alta' || promocaoAplicadaId) ? 'alta' : 'normal' }
-      );
+      try {
+        await notificationService.notifyAdmin(
+          tituloNotif,
+          msgNotif,
+          'vendas',
+          'orcamento_criado',
+          { itemId: newBudget.id, tab: 'abertos', prioridade: (nivelPrioridade === 'alta' || promocaoAplicadaId) ? 'alta' : 'normal' }
+        );
+      } catch (notificationError) {
+        console.error('Orçamento criado, mas a notificação administrativa falhou:', notificationError);
+      }
 
       toast.success('Sua solicitação de orçamento foi enviada com sucesso!');
       onFinish();
     } catch (err: any) {
+      if (!quoteCreated && uploadedPaths.length > 0) {
+        const { error: cleanupError } = await supabase.storage
+          .from('documentos_cliente')
+          .remove(uploadedPaths);
+        if (cleanupError) console.error('Erro ao remover anexos órfãos:', cleanupError);
+      }
       toast.error(handleError(err, 'Erro ao enviar solicitação'));
     } finally {
       setIsSubmitting(false);

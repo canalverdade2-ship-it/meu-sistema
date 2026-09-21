@@ -1,0 +1,768 @@
+import fs from 'fs/promises';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
+import path from 'path';
+
+const execFileAsync = promisify(execFile);
+
+async function generatePdf() {
+  const htmlContent = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>GSA TV — Dossiê Técnico, Estado Atual e Plano de Conclusão</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 15mm 15mm 15mm 15mm;
+    }
+    
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      background: #ffffff;
+      font-size: 10.5pt;
+      line-height: 1.5;
+      margin: 0;
+      padding: 0;
+    }
+
+    .cover {
+      page-break-after: always;
+      height: 245mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 35px 25px;
+      background: linear-gradient(135deg, #040e1d 0%, #06162a 50%, #0b2240 100%);
+      color: #ffffff;
+      border-radius: 8px;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      background: #c99a3b;
+      color: #040e1d;
+      font-weight: 800;
+      font-size: 10pt;
+      padding: 6px 14px;
+      border-radius: 4px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 25px;
+    }
+
+    .cover-title {
+      font-size: 34pt;
+      font-weight: 900;
+      line-height: 1.1;
+      margin: 0 0 15px 0;
+      color: #ffffff;
+    }
+
+    .cover-title span {
+      color: #e2b354;
+    }
+
+    .cover-subtitle {
+      font-size: 14pt;
+      color: #94a3b8;
+      max-width: 650px;
+      line-height: 1.4;
+      margin-bottom: 30px;
+    }
+
+    .cover-meta {
+      border-top: 1px solid rgba(201, 154, 59, 0.4);
+      padding-top: 25px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      font-size: 10pt;
+    }
+
+    .cover-meta div strong {
+      color: #e2b354;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    h1:not(.cover-title), h2, h3, h4 {
+      color: #06162a;
+      font-weight: 800;
+    }
+
+    h1:not(.cover-title) {
+      font-size: 20pt;
+      border-bottom: 2.5px solid #c99a3b;
+      padding-bottom: 8px;
+      margin-top: 36px;
+      margin-bottom: 16px;
+      page-break-before: always;
+    }
+
+    h2 {
+      font-size: 15pt;
+      border-left: 4px solid #c99a3b;
+      padding-left: 10px;
+      margin-top: 24px;
+      margin-bottom: 12px;
+      color: #0b2240;
+    }
+
+    h3 {
+      font-size: 12pt;
+      margin-top: 18px;
+      margin-bottom: 8px;
+      color: #1e3a8a;
+    }
+
+    p, li {
+      text-align: justify;
+    }
+
+    ul, ol {
+      margin-top: 6px;
+      margin-bottom: 12px;
+      padding-left: 24px;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 20px 0;
+      font-size: 9pt;
+      background: #ffffff;
+    }
+
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      text-align: left;
+    }
+
+    th {
+      background: #06162a;
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .highlight-box {
+      background: #f0fdf4;
+      border-left: 4px solid #16a34a;
+      padding: 12px 16px;
+      margin: 14px 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 10pt;
+    }
+
+    .warning-box {
+      background: #fffbeb;
+      border-left: 4px solid #d97706;
+      padding: 12px 16px;
+      margin: 14px 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 10pt;
+    }
+
+    .badge-gold {
+      background: #c99a3b;
+      color: #040e1d;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 700;
+      font-size: 8pt;
+    }
+
+    .badge-blue {
+      background: #1e3a8a;
+      color: #ffffff;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 700;
+      font-size: 8pt;
+    }
+
+    code {
+      background: #f1f5f9;
+      color: #b91c1c;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-family: Consolas, 'Courier New', Courier, monospace;
+      font-size: 9.5pt;
+    }
+
+    pre {
+      background: #06162a;
+      color: #f8fafc;
+      padding: 12px 14px;
+      border-radius: 6px;
+      font-family: Consolas, 'Courier New', Courier, monospace;
+      font-size: 8.5pt;
+      overflow-x: auto;
+      line-height: 1.4;
+      margin: 12px 0;
+    }
+
+    .footer-text {
+      font-size: 8pt;
+      color: #94a3b8;
+      text-align: center;
+      margin-top: 30px;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CAPA -->
+  <div class="cover">
+    <div>
+      <span class="cover-badge">Grupo GSA • Divisão de Broadcast & TV</span>
+      <h1 class="cover-title">GSA TV <span>24 HORAS</span></h1>
+      <div class="cover-subtitle">
+        Dossiê Técnico de Continuidade: arquitetura, implantação comprovada, grade canônica, integrações gratuitas, operação, pendências e plano de entrada integral no ar
+      </div>
+    </div>
+    
+    <div class="cover-meta">
+      <div>
+        <strong>EMISSORA & REDE:</strong>
+        GSA TV — Transmissão Contínua 24h Full HD
+      </div>
+      <div>
+        <strong>DATA DE EMISSÃO:</strong>
+        03 de Setembro de 2026 • Estado consolidado ao encerramento desta sessão
+      </div>
+      <div>
+        <strong>INFRAESTRUTURA:</strong>
+        Oracle Cloud VPS (IP: 147.15.43.141) • GSA Hub Master
+      </div>
+      <div>
+        <strong>CLASSIFICAÇÃO:</strong>
+        Documento oficial de continuidade técnica, operação e aceite de produção
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMÁRIO EXECUTIVO -->
+  <h1>1. Sumário Executivo & Declaração de Conformidade</h1>
+  <p>
+    Este documento consolida o estado verificável da <strong>GSA TV</strong> ao final de 03/09/2026. Ele preserva a arquitetura e as decisões anteriores, registra as mudanças implantadas nesta etapa e, principalmente, separa o que está <strong>comprovadamente em produção</strong> do que ainda depende de conteúdo, homologação ou correção.
+  </p>
+  <p>
+    O modelo editorial é híbrido: acervo próprio/licenciado, dados oficiais gratuitos, produções originais assistidas por IA, programas jornalísticos, conteúdos religiosos, entretenimento e intervenções ao vivo. Percentuais de composição somente devem ser publicados depois que o inventário real de mídia estiver completo.
+  </p>
+  <div class="highlight-box">
+    <strong>Estado executivo:</strong> o canal estava <strong>online</strong>, com estado desejado <strong>running</strong> e sinal <strong>sending</strong> na última auditoria. A grade semanal fixa e 30 dias futuros foram implantados. Isso ainda não significa que todos os horários possuam episódios prontos: a continuidade cobre ausências, mas a entrada integral da programação depende das pendências descritas nas Seções 15 a 17.
+  </div>
+
+  <!-- INFRAESTRUTURA DE SERVIDOR & CLOUD -->
+  <h1>2. Arquitetura de Infraestrutura (VPS & Containers)</h1>
+  <p>
+    Toda a operação centralizada da GSA TV está hospedada em uma instância de alto desempenho na <strong>Oracle Cloud Infrastructure (OCI)</strong> com arquitetura ARM64 (Ampere Altra / Neoverse-N1) com 24 GB de memória RAM e sistema operacional Linux Ubuntu/Oracle Enterprise.
+  </p>
+
+  <h2>2.1 Dados de Acesso e Conectividade</h2>
+  <table>
+    <tr><th>Parâmetro</th><th>Configuração / Valor</th><th>Finalidade</th></tr>
+    <tr><td>IP do Servidor</td><td><code>147.15.43.141</code></td><td>Endereço fixo da VPS de Playout</td></tr>
+    <tr><td>Porta SSH</td><td><code>22</code> (Usuário <code>opc</code>)</td><td>Acesso administrativo remoto seguro</td></tr>
+    <tr><td>Domínio Playout API</td><td><code>https://api.147-15-43-141.nip.io/gsa-tv</code></td><td>Endpoint REST e streaming de assets</td></tr>
+    <tr><td>PostgreSQL Supabase</td><td><code>127.0.0.1:5433</code> (Banco <code>gsahub</code>)</td><td>Base relacional operacional da TV</td></tr>
+    <tr><td>noVNC Visual Console</td><td><code>127.0.0.1:6088</code></td><td>Interface gráfica do navegador de IA</td></tr>
+    <tr><td>Chrome DevTools (CDP)</td><td><code>127.0.0.1:9228</code></td><td>Protocolo de automação remota Puppeteer</td></tr>
+  </table>
+
+  <h2>2.2 Ecossistema de Containers Docker</h2>
+  <p>A VPS opera com isolamento rigoroso de microsserviços via Docker:</p>
+  <ul>
+    <li><strong><code>gsa-tv-ffplayout</code>:</strong> Motor de broadcast 24h contínuo. Lê os arquivos normalizados e alimenta o pipeline RTMP para o YouTube.</li>
+    <li><strong><code>gsa-tv-control-plane</code>:</strong> Backend em Node.js (porta 9202), atualizado no estágio pré-air posterior para a versão <code>1.6.30</code>, responsável pela API administrativa, orquestração de mídias, normalização, controle de sinal, manutenção da grade fixa e aplicação das travas de publicação.</li>
+    <li><strong><code>gsa-tv-watchdog</code>:</strong> Daemon de vigilância operacional. Monitora a taxa de bits do sinal e reinicia processos em caso de congelamento.</li>
+    <li><strong><code>gsa-ai-browser</code>:</strong> Container Chromium com perfil Google persistente logado, permitindo acionar o Google Flow e Google Vids via CDP 9228 sem desautenticação.</li>
+    <li><strong><code>n8n</code>:</strong> Orquestrador dos workflows GSA TV. O workflow 09 mantém o horizonte da grade fixa e o registro de continuidade mais recente confirma o <strong>Workflow 12 ativo</strong> para o estágio pré-air.</li>
+  </ul>
+
+  <!-- MOTOR DE PLAYOUT E TRANSMISSÃO 24H -->
+  <h1>3. Motor de Playout & Transmissão Contínua (YouTube 24h)</h1>
+  <p>
+    O perfil atualmente configurado no portal é <strong>720p30 HD (1280x720)</strong>. O alvo editorial continua sendo 1080p30 para masters e vinhetas quando a capacidade e a estabilidade forem homologadas. A saída utiliza H.264 e áudio AAC 48 kHz estéreo; loudness, bitrate e GOP devem ser confirmados por medição do sinal final no YouTube antes do aceite.
+  </p>
+  <h2>3.1 Proteção contra Quedas e Chaves Duplicadas</h2>
+  <div class="warning-box">
+    <strong>Regra Anti-Conflito RTMP:</strong> O YouTube invalida e derruba transmissões caso receba mais de uma ingestão paralela na mesma stream key. Por isso, a Central Master (GsaTvMasterControl.tsx) centraliza todo o comando em um único player HLS limpo, com desligamento automático no cleanup de React para evitar sessões fantasmas.
+  </div>
+
+  <h2>3.2 Modos Operacionais de Saída</h2>
+  <ul>
+    <li><strong>Modo Program (Grade Regular):</strong> O <code>ffplayout</code> reproduz a playlist compilada do dia no milissegundo exato, com transições suaves (1.5s fade e 2.0s dissolve).</li>
+    <li><strong>Modo Takeover (Media Take):</strong> Utilizado para intervenções imediatas, edições especiais ou furações de reportagem, aplicando bypass seguro sem interromper o encoder RTMP.</li>
+    <li><strong>Modo Continuidade / Cartela Oficial:</strong> Loop de emergência com trilha sonora institucional e identidade GSA TV caso ocorra indisponibilidade de mídia.</li>
+  </ul>
+
+  <!-- ESTÚDIO DE IA, GOOGLE FLOW E GOOGLE VIDS -->
+  <h1>4. Estação de IA: Google Flow, Google Vids & Avatares</h1>
+  <p>
+    A geração de ativos e conteúdos inéditos diários utiliza a integração da estação <strong>GSA AI</strong> através do container <code>gsa-ai-browser</code> (porta CDP 9228) com perfil Google Workspace autenticado.
+  </p>
+
+  <h2>4.1 Divisão de Papéis das IAs</h2>
+  <table>
+    <tr><th>Ferramenta</th><th>Papel no Sistema</th><th>Entregáveis Oficiais</th></tr>
+    <tr>
+      <td><strong>Google Flow (Veo 3.1 Lite)</strong></td>
+      <td>Identidade visual premium, vinhetas cinematográficas e estúdios 3D</td>
+      <td>Aberturas oficiais, estúdio master azul-marinho e dourado, elementos 3D</td>
+    </tr>
+    <tr>
+      <td><strong>Google Vids</strong></td>
+      <td>Linha de montagem rápida, animação de avatares e lip-sync</td>
+      <td>Apresentadores oficiais <strong>Holt</strong> e <strong>Nyla</strong>, passagens faladas</td>
+    </tr>
+    <tr>
+      <td><strong>Fish Audio & Neural TTS</strong></td>
+      <td>Síntese de voz com cotas ilimitadas e clones aprovados</td>
+      <td>Locuções comerciais potentes, vozes femininas de culinária e documentários</td>
+    </tr>
+    <tr>
+      <td><strong>Engine FFmpeg</strong></td>
+      <td>Mesa de corte, gerador de caracteres (GC) e montagem final</td>
+      <td>Lower thirds de 3 andares, relógio ao vivo, tickers e exportação master</td>
+    </tr>
+  </table>
+
+  <!-- DIRETRIZES DE VOZ E ÁUDIO -->
+  <h1>5. Matriz de Direção de Voz e Sonoplastia por Programa</h1>
+  <p>
+    Para eliminar a monotonia robótica e conferir identidade autêntica de emissora, cada atração possui uma assinatura vocal rigorosa:
+  </p>
+  <table>
+    <tr><th>Programa / Faixa</th><th>Perfil de Locução</th><th>Entonação & Estilo</th></tr>
+    <tr><td><strong>GSA Sabor (Culinária)</strong></td><td>Feminina Gastronômica</td><td>Voz doce, calorosa, envolvente e afetuosa; ritmo calmo que valoriza os ingredientes.</td></tr>
+    <tr><td><strong>GSA Doc / Planeta Terra</strong></td><td>Narrador Clássico</td><td>Voz masculina profunda, dramática, imersiva e chamativa (estilo BBC/NatGeo).</td></tr>
+    <tr><td><strong>GSA Mistérios</strong></td><td>Investigativo / Solene</td><td>Tom instigante, curioso, pausado, com pausas estratégicas de suspense.</td></tr>
+    <tr><td><strong>Telejornais GSA News</strong></td><td>Bancada de Rede</td><td>Dupla oficial <strong>Holt & Nyla</strong>: firmeza, agilidade, clareza e autoridade.</td></tr>
+    <tr><td><strong>GSA Mercado</strong></td><td>Analista de Mercado</td><td>Tom corporativo, analítico, objetivo e direto ao ponto.</td></tr>
+    <tr><td><strong>GSA Tá na Rede</strong></td><td>Jovem & Comercial</td><td>Voz vibrante, descontraída, animada e comercial de mídias sociais.</td></tr>
+    <tr><td><strong>GSA Em Fé / Bíblia</strong></td><td>Serena & Espiritual</td><td>Tom pacífico, solene, acolhedor e inspirador de oração e paz.</td></tr>
+  </table>
+
+  <h2>5.1 Sidechain Audio Ducking Automático</h2>
+  <p>
+    Em todos os programas (especialmente Culinária e Documentários), a mixagem segue a técnica broadcast de <strong>Audio Ducking</strong>: a trilha musical de fundo opera em volume pleno nas aberturas e transições, reduz automaticamente para <strong>-18 dB</strong> quando a narração começa, e volta a respirar com ganho de <strong>+6 dB</strong> nas pausas de respiração da locutora.
+  </p>
+
+  <!-- REGRAS DE EDIÇÃO DE VÍDEO E B-ROLL -->
+  <h1>6. Doutrina de Edição de Vídeo & B-Roll sem Marcas</h1>
+  
+  <h2>6.1 Fim Total do Efeito Zoom/Balanço em Fotos</h2>
+  <p>
+    Está <strong>terminantemente proibido</strong> aplicar efeitos de zoom infinito ou balanços artificiais sobre fotografias estáticas. Quando uma matéria jornalística ou receita utilizar fotos, a montagem será composta por uma <strong>sequência dinâmica de cortes secos limpos a cada 3 a 5 segundos</strong>, acompanhando o ritmo da locução.
+  </p>
+
+  <h2>6.2 Uso de Imagens e Vídeos Reais</h2>
+  <p>
+    A diretriz editorial atual é priorizar imagens e vídeos reais, sem o rótulo “imagem ilustrativa gerada por IA”. Isso não autoriza copiar reportagens de terceiros. Cada ativo precisa ter licença, domínio público, autorização formal ou outra base jurídica registrada no módulo de direitos:
+  </p>
+  <ul>
+    <li><strong>Proveniência:</strong> registrar URL, autor/provedor, data, licença e evidência.</li>
+    <li><strong>Aprovação humana:</strong> conteúdo com licença desconhecida fica bloqueado até justificativa e anexo.</li>
+    <li><strong>Uso editorial:</strong> dados e links de APIs servem para pesquisa e roteiro; não concedem direitos sobre fotos, vídeos ou textos integrais.</li>
+    <li><strong>Áudio:</strong> usar áudio original apenas quando a licença permitir; trilhas e locuções devem possuir autorização compatível com YouTube.</li>
+  </ul>
+
+  <!-- GRADE DEFINITIVA 24 HORAS -->
+  <h1>7. Manual da Grade Definitiva 24 Horas</h1>
+  <p>
+    A programação semanal completa da GSA TV distribui-se de Segunda a Domingo conforme a tabela mestra homologada:
+  </p>
+
+  <h2>7.1 Faixa Diurna (06h00 às 15h00)</h2>
+  <table>
+    <tr><th>Horário</th><th>Segunda a Sexta</th><th>Sábado</th><th>Domingo</th></tr>
+    <tr><td>06:00</td><td>GSA Bem Viver</td><td>GSA Agro</td><td>GSA Agro</td></tr>
+    <tr><td>07:00</td><td>GSA Em Fé (O Despertar da Fé)</td><td>GSA Em Fé</td><td>GSA Em Fé</td></tr>
+    <tr><td>07:25</td><td>GSA Tempo</td><td>GSA Tempo</td><td>GSA Tempo</td></tr>
+    <tr><td>07:30</td><td>GSA Manhã News</td><td>GSA Manhã News</td><td>GSA Motivação</td></tr>
+    <tr><td>08:00</td><td>GSA Business / GSA Tech</td><td>GSA Motivação</td><td>GSA Bem Viver</td></tr>
+    <tr><td>09:00</td><td>GSA Em Fé (Oração da Manhã)</td><td>GSA Em Fé</td><td>GSA Em Fé</td></tr>
+    <tr><td>09:30</td><td>GSA Histórias da Bíblia</td><td>GSA Histórias da Bíblia</td><td>GSA Histórias da Bíblia</td></tr>
+    <tr><td>10:00</td><td>GSA Cidadania</td><td>GSA Mundo</td><td>GSA Mundo</td></tr>
+    <tr><td>11:00</td><td>GSA Destinos</td><td>GSA Tech</td><td>GSA Tá na Rede</td></tr>
+    <tr><td>11:30</td><td>GSA Sabor (Culinária)</td><td>GSA Tech</td><td>GSA Motor</td></tr>
+    <tr><td>11:55</td><td>GSA Tempo</td><td>GSA Tempo</td><td>GSA Tempo</td></tr>
+    <tr><td>12:00</td><td>GSA Meio Dia News (Pontual)</td><td>GSA Meio Dia News</td><td>GSA Meio Dia News</td></tr>
+    <tr><td>12:30</td><td>GSA Mercado</td><td>GSA Motor</td><td>GSA Sabor</td></tr>
+    <tr><td>13:00</td><td>GSA Em Fé (Bênção da Tarde)</td><td>GSA Em Fé</td><td>GSA Em Fé</td></tr>
+    <tr><td>13:30</td><td>GSA Desenhos Clássicos</td><td>GSA Sessão Pipoca</td><td>GSA Sessão Pipoca</td></tr>
+    <tr><td>15:00</td><td>GSA Em Fé (Hora da Misericórdia)</td><td>GSA Em Fé</td><td>GSA Em Fé</td></tr>
+  </table>
+
+  <h2>7.2 Faixa Noturna & Madrugada (15h30 às 06h00)</h2>
+  <table>
+    <tr><th>Horário</th><th>Segunda a Sexta</th><th>Sábado</th><th>Domingo</th></tr>
+    <tr><td>15:30</td><td>GSA Business / GSA Tech</td><td>GSA Cinema</td><td>GSA Cinema</td></tr>
+    <tr><td>16:30</td><td>GSA Planeta Terra (Natureza)</td><td>GSA Cinema — Continuação</td><td>GSA Cinema — Continuação</td></tr>
+    <tr><td>17:00</td><td>GSA Tá na Rede (Cultura Viral)</td><td>GSA Esportes</td><td>GSA Esportes</td></tr>
+    <tr><td>17:30</td><td>GSA Motor</td><td>GSA Destinos</td><td>GSA Destinos</td></tr>
+    <tr><td>18:00</td><td>GSA Music (Música & Louvor)</td><td>GSA Music</td><td>GSA Music</td></tr>
+    <tr><td>18:55</td><td>GSA Tempo</td><td>GSA Tempo</td><td>GSA Tempo</td></tr>
+    <tr><td>19:00</td><td>GSA News Noite (Bancada Principal)</td><td>GSA News Esp.</td><td>GSA News Esp.</td></tr>
+    <tr><td>19:30</td><td>GSA Mercado</td><td>GSA News Esp.</td><td>GSA News Esp.</td></tr>
+    <tr><td>20:00</td><td>GSA Em Fé (Bênção da Família)</td><td>GSA Em Fé</td><td>GSA Em Fé</td></tr>
+    <tr><td>20:30</td><td>GSA Cidadania</td><td>GSA Tá na Rede Web</td><td>GSA Tá na Rede Web</td></tr>
+    <tr><td>21:00</td><td>GSA Music (Dose Dupla)</td><td>GSA Music</td><td>GSA Music</td></tr>
+    <tr><td>22:00</td><td>GSA Doc / GSA Mistérios / GSA Sessão Pipoca</td><td>GSA Doc</td><td>GSA Doc Especial</td></tr>
+    <tr><td>23:00</td><td>GSA Em Fé (Oração da Noite)</td><td>GSA Em Fé</td><td>GSA Em Fé</td></tr>
+    <tr><td>23:30</td><td>GSA News Noturno (Edição Síntese)</td><td>GSA Mistérios Noturno</td><td>GSA Em Fé Reflexão</td></tr>
+    <tr><td>00:00</td><td>GSA Sessão Pipoca — Madrugada (Clássicos de Ouro)</td><td>GSA Sessão Pipoca — Madrugada</td><td>GSA Sessão Pipoca — Madrugada</td></tr>
+    <tr><td>01:45</td><td>GSA Documentário Especial</td><td>GSA Documentário Especial</td><td>GSA Documentário Especial</td></tr>
+    <tr><td>02:45</td><td>GSA Mistérios da Noite (Ciência)</td><td>GSA Mistérios da Noite</td><td>GSA Mistérios da Noite</td></tr>
+    <tr><td>03:45</td><td>GSA Tá na Rede Madrugada</td><td>GSA Tá na Rede Madrugada</td><td>GSA Tá na Rede Madrugada</td></tr>
+    <tr><td>04:15</td><td>GSA Noite de Louvor & Adoração</td><td>GSA Noite de Louvor</td><td>GSA Noite de Louvor</td></tr>
+    <tr><td>05:15</td><td>GSA Destinos do Mundo (Amanhecer)</td><td>GSA Destinos do Mundo</td><td>GSA Destinos do Mundo</td></tr>
+  </table>
+
+  <!-- GERADOR DE CARACTERES E FEEDS OFICIAIS -->
+  <h1>8. Integração em Tempo Real: GCs, Clima & Banco Central</h1>
+  <p>
+    Eliminando a digitação manual, o motor FFmpeg consome dados oficiais em tempo real através de conectores automatizados:
+  </p>
+  <ul>
+    <li><strong>Feed Oficial Agência Brasil / EBC:</strong> Conexão XML via RSS para captação automática de manchetes das últimas notícias factuais do Brasil e do mundo.</li>
+    <li><strong>API Oficial do Banco Central do Brasil (Bacen/Olinda OData):</strong> Leitura direta do Dólar PTAX (Compra/Venda), Euro e taxas oficiais sem limites de cota.</li>
+    <li><strong>Dados Meteorológicos:</strong> Mapeamento de temperaturas, condições de chuva e alertas da Defesa Civil formatados automaticamente nos mapas do <em>GSA Tempo</em>.</li>
+    <li><strong>Relógio Oficial de Brasília:</strong> Inserção dinâmica no primeiro andar do GC com data e hora exata da transmissão (ex: <code>03/09/2026 • 17:30</code>).</li>
+  </ul>
+
+  <!-- CATÁLOGO DE VINHETAS MASTER -->
+  <h1>9. Pacote de Vinhetas MASTER (Aberturas e Fechamentos)</h1>
+  <p>
+    Cada atração da grade possui um par permanente de vinhetas em 1080p Full HD salvas em <code>/media/1/identity/vinhetas/</code>:
+  </p>
+  <table>
+    <tr><th>Atração</th><th>Abertura MASTER (6 a 8s)</th><th>Fechamento MASTER (4 a 5s)</th></tr>
+    <tr><td>GSA Manhã News</td><td><code>vinheta-manha-news-abertura.mp4</code></td><td><code>vinheta-manha-news-fechamento.mp4</code></td></tr>
+    <tr><td>GSA Meio Dia News</td><td><code>vinheta-meio-dia-abertura.mp4</code></td><td><code>vinheta-meio-dia-fechamento.mp4</code></td></tr>
+    <tr><td>GSA News Noite</td><td><code>vinheta-news-noite-abertura.mp4</code></td><td><code>vinheta-news-noite-fechamento.mp4</code></td></tr>
+    <tr><td>GSA Mercado</td><td><code>vinheta-financeiro-abertura.mp4</code></td><td><code>vinheta-financeiro-fechamento.mp4</code></td></tr>
+    <tr><td>GSA Tempo</td><td><code>vinheta-clima-abertura.mp4</code></td><td><code>vinheta-clima-fechamento.mp4</code></td></tr>
+    <tr><td>GSA Cidadania</td><td><code>vinheta-cidadania-abertura.mp4</code></td><td><code>vinheta-cidadania-fechamento.mp4</code></td></tr>
+    <tr><td>GSA Sabor (Culinária)</td><td><code>vinheta-sabor-abertura.mp4</code></td><td><code>vinheta-sabor-fechamento.mp4</code></td></tr>
+    <tr><td>GSA Tá na Rede</td><td><code>vinheta-ta-na-rede-abertura.mp4</code></td><td><code>vinheta-ta-na-rede-fechamento.mp4</code></td></tr>
+    <tr><td>GSA Planeta Terra / Doc</td><td><code>vinheta-doc-abertura.mp4</code></td><td><code>vinheta-doc-fechamento.mp4</code></td></tr>
+    <tr><td>GSA Em Fé (6 Colunas)</td><td><code>vinheta-em-fe-abertura.mp4</code></td><td><code>vinheta-em-fe-fechamento.mp4</code></td></tr>
+    <tr><td>GSA Histórias da Bíblia</td><td><code>vinheta-biblia-abertura.mp4</code></td><td><code>vinheta-biblia-fechamento.mp4</code></td></tr>
+    <tr><td>GSA Motor</td><td><code>vinheta-motores-abertura.mp4</code></td><td><code>vinheta-motores-fechamento.mp4</code></td></tr>
+  </table>
+
+  <!-- MANUAL DE CONTINGÊNCIA E ANTI-STRIKE -->
+  <h1>10. Protocolos Operacionais & Contingência (Anti-Strike)</h1>
+  
+  <h2>10.1 Procedimento Anti-Strike (Direitos Autorais)</h2>
+  <div class="warning-box">
+    <strong>Auditoria Preventiva:</strong> É terminantemente proibido veicular clipes comerciais com áudio musical protegido por Content ID sem licença. Todas as músicas de fundo devem ser instrumentais royalty-free aprovadas. Nenhuma reportagem de TV externa pode entrar com seu áudio original.
+  </div>
+
+  <h2>10.2 Procedimento de Queda ou Travamento de Arquivo</h2>
+  <ol>
+    <li>Se um arquivo de mídia sofrer corrupção de decodificação durante o playout, o watchdog dispara o retorno imediato para a <strong>Cartela de Continuidade Oficial</strong> (<code>media-gsa-tv-official-continuity</code>).</li>
+    <li>Em seguida, o operador ou a rotina automática dispara o <code>media_take</code> do programa seguinte ou do bloco musical de contingência.</li>
+    <li>O encoder RTMP da VPS nunca é reiniciado a frio durante uma transmissão, assegurando que o YouTube não encerre a live por perda de handshake.</li>
+  </ol>
+
+  <!-- ESTADO IMPLANTADO -->
+  <h1>11. Estado Implantado e Evidências de 03/09/2026</h1>
+  <table>
+    <tr><th>Componente</th><th>Estado comprovado</th><th>Evidência operacional</th></tr>
+    <tr><td>Canal principal</td><td><span class="badge-gold">ATIVO</span></td><td><code>online / running / program / sending</code></td></tr>
+    <tr><td>Control plane</td><td><span class="badge-gold">IMPLANTADO</span></td><td>Versão <code>1.6.30</code>, saudável no último registro pré-air</td></tr>
+    <tr><td>Grade semanal fixa</td><td><span class="badge-gold">IMPLANTADA</span></td><td>252 slots; 86.400 segundos cobertos em cada dia DOW 0 a 6</td></tr>
+    <tr><td>Horizonte diário</td><td><span class="badge-gold">MATERIALIZADO</span></td><td>30 dias, de 04/09/2026 a 03/10/2026</td></tr>
+    <tr><td>Programas</td><td><span class="badge-blue">CADASTRADOS</span></td><td>Catálogo canônico com todos os nomes iniciados por GSA; banco possuía 37 registros GSA após preservação dos existentes</td></tr>
+    <tr><td>Fontes editoriais</td><td><span class="badge-gold">OPERACIONAIS</span></td><td>30 cadastradas; 28 habilitadas; 28/28 respondendo OK no estágio posterior</td></tr>
+    <tr><td>Workflows n8n</td><td><span class="badge-gold">PUBLICADOS</span></td><td>Renovação diária da grade e Workflow 12 pré-air informados como ativos</td></tr>
+    <tr><td>Biblioteca</td><td><span class="badge-blue">PARCIAL</span></td><td>22 mídias em estado <code>ready</code> na auditoria; ainda insuficiente para preencher a grade inteira</td></tr>
+    <tr><td>Transmissão YouTube</td><td><span class="badge-blue">SINAL ENVIANDO</span></td><td>Estado interno confirmado; validação externa contínua no YouTube permanece critério obrigatório</td></tr>
+  </table>
+
+  <h2>11.1 Alterações realizadas nesta etapa</h2>
+  <ul>
+    <li>Padronização definitiva dos nomes: <strong>GSA Motor</strong>, <strong>GSA Tempo</strong>, <strong>GSA Cidadania</strong> e <strong>GSA Mercado</strong>.</li>
+    <li>Definição inequívoca: <strong>GSA Sessão Pipoca</strong> exibe filmes; <strong>GSA Cinema</strong> cobre notícias, lançamentos e bastidores do cinema.</li>
+    <li>Todos os títulos da grade começam por <strong>GSA</strong>, inclusive faixas e edições especiais.</li>
+    <li><strong>GSA Entrevista</strong> foi removido da programação e não deve reaparecer em planejamentos, prompts ou vinhetas.</li>
+    <li>Assinatura institucional definida para a vinheta: <strong>“GSA TV. Conectada com você.”</strong></li>
+    <li>Criação da migration <code>20260903223000_gsa_tv_fixed_weekly_grid_and_free_sources.sql</code>.</li>
+    <li>Criação das tabelas de relógio semanal, fontes editoriais, vínculos e itens coletados.</li>
+    <li>Criação das funções idempotentes <code>gsa_tv_materialize_fixed_schedule</code> e <code>gsa_tv_refresh_fixed_schedule_horizon</code>.</li>
+    <li>Proteção contra sobrescrita de grades publicadas, em execução ou concluídas.</li>
+    <li>Atualização inicial do control plane para aceitar <code>materialize_fixed_schedule</code> e evolução posterior até a versão <code>1.6.30</code>.</li>
+    <li>Publicação do workflow diário <code>GSA TV 09 - Fixed Grid Horizon</code>, às 00:10 no horário de São Paulo.</li>
+    <li>Publicação dos workflows <code>10 - Editorial Source Collect</code>, <code>11 - Editorial Project Preparation</code> e <code>12 - Production Package Builder</code>.</li>
+    <li>Geração de uma prancha conceitual consolidada com 32 identidades de programas, em azul-marinho, dourado e branco.</li>
+  </ul>
+
+  <h2>11.2 Evolução da automação editorial</h2>
+  <ul>
+    <li>30 fontes cadastradas e 28 habilitadas, com 28/28 respondendo OK no teste registrado.</li>
+    <li>Inclusão posterior de INPE, ANP, NASA e catálogo oficial de Dados Abertos da Receita Federal.</li>
+    <li>Correção do RSS da Agência Brasil para remover HTML antes de alimentar a IA.</li>
+    <li>13 programas classificados com cobertura completa de API e 11 com cobertura parcial.</li>
+    <li>Cruzamento automático de grade, programa, APIs, horário e duração.</li>
+    <li>23 projetos factuais preparados para 04/09 e 21 para 05/09, com atualização idempotente sem duplicatas.</li>
+    <li>Modo <em>source-grounded</em>: a IA recebe apenas os dados coletados, usa baixa temperatura e passa por uma segunda auditoria factual.</li>
+    <li>Bloqueio de publicação quando <code>fact_check_status</code> não for <code>pass</code>.</li>
+    <li>Production Package concluído com manifesto de fontes, direitos, hashes SHA-256, horário, duração, IDs editoriais e <code>auto_publish=false</code>.</li>
+  </ul>
+
+  <h2>11.3 Hardening de infraestrutura já registrado</h2>
+  <ul>
+    <li>Control Plane e Watchdog operacionais; ffplayout preservado durante as mudanças.</li>
+    <li>n8n protegido por HTTPS/Let's Encrypt; porta 5678 restrita a <code>127.0.0.1</code>.</li>
+    <li>Segredos do n8n removidos do compose e mantidos em <code>/etc/gsa/n8n.env</code>.</li>
+    <li>Suíte de contratos registrada com <strong>61/61 PASS</strong>.</li>
+    <li>Estação GSA AI isolada em <code>/home/opc/gsa-ai</code>, com Chromium persistente, Xvfb/Openbox/noVNC, porta local 6088 e CDP 9228.</li>
+  </ul>
+
+  <!-- MODELO DE DADOS -->
+  <h1>12. Modelo de Dados da Grade Fixa e Integrações</h1>
+  <table>
+    <tr><th>Objeto</th><th>Responsabilidade</th><th>Proteção</th></tr>
+    <tr><td><code>gsa_tv_weekly_grid_slots</code></td><td>Relógio semanal permanente, por canal, dia, início, fim, programa e modo de conteúdo</td><td>RLS; escrita restrita ao <code>service_role</code></td></tr>
+    <tr><td><code>gsa_tv_editorial_sources</code></td><td>Catálogo de APIs/feeds gratuitos, atribuição, periodicidade e saúde da fonte</td><td><code>free_only=true</code>; RLS</td></tr>
+    <tr><td><code>gsa_tv_program_source_links</code></td><td>Relaciona cada programa às fontes apropriadas, prioridade e finalidade editorial</td><td>Chave composta programa/fonte</td></tr>
+    <tr><td><code>gsa_tv_editorial_items</code></td><td>Destino preparado para notícias e dados coletados, com deduplicação, validação e classificação de direitos</td><td>RLS; estados pending/verified/rejected/expired</td></tr>
+    <tr><td><code>gsa_tv_schedule_versions</code></td><td>Grade diária materializada e publicável</td><td>Uma versão publicada por canal/data</td></tr>
+    <tr><td><code>gsa_tv_program_blocks</code></td><td>Blocos ordenados do dia, incluindo metadados das fontes editoriais aplicáveis</td><td>FKs e validação operacional</td></tr>
+  </table>
+
+  <h2>12.1 Política de materialização</h2>
+  <ol>
+    <li>O relógio semanal é a fonte canônica.</li>
+    <li>Todos os dias, às 00:10, o n8n solicita a manutenção de 30 dias futuros.</li>
+    <li>A função ignora datas que já possuam grade publicada, em execução ou concluída.</li>
+    <li>Novos blocos recebem o programa, horário, duração, variante, modo de conteúdo e IDs das fontes vinculadas.</li>
+    <li>A materialização define o espaço editorial; ela não inventa nem licencia uma mídia para o bloco.</li>
+  </ol>
+
+  <!-- FONTES -->
+  <h1>13. Catálogo de APIs e Fontes Gratuitas</h1>
+  <table>
+    <tr><th>Grupo</th><th>Fontes cadastradas</th><th>Programas principais</th></tr>
+    <tr><td>Notícias e política</td><td>Agência Brasil/EBC RSS, Câmara, Senado, TSE</td><td>GSA Manhã News, GSA Meio Dia News, GSA News Noite, GSA News Especial, GSA News Noturno, GSA Mundo, GSA Cidadania</td></tr>
+    <tr><td>Economia</td><td>Banco Central PTAX, IBGE/SIDRA, CVM Dados Abertos</td><td>GSA Mercado, GSA Business, telejornais</td></tr>
+    <tr><td>Saúde</td><td>Ministério da Saúde - Dados Abertos</td><td>GSA Bem Viver, GSA Cidadania</td></tr>
+    <tr><td>Tecnologia e ciência</td><td>Hacker News, arXiv, NASA Open APIs</td><td>GSA Tech, GSA Planeta Terra, GSA Mundo</td></tr>
+    <tr><td>Clima</td><td>INMET - Previsão do Tempo</td><td>GSA Tempo, GSA Planeta Terra</td></tr>
+    <tr><td>Energia, petróleo e ambiente</td><td>ANP e INPE</td><td>GSA Mercado, GSA Business, GSA Planeta Terra e telejornais</td></tr>
+    <tr><td>Dados empresariais oficiais</td><td>Catálogo de Dados Abertos da Receita Federal</td><td>GSA Business e pautas de serviço; tratado como catálogo, não como falsa API em tempo real</td></tr>
+    <tr><td>Cinema</td><td>TMDB (chave gratuita pendente)</td><td>GSA Cinema</td></tr>
+    <tr><td>Esportes</td><td>TheSportsDB (chave gratuita pendente)</td><td>GSA Esportes</td></tr>
+    <tr><td>Loterias</td><td>11 endpoints oficiais CAIXA: Mega-Sena, Lotofácil, Quina, +Milionária, Lotomania, Timemania, Dupla Sena, Dia de Sorte, Super Sete, Federal e Loteca</td><td>GSA Mercado</td></tr>
+  </table>
+  <div class="warning-box">
+    <strong>Limite jurídico e técnico:</strong> coleta e preparação editorial já estão operacionais para 28 fontes habilitadas. API gratuita não equivale a autorização para retransmitir imagens ou vídeos; cada produção mantém manifesto de fontes e classificação de direitos.
+  </div>
+
+  <!-- CONTROLE -->
+  <h1>14. Portal GSA Hub e Sala de Controle</h1>
+  <p>O módulo administrativo é o ponto central de comando da emissora. As áreas planejadas e implementadas ao longo do projeto incluem:</p>
+  <ul>
+    <li>Estado operacional, heartbeat, HLS e confirmação de sinal.</li>
+    <li>Sala de Controle com prévia e no ar, seleção de mídia, fila, anterior, próximo, pausar, retomar, encerrar e sincronizar.</li>
+    <li>Biblioteca local na VPS, sem dependência definitiva do Google Drive.</li>
+    <li>Programação, blocos, séries, reprises, comentários, aprovação e publicação.</li>
+    <li>Publicidade e peças geradas/administradas pelo Laboratório de IA.</li>
+    <li>Fontes externas e TAKE/RETURN para entradas ao vivo.</li>
+    <li>Gráficos: mosca, GC/lower third, tarja, ticker, plantão e relógio.</li>
+    <li>Continuidade e emergência com cartela/logo para evitar tela preta.</li>
+    <li>Direitos autorais com evidência em imagem, PDF, texto ou autorização formal.</li>
+    <li>Laboratório de IA para roteiros, grade, imagens, áudio, vídeo, publicidade e apresentadores virtuais fixos.</li>
+  </ul>
+  <p>A prancha de logos gerada nesta etapa é um <strong>estudo conceitual consolidado</strong>. A exportação de cada marca em arquivo individual, fundo transparente, versões horizontal/vertical e aprovação humana continua pendente.</p>
+
+  <!-- PENDÊNCIAS -->
+  <h1>15. Pendências Reais para a Programação Entrar 100% no Ar</h1>
+  <h2>15.1 Prioridade P0 - impeditivos de operação integral</h2>
+  <table>
+    <tr><th>Pendência</th><th>Situação atual</th><th>Condição de conclusão</th></tr>
+    <tr><td>Conteúdo de todos os slots</td><td>A grade existe, porém a biblioteca possuía somente 22 mídias prontas</td><td>Cada bloco futuro deve apontar para episódio/mídia aprovada ou fonte ao vivo testada</td></tr>
+    <tr><td>Expansão de conteúdo para toda a grade</td><td>Coleta e preparação factual operacionais; somente o primeiro master pré-air foi fechado</td><td>Converter os projetos preparados em masters aprovados para os próximos horários</td></tr>
+    <tr><td>Direitos de filmes, músicas e vídeos reais</td><td>Estrutura existe; acervo completo licenciado não foi comprovado</td><td>Registro aprovado para todo ativo antes da publicação</td></tr>
+    <tr><td>GSA Manhã News de 04/09 às 07:30</td><td>Master técnico concluído e cadastrado; estado editorial ainda <code>pending</code>; bloco permanece sem mídia</td><td>Aprovação humana, vínculo ao bloco, compilação, validação do corte e comprovação no ar</td></tr>
+    <tr><td>Verificação externa no YouTube</td><td>Control plane indica <code>sending</code></td><td>YouTube Studio precisa confirmar sinal contínuo, bitrate, áudio, ausência de buffer e conteúdo correto</td></tr>
+  </table>
+
+  <h2>15.2 Prioridade P1 - estabilidade e acabamento</h2>
+  <ul>
+    <li>Continuar monitorando os workflows 09, 10, 11 e 12 e registrar SLAs de falha/recuperação.</li>
+    <li>Cadastrar as chaves gratuitas ainda necessárias e revisar os termos de uso das fontes desabilitadas.</li>
+    <li>Exibir no portal o estado de cada API, última coleta, erro, atribuição e programas vinculados.</li>
+    <li>Exportar e aprovar individualmente os logos dos programas; gerar SVG/PNG transparente e pacote de aplicação.</li>
+    <li>Homologar 1080p30 somente após teste de estabilidade; manter 720p30 enquanto for o perfil seguro.</li>
+    <li>Confirmar que o mecanismo de emergência coloca a identidade oficial no ar em poucos segundos sem derrubar o RTMP.</li>
+  </ul>
+
+  <h2>15.3 Falhas históricas que exigem encerramento formal</h2>
+  <p>A auditoria encontrou registros antigos de tarefas com falha. Eles não provam defeito atual, mas precisam ser reproduzidos ou marcados como resolvidos:</p>
+  <ul>
+    <li><code>ai_flow_vids_generate</code>: aspas inválidas em filtro FFmpeg, tipo de mídia rejeitado, tarefa não suportada e FFmpeg ausente em execução legada.</li>
+    <li><code>media_take</code>: referência histórica a variável <code>next</code> não definida.</li>
+    <li><code>probe_media</code>: arquivo temporário sem formato de saída reconhecível.</li>
+    <li><code>compile_playlist/playout_reload</code>: conflitos 409 de playlist existente e permissão.</li>
+  </ul>
+
+  <!-- INVENTÁRIO -->
+  <h1>16. Lacunas de Conteúdo e Cadastro Editorial</h1>
+  <p>Na última auditoria, as seguintes áreas ainda estavam vazias ou incompletas:</p>
+  <table>
+    <tr><th>Área</th><th>Contagem observada</th><th>Ação necessária</th></tr>
+    <tr><td>Séries</td><td>0</td><td>Criar séries editoriais para programas recorrentes</td></tr>
+    <tr><td>Episódios</td><td>0</td><td>Relacionar masters, temporadas e reprises</td></tr>
+    <tr><td>Campanhas publicitárias</td><td>0</td><td>Cadastrar contratos, peças, frequência e vigência</td></tr>
+    <tr><td>Apresentadores de IA</td><td>0</td><td>Criar e aprovar os apresentadores fixos masculino e feminino</td></tr>
+    <tr><td>Direitos</td><td>1 registro observado</td><td>Ampliar para todo o acervo e todas as fontes externas</td></tr>
+    <tr><td>Projetos de IA</td><td>14</td><td>Revisar, aprovar e converter entregáveis em mídia broadcast</td></tr>
+  </table>
+
+  <!-- CHECKLIST -->
+  <h1>17. Plano de Conclusão e Critérios de Aceite</h1>
+  <ol>
+    <li><strong>Fechar integridade técnica:</strong> reproduzir falhas históricas, corrigir as confirmadas e zerar incidentes abertos relevantes.</li>
+    <li><strong>Manter conectores:</strong> monitorar adapters RSS/Atom/JSON/OData/CKAN/CAIXA, tratar fontes transitórias e expor a saúde no portal.</li>
+    <li><strong>Popular o catálogo:</strong> criar séries, episódios, apresentadores, vinhetas e pacotes de identidade para todos os programas.</li>
+    <li><strong>Licenciar o acervo:</strong> nenhum filme, música, fotografia ou vídeo externo entra sem registro de direitos aprovado.</li>
+    <li><strong>Produzir masters:</strong> gerar conteúdos no Laboratório de IA, revisar por humano, normalizar e associar aos blocos.</li>
+    <li><strong>Ensaiar 24 horas:</strong> executar uma grade completa em ambiente de homologação medindo áudio, vídeo, transições, pausas, TAKE/RETURN e emergência.</li>
+    <li><strong>Homologar YouTube:</strong> confirmar bitrate estável, áudio contínuo, latência, ausência de buffer e um único encoder por chave.</li>
+    <li><strong>Publicar:</strong> iniciar a grade oficial somente após todos os critérios abaixo estarem verdes.</li>
+  </ol>
+  <table>
+    <tr><th>Critério de aceite final</th><th>Meta</th></tr>
+    <tr><td>Cobertura de grade</td><td>100% dos 86.400 segundos/dia, sete dias</td></tr>
+    <tr><td>Blocos com conteúdo válido</td><td>100%, sem depender de fallback como programação normal</td></tr>
+    <tr><td>Direitos aprovados</td><td>100% dos ativos veiculados</td></tr>
+    <tr><td>Sinal YouTube</td><td>24 horas sem desconexão, buffer crítico ou encoder duplicado</td></tr>
+    <tr><td>Áudio</td><td>AAC 48 kHz estéreo, loudness e silêncio validados</td></tr>
+    <tr><td>Emergência</td><td>Logo/cartela no ar imediatamente e retorno seguro</td></tr>
+    <tr><td>Operação pelo portal</td><td>Todos os comandos auditados e refletidos no estado real</td></tr>
+    <tr><td>APIs</td><td>Coleta, atribuição, deduplicação e erro observáveis</td></tr>
+  </table>
+
+  <!-- GATE PRE-AIR -->
+  <h1>18. Último Estado Pré-Air: GSA Manhã News de 04/09/2026</h1>
+  <p>Este registro foi incorporado a partir da última etapa concluída no fluxo anterior e define o ponto exato para retomada:</p>
+  <table>
+    <tr><th>Item</th><th>Resultado registrado</th></tr>
+    <tr><td>Programa / horário</td><td><strong>GSA Manhã News</strong> - 04/09/2026 às 07:30</td></tr>
+    <tr><td>Roteiro</td><td>Source-grounded; <code>FACT_CHECK: PASS</code></td></tr>
+    <tr><td>Estrutura</td><td>11 cenas; Holt e Nyla alternados; vinheta oficial específica</td></tr>
+    <tr><td>Fontes</td><td>Agência Brasil, Câmara e Senado vinculados; Agência Brasil usada apenas como referência factual</td></tr>
+    <tr><td>Vídeo</td><td>1920x1080, 30 fps, H.264</td></tr>
+    <tr><td>Áudio</td><td>AAC 48 kHz estéreo; aproximadamente -16,01 LUFS; true peak -1,68 dBTP</td></tr>
+    <tr><td>Duração</td><td>273,515 segundos - aproximadamente 4min33s</td></tr>
+    <tr><td>Integridade</td><td>Decode integral sem erro</td></tr>
+    <tr><td>SHA-256</td><td><code>bfd8fdb210a8baed7fbe3b1efd4fed1bb5fcd4c9665bb0aa17cc50719f1b20ab</code></td></tr>
+    <tr><td>QC visual</td><td>Abertura, Holt, Nyla, Câmara, Senado e encerramento aprovados</td></tr>
+    <tr><td>ID da mídia</td><td><code>media-gsa-manha-news-2026-09-04-draft-qc-v1</code></td></tr>
+    <tr><td>Estados</td><td><code>state=ready</code> técnico + <code>approval_state=pending</code> editorial</td></tr>
+    <tr><td>Bloco 07:30</td><td><code>media_item_id = NULL</code>; programação no ar não foi alterada</td></tr>
+  </table>
+
+  <h2>18.1 Incidente de avatar detectado e contido</h2>
+  <p>Os arquivos legados <code>male_holt.mp4</code> e <code>male_close.mp4</code> continham Nyla, apesar dos nomes. O primeiro render foi rejeitado e arquivado como <code>avatar_mismatch</code>, sem cadastro para exibição. O segundo master utilizou o Holt verdadeiro do acervo oficial.</p>
+
+  <h2>18.2 Trava de publicação adicionada</h2>
+  <div class="highlight-box">
+    A versão 1.6.30 do Control Plane impede que uma mídia seja vinculada à programação se não cumprir simultaneamente: <code>state=ready</code>, <code>approval_state=approved</code> e <code>rights_ok=true</code>.
+  </div>
+  <p>No último estado informado: Control Plane saudável, ffplayout saudável, n8n em execução, Workflow 12 ativo, canal <code>online / running / program / sending</code> e <code>last_error</code> vazio.</p>
+
+  <h2>18.3 Matriz factual e cadeia de produção</h2>
+  <p>Para futuras edições, o GSA Manhã News está ligado a Agência Brasil, Câmara, Senado, TSE, Saúde, INMET, Banco Central/PTAX, IBGE/SIDRA, ANP e INPE. INMET, BCB, ANP e INPE foram coletados com sucesso; o IBGE/SIDRA apresentou falha transitória e não foi forçado nem usado como dado atual.</p>
+  <p>O produtor audiovisual legado foi identificado como adequado somente a peças curtas de aproximadamente 20 a 25 segundos. Foram encontrados segredos antigos embutidos em código/configuração; a migração automática foi bloqueada e não houve tentativa de contornar a proteção. O worker não tinha jobs pendentes e o novo pipeline não depende dele.</p>
+
+  <h2>18.4 Gate humano e próxima ação exata</h2>
+  <ol>
+    <li>O responsável humano revisa e aprova o master.</li>
+    <li>Alterar <code>approval_state</code> para <code>approved</code>, preservando <code>rights_ok=true</code>.</li>
+    <li>Associar o master ao bloco de 04/09 às 07:30.</li>
+    <li>Recompilar e validar a playlist.</li>
+    <li>Comprovar o corte no player e no YouTube.</li>
+    <li>Após 4min33s, a continuidade completa automaticamente o restante do slot de 30 minutos, salvo substituição por conteúdo adicional aprovado.</li>
+  </ol>
+  <div class="warning-box">
+    <strong>Autorização ainda necessária:</strong> nenhuma promoção ao ar deve ocorrer até o comando humano explícito “aprovado, pode colocar no ar”.
+  </div>
+
+  <!-- CONCLUSÃO -->
+  <h1>19. Conclusão e Ponto Exato de Continuidade</h1>
+  <p>
+    A GSA TV possui infraestrutura ativa, sinal sendo enviado, central operacional, grade semanal fixa, horizonte de 30 dias e um catálogo robusto de fontes gratuitas ligado aos programas. O projeto, entretanto, <strong>não deve ser declarado 100% concluído</strong> até que o conteúdo de todos os blocos, os direitos, os adaptadores de coleta, os apresentadores, o telejornal master e o ensaio contínuo sejam comprovados pelos critérios da Seção 17.
+  </p>
+  <div class="highlight-box">
+    <strong>Próxima ação imediata:</strong> obter a aprovação humana do master <code>media-gsa-manha-news-2026-09-04-draft-qc-v1</code>. Em paralelo, continuar o fechamento P0: conectores editoriais, episódios das próximas 48 horas, direitos e ensaio monitorado ponta a ponta.
+  </div>
+
+  <div class="footer-text">
+    GSA TV • Dossiê Técnico de Continuidade • Estado em 03/09/2026 • Documento Oficial Grupo GSA
+  </div>
+
+</body>
+</html>
+`;
+
+  const htmlPath = path.resolve('scratch/documentacao_tecnica_gsa_tv.html');
+  const outputDir = path.resolve('output/pdf');
+  await fs.mkdir(outputDir, { recursive: true });
+  const pdfPath = path.join(outputDir, 'GSA_TV_DOCUMENTACAO_TECNICA_COMPLETA_ATUALIZADA_2026-09-03.pdf');
+  const brainPdfPath = path.resolve('C:/Users/Adriano Farias/.gemini/antigravity/brain/c6c9049f-c55a-4d14-9335-f1cc78667b6d/GSA_TV_DOCUMENTACAO_TECNICA_COMPLETA.pdf');
+
+  await fs.writeFile(htmlPath, htmlContent, 'utf8');
+  console.log('HTML gerado em:', htmlPath);
+
+  const edgeExe = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+  const args = [
+    '--headless',
+    '--disable-gpu',
+    '--no-pdf-header-footer',
+    '--run-all-compositor-stages-before-draw',
+    `--print-to-pdf=${pdfPath}`,
+    htmlPath
+  ];
+
+  console.log('Compilando PDF com Microsoft Edge Headless...');
+  await execFileAsync(edgeExe, args);
+  console.log('PDF gerado com sucesso em:', pdfPath);
+
+  // Manter uma cópia estável no diretório histórico de artefatos, quando disponível.
+  const pdfBuf = await fs.readFile(pdfPath);
+  try {
+    await fs.writeFile(brainPdfPath, pdfBuf);
+    console.log('PDF copiado para o diretório de artefatos:', brainPdfPath);
+  } catch (error) {
+    console.warn('Cópia histórica não realizada:', error.message);
+  }
+
+  const stat = await fs.stat(pdfPath);
+  console.log('Tamanho do PDF:', (stat.size / 1024).toFixed(1), 'KB');
+}
+
+generatePdf().catch(console.error);

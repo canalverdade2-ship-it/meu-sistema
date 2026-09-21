@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { formatCurrency, formatDate, handleError, generateUUID } from '../../lib/utils';
 import { Calendar, Clock, CheckCircle, XCircle, Info, ArrowRight, Layers, ShieldCheck, AlertTriangle, Receipt, DollarSign } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Modal } from '../ui/Modal';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import { callClientRpc } from '../../lib/clientRpc';
 
 const getLocalDateInputValue = (date = new Date()) => {
@@ -96,42 +97,19 @@ export function ClientAssinaturas({
   }, [initialItemId, minhasAssinaturas.length, initialTab]);
 
   useEffect(() => {
-    let isMounted = true;
-    const fetchMinhasAssinaturas = async () => {
-      try {
-        const { data } = await supabase
-          .from('ordens_assinatura')
-          .select('*, assinaturas(nome, valor), faturas(*), orcamentos(*)')
-          .eq('cliente_id', clientId)
-          .order('data_criacao', { ascending: false });
-        
-        if (data && isMounted) setMinhasAssinaturas(data);
-      } catch (err) {
-        console.error('Erro ao buscar assinaturas:', err);
-      }
-    };
-
     fetchMinhasAssinaturas();
-
-    const channel = supabase
-      .channel('client-assinaturas-updates')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'ordens_assinatura',
-        filter: `cliente_id=eq.${clientId}`
-      }, () => {
-        fetchMinhasAssinaturas();
-      })
-      .subscribe();
-
-    return () => {
-      isMounted = false;
-      supabase.removeChannel(channel);
-    };
   }, [clientId, minhasTab]);
 
-  const fetchMinhasAssinaturas = async () => {
+  useRealtimeSubscription(
+    [
+      { table: 'ordens_assinatura', filter: `cliente_id=eq.${clientId}`, onChange: fetchMinhasAssinaturas },
+      { table: 'faturas', filter: `cliente_id=eq.${clientId}`, onChange: fetchMinhasAssinaturas },
+      { table: 'assinaturas', onChange: fetchMinhasAssinaturas },
+    ],
+    [clientId]
+  );
+
+  async function fetchMinhasAssinaturas() {
     try {
       const { data } = await supabase
         .from('ordens_assinatura')
@@ -567,11 +545,12 @@ export function ClientAssinaturas({
           </p>
           <div>
             <label className="block text-sm font-bold text-neutral-700 mb-1">Meses</label>
-            <input
+            <input 
               type="number"
               min="1"
               value={mesesProrrogacao}
-              onChange={(e) => setMesesProrrogacao(parseInt(e.target.value))}
+              inputMode="numeric"
+onChange={(e) => setMesesProrrogacao(parseInt(e.target.value))}
               className="w-full rounded-xl border-neutral-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
           </div>

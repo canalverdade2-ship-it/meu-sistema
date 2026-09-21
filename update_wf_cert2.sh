@@ -1,0 +1,2 @@
+sudo docker exec -e PGPASSWORD='evopass' evo-postgres psql -U evo -d n8n -c "DELETE FROM workflow_entity WHERE id = 'AAAABBBBCCCCDDDD';"
+sudo docker exec n8n n8n import:workflow --input=/tmp/update_wf.json

@@ -598,8 +598,9 @@ export function IndicacoesModule({ activeSubTab, initialItemId, colaboradorId, c
                   type="text"
                   required
                   placeholder="(00) 00000-0000"
+                  maxLength={15}
                   value={newFormData.whatsapp_indicado}
-                  onChange={e => setNewFormData({...newFormData, whatsapp_indicado: e.target.value})}
+                  onChange={e => setNewFormData({...newFormData, whatsapp_indicado: maskPhone(e.target.value)})}
                   className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
                 />
               </div>

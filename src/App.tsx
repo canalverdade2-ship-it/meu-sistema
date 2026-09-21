@@ -24,10 +24,13 @@ import { readSafeReturnTo } from './routing/safeReturnTo';
 import { defaultAdminPath } from './security/collaboratorAccess';
 import { supabase } from './lib/supabase';
 import { clientOperationalWrite } from './lib/clientOperationalWrite';
+import { callClientRpc } from './lib/clientRpc';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AffiliateTrackingBridge } from './components/AffiliateTrackingBridge';
 import { PublicVIPPresentationPage } from './components/public/PublicVIPPresentationPage';
 import { PublicNotFoundPage } from './components/public/PublicNotFoundPage';
+import ProtocolConsultPage from './components/public/ProtocolConsultPage';
+import type { ProductVariationSelection } from './types/productVariations';
 
 const PENDING_STORE_CHECKOUT_KEY = 'gsa_pending_store_checkout';
 const PENDING_STORE_COUPONS_KEY = 'gsa_pending_store_coupons';
@@ -40,7 +43,14 @@ async function migrateGuestCartToAccount(clientId: string): Promise<boolean> {
   let parsed: any;
   try { parsed = JSON.parse(rawCart); } catch { return false; }
 
-  const pendingItems: Array<{ item_id: string; tipo: string; quantidade: number; prazo_meses?: number }> =
+  const pendingItems: Array<{
+    item_id: string;
+    tipo: string;
+    quantidade: number;
+    prazo_meses?: number;
+    produto_variante_id?: string | null;
+    opcoes_variacao?: ProductVariationSelection | null;
+  }> =
     Array.isArray(parsed?.items) ? parsed.items : [];
   if (pendingItems.length === 0) {
     localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
@@ -66,11 +76,11 @@ async function migrateGuestCartToAccount(clientId: string): Promise<boolean> {
     // Carrinho já existente na conta: evita duplicar linhas ao migrar o carrinho do visitante
     const { data: existingCart } = await supabase
       .from('loja_carrinhos')
-      .select('id, item_id, tipo, quantidade')
+      .select('id, item_id, tipo, quantidade, produto_variante_id')
       .eq('cliente_id', clientId);
 
     const existingMap = new Map<string, any>(
-      (existingCart || []).map((row: any) => [`${row.tipo}:${row.item_id}`, row]),
+      (existingCart || []).map((row: any) => [`${row.tipo}:${row.item_id}:${row.produto_variante_id || 'none'}`, row]),
     );
 
     // Escritas sequenciais: garante que uma falha no meio não deixe itens já inseridos
@@ -84,7 +94,7 @@ async function migrateGuestCartToAccount(clientId: string): Promise<boolean> {
 
       const quantidade = Math.max(1, Number(item.quantidade || 1));
       const prazoMeses = item.prazo_meses ? Number(item.prazo_meses) : undefined;
-      const key = `${item.tipo}:${item.item_id}`;
+      const key = `${item.tipo}:${item.item_id}:${item.produto_variante_id || 'none'}`;
       const existing = existingMap.get(key);
 
       if (existing) {
@@ -95,15 +105,26 @@ async function migrateGuestCartToAccount(clientId: string): Promise<boolean> {
           clientId,
           'loja_carrinhos',
           'update',
-          { quantidade: novaQuantidade, updated_at: new Date().toISOString() },
+          {
+            quantidade: novaQuantidade,
+            updated_at: new Date().toISOString(),
+            ...(item.produto_variante_id ? { produto_variante_id: item.produto_variante_id } : {}),
+          },
           { id: existing.id },
         );
         existing.quantidade = novaQuantidade;
       } else {
         const insertData: any = { cliente_id: clientId, item_id: item.item_id, tipo: item.tipo, quantidade, updated_at: new Date().toISOString() };
         if (prazoMeses) insertData.prazo_meses = prazoMeses;
+        if (item.produto_variante_id) insertData.produto_variante_id = item.produto_variante_id;
         await clientOperationalWrite(clientId, 'loja_carrinhos', 'insert', insertData);
-        existingMap.set(key, { id: null, item_id: item.item_id, tipo: item.tipo, quantidade });
+        existingMap.set(key, {
+          id: null,
+          item_id: item.item_id,
+          tipo: item.tipo,
+          quantidade,
+          produto_variante_id: item.produto_variante_id || null,
+        });
       }
       migrated = true;
     }
@@ -113,7 +134,7 @@ async function migrateGuestCartToAccount(clientId: string): Promise<boolean> {
     const couponIds: string[] = Array.isArray(parsedCoupons?.activatedCouponIds) ? parsedCoupons.activatedCouponIds : [];
     for (const cupomId of couponIds) {
       if (!cupomId) continue;
-      try { await clientOperationalWrite(clientId, 'cupons_ativados', 'insert', { cliente_id: clientId, cupom_id: cupomId }); } catch { /* ignore duplicate */ }
+      try { await callClientRpc('gsa_client_activate_store_coupon', { p_cupom_id: cupomId }); } catch { /* estado já pode estar ativado */ }
     }
 
     if (migrated) {
@@ -144,7 +165,7 @@ const BusinessRegistrationPage = lazyWithRetry(() => import('./pages/BusinessReg
 const RestrictedAccessHubPage = lazyWithRetry(() => import('./pages/RestrictedAccessHubPage'), 'RestrictedAccessHubPage');
 const ProviderAccessPage = lazyWithRetry(() => import('./pages/ProviderAccessPage'), 'ProviderAccessPage');
 const ProviderLandingPage = lazyWithRetry(() => import('./pages/Prestador/ProviderLandingPage'), 'ProviderLandingPage');
-const PrestadorDashboard = lazyWithRetry(() => import('./pages/Prestador/PrestadorDashboard'), 'PrestadorDashboard');
+const PrestadorDashboard = lazyWithRetry(() => import('./pages/Prestador/PrestadorDashboard'), 'PrestadorDashboard'); // const PrestadorDashboard = lazy(() => import('./pages/Prestador/PrestadorDashboard')
 const FornecedorDashboard = lazyWithRetry(() => import('./pages/Fornecedor/FornecedorDashboard'), 'FornecedorDashboard');
 const FornecedorAccessPage = lazyWithRetry(() => import('./pages/Fornecedor/FornecedorAccessPage'), 'FornecedorAccessPage');
 const FornecedorLandingPage = lazyWithRetry(() => import('./pages/Fornecedor/FornecedorLandingPage'), 'FornecedorLandingPage');
@@ -170,6 +191,7 @@ export default function App() {
     colaboradorId?: string;
     colaboradorNome?: string;
     colaboradorModulos?: string[];
+    isGsaTv?: boolean;
     prestadorId?: string;
     fornecedorId?: string;
   }>({});
@@ -193,20 +215,30 @@ export default function App() {
       replace(decodeURIComponent(returnTo));
       // Se o carrinho foi migrado, dispara o evento para o ClientGSAStore abrir o drawer
       if (didMigrate) {
-        setTimeout(() => window.dispatchEvent(new CustomEvent('gsa-cart-migrated')), 800);
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('gsa_open_cart'));
+        }, 800);
       }
+    } else if (resolvedType === 'pj') {
+      replace(routes.business.dashboard());
     } else {
-      replace(resolvedType === 'pj' ? routes.business.dashboard() : routes.client.dashboard());
+      replace(routes.client.dashboard());
     }
   };
 
-  const handleLoginAdmin = (adminDetails: { type: 'admin' | 'colaborador'; id?: string; nome?: string; modulos?: string[] }) => {
+  const handleLoginAdmin = (adminDetails: { type: 'admin' | 'colaborador'; id?: string; nome?: string; modulos?: string[]; isGsaTv?: boolean }) => {
+    if (adminDetails.isGsaTv) {
+      sessionStorage.setItem('isGsaTv', 'true');
+    } else {
+      sessionStorage.removeItem('isGsaTv');
+    }
     setSession({
       adminAuth: true,
       adminType: adminDetails.type,
       colaboradorId: adminDetails.id,
       colaboradorNome: adminDetails.nome,
       colaboradorModulos: adminDetails.modulos,
+      isGsaTv: adminDetails.isGsaTv,
     });
 
     const params = new URLSearchParams(window.location.search);
@@ -266,72 +298,63 @@ export default function App() {
     }
   };
 
-  const handleLogout = async () => {
+  const handleLogout = async (reason?: string) => {
     try {
       await sessionService.endSession();
     } catch {
-      // Falha silenciosa no logout
+      // Ignora erro no logout
     }
     setSession({});
-    localStorage.removeItem('adminType');
-    localStorage.removeItem('colaboradorId');
-    localStorage.removeItem('colaboradorNome');
-    replace(routes.public.home());
+    if (reason === 'superseded') {
+      toast.error('Sua sessão foi encerrada porque sua conta foi conectada em outro dispositivo ou local.', {
+        id: 'session-superseded',
+        duration: 8000,
+      });
+    }
+    if (route.area === 'admin') {
+      replace(routes.login.restricted());
+    } else if (route.area === 'business') {
+      replace(routes.login.business());
+    } else if (route.area === 'provider') {
+      replace(routes.login.provider());
+    } else if (route.area === 'supplier') {
+      replace(routes.login.supplier());
+    } else {
+      replace(routes.login.root());
+    }
   };
 
-  useEffect(() => {
-    const legacyRedirect = resolveLegacyRoute(window.location.pathname, window.location.search);
-    if (legacyRedirect) replace(legacyRedirect);
-  }, [route.pathname, route.search]);
+  useAutoLogout(handleLogout, isSessionActive);
 
   useEffect(() => {
     let mounted = true;
     const safetyTimer = setTimeout(() => {
-      if (mounted) {
-        setIsLoadingSession(false);
-      }
-    }, 3000);
+      if (mounted) setIsLoadingSession(false);
+    }, 4000);
 
     const restore = async () => {
       try {
         const restored = await sessionService.restoreSession();
         if (!mounted) return;
+
         if (restored) {
           if (restored.atorTipo === 'cliente') {
-            const restoredPersonType = restored.clientPersonType === 'pj' || restored.clientPersonType === 'pf'
-              ? restored.clientPersonType
-              : await sessionService.resolveAuthenticatedClientPersonType(restored.atorId);
-            const clientPersonType: ClientPersonType = restoredPersonType || (route.area === 'business' ? 'pj' : 'pf');
-            sessionService.setClientPersonType(clientPersonType);
-            setSession({ clientId: restored.atorId, clientPersonType });
-
-            const recoveryProfile = clientPersonType === 'pj' ? routes.business.profile() : routes.client.perfil();
-            if (restored.precisa_trocar_senha && window.location.pathname !== recoveryProfile) {
-              replace(`${recoveryProfile}?modal=alterar-senha&origem=recuperacao`);
-            } else if ((route.area === 'public' && route.module === 'affiliates' && ['login', 'acesso', 'cadastro'].includes(route.itemId || '')) || (route.area === 'login' && route.module === 'afiliado')) {
-              replace('/afiliados/dashboard');
-            } else if (clientPersonType === 'pj' && route.area === 'client') {
-              replace(routes.business.dashboard());
-            } else if (clientPersonType === 'pf' && route.area === 'business') {
-              replace(routes.client.dashboard());
-            } else if (route.area === 'login') {
-              const returnTo = route.query.returnTo;
-              if (returnTo) {
-                replace(decodeURIComponent(returnTo));
-              } else {
-                replace(clientPersonType === 'pj' ? routes.business.dashboard() : routes.client.dashboard());
-              }
+            const clientType = sessionService.getClientPersonType() || (route.area === 'business' ? 'pj' : 'pf');
+            setSession({ clientId: restored.atorId, clientPersonType: clientType });
+            if (route.area === 'login' && ['cliente', 'empresas'].includes(route.module)) {
+              replace(clientType === 'pj' ? routes.business.dashboard() : routes.client.dashboard());
             }
-          } else if (restored.atorTipo === 'admin' || restored.atorTipo === 'colaborador') {
+          } else if (['admin', 'colaborador'].includes(restored.atorTipo)) {
             setSession({
               adminAuth: true,
-              adminType: restored.atorTipo,
-              colaboradorId: restored.atorId !== '00000000-0000-0000-0000-000000000000' ? restored.atorId : undefined,
+              adminType: restored.atorTipo as 'admin' | 'colaborador',
+              colaboradorId: restored.atorId,
               colaboradorNome: restored.atorNome,
               colaboradorModulos: restored.modulos || [],
+              isGsaTv: sessionStorage.getItem('isGsaTv') === 'true',
             });
             if (route.area === 'login' && ['acesso-restrito', 'admin', 'colaborador'].includes(route.module)) {
-              replace(defaultAdminPath(restored.atorTipo, restored.modulos || []));
+              replace(defaultAdminPath(restored.atorTipo as 'admin' | 'colaborador', restored.modulos || []));
             }
           } else if (restored.atorTipo === 'prestador') {
             const access = await validateProviderSessionAccess(restored.atorId);
@@ -439,7 +462,9 @@ export default function App() {
     return null;
   }
 
-  const publicPage = route.module === 'services'
+  const publicPage = route.module === 'privacy'
+    ? 'privacy'
+    : route.module === 'services'
     ? 'services'
     : route.module === 'free-tools'
       ? 'free-tools'
@@ -540,7 +565,11 @@ export default function App() {
               />
             )}
 
-            {activeView === 'public' && !['affiliates', 'trabalhe-conosco', 'careers', 'vip'].includes(route.module) && (
+            {activeView === 'public' && route.module === 'protocolConsult' && (
+              <ProtocolConsultPage />
+            )}
+
+            {activeView === 'public' && !['affiliates', 'trabalhe-conosco', 'careers', 'vip', 'protocolConsult'].includes(route.module) && (
               <Home
                 onLoginClient={handleLoginClient}
                 onGuestStore={() => navigate(routes.marketplace.root())}
@@ -550,7 +579,9 @@ export default function App() {
                 onServiceDetailChange={(slug) => navigate(slug ? routes.public.serviceDetail(slug) : routes.public.services())}
                 onPartnerDetailChange={(slug) => navigate(slug ? routes.public.partner(slug) : routes.public.partners())}
                 onPublicPageChange={(page) => navigate(
-                  page === 'home'
+                  page === 'privacy'
+                    ? routes.public.privacy()
+                    : page === 'home'
                     ? routes.public.home()
                     : page === 'services'
                       ? routes.public.services()
@@ -692,11 +723,7 @@ export default function App() {
                 }}
                 onBackToSite={() => navigate(routes.public.home())}
                 onRequireAuth={() => {
-                  const params = new URLSearchParams(window.location.search);
-                  if (!params.has('modal')) {
-                    params.set('modal', 'carrinho');
-                  }
-                  const returnUrl = window.location.pathname + '?' + params.toString();
+                  const returnUrl = window.location.pathname + window.location.search;
                   const returnTo = encodeURIComponent(returnUrl);
                   navigate(`${routes.login.personal()}?returnTo=${returnTo}`);
                 }}
@@ -724,6 +751,7 @@ export default function App() {
                   colaboradorId={session.colaboradorId}
                   colaboradorNome={session.colaboradorNome}
                   colaboradorModulos={session.colaboradorModulos || []}
+                  isGsaTv={session.isGsaTv}
                 />
               </AdminNotificationProvider>
             )}

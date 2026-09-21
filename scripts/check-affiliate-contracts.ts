@@ -79,8 +79,8 @@ async function main() {
 
   await contains('src/pages/Afiliado/AffiliateAccessPage.tsx', [
     "sessionService.loginWithPin(cleanDocument, accessPin, 'cliente')",
-    'joinAffiliate({',
-    'PIN de 4 dígitos da sua conta GSA',
+    'sessionService.registerAffiliate({',
+    'Crie um PIN de 4 dígitos',
   ]);
   await excludes('src/pages/Afiliado/AffiliateAccessPage.tsx', [
     "supabase.rpc('gsa_public_register_affiliate'",
@@ -92,6 +92,25 @@ async function main() {
     'requestAffiliatePayout',
     'cancelAffiliatePayout',
     'redeemAffiliatePoints',
+    'activateClientProfileFromAffiliate',
+    'Ativar perfil de cliente',
+  ]);
+
+  await contains('supabase/migrations/20260829003000_independent_affiliate_and_client_profile_activation.sql', [
+    'perfil_cliente_ativo',
+    'gsa_register_affiliate_account',
+    'gsa_client_profile_access_state',
+    'gsa_affiliate_activate_client_profile',
+    'COMMIT;',
+  ]);
+  await contains('supabase/migrations/20260830010000_harden_affiliate_program_end_to_end.sql', [
+    'saldo_operacional',
+    'gsa_affiliate_programs_public_read',
+    'gsa_affiliates_own_read',
+    'gsa_affiliate_transfers_own_read',
+    'gsa_register_affiliate_sale_commission',
+    'Informe a referência ou comprovante do pagamento PIX',
+    "modulo = 'afiliados'",
   ]);
   await excludes('src/pages/Afiliado/AfiliadoDashboard.tsx', [
     ".from('gsa_afiliados')",

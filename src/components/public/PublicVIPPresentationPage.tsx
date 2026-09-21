@@ -13,6 +13,7 @@ import {
 import { VIP_LEVELS, VIPLevel } from '../../constants';
 import { routes } from '../../routing/routeCatalog';
 import { navigate } from '../../routing/navigationService';
+import { supabase } from '../../lib/supabase';
 
 interface PublicVIPPresentationPageProps {
   onBack?: () => void;
@@ -121,12 +122,12 @@ const HERO_STATS = [
   { value: '15%', suffix: 'OFF', label: 'Desconto extra direto no carrinho' },
 ];
 
-/* ─── 8 Grandes Benefícios do Clube VIP ──────────────────────────────────── */
+/* ─── Benefícios Reais do Clube VIP ─────────────────────────────────────── */
 const VIP_PERKS = [
   {
     icon: BadgePercent,
     title: 'Descontos VIP no Marketplace',
-    desc: 'Economize de 2% a 15% de desconto adicional acumulativo em milhares de produtos, serviços e viagens.',
+    desc: 'Economize até 15% de desconto automático no carrinho em todos os produtos e serviços da loja.',
     tag: 'Até 15% OFF',
     accent: '#f59e0b',
     bg: '#fffbeb',
@@ -135,7 +136,7 @@ const VIP_PERKS = [
   {
     icon: Zap,
     title: 'Multiplicador Turbo de Pontos',
-    desc: 'Ganhe de 0,5× até 5× pontos a cada compra no ecossistema GSA. Seus pontos nunca perdem a validade.',
+    desc: 'Ganhe de 0,5× até 5× pontos a cada R$ 1,00 gasto no ecossistema GSA conforme sua categoria.',
     tag: 'Até 5× Pontos',
     accent: '#10b981',
     bg: '#f0fdf4',
@@ -143,141 +144,57 @@ const VIP_PERKS = [
   },
   {
     icon: Wallet,
-    title: 'Resgate em Dinheiro via PIX',
-    desc: 'Converta seus pontos em dinheiro vivo direto na sua conta bancária sem burocracia e com taxa zero no topo.',
-    tag: 'PIX na Conta',
+    title: 'Resgate de Saldo & Conversão',
+    desc: 'Converta seus pontos em saldo na carteira digital para abater faturas, pagar novos pedidos ou transferir via PIX.',
+    tag: 'Resgate em Saldo',
     accent: '#3b82f6',
     bg: '#eff6ff',
     border: '#bfdbfe',
   },
   {
-    icon: Package,
-    title: 'Frete Reduzido & Despacho Turbo',
-    desc: 'Condições especiais de entrega com frete reduzido ou grátis e separação prioritária no centro de distribuição.',
-    tag: 'Entrega Ágil',
-    accent: '#ec4899',
-    bg: '#fdf2f8',
-    border: '#fbcfe8',
-  },
-  {
-    icon: Clock,
-    title: 'Acesso Antecipado a Ofertas',
-    desc: 'Compre 2 horas antes de todo mundo em lançamentos, liquidações de estoque e na Black Friday GSA.',
-    tag: '2h de Vantagem',
-    accent: '#8b5cf6',
-    bg: '#f5f3ff',
-    border: '#ddd6fe',
-  },
-  {
-    icon: Headphones,
-    title: 'Concierge & Suporte Prioritário',
-    desc: 'Fila exclusiva de atendimento no WhatsApp com gerente de conta dedicado para resolução imediata.',
-    tag: 'WhatsApp VIP',
+    icon: ShieldCheck,
+    title: 'Taxas de Saque Decrescentes',
+    desc: 'Taxa de transferência reduzida progressivamente de 5% no nível Básico até 0% (isenção total) no nível Black.',
+    tag: 'Até 0% de Taxa',
     accent: '#06b6d4',
     bg: '#ecfeff',
     border: '#a5f3fc',
   },
   {
     icon: Gift,
-    title: 'Presente & Vouchers no Aniversário',
-    desc: 'Receba cupons bônus, presentes exclusivos e vouchers de parceiros durante todo o mês do seu aniversário.',
-    tag: 'Mimo no Seu Mês',
+    title: '100 Pontos de Boas-Vindas',
+    desc: 'Cadastre-se gratuitamente agora e receba 100 pontos VIP de boas-vindas creditados na sua conta.',
+    tag: 'Bônus Imediato',
     accent: '#f97316',
     bg: '#fff7ed',
     border: '#fed7aa',
   },
   {
-    icon: RefreshCcw,
-    title: 'Garantia & Troca Fácil em 30 Dias',
-    desc: 'Logística reversa simplificada sem perguntas, prioridade de reembolso e 30 dias para trocas no marketplace.',
-    tag: 'Sem Burocracia',
+    icon: Trophy,
+    title: 'Upgrades Diretos por Pontos',
+    desc: 'Evolua de categoria automaticamente pelas suas compras ou utilize seus pontos acumulados para adquirir upgrades imediatos.',
+    tag: 'Evolução de Nível',
+    accent: '#8b5cf6',
+    bg: '#f5f3ff',
+    border: '#ddd6fe',
+  },
+  {
+    icon: Clock,
+    title: 'Pontos Vitalícios',
+    desc: 'Seus pontos acumulados não expiram e não possuem data limite, ficando sempre seguros na sua conta.',
+    tag: 'Sem Validade',
     accent: '#6366f1',
     bg: '#eef2ff',
     border: '#c7d2fe',
   },
-];
-
-/* ─── Showcase de Economia Real no Marketplace ────────────────────────────── */
-const MARKETPLACE_DEALS_SHOWCASE = [
   {
-    id: 1,
-    category: 'Eletrônicos & Tech',
-    name: 'Smartphone Pro Max 256GB 5G Câmera Tripla',
-    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&auto=format&fit=crop&q=80',
-    regularPrice: 4299.00,
-    vipDiscountPct: 15,
-    pointsGain: 18270,
-    tag: 'Mais Vendido',
-  },
-  {
-    id: 2,
-    category: 'Viagens & Turismo',
-    name: 'Pacote Nordeste 5 Dias Resort All Inclusive + Aéreo',
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&auto=format&fit=crop&q=80',
-    regularPrice: 2890.00,
-    vipDiscountPct: 15,
-    pointsGain: 12282,
-    tag: 'Experiência VIP',
-  },
-  {
-    id: 3,
-    category: 'Serviços Especializados',
-    name: 'Higienização e Manutenção Completa Residencial / Predial',
-    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=500&auto=format&fit=crop&q=80',
-    regularPrice: 480.00,
-    vipDiscountPct: 15,
-    pointsGain: 2040,
-    tag: 'Garantia GSA',
-  },
-  {
-    id: 4,
-    category: 'Casa & Smart Living',
-    name: 'Smart TV 55" 4K UHD HDR Processador IA Dolby Vision',
-    image: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=500&auto=format&fit=crop&q=80',
-    regularPrice: 2799.00,
-    vipDiscountPct: 15,
-    pointsGain: 11895,
-    tag: 'Oferta Relâmpago',
-  },
-];
-
-/* ─── Depoimentos de Membros Reais ────────────────────────────────────────── */
-const TESTIMONIALS = [
-  {
-    name: 'Marcelo Silveira',
-    role: 'Empresário no Ramo de Tecnologia',
-    city: 'São Paulo - SP',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    level: 'Black VIP',
-    levelColor: '#fbbf24',
-    rating: 5,
-    headline: 'Já resgatei mais de R$ 2.400 direto no PIX!',
-    quote: 'Uso o marketplace da GSA para compras da empresa e serviços de escritório. O multiplicador de 5× do nível Black acumula pontos absurdamente rápido. O resgate no PIX cai no mesmo dia.',
-    savings: 'R$ 4.850,00 economizados no ano',
-  },
-  {
-    name: 'Camila Rodrigues',
-    role: 'Arquiteta & Designer de Interiores',
-    city: 'Curitiba - PR',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-    level: 'Diamante VIP',
-    levelColor: '#38bdf8',
-    rating: 5,
-    headline: 'Os descontos acumulativos nos pacotes de viagem são imbatíveis.',
-    quote: 'Comprei duas viagens em família e renovei equipamentos com 10% de desconto exclusivo e frete grátis. O atendimento VIP no WhatsApp resolve qualquer dúvida em 2 minutos.',
-    savings: 'R$ 3.290,00 economizados no ano',
-  },
-  {
-    name: 'Eduardo Guimarães',
-    role: 'Gestor Comercial & Consultor',
-    city: 'Belo Horizonte - MG',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-    level: 'Ouro VIP',
-    levelColor: '#f59e0b',
-    rating: 5,
-    headline: 'Comecei no gratuito e em 2 meses já estava no Ouro.',
-    quote: 'Não tem pegadinha nem taxa oculta. Você vai comprando o que já precisava, acumula pontos que nunca expiram e vê o saldo crescer no painel. É o programa mais transparente do Brasil.',
-    savings: 'R$ 1.940,00 economizados no ano',
+    icon: Shield,
+    title: 'Adesão 100% Gratuita',
+    desc: 'Sem mensalidades, sem contratos obrigatórios e sem taxas ocultas. Você começa no nível Básico com custo zero.',
+    tag: 'Livre de Mensalidade',
+    accent: '#ec4899',
+    bg: '#fdf2f8',
+    border: '#fbcfe8',
   },
 ];
 
@@ -322,12 +239,43 @@ export function PublicVIPPresentationPage({ onBack, clientId }: PublicVIPPresent
   const [faqFilter, setFaqFilter] = useState<string>('todos');
   const [faqSearch, setFaqSearch] = useState<string>('');
   const [stickyVisible, setStickyVisible] = useState(false);
+  const [realProducts, setRealProducts] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
   const heroRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const obs = new IntersectionObserver(([e]) => setStickyVisible(!e.isIntersecting), { threshold: 0.1 });
     if (heroRef.current) obs.observe(heroRef.current);
     return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const fetchRealProducts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('produtos')
+          .select('id, nome, valor, imagem_url, categoria')
+          .eq('status', 'ativo')
+          .eq('visivel_na_loja', true)
+          .gt('valor', 0)
+          .limit(8);
+
+        if (!active) return;
+        if (data && data.length > 0) {
+          setRealProducts(data.slice(0, 4));
+        }
+      } catch (err) {
+        console.error('Erro ao buscar produtos reais para apresentação VIP:', err);
+      } finally {
+        if (active) setLoadingProducts(false);
+      }
+    };
+
+    fetchRealProducts();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const goRegister = () => navigate(`${routes.login.personal()}?mode=register`);
@@ -362,102 +310,100 @@ export function PublicVIPPresentationPage({ onBack, clientId }: PublicVIPPresent
   return (
     <div className="min-h-screen bg-[#070b14] text-slate-100 font-sans antialiased selection:bg-amber-400 selection:text-slate-950">
 
-      {/* ── TOP ANNOUNCEMENT TICKER ── */}
-      <aside aria-label="Aviso de promoção VIP" className="bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-500 px-4 py-2 text-center text-xs font-black text-slate-950 shadow-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-center gap-2">
-          <Sparkles size={14} className="animate-spin text-slate-950 shrink-0" style={{ animationDuration: '4s' }} />
-          <span>
-            <strong>BÔNUS EXCLUSIVO DE HOJE:</strong> Cadastre-se gratuitamente agora e ganhe <strong>500 Pontos VIP</strong> de boas-vindas na sua conta!
-          </span>
-          <button 
-            onClick={goRegister}
-            className="hidden sm:inline-flex items-center gap-1 underline underline-offset-2 hover:text-white transition-colors cursor-pointer ml-2"
-          >
-            Garantir bônus agora <ChevronRight size={13} />
-          </button>
-        </div>
-      </aside>
-
       {/* ── STICKY GLASS NAVBAR ── */}
-      <header className="sticky top-0 z-50 border-b border-slate-800/80 bg-[#0a101d]/90 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-50 border-b border-slate-800/80 bg-[#0a101d]/95 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
           
-          {/* Back & Logo */}
-          <div className="flex items-center gap-4 sm:gap-6">
+          {/* Left: Voltar & Brand */}
+          <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={goBack}
-              className="group flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/80 px-3 py-1.5 text-xs font-semibold text-slate-300 transition-all hover:border-slate-700 hover:bg-slate-800 hover:text-white cursor-pointer"
+              className="group flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/80 px-3 py-1.5 text-xs font-medium text-slate-300 transition-all hover:border-slate-700 hover:bg-slate-800 hover:text-white cursor-pointer shrink-0"
               title="Retornar à Loja Marketplace"
             >
-              <ArrowLeft size={15} className="transition-transform group-hover:-translate-x-0.5 text-amber-400" />
-              <span className="hidden md:inline">Voltar ao Marketplace</span>
-              <span className="md:hidden">Voltar</span>
+              <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-0.5 text-amber-400 shrink-0" />
+              <span className="hidden sm:inline">Voltar</span>
             </button>
 
-            <div className="flex items-center gap-3">
-              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 p-0.5 shadow-lg shadow-amber-500/20">
+            <div className="flex items-center gap-2.5 shrink-0">
+              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 p-0.5 shadow-md shadow-amber-500/20 shrink-0">
                 <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-[#0c1427]">
-                  <Crown size={20} className="fill-amber-400 text-amber-400" />
+                  <Crown size={18} className="fill-amber-400 text-amber-400" />
                 </div>
               </div>
-              <div className="leading-tight">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-base font-black tracking-tight text-white">GSA HUB</span>
-                  <span className="rounded-md bg-gradient-to-r from-amber-400 to-yellow-500 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-950">
-                    VIP CLUB
-                  </span>
-                </div>
-                <p className="text-[11px] font-medium text-slate-400 hidden sm:block">Programa de Fidelidade & Cashback</p>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-sm sm:text-base font-black tracking-tight text-white whitespace-nowrap">GSA HUB</span>
+                <span className="rounded-md bg-gradient-to-r from-amber-400 to-yellow-500 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-950 shrink-0">
+                  VIP
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Quick Nav Links (Desktop) */}
-          <nav className="hidden lg:flex items-center gap-6 text-xs font-bold text-slate-300">
-            <button onClick={() => scrollToSection('como-funciona')} className="hover:text-amber-400 transition-colors cursor-pointer">
+          {/* Center: Navigation Links (Never wrapping, single-line pills) */}
+          <nav className="hidden xl:flex items-center gap-1 bg-slate-900/60 p-1 rounded-xl border border-slate-800/80 text-xs font-semibold text-slate-300 shrink-0">
+            <button
+              onClick={() => scrollToSection('como-funciona')}
+              className="px-3 py-1.5 rounded-lg hover:text-amber-400 hover:bg-slate-800/60 transition-all whitespace-nowrap cursor-pointer"
+            >
               Como Funciona
             </button>
-            <button onClick={() => scrollToSection('beneficios')} className="hover:text-amber-400 transition-colors cursor-pointer">
+            <button
+              onClick={() => scrollToSection('beneficios')}
+              className="px-3 py-1.5 rounded-lg hover:text-amber-400 hover:bg-slate-800/60 transition-all whitespace-nowrap cursor-pointer"
+            >
               Benefícios
             </button>
-            <button onClick={() => scrollToSection('ofertas-vip')} className="hover:text-amber-400 transition-colors cursor-pointer flex items-center gap-1">
-              <Flame size={13} className="text-amber-400" /> Ofertas VIP
+            <button
+              onClick={() => scrollToSection('ofertas-vip')}
+              className="px-3 py-1.5 rounded-lg hover:text-amber-400 hover:bg-slate-800/60 transition-all whitespace-nowrap cursor-pointer flex items-center gap-1"
+            >
+              <Flame size={13} className="text-amber-400 shrink-0" /> Ofertas
             </button>
-            <button onClick={() => scrollToSection('niveis')} className="hover:text-amber-400 transition-colors cursor-pointer">
-              Níveis & Comparativo
+            <button
+              onClick={() => scrollToSection('niveis')}
+              className="px-3 py-1.5 rounded-lg hover:text-amber-400 hover:bg-slate-800/60 transition-all whitespace-nowrap cursor-pointer"
+            >
+              Níveis
             </button>
-            <button onClick={() => scrollToSection('simulador')} className="hover:text-amber-400 transition-colors cursor-pointer">
+            <button
+              onClick={() => scrollToSection('simulador')}
+              className="px-3 py-1.5 rounded-lg hover:text-amber-400 hover:bg-slate-800/60 transition-all whitespace-nowrap cursor-pointer"
+            >
               Simulador
             </button>
-            <button onClick={() => scrollToSection('faq')} className="hover:text-amber-400 transition-colors cursor-pointer">
+            <button
+              onClick={() => scrollToSection('faq')}
+              className="px-3 py-1.5 rounded-lg hover:text-amber-400 hover:bg-slate-800/60 transition-all whitespace-nowrap cursor-pointer"
+            >
               Dúvidas
             </button>
           </nav>
 
-          {/* User CTA Action */}
-          <div className="flex items-center gap-2.5">
+          {/* Right: Auth Action Buttons */}
+          <div className="flex items-center gap-2 shrink-0">
             {clientId ? (
               <button
                 onClick={goDashboard}
-                className="group flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 px-4 py-2 text-xs font-black text-slate-950 shadow-md shadow-amber-500/20 transition-all hover:brightness-110 active:scale-95 cursor-pointer"
+                className="group flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 px-3.5 py-2 text-xs font-black text-slate-950 shadow-md shadow-amber-500/20 transition-all hover:brightness-110 active:scale-95 cursor-pointer whitespace-nowrap shrink-0"
               >
-                <Trophy size={14} className="transition-transform group-hover:rotate-12" />
-                <span>Acessar Meu Painel VIP</span>
+                <Trophy size={14} className="transition-transform group-hover:rotate-12 shrink-0" />
+                <span>Painel VIP</span>
               </button>
             ) : (
               <>
                 <button
                   onClick={goLogin}
-                  className="hidden sm:flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-2 text-xs font-bold text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-800 hover:text-white cursor-pointer"
+                  className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs font-bold text-slate-200 transition-colors hover:border-slate-500 hover:bg-slate-800 hover:text-white cursor-pointer whitespace-nowrap shrink-0"
                 >
-                  <LogIn size={14} className="text-amber-400" />
-                  <span>Já Tenho Conta</span>
+                  <LogIn size={13} className="text-amber-400 shrink-0" />
+                  <span>Entrar</span>
                 </button>
                 <button
                   onClick={goRegister}
-                  className="relative group overflow-hidden flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 px-4 sm:px-5 py-2 sm:py-2.5 text-xs font-black text-slate-950 shadow-lg shadow-amber-500/25 transition-all hover:scale-[1.03] hover:shadow-amber-500/40 active:scale-95 cursor-pointer"
+                  className="relative group overflow-hidden flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 px-4 py-2 text-xs font-black text-slate-950 shadow-md shadow-amber-500/20 transition-all hover:scale-[1.02] hover:shadow-amber-500/30 active:scale-95 cursor-pointer whitespace-nowrap shrink-0"
                 >
-                  <UserPlus size={14} />
+                  <UserPlus size={14} className="shrink-0" />
                   <span>Cadastrar Grátis</span>
                   <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
                 </button>
@@ -543,31 +489,19 @@ export function PublicVIPPresentationPage({ onBack, clientId }: PublicVIPPresent
                 </button>
               </div>
 
-              {/* Social Proof Bar */}
-              <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-slate-800/80 text-xs text-slate-400">
-                <div className="flex -space-x-2 overflow-hidden">
-                  <img className="inline-block h-8 w-8 rounded-full ring-2 ring-slate-900 object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Membro VIP" />
-                  <img className="inline-block h-8 w-8 rounded-full ring-2 ring-slate-900 object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" alt="Membro VIP" />
-                  <img className="inline-block h-8 w-8 rounded-full ring-2 ring-slate-900 object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" alt="Membro VIP" />
-                  <img className="inline-block h-8 w-8 rounded-full ring-2 ring-slate-900 object-cover" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80" alt="Membro VIP" />
+              {/* Genuine Guarantee Badges */}
+              <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-800/80 text-xs text-slate-300">
+                <div className="flex items-center gap-2 bg-slate-900/60 border border-slate-800 px-3.5 py-2 rounded-xl">
+                  <ShieldCheck size={16} className="text-emerald-400 shrink-0" />
+                  <span className="font-semibold">Adesão 100% Gratuita</span>
                 </div>
-                <div>
-                  <div className="flex items-center gap-1 text-amber-400">
-                    <Star size={13} className="fill-amber-400" />
-                    <Star size={13} className="fill-amber-400" />
-                    <Star size={13} className="fill-amber-400" />
-                    <Star size={13} className="fill-amber-400" />
-                    <Star size={13} className="fill-amber-400" />
-                    <span className="font-black text-white ml-1">4.9/5</span>
-                  </div>
-                  <p className="text-[11px] text-slate-400">Mais de <strong>14.800 membros</strong> ativos e economizando</p>
+                <div className="flex items-center gap-2 bg-slate-900/60 border border-slate-800 px-3.5 py-2 rounded-xl">
+                  <Gift size={16} className="text-amber-400 shrink-0" />
+                  <span className="font-semibold">100 Pontos de Boas-Vindas</span>
                 </div>
-                <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-slate-800 text-emerald-400 text-[11px] font-semibold">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                  </span>
-                  +128 novos membros aderiram hoje
+                <div className="flex items-center gap-2 bg-slate-900/60 border border-slate-800 px-3.5 py-2 rounded-xl">
+                  <Coins size={16} className="text-sky-400 shrink-0" />
+                  <span className="font-semibold">Pontos Vitalícios</span>
                 </div>
               </div>
             </div>
@@ -608,12 +542,18 @@ export function PublicVIPPresentationPage({ onBack, clientId }: PublicVIPPresent
               </div>
 
               {/* The Physical Card Container */}
-              <div className="relative w-full max-w-sm">
+              <motion.div 
+                className="relative w-full max-w-sm"
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              >
                 
                 {/* Ambient glow behind card */}
-                <div
-                  className="absolute inset-0 rounded-3xl blur-2xl opacity-50 transition-all duration-500"
+                <motion.div
+                  className="absolute inset-0 rounded-3xl blur-2xl transition-colors duration-500"
                   style={{ backgroundColor: currentConfig.color }}
+                  animate={{ opacity: [0.4, 0.8, 0.4], scale: [0.95, 1.05, 0.95] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 />
 
                 {/* Stacked background card effect for depth */}
@@ -701,7 +641,7 @@ export function PublicVIPPresentationPage({ onBack, clientId }: PublicVIPPresent
                     Badge de nível: <strong className="text-amber-400">{currentConfig.badge}</strong> · Sem custos de emissão
                   </p>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
           </div>
@@ -827,90 +767,115 @@ export function PublicVIPPresentationPage({ onBack, clientId }: PublicVIPPresent
             <div>
               <div className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-amber-400 mb-2">
                 <Flame size={14} className="text-amber-400" />
-                Vantagem em Compras Reais
+                Vantagem em Produtos Reais da Loja
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-white">
-                Veja quanto você economiza como <span className="text-amber-400">Membro VIP</span>
+                Veja quanto você economiza como <span className="text-amber-400">{currentLevel.name} VIP</span>
               </h2>
               <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                Comparativo de preços reais com desconto exclusivo e pontuação turbinada.
+                Economia calculada em tempo real com o desconto de {currentLevel.discountPercentage}% OFF e multiplicador de {currentLevel.multiplier}× pontos.
               </p>
             </div>
             <button
-              onClick={goBack}
+              onClick={() => navigate(routes.marketplace.store.products())}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
             >
-              <span>Explorar todo o marketplace</span>
+              <span>Explorar todo o catálogo da loja</span>
               <ChevronRight size={14} />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {MARKETPLACE_DEALS_SHOWCASE.map((item) => {
-              const vipPrice = item.regularPrice * (1 - item.vipDiscountPct / 100);
-              const savings = item.regularPrice - vipPrice;
+          {loadingProducts ? (
+            <div className="flex h-48 items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-400 border-t-transparent" />
+            </div>
+          ) : realProducts.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {realProducts.map((item) => {
+                const regularPrice = Number(item.valor) || 0;
+                const discountPct = currentLevel.discountPercentage || 0;
+                const vipPrice = regularPrice * (1 - discountPct / 100);
+                const savings = regularPrice - vipPrice;
+                const pointsGain = Math.round(vipPrice * currentLevel.multiplier);
 
-              return (
-                <div
-                  key={item.id}
-                  className="group relative overflow-hidden rounded-2xl border border-slate-800 bg-[#0d1629] p-4 transition-all hover:border-amber-500/40 hover:shadow-xl hover:-translate-y-1"
-                >
-                  {/* Image & Tag */}
-                  <div className="relative h-44 w-full overflow-hidden rounded-xl bg-slate-900 mb-4">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute top-2 left-2 rounded-md bg-amber-400 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-950 shadow-md">
-                      {item.tag}
-                    </div>
-                    <div className="absolute top-2 right-2 rounded-md bg-black/70 backdrop-blur-md px-2 py-0.5 text-[10px] font-black text-emerald-400 border border-emerald-400/30">
-                      -{item.vipDiscountPct}% VIP
-                    </div>
-                  </div>
-
-                  {/* Category & Title */}
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400/90">{item.category}</p>
-                  <h3 className="text-sm font-bold text-white line-clamp-2 mt-1 min-h-[40px]">
-                    {item.name}
-                  </h3>
-
-                  {/* Price comparison */}
-                  <div className="mt-4 rounded-xl bg-slate-950/70 p-3 border border-slate-800/80">
-                    <div className="flex items-center justify-between text-[11px] text-slate-400">
-                      <span>Preço Comum:</span>
-                      <span className="line-through">
-                        {item.regularPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                      </span>
-                    </div>
-                    <div className="mt-1 flex items-baseline justify-between">
-                      <span className="text-xs font-black text-amber-400 uppercase">Preço VIP:</span>
-                      <span className="text-lg font-black text-white">
-                        {vipPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                      </span>
-                    </div>
-                    <div className="mt-1.5 flex items-center justify-between pt-1.5 border-t border-slate-800/60 text-[10px]">
-                      <span className="font-bold text-emerald-400">
-                        Economia: {savings.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                      </span>
-                      <span className="font-bold text-amber-400 flex items-center gap-0.5">
-                        <Coins size={11} /> +{item.pointsGain.toLocaleString('pt-BR')} pts
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* CTA */}
-                  <button
-                    onClick={goRegister}
-                    className="mt-3 w-full rounded-xl bg-slate-800 py-2.5 text-xs font-bold text-slate-200 transition-all hover:bg-amber-400 hover:text-slate-950 cursor-pointer"
+                return (
+                  <div
+                    key={item.id}
+                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-800 bg-[#0d1629] p-4 transition-all hover:border-amber-500/40 hover:shadow-xl hover:-translate-y-1"
                   >
-                    Quero Desconto VIP
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+                    <div>
+                      {/* Image & Tag */}
+                      <div className="relative h-44 w-full overflow-hidden rounded-xl bg-slate-900 mb-4 flex items-center justify-center">
+                        <img
+                          src={item.imagem_url || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=80'}
+                          alt={item.nome}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          onError={(e: any) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=80';
+                          }}
+                        />
+                        <div className="absolute top-2 left-2 rounded-md bg-amber-400 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-950 shadow-md">
+                          {item.categoria || 'Catálogo GSA'}
+                        </div>
+                        {discountPct > 0 && (
+                          <div className="absolute top-2 right-2 rounded-md bg-black/80 backdrop-blur-md px-2 py-0.5 text-[10px] font-black text-emerald-400 border border-emerald-400/30">
+                            -{discountPct}% VIP
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Title */}
+                      <h3 className="text-sm font-bold text-white line-clamp-2 mt-1 min-h-[40px]" title={item.nome}>
+                        {item.nome}
+                      </h3>
+
+                      {/* Price comparison */}
+                      <div className="mt-4 rounded-xl bg-slate-950/70 p-3 border border-slate-800/80">
+                        <div className="flex items-center justify-between text-[11px] text-slate-400">
+                          <span>Preço Normal:</span>
+                          <span className={discountPct > 0 ? 'line-through' : 'font-semibold text-slate-300'}>
+                            {regularPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex items-baseline justify-between">
+                          <span className="text-xs font-black text-amber-400 uppercase">Preço VIP:</span>
+                          <span className="text-lg font-black text-white">
+                            {vipPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </span>
+                        </div>
+                        <div className="mt-1.5 flex items-center justify-between pt-1.5 border-t border-slate-800/60 text-[10px]">
+                          <span className="font-bold text-emerald-400">
+                            Economia: {savings.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </span>
+                          <span className="font-bold text-amber-400 flex items-center gap-0.5">
+                            <Coins size={11} /> +{pointsGain.toLocaleString('pt-BR')} pts
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* CTA */}
+                    <button
+                      onClick={() => navigate(routes.marketplace.store.product(item.id))}
+                      className="mt-4 w-full rounded-xl bg-slate-800 py-2.5 text-xs font-bold text-slate-200 transition-all hover:bg-amber-400 hover:text-slate-950 cursor-pointer"
+                    >
+                      Ver Produto na Loja
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-slate-800 bg-[#0d1629] p-8 text-center">
+              <p className="text-sm text-slate-400">Visite nosso catálogo para conferir os produtos e descontos disponíveis para seu nível.</p>
+              <button
+                onClick={() => navigate(routes.marketplace.store.products())}
+                className="mt-4 rounded-xl bg-amber-400 px-6 py-2.5 text-xs font-black text-slate-950"
+              >
+                Abrir Catálogo
+              </button>
+            </div>
+          )}
 
           <div className="mt-8 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-4 border border-amber-500/20 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -1379,79 +1344,7 @@ export function PublicVIPPresentationPage({ onBack, clientId }: PublicVIPPresent
         </div>
       </section>
 
-      {/* ── DEPOIMENTOS DE MEMBROS (PROVA SOCIAL) ── */}
-      <section id="depoimentos" className="py-20 sm:py-28 bg-[#0a101d] border-y border-slate-800">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 mb-3">
-              <Star size={12} className="text-amber-400" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">
-                Experiências Reais
-              </span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-              O que dizem os membros do <span className="text-amber-400">GSA VIP</span>
-            </h2>
-            <p className="mt-3 text-sm sm:text-base text-slate-400 leading-relaxed">
-              Mais de 14.800 clientes aproveitam os multiplicadores, resgates e descontos todos os dias.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-            {TESTIMONIALS.map((t, i) => (
-              <div
-                key={i}
-                className="relative flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-800 bg-[#0d1629] p-7 shadow-xl transition-all hover:border-slate-700 hover:bg-[#101b33]"
-              >
-                <div>
-                  {/* Rating & Badge */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex text-amber-400">
-                      {[...Array(t.rating)].map((_, idx) => (
-                        <Star key={idx} size={15} className="fill-amber-400" />
-                      ))}
-                    </div>
-                    <span
-                      className="rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider"
-                      style={{ backgroundColor: `${t.levelColor}20`, color: t.levelColor }}
-                    >
-                      {t.level}
-                    </span>
-                  </div>
-
-                  <h3 className="text-base font-black text-white mb-2 leading-snug">
-                    "{t.headline}"
-                  </h3>
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    {t.quote}
-                  </p>
-                </div>
-
-                <div className="mt-6 pt-5 border-t border-slate-800 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={t.avatar}
-                      alt={t.name}
-                      className="h-10 w-10 rounded-full object-cover ring-2 ring-amber-400/30"
-                    />
-                    <div>
-                      <p className="text-xs font-black text-white">{t.name}</p>
-                      <p className="text-[10px] text-slate-400">{t.city}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400 block">
-                      {t.savings}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
 
       {/* ── FAQ INTERATIVO COM BUSCA E ABAS ── */}
       <section id="faq" className="py-20 sm:py-28 bg-[#070b14]">
@@ -1579,7 +1472,7 @@ export function PublicVIPPresentationPage({ onBack, clientId }: PublicVIPPresent
           </h2>
 
           <p className="mx-auto mt-4 max-w-xl text-sm sm:text-base text-slate-300 leading-relaxed">
-            Crie sua conta gratuitamente em menos de 1 minuto, ganhe seu bônus de 500 pontos e comece a economizar em todo o marketplace GSA hoje mesmo.
+            Crie sua conta gratuitamente em menos de 1 minuto, ganhe seu bônus de 100 pontos e comece a economizar em todo o marketplace GSA hoje mesmo.
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">

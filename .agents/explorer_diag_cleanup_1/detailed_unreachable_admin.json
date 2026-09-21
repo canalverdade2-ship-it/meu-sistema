@@ -1,0 +1,546 @@
+[
+  {
+    "file": "src/components/admin/AcessosModule.tsx",
+    "lines": 426,
+    "exports": [
+      "AcessosModule"
+    ],
+    "superDomain": "SD5: Governança & Configurações",
+    "importedBy": [],
+    "scriptMatches": [
+      "scripts/check-admin-panel-contracts.ts",
+      "scripts/check-provider-portal-security-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/AffiliateAdminModule.tsx",
+    "lines": 1648,
+    "exports": [
+      "AffiliateAdminModule"
+    ],
+    "superDomain": "SD3: Pessoas, RH & Prestadores",
+    "importedBy": [
+      "src/components/admin/FinanceiroModule.tsx"
+    ],
+    "scriptMatches": [
+      "scripts/check-affiliate-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/AreaVIPModule.tsx",
+    "lines": 1332,
+    "exports": [
+      "AreaVIPModule"
+    ],
+    "superDomain": "SD4: Contratos, Clientes & Jurídico",
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/CadastroModule.tsx",
+    "lines": 390,
+    "exports": [
+      "CadastroModule"
+    ],
+    "superDomain": "SD4: Contratos, Clientes & Jurídico",
+    "importedBy": [],
+    "scriptMatches": [
+      "scripts/check-admin-panel-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/CareersAdminModule.tsx",
+    "lines": 442,
+    "exports": [
+      "CareersAdminModule"
+    ],
+    "superDomain": "SD3: Pessoas, RH & Prestadores",
+    "importedBy": [],
+    "scriptMatches": [
+      "scripts/check-careers-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/ClientesModule.tsx",
+    "lines": 3165,
+    "exports": [
+      "ClientPendency",
+      "ClientesModule"
+    ],
+    "superDomain": "SD4: Contratos, Clientes & Jurídico",
+    "importedBy": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/CobrancaModule.tsx",
+    "lines": 1980,
+    "exports": [
+      "CobrancaModule"
+    ],
+    "superDomain": "SD2: Financeiro & Faturamento",
+    "importedBy": [
+      "src/components/admin/FinanceiroModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/ConfiguracoesModule.tsx",
+    "lines": 293,
+    "exports": [
+      "ConfiguracoesModule"
+    ],
+    "superDomain": "SD5: Governança & Configurações",
+    "importedBy": [],
+    "scriptMatches": [
+      "scripts/check-admin-panel-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/CreditoModule.tsx",
+    "lines": 2203,
+    "exports": [
+      "CreditoModule"
+    ],
+    "superDomain": "SD2: Financeiro & Faturamento",
+    "importedBy": [
+      "src/components/admin/VendasModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/CuponsLojaModule.tsx",
+    "lines": 742,
+    "exports": [
+      "CuponsLojaModule"
+    ],
+    "superDomain": "SD1: Operações & Orçamentos",
+    "importedBy": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/Dashboard.tsx",
+    "lines": 447,
+    "exports": [
+      "Dashboard"
+    ],
+    "superDomain": "SD5: Governança & Configurações",
+    "importedBy": [],
+    "scriptMatches": [
+      "scripts/check-admin-panel-contracts.ts",
+      "scripts/check-affiliate-contracts.ts",
+      "scripts/check-client-audience-portals.ts",
+      "scripts/check-collaborator-boundaries-runtime.cjs",
+      "scripts/check-collaborator-boundary-contracts.ts",
+      "scripts/check-provider-portal-security-contracts.ts",
+      "scripts/check-supplier-procurement-contracts.ts"
+    ],
+    "testMatches": [
+      "src/tests/governanca-super-domain.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ]
+  },
+  {
+    "file": "src/components/admin/EmpresaModule.tsx",
+    "lines": 196,
+    "exports": [
+      "EmpresaModule"
+    ],
+    "superDomain": "SD4: Contratos, Clientes & Jurídico",
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/EmprestimosModule.tsx",
+    "lines": 1173,
+    "exports": [
+      "EmprestimosModule"
+    ],
+    "superDomain": "SD2: Financeiro & Faturamento",
+    "importedBy": [
+      "src/components/admin/VendasModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/FinanceiroModule.tsx",
+    "lines": 3287,
+    "exports": [
+      "FinanceiroModule",
+      "FaturaDetails",
+      "getFaturaDetails"
+    ],
+    "superDomain": "SD2: Financeiro & Faturamento",
+    "importedBy": [
+      "src/components/admin/ClientesModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/FiscalModule.tsx",
+    "lines": 200,
+    "exports": [
+      "FiscalModule"
+    ],
+    "superDomain": "SD2: Financeiro & Faturamento",
+    "importedBy": [
+      "src/components/admin/FinanceiroModule.tsx"
+    ],
+    "scriptMatches": [
+      "scripts/check-admin-panel-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/IndicacoesModule.tsx",
+    "lines": 640,
+    "exports": [
+      "IndicacoesModule"
+    ],
+    "superDomain": "SD3: Pessoas, RH & Prestadores",
+    "importedBy": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/LojaTrocasModule.tsx",
+    "lines": 777,
+    "exports": [
+      "LojaTrocasModule"
+    ],
+    "superDomain": "SD1: Operações & Orçamentos",
+    "importedBy": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/OrcamentosModule.tsx",
+    "lines": 2729,
+    "exports": [
+      "OrcamentosModule"
+    ],
+    "superDomain": "SD1: Operações & Orçamentos",
+    "importedBy": [
+      "src/components/admin/VendasModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/OrdensServicoModule.tsx",
+    "lines": 1052,
+    "exports": [
+      "OrdensServicoModule",
+      "OSDetails"
+    ],
+    "superDomain": "SD1: Operações & Orçamentos",
+    "importedBy": [
+      "src/components/admin/ClientesModule.tsx",
+      "src/components/admin/VendasModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/PartnersAdminModule.tsx",
+    "lines": 322,
+    "exports": [
+      "PartnersAdminModule"
+    ],
+    "superDomain": "SD3: Pessoas, RH & Prestadores",
+    "importedBy": [],
+    "scriptMatches": [
+      "scripts/check-partners-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/PremiosModule.tsx",
+    "lines": 864,
+    "exports": [
+      "PremiosModule"
+    ],
+    "superDomain": "SD3: Pessoas, RH & Prestadores",
+    "importedBy": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/PrestadoresModule.tsx",
+    "lines": 142,
+    "exports": [
+      "PrestadoresModule"
+    ],
+    "superDomain": "SD3: Pessoas, RH & Prestadores",
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/PromoAnalytics.tsx",
+    "lines": 157,
+    "exports": [
+      "PromoAnalytics"
+    ],
+    "superDomain": "SD3: Pessoas, RH & Prestadores",
+    "importedBy": [
+      "src/components/admin/PromocaoQuantidadeModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/PromocaoQuantidadeForm.tsx",
+    "lines": 466,
+    "exports": [
+      "PromocaoQuantidadeForm"
+    ],
+    "superDomain": "SD3: Pessoas, RH & Prestadores",
+    "importedBy": [
+      "src/components/admin/PromocaoQuantidadeModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/PromocaoQuantidadeModule.tsx",
+    "lines": 191,
+    "exports": [
+      "PromocaoQuantidadeModule"
+    ],
+    "superDomain": "SD3: Pessoas, RH & Prestadores",
+    "importedBy": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/PromocoesModule.tsx",
+    "lines": 561,
+    "exports": [
+      "PromocoesModule"
+    ],
+    "superDomain": "SD3: Pessoas, RH & Prestadores",
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/PromoDetalhesModal.tsx",
+    "lines": 316,
+    "exports": [
+      "PromoDetalhesModal"
+    ],
+    "superDomain": "SD3: Pessoas, RH & Prestadores",
+    "importedBy": [
+      "src/components/admin/PromocoesModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/ProtectionAdminModule.tsx",
+    "lines": 347,
+    "exports": [
+      "ProtectionAdminModule"
+    ],
+    "superDomain": "SD4: Contratos, Clientes & Jurídico",
+    "importedBy": [],
+    "scriptMatches": [
+      "scripts/check-admin-panel-contracts.ts",
+      "scripts/check-protection-direct-quote-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/ReembolsosModule.tsx",
+    "lines": 830,
+    "exports": [
+      "ReembolsosModule"
+    ],
+    "superDomain": "SD2: Financeiro & Faturamento",
+    "importedBy": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/RelatoriosModule.tsx",
+    "lines": 141,
+    "exports": [
+      "RelatoriosModule"
+    ],
+    "superDomain": "SD5: Governança & Configurações",
+    "importedBy": [],
+    "scriptMatches": [
+      "scripts/check-admin-panel-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/SystemMonitorModule.tsx",
+    "lines": 671,
+    "exports": [
+      "SystemMonitorModule"
+    ],
+    "superDomain": "SD5: Governança & Configurações",
+    "importedBy": [],
+    "scriptMatches": [
+      "scripts/check-admin-panel-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/TicketsModule.tsx",
+    "lines": 793,
+    "exports": [
+      "TicketsModule"
+    ],
+    "superDomain": "SD4: Contratos, Clientes & Jurídico",
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/VendasModule.tsx",
+    "lines": 346,
+    "exports": [
+      "VendasModule"
+    ],
+    "superDomain": "SD1: Operações & Orçamentos",
+    "importedBy": [],
+    "scriptMatches": [
+      "scripts/check-admin-panel-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/VouchersModule.tsx",
+    "lines": 803,
+    "exports": [
+      "VouchersModule"
+    ],
+    "superDomain": "SD3: Pessoas, RH & Prestadores",
+    "importedBy": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/clientes/AdminClienteDocumentos.tsx",
+    "lines": 587,
+    "exports": [
+      "AdminClienteDocumentos"
+    ],
+    "superDomain": "Unknown",
+    "importedBy": [
+      "src/components/admin/ClientesModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/ecommerce/EcommerceAnalytics.tsx",
+    "lines": 123,
+    "exports": [
+      "EcommerceAnalytics"
+    ],
+    "superDomain": "Unknown",
+    "importedBy": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/ecommerce/PricingPanel.tsx",
+    "lines": 237,
+    "exports": [
+      "PricingPanel"
+    ],
+    "superDomain": "Unknown",
+    "importedBy": [
+      "src/components/admin/CadastroModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/prestadores/PrestadoresCadastro.tsx",
+    "lines": 1621,
+    "exports": [
+      "PrestadoresCadastro"
+    ],
+    "superDomain": "SD3: Pessoas, RH & Prestadores",
+    "importedBy": [
+      "src/components/admin/CadastroModule.tsx",
+      "src/components/admin/PrestadoresModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/prestadores/PrestadoresDemandas.tsx",
+    "lines": 3012,
+    "exports": [
+      "PrestadoresDemandas",
+      "AdminOSSuporteChat"
+    ],
+    "superDomain": "SD1: Operações & Orçamentos",
+    "importedBy": [
+      "src/components/admin/VendasModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/prestadores/PrestadoresFinanceiro.tsx",
+    "lines": 691,
+    "exports": [
+      "PrestadoresFinanceiro"
+    ],
+    "superDomain": "SD2: Financeiro & Faturamento",
+    "importedBy": [
+      "src/components/admin/FinanceiroModule.tsx",
+      "src/components/admin/PrestadoresModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/admin/products/ProductVariationsEditor.tsx",
+    "lines": 200,
+    "exports": [
+      "ProductVariationsEditor"
+    ],
+    "superDomain": "SD1: Operações & Orçamentos",
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  }
+]

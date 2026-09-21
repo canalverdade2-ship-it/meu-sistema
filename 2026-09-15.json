@@ -1,0 +1,51 @@
+{
+  "date": "2026-09-15",
+  "schedule_version_id": "896c3e00-05a1-48ad-8d1e-bb12cc6a45ef",
+  "state": "incomplete",
+  "programs": [
+    {
+      "block_id": "532ddef0-d5c1-40f3-bcdc-4423d0c2073b",
+      "program": "GSA Bem Viver",
+      "slug": "gsa-bem-viver",
+      "state": "validated",
+      "master": "/media/1/production/autonomous/2026-09-15/gsa-bem-viver-532ddef0-d5c1-40f3-bcdc-4423d0c2073b.mp4",
+      "duration": 580.0,
+      "media_id": "media-auto-2712832c-219b-4eb3-93ba-17a9311728c3"
+    },
+    {
+      "block_id": "64a32b69-696e-4e84-a316-c493fc4bceac",
+      "program": "GSA Cinema",
+      "slug": "gsa-cinema",
+      "state": "validated",
+      "master": "/media/1/production/autonomous/2026-09-15/gsa-cinema-64a32b69-696e-4e84-a316-c493fc4bceac.json",
+      "duration": 525.022,
+      "media_id": "media-auto-bc9fc39f-1b90-4d42-9730-90f5226e9d25"
+    },
+    {
+      "block_id": "493559c1-2408-43fc-84a4-974066b2e081",
+      "program": "GSA Mistérios",
+      "slug": "gsa-misterios",
+      "state": "validated",
+      "master": "/media/1/production/autonomous/2026-09-15/gsa-misterios-493559c1-2408-43fc-84a4-974066b2e081.json",
+      "duration": 545.022,
+      "media_id": "media-auto-1d1d5d5f-c28e-4a00-acb7-07bcb9adbaa4"
+    },
+    {
+      "block_id": "0f2f9292-a83b-462b-aab7-b09cbff27b8a",
+      "program": "GSA Tá na Rede",
+      "slug": "gsa-ta-na-rede",
+      "state": "pending"
+    },
+    {
+      "block_id": "6c377715-f532-4691-a846-75d8bc685679",
+      "program": "GSA Esportes",
+      "slug": "gsa-esportes",
+      "state": "validated",
+      "master": "/media/1/production/autonomous/2026-09-15/gsa-esportes-6c377715-f532-4691-a846-75d8bc685679.json",
+      "duration": 548.022,
+      "media_id": "media-auto-36cb8888-2a58-4450-b4a8-b5715936f390"
+    }
+  ],
+  "started_at": "2026-09-15T11:01:59.815006-03:00",
+  "updated_at": "2026-09-15T11:12:55.981420-03:00"
+}

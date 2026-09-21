@@ -14,9 +14,10 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { toast } from 'react-hot-toast';
-import { formatCurrency, formatDate, formatDateTime, generateUUID } from '../../../lib/utils';
+import { formatCurrency, formatDate, formatDateTime, generateUUID, maskCPF, maskCNPJ, maskPhone } from '../../../lib/utils';
 import { Modal } from '../../ui/Modal';
 import { callClientRpc } from '../../../lib/clientRpc';
+import { useRealtimeSubscription } from '../../../hooks/useRealtime';
 
 interface Saque {
   id: string;
@@ -81,25 +82,29 @@ export function SaquesList({
     }
   }, [shouldOpenModal]);
 
+  const fetchSaques = async () => {
+    const { data } = await supabase.from('saques').select('*').eq('cliente_id', clientId).order('data_solicitacao', { ascending: false });
+    if (data) setSaques(data);
+  };
+
   useEffect(() => {
-    let isMounted = true;
-    fetchSaques(isMounted);
-    const channel = supabase
-      .channel('client-saques-updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'saques', filter: `cliente_id=eq.${clientId}` }, () => {
-        fetchSaques(isMounted);
-      })
-      .subscribe();
-    return () => { 
-      isMounted = false;
-      supabase.removeChannel(channel); 
-    };
+    void fetchSaques();
   }, [clientId]);
 
-  const fetchSaques = async (isMounted = true) => {
-    const { data } = await supabase.from('saques').select('*').eq('cliente_id', clientId).order('data_solicitacao', { ascending: false });
-    if (data && isMounted) setSaques(data);
-  };
+  useRealtimeSubscription(
+    [
+      {
+        table: 'saques',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        debounceMs: 300,
+        onChange: () => {
+          fetchSaques();
+          onRefresh();
+        },
+      },
+    ],
+    [clientId]
+  );
 
     const isPixValid = () => {
       const { tipo_chave_pix, chave_pix } = formData;
@@ -145,8 +150,9 @@ export function SaquesList({
       try {
         const saqueResult = await callClientRpc<any>('gsa_client_request_withdrawal', {
           p_request_id: withdrawalRequestId.current,
-          p_tipo_chave_pix: formData.tipo_chave_pix,
+          p_valor: saldo,                          // valor total do saldo a sacar
           p_chave_pix: formData.chave_pix,
+          p_tipo_chave: formData.tipo_chave_pix,   // corrigido: p_tipo_chave (não p_tipo_chave_pix)
         });
 
         withdrawalRequestId.current = generateUUID();
@@ -294,9 +300,22 @@ export function SaquesList({
                           type="text" 
                           inputMode={['cpf', 'cnpj', 'telefone'].includes(formData.tipo_chave_pix) ? 'numeric' : 'text'}
                           pattern={['cpf', 'cnpj', 'telefone'].includes(formData.tipo_chave_pix) ? '[0-9]*' : undefined}
-                          placeholder="Informe sua chave PIX..." 
+                          placeholder={
+                            formData.tipo_chave_pix === 'cpf' ? '000.000.000-00' :
+                            formData.tipo_chave_pix === 'cnpj' ? '00.000.000/0000-00' :
+                            formData.tipo_chave_pix === 'telefone' ? '(00) 00000-0000' :
+                            formData.tipo_chave_pix === 'email' ? 'exemplo@email.com' :
+                            'Informe sua chave PIX...'
+                          }
+                          maxLength={formData.tipo_chave_pix === 'cpf' ? 14 : formData.tipo_chave_pix === 'cnpj' ? 18 : formData.tipo_chave_pix === 'telefone' ? 15 : undefined}
                           value={formData.chave_pix} 
-                          onChange={e => setFormData({...formData, chave_pix: e.target.value})} 
+                          onChange={e => {
+                            let val = e.target.value;
+                            if (formData.tipo_chave_pix === 'cpf') val = maskCPF(val);
+                            else if (formData.tipo_chave_pix === 'cnpj') val = maskCNPJ(val);
+                            else if (formData.tipo_chave_pix === 'telefone') val = maskPhone(val);
+                            setFormData({...formData, chave_pix: val});
+                          }} 
                           className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none" 
                         />
                       </div>

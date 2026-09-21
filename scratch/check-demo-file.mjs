@@ -1,0 +1,11 @@
+import { runSshScript } from './ssh2-run.mjs';
+
+async function main() {
+  const script = `
+ls -lh /opt/gsa-tv/cache/media/1/identity/vinhetas/vinheta-gsa-manha-news-clean-demo.mp4
+`;
+  const res = await runSshScript(script);
+  console.log(res.stdout);
+}
+
+main().catch(console.error);

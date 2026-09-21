@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+import { runSshScript } from './ssh2-run.mjs';
+const credentials=fs.readFileSync(new URL('../CREDENCIAIS_SISTEMA_GSA.md',import.meta.url),'utf8');
+const password=credentials.match(/Senha Master:\*\*\s*([^\r\n]+)/i)?.[1]?.trim();
+if(!password) throw new Error('Senha de infraestrutura não encontrada.');
+const pw=Buffer.from(password).toString('base64');
+const file='20260905003500_gsa_tv_add_hora_da_palavra.sql';
+const sql=fs.readFileSync(new URL('../supabase/migrations/'+file,import.meta.url),'utf8');
+const data=Buffer.from(sql).toString('base64');
+const sh=`set -euo pipefail\nprintf '%s' '${data}'|base64 -d >/tmp/${file}\ninstall -m 0644 /tmp/${file} /home/opc/gsa-ai/migrations/${file}\nexport PGPASSWORD=$(printf '%s' '${pw}'|base64 -d)\npsql -h 127.0.0.1 -p 5433 -U supabase_admin -d gsahub -X -v ON_ERROR_STOP=1 -f /tmp/${file}\nrm -f /tmp/${file}\npsql -h 127.0.0.1 -p 5433 -U supabase_admin -d gsahub -X -At -F '|' -c "select p.name,p.category,p.status,p.default_duration_s,s.weekday,s.start_time,s.end_time,s.content_mode from public.gsa_tv_programs p left join public.gsa_tv_weekly_grid_slots s on s.program_id=p.id and s.enabled where p.name='GSA Hora da Palavra' order by s.weekday,s.start_time; select 'enabled_slots',count(*) from public.gsa_tv_weekly_grid_slots where enabled; select 'archived_slots',count(*) from public.gsa_tv_weekly_grid_slots s join public.gsa_tv_programs p on p.id=s.program_id where s.enabled and p.status='archived';"`;
+const result=await runSshScript(sh,120000);process.stdout.write(result.stdout);if(result.stderr)process.stderr.write(result.stderr);

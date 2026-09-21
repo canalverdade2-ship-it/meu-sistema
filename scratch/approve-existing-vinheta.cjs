@@ -1,0 +1,5 @@
+const fs=require('fs');
+const file='/home/opc/gsa-ai/GSA_TV_MEMORY_CHANGELOG.md';
+const marker='vinheta-current-composition-user-approved-20260909';
+if(!fs.readFileSync(file,'utf8').includes(marker)) fs.appendFileSync(file,`\n## 2026-09-09 — Usuário aprovou manter a composição atual da vinheta\n\n- Após ser informado da sobreposição das assinaturas no fechamento, o usuário determinou: “Pode deixar desta forma mesmo esta vinheta”.\n- Decisão: manter a composição atual aprovada, sem substituir a cena final por cartão estático de logo. A ressalva editorial anterior deixa de bloquear esta composição por decisão expressa do usuário.\n- Referência 1080p30 já normalizada e verificada tecnicamente: /home/opc/gsa-ai/work/vinheta-flow-40s/final-1080-source/Vinheta_Oficial_GSA_TV_MASTER_CORRECTED_1080p30_40s.mp4, 40,000s, H.264 1920x1080/30 e AAC48k estéreo.\n- Variante local experimental vinheta-oficial-clean-1080p30.mp4 não foi aprovada, não deve substituir a referência e não foi publicada.\n- Esta entrada registra aprovação da composição, não comprova nova promoção ao playout.\n- ${marker}\n`);
+console.log('Aprovação da composição atual registrada.');

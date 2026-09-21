@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+const p='src/components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx';
+let s=fs.readFileSync(p,'utf8').replace(/\r\n/g,'\n');
+const old1=`      const { error } = await supabase\n        .from('orcamentos')\n        .update({\n          fase_negociacao: 'cliente',\n          proposta_admin_porcentagem: renegotiateValue\n        })\n        .eq('id', selectedOrcamento.id);\n\n      if (error) throw error;`;
+const new1=`      await callAdminRpc('gsa_admin_patch_marketplace_budget', {\n        p_orcamento_id: selectedOrcamento.id,\n        p_patch: { fase_negociacao: 'cliente', proposta_admin_porcentagem: renegotiateValue },\n      });`;
+if(!s.includes(old1)) throw new Error('renegotiation block missing');
+s=s.replace(old1,new1);
+const old2=`                  const { error } = await supabase\n                    .from('orcamentos')\n                    .update({\n                      documentos_solicitados: filtered,\n                      status: 'pendência documentos'\n                    })\n                    .eq('id', selectedOrcamento.id);\n\n                  if (error) throw error;`;
+const new2=`                  await callAdminRpc('gsa_admin_patch_marketplace_budget', {\n                    p_orcamento_id: selectedOrcamento.id,\n                    p_patch: { documentos_solicitados: filtered, status: 'pendência documentos' },\n                  });`;
+if(!s.includes(old2)) throw new Error('documents block missing');
+s=s.replace(old2,new2);
+fs.writeFileSync(p,s,'utf8');
+console.log('ORCAMENTOS_WORKSTATION_PATCHED');

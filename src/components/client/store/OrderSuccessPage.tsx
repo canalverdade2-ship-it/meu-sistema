@@ -11,6 +11,7 @@ export function OrderSuccessPage() {
 
   useEffect(() => {
     // Confete animation na montagem
+    let interval: any = null;
     try {
       const duration = 3 * 1000;
       const animationEnd = Date.now() + duration;
@@ -18,7 +19,7 @@ export function OrderSuccessPage() {
 
       const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
 
-      const interval: any = setInterval(function() {
+      interval = setInterval(function() {
         const timeLeft = animationEnd - Date.now();
 
         if (timeLeft <= 0) {
@@ -26,18 +27,22 @@ export function OrderSuccessPage() {
         }
 
         const particleCount = 50 * (timeLeft / duration);
-        (window as any).confetti({
+        (window as any).confetti?.({
           ...defaults,
           particleCount,
           origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
         });
-        (window as any).confetti({
+        (window as any).confetti?.({
           ...defaults,
           particleCount,
           origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
         });
       }, 250);
     } catch (e) {}
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, []);
 
   return (

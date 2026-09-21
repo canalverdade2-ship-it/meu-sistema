@@ -28,7 +28,6 @@ import { navigate } from '../../routing/navigationService';
 import { PublicHeader } from './final/PublicHeader';
 import { BrandJourneyPage } from './BrandJourneyPage';
 import { SystemsBudgetModal } from './SystemsBudgetModal';
-import { PrivacyPolicyDialog } from './PrivacyPolicyDialog';
 import {
   SystemsExamplesDialog,
   type SystemExampleCategory,
@@ -164,11 +163,12 @@ const engineering: Array<{
 
 export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
   const [budgetOpen, setBudgetOpen] = useState(false);
-  const [privacyOpen, setPrivacyOpen] = useState(false);
   const [activeSolution, setActiveSolution] = useState<SystemExampleCategory>('systems');
   const [selectedExample, setSelectedExample] = useState<SystemExampleCategory | null>(null);
   const [insightSelection, setInsightSelection] = useState<SystemsInsightSelection | null>(null);
-  const isBrandJourney = window.location.pathname.replace(/\/+$/, '') === '/empresa-do-zero-ao-digital';
+  const isBrandJourney = ['/empresa-do-zero-ao-digital', '/identidade-e-web-design'].includes(
+    window.location.pathname.replace(/\/+$/, '')
+  );
 
   if (isBrandJourney) {
     return (
@@ -485,7 +485,7 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
         <section className="border-t border-white/8 bg-[#07101b] px-4 py-7 sm:px-6 lg:px-8">
           <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-400">Sua empresa ainda precisa de nome, identidade visual e presença digital completa?</p>
-            <button type="button" onClick={() => navigate('/empresa-do-zero-ao-digital')} className="inline-flex items-center gap-2 text-sm font-black text-cyan-300 hover:text-cyan-200">Conhecer a jornada completa <ArrowRight className="h-4 w-4" /></button>
+            <button type="button" onClick={() => navigate('/identidade-e-web-design')} className="inline-flex items-center gap-2 text-sm font-black text-cyan-300 hover:text-cyan-200">Conhecer a jornada completa <ArrowRight className="h-4 w-4" /></button>
           </div>
         </section>
       </main>
@@ -495,8 +495,8 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
           <div><LogoGSA size="md" variant="light" /><p className="mt-3 text-sm text-slate-500">Produtos digitais planejados para funcionar e evoluir.</p></div>
           <div className="flex flex-wrap gap-x-5 gap-y-3 text-sm font-bold text-slate-400">
             <button type="button" onClick={onBack} className="hover:text-cyan-300">Início</button>
-            <button type="button" onClick={() => navigate('/empresa-do-zero-ao-digital')} className="hover:text-cyan-300">Construção de Marca</button>
-            <button type="button" onClick={() => setPrivacyOpen(true)} className="hover:text-cyan-300">Privacidade</button>
+            <button type="button" onClick={() => navigate('/identidade-e-web-design')} className="hover:text-cyan-300">Identidade e Web Design</button>
+            <button type="button" onClick={() => navigate('/privacidade')} className="hover:text-cyan-300">Privacidade</button>
             <button type="button" onClick={openWhatsApp} className="hover:text-cyan-300">Contato</button>
           </div>
         </div>
@@ -510,7 +510,6 @@ export function SystemsPageFinal({ onBack, onLogin }: SystemsPageFinalProps) {
       />
       <SystemsExamplesDialog category={selectedExample} onClose={() => setSelectedExample(null)} onRequestBudget={() => setBudgetOpen(true)} />
       <SystemsBudgetModal isOpen={budgetOpen} onClose={() => setBudgetOpen(false)} />
-      <PrivacyPolicyDialog isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
     </div>
   );
 }

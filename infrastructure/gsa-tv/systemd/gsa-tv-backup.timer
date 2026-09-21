@@ -1,0 +1,12 @@
+[Unit]
+Description=Daily backup schedule for GSA TV ffplayout
+
+[Timer]
+OnCalendar=*-*-* 03:20:00 America/Sao_Paulo
+Persistent=true
+RandomizedDelaySec=10m
+Unit=gsa-tv-backup.service
+
+[Install]
+WantedBy=timers.target
+

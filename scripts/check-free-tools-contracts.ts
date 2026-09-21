@@ -168,19 +168,19 @@ contains('src/components/public/FreeToolsSimpleCalculators.tsx', [
 
 contains('src/components/public/FreeToolsAdvancedCalculators.tsx', [
   /Modo Pro · cálculo avançado/i,
-  /Conferir no Meu INSS/i,
-  /Memória avançada da rescisão/i,
+  /Conferir extrato CNIS no Meu INSS/i,
+  /Memória detalhada de verbas/i,
   /ThirteenthPro/,
   /BenefitsPro/,
   /BpcPro/,
 ]);
 
 contains('src/components/public/FreeToolsAdditionalCalculators.tsx', [
-  /Estimativa proporcional do 13º salário/,
-  /Triagem detalhada de benefícios do INSS/,
-  /Triagem completa do BPC \/ LOAS/,
-  /Os dados são processados somente no navegador/,
-  /A carência está dispensada para todas as categorias/,
+  /Estimativa simples dos valores brutos do 13º salário/,
+  /Triagem de benefícios do INSS/,
+  /Triagem BPC \/ LOAS/,
+  /BENEFIT_OPTIONS/,
+  /BPC_INCOME_LIMIT_2026/,
 ]);
 
 contains('src/lib/freeToolsAdditionalCalculations.ts', [
@@ -211,7 +211,7 @@ contains('src/components/public/FreeToolsProEligibilityDialog.tsx', [
 ]);
 
 contains('src/lib/freeToolsProAccess.ts', [
-  /gsa-free-tools-pro/,
+  /gsa-free-tools/,
   /gsa_free_tools_visitor_token/,
   /client_has_paid_invoice/,
   /checkout_available/,
@@ -219,24 +219,17 @@ contains('src/lib/freeToolsProAccess.ts', [
   /'thirteenth'.*'benefits'.*'bpc'/,
 ]);
 
-contains('supabase/functions/gsa-free-tools-pro/index.ts', [
+contains('supabase/functions/gsa-free-tools/index.ts', [
   /https:\/\/api\.checkout\.infinitepay\.io\/links/,
   /https:\/\/api\.checkout\.infinitepay\.io\/payment_check/,
   /client_paid_invoice/,
   /client_has_paid_invoice/,
   /free_period/,
-  /allowedSources = \['payment', 'voucher'\]/,
+  /src = \['payment', 'voucher'\]/,
   /gsa_calculator_redeem_voucher_and_create_session_internal/,
   /create_checkout/,
   /verify_payment/,
   /'thirteenth'.*'benefits'.*'bpc'/,
-]);
-
-contains('supabase/functions/gsa-free-tools-pro-webhook/index.ts', [
-  /payment_check/,
-  /gsa_calculator_finalize_payment_internal/,
-  /await verifyAndFinalize/,
-  /return json\(400/,
 ]);
 
 contains('supabase/migrations/20260723233000_free_tools_pro_access.sql', [

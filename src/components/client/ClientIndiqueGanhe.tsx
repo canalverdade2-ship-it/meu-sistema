@@ -14,6 +14,7 @@ import {
 } from '../../utils/referralHelpers';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 export function ClientIndiqueGanhe({ 
   clientId,
@@ -96,42 +97,55 @@ export function ClientIndiqueGanhe({
     fetchIndicacoes();
     fetchCliente();
     fetchSettings();
+  }, [clientId, activeTab]);
 
-    const channel = supabase
-      .channel('indicacoes-updates')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
+  useRealtimeSubscription(
+    [
+      {
         table: 'indicacoes',
-        filter: `indicador_id=eq.${clientId}`
-      }, (payload) => {
-        fetchIndicacoes();
-        if (payload.new && selectedIndicacao && (payload.new as any).id === selectedIndicacao.id) {
-          setSelectedIndicacao(prev => prev ? { ...prev, ...payload.new } as Indicacao : null);
-        }
-      })
-      .subscribe();
+        filter: clientId ? `indicador_id=eq.${clientId}` : undefined,
+        debounceMs: 150,
+        onChange: fetchIndicacoes,
+        onPayload: (payload) => {
+          fetchIndicacoes();
+          if (payload.new && selectedIndicacao && (payload.new as any).id === selectedIndicacao.id) {
+            setSelectedIndicacao(prev => prev ? ({ ...prev, ...payload.new } as Indicacao) : null);
+          }
+        },
+      },
+      {
+        table: 'vouchers',
+        debounceMs: 150,
+        onChange: fetchIndicacoes,
+      },
+      {
+        table: 'clientes',
+        filter: clientId ? `id=eq.${clientId}` : undefined,
+        debounceMs: 150,
+        onChange: () => {
+          fetchCliente();
+          fetchIndicacoes();
+        },
+      },
+    ],
+    [clientId, activeTab, selectedIndicacao?.id]
+  );
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [clientId, activeTab, selectedIndicacao?.id]);
-
-  const fetchCliente = async () => {
+  async function fetchCliente() {
     try {
       const { data } = await supabase.from('clientes').select('*').eq('id', clientId).single();
       if (data) setCliente(data);
     } catch (e) { console.error("Erro capturado:", e); }
   };
 
-  const fetchSettings = async () => {
+  async function fetchSettings() {
     try {
       const s = await fetchReferralSettings();
       setSettings(s);
     } catch (e) { console.error("Erro capturado:", e); }
   };
 
-  const fetchIndicacoes = async () => {
+  async function fetchIndicacoes() {
     try {
       // 1. Cleanup expired indications (Lazy Cleanup)
       const today = new Date();
@@ -255,7 +269,7 @@ export function ClientIndiqueGanhe({
       const recompensaIndicadorTexto = formatIndicadorReward(settings);
       await createNotification(
         clientId,
-        'Indicação Registrada! 🤝',
+        'Indicação Registrada! 🎉',
         `Sua indicação para ${formData.indicado_nome} foi registrada! Você ganhará ${recompensaIndicadorTexto} após o pagamento da 1ª fatura.`,
         'vouchers'
       );

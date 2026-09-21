@@ -1,6 +1,6 @@
 import type React from 'react';
-import { useEffect, useState } from 'react';
-import { Copy, Loader2, Lock, ShieldAlert } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Copy, Loader2, Lock, MessageCircle, ShieldAlert, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Modal } from '../ui/Modal';
 import { PinInput } from '../ui/PinInput';
@@ -42,6 +42,13 @@ const emptyRegistration = {
   data_cadastro: new Date().toISOString().split('T')[0],
 };
 
+type ActiveChallenge = {
+  challengeId: string;
+  expiresIn: number;
+  destination: string;
+  formData: typeof emptyRegistration | null;
+};
+
 export function ClientAccessModal({ isOpen, initialMode = 'login', initialPersonType = 'pf', onClose, onLoginClient }: ClientAccessModalProps) {
   const [mode, setMode] = useState<ClientAccessMode>(initialMode);
   const [personType, setPersonType] = useState<PersonType>(initialPersonType);
@@ -62,6 +69,10 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', initialPerson
   const [voucherInput, setVoucherInput] = useState('');
   const [referralInfo, setReferralInfo] = useState<{ kind?: string; isDefaultCode?: boolean } | null>(null);
   const [registrationData, setRegistrationData] = useState(emptyRegistration);
+  // Estado para desafio WhatsApp ativo detectado pelo CPF
+  const [activeChallenge, setActiveChallenge] = useState<ActiveChallenge | null>(null);
+  const [checkingChallenge, setCheckingChallenge] = useState(false);
+  const lastCheckedDocRef = useRef('');
   const { settings, loading: settingsLoading } = usePublicRegistrationSettings(isOpen && mode === 'register');
 
   useEffect(() => {
@@ -81,13 +92,56 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', initialPerson
     setRegisterStage('voucher');
     setVoucherInput('');
     setReferralInfo(null);
+    setActiveChallenge(null);
+    lastCheckedDocRef.current = '';
   }, [initialMode, initialPersonType, isOpen]);
 
   useEffect(() => {
-    if (voucherTab === 'sem-indicacao' && settings.ativo && settings.codigo && !voucherInput) {
+    if (voucherTab === 'sem-indicacao' && settings.ativo && settings.codigo) {
       setVoucherInput(settings.codigo);
     }
-  }, [voucherTab, settings.ativo, settings.codigo, voucherInput]);
+  }, [voucherTab, settings.ativo, settings.codigo]);
+
+  // Detecção automática de desafio WhatsApp ativo ao digitar o CPF no formulário de cadastro
+  useEffect(() => {
+    if (mode !== 'register' || registerStage !== 'form') return;
+    const cleanDoc = documento.replace(/\D/g, '');
+    const expectedLength = personType === 'pf' ? 11 : 14;
+    if (cleanDoc.length !== expectedLength) return;
+    
+    // Só consulta se for matematicamente válido
+    if (personType === 'pf' && !validarCPF(cleanDoc)) return;
+    if (personType === 'pj' && !validarCNPJ(cleanDoc)) return;
+
+    if (lastCheckedDocRef.current === cleanDoc) return;
+
+    lastCheckedDocRef.current = cleanDoc;
+    setCheckingChallenge(true);
+
+    supabase.functions.invoke('gsa-auth-session', {
+      body: { action: 'check_provider_registration_code', payload: { documento: cleanDoc } },
+    }).then(({ data }) => {
+      if (data?.registered) {
+        toast(`Este ${personType === 'pf' ? 'CPF' : 'CNPJ'} já possui cadastro. Faça login para acessar.`, { icon: 'ℹ️' });
+        changeMode('login');
+        setDocumento(cleanDoc);
+        return;
+      }
+      if (data?.active && data?.challenge_id) {
+        setActiveChallenge({
+          challengeId: data.challenge_id,
+          expiresIn: Number(data.expires_in || 0),
+          destination: data.destination || 'WhatsApp cadastrado',
+          formData: data.form_data || null,
+        });
+      }
+    }).catch(() => {
+      // Falha silenciosa — o usuário pode continuar normalmente
+    }).finally(() => {
+      setCheckingChallenge(false);
+    });
+  }, [documento, personType, mode, registerStage]);
+
 
   const cleanDocument = () => documento.replace(/\D/g, '');
   const validDocumentLength = () => cleanDocument().length === (personType === 'pf' ? 11 : 14);
@@ -372,15 +426,15 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', initialPerson
       {mode === 'register' && registerStage === 'form' && (
         <form onSubmit={handleRegister} className="space-y-4">
           <PersonSelector value={personType} onChange={(value) => { setPersonType(value); setDocumento(''); }} />
-          <DocumentInput personType={personType} value={documento} onChange={setDocumento} validate />
+          <DocumentInput personType={personType} value={documento} onChange={setDocumento} validate loading={checkingChallenge} />
           <label className="grid gap-2 text-sm font-medium text-neutral-600">{personType === 'pf' ? 'Nome completo' : 'Razão social'}<input required name="nome" autoComplete="name" value={registrationData.nome} onChange={(event) => setRegistrationData({ ...registrationData, nome: event.target.value })} className="input-field" maxLength={180} /></label>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-sm font-medium text-neutral-600">E-mail<input type="email" required name="email" autoComplete="email" value={registrationData.email} onChange={(event) => setRegistrationData({ ...registrationData, email: event.target.value })} className="input-field" maxLength={254} /></label>
-            <label className="grid gap-2 text-sm font-medium text-neutral-600">Telefone<input required name="telefone" autoComplete="tel" value={registrationData.telefone} onChange={(event) => setRegistrationData({ ...registrationData, telefone: maskPhone(event.target.value) })} className="input-field" maxLength={15} /></label>
+            <label className="grid gap-2 text-sm font-medium text-neutral-600">Telefone<input required name="telefone" type="tel" inputMode="tel" autoComplete="tel" value={registrationData.telefone} onChange={(event) => setRegistrationData({ ...registrationData, telefone: maskPhone(event.target.value) })} className="input-field" maxLength={15} /></label>
           </div>
           <div className="grid grid-cols-[1fr_120px] gap-4">
-            <label className="grid gap-2 text-sm font-medium text-neutral-600">CEP<input required name="cep" autoComplete="postal-code" value={registrationData.cep} onChange={async (event) => { let value = event.target.value.replace(/\D/g, ''); if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, '$1-$2'); setRegistrationData((previous) => ({ ...previous, cep: value })); const raw = value.replace(/\D/g, ''); if (raw.length === 8) { const address = await consultarCEP(raw); if (address) setRegistrationData((previous) => ({ ...previous, endereco: address.logradouro, bairro: address.bairro, cidade: address.localidade, estado: address.uf })); } }} className="input-field" maxLength={9} /></label>
-            <label className="grid gap-2 text-sm font-medium text-neutral-600">Número<input required name="numero" autoComplete="address-line2" value={registrationData.numero} onChange={(event) => setRegistrationData({ ...registrationData, numero: event.target.value })} className="input-field" maxLength={20} /></label>
+            <label className="grid gap-2 text-sm font-medium text-neutral-600">CEP<input required name="cep" inputMode="numeric" autoComplete="postal-code" value={registrationData.cep} onChange={async (event) => { let value = event.target.value.replace(/\D/g, ''); if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, '$1-$2'); setRegistrationData((previous) => ({ ...previous, cep: value })); const raw = value.replace(/\D/g, ''); if (raw.length === 8) { const address = await consultarCEP(raw); if (address) setRegistrationData((previous) => ({ ...previous, endereco: address.logradouro, bairro: address.bairro, cidade: address.localidade, estado: address.uf })); } }} className="input-field" maxLength={9} /></label>
+            <label className="grid gap-2 text-sm font-medium text-neutral-600">Número<input required name="numero" inputMode="numeric" autoComplete="address-line2" value={registrationData.numero} onChange={(event) => setRegistrationData({ ...registrationData, numero: event.target.value })} className="input-field" maxLength={20} /></label>
           </div>
           <label className="grid gap-2 text-sm font-medium text-neutral-600">Endereço<input required name="endereco" autoComplete="street-address" value={registrationData.endereco} onChange={(event) => setRegistrationData({ ...registrationData, endereco: event.target.value })} className="input-field" maxLength={220} /></label>
           <div className="grid gap-4 sm:grid-cols-[1fr_1fr_90px]">
@@ -396,16 +450,89 @@ export function ClientAccessModal({ isOpen, initialMode = 'login', initialPerson
       {mode === 'register' && registerStage === 'whatsapp' && (
         <WhatsAppPinVerification
           initialPhone={registrationData.telefone}
+          documento={documento.replace(/\D/g, '')}
+          formData={registrationData as Record<string, unknown>}
+          initialChallengeId={activeChallenge?.challengeId}
+          initialTimeLeft={activeChallenge?.expiresIn}
           onVerified={(verifiedPhone) => {
             setRegistrationData({ ...registrationData, telefone: verifiedPhone });
+            setActiveChallenge(null);
             setRegisterStage('setup_pin');
           }}
-          onCancel={() => setRegisterStage('form')}
+          onCancel={() => { setActiveChallenge(null); setRegisterStage('form'); }}
         />
       )}
 
       {mode === 'register' && registerStage === 'setup_pin' && (
-        <SetupAccessPin onComplete={submitFinalRegistration} loading={loading} />
+        <SetupAccessPin 
+          onComplete={submitFinalRegistration} 
+          loading={loading} 
+          onSuccess={() => changeMode('login')}
+        />
+      )}
+
+      {/* Pop-up de desafio WhatsApp ativo detectado pelo CPF */}
+      {activeChallenge && registerStage === 'form' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="active-challenge-title">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-green-100 p-2 text-green-600">
+                  <MessageCircle className="h-6 w-6" />
+                </div>
+                <h3 id="active-challenge-title" className="text-lg font-black text-[#0d1724]">Cadastro em andamento</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveChallenge(null)}
+                className="rounded-lg p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700"
+                aria-label="Fechar"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <p className="mb-2 text-sm text-neutral-600">
+              Identificamos que você iniciou um cadastro recentemente. O código de verificação enviado para o WhatsApp <strong>{activeChallenge.destination}</strong> ainda está ativo.
+            </p>
+            {activeChallenge.expiresIn > 0 && (
+              <p className="mb-4 text-sm font-bold text-green-700">
+                Expira em {Math.floor(activeChallenge.expiresIn / 60).toString().padStart(2, '0')}:{(activeChallenge.expiresIn % 60).toString().padStart(2, '0')} minutos.
+              </p>
+            )}
+            {activeChallenge.formData && (
+              <div className="mb-4 rounded-xl bg-neutral-50 px-4 py-3 text-sm text-neutral-700">
+                <p className="font-bold">Dados salvos do cadastro anterior:</p>
+                <p className="mt-1 text-xs text-neutral-500 line-clamp-2">
+                  {[activeChallenge.formData.nome, activeChallenge.formData.email, activeChallenge.formData.telefone].filter(Boolean).join(' · ')}
+                </p>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => setActiveChallenge(null)}
+                className="btn-secondary flex-1 text-sm"
+              >
+                Iniciar novo cadastro
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  // Restaurar dados do formulário salvos, se existirem
+                  if (activeChallenge.formData) {
+                    setRegistrationData({ ...emptyRegistration, ...activeChallenge.formData });
+                  }
+                  setRegisterStage('whatsapp');
+                }}
+                className="btn-primary flex-1 text-sm"
+              >
+                Continuar verificação
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </Modal>
   );
@@ -415,7 +542,7 @@ function PersonSelector({ value, onChange }: { value: PersonType; onChange: (val
   return <div className="flex gap-2 rounded-lg bg-neutral-100 p-1" role="group" aria-label="Tipo de pessoa"><button type="button" aria-pressed={value === 'pf'} onClick={() => onChange('pf')} className={`flex-1 rounded-md py-2 text-sm ${value === 'pf' ? 'bg-white shadow' : 'text-neutral-500'}`}>CPF</button><button type="button" aria-pressed={value === 'pj'} onClick={() => onChange('pj')} className={`flex-1 rounded-md py-2 text-sm ${value === 'pj' ? 'bg-white shadow' : 'text-neutral-500'}`}>CNPJ</button></div>;
 }
 
-function DocumentInput({ personType, value, onChange, validate = false }: { personType: PersonType; value: string; onChange: (value: string) => void; validate?: boolean }) {
+function DocumentInput({ personType, value, onChange, validate = false, loading = false }: { personType: PersonType; value: string; onChange: (value: string) => void; validate?: boolean; loading?: boolean }) {
   const inputId = `client-document-${personType}`;
-  return <div><label htmlFor={inputId} className="mb-2 block text-sm font-medium text-neutral-600">{personType === 'pf' ? 'CPF' : 'CNPJ'}</label><input id={inputId} name="documento" autoComplete="off" type="text" inputMode="numeric" required value={value} onChange={(event) => onChange(personType === 'pf' ? maskCPF(event.target.value) : maskCNPJ(event.target.value))} onBlur={() => { if (!validate) return; const clean = value.replace(/\D/g, ''); if (clean && (personType === 'pf' ? !validarCPF(clean) : !validarCNPJ(clean))) { toast.error(`${personType === 'pf' ? 'CPF' : 'CNPJ'} inválido.`); onChange(''); } }} placeholder={personType === 'pf' ? '000.000.000-00' : '00.000.000/0000-00'} className="input-field" /></div>;
+  return <div><label htmlFor={inputId} className="mb-2 flex items-center justify-between text-sm font-medium text-neutral-600"><span>{personType === 'pf' ? 'CPF' : 'CNPJ'}</span>{loading && <span className="flex items-center gap-1 text-xs text-neutral-400"><Loader2 className="h-3 w-3 animate-spin" /> Consultando...</span>}</label><input id={inputId} name="documento" autoComplete="off" type="text" inputMode="numeric" required value={value} onChange={(event) => onChange(personType === 'pf' ? maskCPF(event.target.value) : maskCNPJ(event.target.value))} onBlur={() => { if (!validate) return; const clean = value.replace(/\D/g, ''); if (clean && (personType === 'pf' ? !validarCPF(clean) : !validarCNPJ(clean))) { toast.error(`${personType === 'pf' ? 'CPF' : 'CNPJ'} inválido.`); onChange(''); } }} placeholder={personType === 'pf' ? '000.000.000-00' : '00.000.000/0000-00'} className="input-field" /></div>;
 }

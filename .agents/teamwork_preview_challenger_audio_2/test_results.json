@@ -1,0 +1,907 @@
+{
+  "timestamp": "2026-09-04T20:02:07.180Z",
+  "inventory": {
+    "totalFiles": 230,
+    "byCategory": {
+      "news": 45,
+      "viral": 45,
+      "faith": 45,
+      "lifestyle": 45,
+      "sfx": 50
+    },
+    "corruptStubs": 0
+  },
+  "magicByteAudit": {
+    "passed": 230,
+    "failed": 0,
+    "failures": []
+  },
+  "sampledTracks": [
+    {
+      "index": 1,
+      "category": "news",
+      "filename": "gsa_news_025_scp-x5x_outer_thoughts_.mp3",
+      "selectionReason": "stratified_random_news",
+      "sizeBytes": 4323409,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 216.05875,
+        "bitRate": 160082,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "1.04"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.02876,
+        "midSeekMs": 0.01756,
+        "tailSeekMs": 0.01688
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 2,
+      "category": "news",
+      "filename": "gsa_news_031_the_ice_giants.mp3",
+      "selectionReason": "stratified_random_news",
+      "sizeBytes": 1897481,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 44.042449,
+        "bitRate": 344664,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "0.79"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.022081,
+        "midSeekMs": 0.025,
+        "tailSeekMs": 0.014
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 3,
+      "category": "news",
+      "filename": "gsa_news_016_grand_dark_waltz_allegro.mp3",
+      "selectionReason": "stratified_random_news",
+      "sizeBytes": 7709420,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 385.35835,
+        "bitRate": 160046,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "1.30"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.03016,
+        "midSeekMs": 0.01864,
+        "tailSeekMs": 0.01904
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 4,
+      "category": "news",
+      "filename": "gsa_news_038_realizer.mp3",
+      "selectionReason": "stratified_random_news",
+      "sizeBytes": 12410170,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 310.15185,
+        "bitRate": 320105,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "1.27"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.02776,
+        "midSeekMs": 0.015361,
+        "tailSeekMs": 0.01172
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 5,
+      "category": "news",
+      "filename": "gsa_news_035_gothamlicious.mp3",
+      "selectionReason": "stratified_random_news",
+      "sizeBytes": 2057350,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 48.039184,
+        "bitRate": 342611,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "0.77"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.0214,
+        "midSeekMs": 0.01204,
+        "tailSeekMs": 0.01084
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 6,
+      "category": "viral",
+      "filename": "gsa_viral_039_royal_coupling.mp3",
+      "selectionReason": "stratified_random_viral",
+      "sizeBytes": 5497154,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 134.034286,
+        "bitRate": 328104,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "0.96"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.02884,
+        "midSeekMs": 0.01428,
+        "tailSeekMs": 0.01244
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 7,
+      "category": "viral",
+      "filename": "gsa_viral_006_paradise_found.mp3",
+      "selectionReason": "stratified_random_viral",
+      "sizeBytes": 3751848,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 187.4808,
+        "bitRate": 160095,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "0.97"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.02736,
+        "midSeekMs": 0.02144,
+        "tailSeekMs": 0.01856
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 8,
+      "category": "viral",
+      "filename": "gsa_viral_011_starting_out_waltz_allegretto.mp3",
+      "selectionReason": "stratified_random_viral",
+      "sizeBytes": 4977016,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 248.73795,
+        "bitRate": 160072,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "1.02"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.029041,
+        "midSeekMs": 0.00992,
+        "tailSeekMs": 0.01516
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 9,
+      "category": "viral",
+      "filename": "gsa_viral_005_goblin_tinker_soldier_spy.mp3",
+      "selectionReason": "stratified_random_viral",
+      "sizeBytes": 2724203,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 136.09795,
+        "bitRate": 160131,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "0.89"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.02392,
+        "midSeekMs": 0.0114,
+        "tailSeekMs": 0.0126
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 10,
+      "category": "viral",
+      "filename": "gsa_viral_024_bleeping_demo.mp3",
+      "selectionReason": "stratified_random_viral",
+      "sizeBytes": 4277450,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 213.76,
+        "bitRate": 160084,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "1.01"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.025281,
+        "midSeekMs": 0.00948,
+        "tailSeekMs": 0.00992
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 11,
+      "category": "faith",
+      "filename": "gsa_faith_010_ancient_rite.mp3",
+      "selectionReason": "stratified_random_faith",
+      "sizeBytes": 4663306,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 113.2147,
+        "bitRate": 329519,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "0.91"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.021921,
+        "midSeekMs": 0.01092,
+        "tailSeekMs": 0.0104
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 12,
+      "category": "faith",
+      "filename": "gsa_faith_008_ether_vox.mp3",
+      "selectionReason": "stratified_random_faith",
+      "sizeBytes": 4123322,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 206.05385,
+        "bitRate": 160087,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "1.00"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.02112,
+        "midSeekMs": 0.0132,
+        "tailSeekMs": 0.0126
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 13,
+      "category": "faith",
+      "filename": "gsa_faith_032_river_flute.mp3",
+      "selectionReason": "stratified_random_faith",
+      "sizeBytes": 49126839,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 1228.068575,
+        "bitRate": 320026,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "2.76"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.023321,
+        "midSeekMs": 0.02032,
+        "tailSeekMs": 0.01364
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 14,
+      "category": "faith",
+      "filename": "gsa_faith_019_kalimba_relaxation_music.mp3",
+      "selectionReason": "stratified_random_faith",
+      "sizeBytes": 17257632,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 428.068578,
+        "bitRate": 322520,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "1.51"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.0276,
+        "midSeekMs": 0.01008,
+        "tailSeekMs": 0.010401
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 15,
+      "category": "faith",
+      "filename": "gsa_faith_013_deep_relaxation.mp3",
+      "selectionReason": "stratified_random_faith",
+      "sizeBytes": 122857035,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 3068.0555,
+        "bitRate": 320351,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "5.74"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.02372,
+        "midSeekMs": 0.01092,
+        "tailSeekMs": 0.0136
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 16,
+      "category": "lifestyle",
+      "filename": "gsa_lifestyle_045_district_four.mp3",
+      "selectionReason": "stratified_random_lifestyle",
+      "sizeBytes": 7945923,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 248.241656,
+        "bitRate": 256070,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "1.13"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.02788,
+        "midSeekMs": 0.011241,
+        "tailSeekMs": 0.0108
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 17,
+      "category": "lifestyle",
+      "filename": "gsa_lifestyle_015_bossa_antigua.mp3",
+      "selectionReason": "stratified_random_lifestyle",
+      "sizeBytes": 9069455,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 283.350219,
+        "bitRate": 256063,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "1.11"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.05772,
+        "midSeekMs": 0.01328,
+        "tailSeekMs": 0.01904
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 18,
+      "category": "lifestyle",
+      "filename": "gsa_lifestyle_016_backbay_lounge.mp3",
+      "selectionReason": "stratified_random_lifestyle",
+      "sizeBytes": 8531962,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 266.5535,
+        "bitRate": 256067,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "1.25"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.0264,
+        "midSeekMs": 0.01412,
+        "tailSeekMs": 0.01236
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 19,
+      "category": "lifestyle",
+      "filename": "gsa_lifestyle_018_robobozo.mp3",
+      "selectionReason": "stratified_random_lifestyle",
+      "sizeBytes": 6592621,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 205.949406,
+        "bitRate": 256087,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "1.03"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.024841,
+        "midSeekMs": 0.01108,
+        "tailSeekMs": 0.01228
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 20,
+      "category": "lifestyle",
+      "filename": "gsa_lifestyle_025_shaving_mirror.mp3",
+      "selectionReason": "stratified_random_lifestyle",
+      "sizeBytes": 6600975,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 206.210625,
+        "bitRate": 256086,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "1.00"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.0246,
+        "midSeekMs": 0.01104,
+        "tailSeekMs": 0.011481
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 21,
+      "category": "sfx",
+      "filename": "gsa_sfx_042_uisfx_level_up.mp3",
+      "selectionReason": "stratified_random_sfx",
+      "sizeBytes": 11536,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 1,
+        "duration": 1.410612,
+        "bitRate": 65424,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "0.70"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.01456,
+        "midSeekMs": 0.00276,
+        "tailSeekMs": 0.00248
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 22,
+      "category": "sfx",
+      "filename": "gsa_sfx_001_click1.wav",
+      "selectionReason": "stratified_random_sfx",
+      "sizeBytes": 18254,
+      "ffprobe": {
+        "passed": true,
+        "codec": "pcm_s16le",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 0.103039,
+        "bitRate": 1417249,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "0.68"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.02152,
+        "midSeekMs": 0.00348,
+        "tailSeekMs": 0.00284
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 23,
+      "category": "sfx",
+      "filename": "gsa_sfx_030_switch20.wav",
+      "selectionReason": "stratified_random_sfx",
+      "sizeBytes": 64334,
+      "ffprobe": {
+        "passed": true,
+        "codec": "pcm_s16le",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 0.364263,
+        "bitRate": 1412913,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "0.67"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.0236,
+        "midSeekMs": 0.00428,
+        "tailSeekMs": 0.005
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 24,
+      "category": "sfx",
+      "filename": "gsa_sfx_036_uisfx_achievement.mp3",
+      "selectionReason": "stratified_random_sfx",
+      "sizeBytes": 12581,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 1,
+        "duration": 1.541224,
+        "bitRate": 65303,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "0.70"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.016801,
+        "midSeekMs": 0.00288,
+        "tailSeekMs": 0.00248
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 25,
+      "category": "sfx",
+      "filename": "gsa_sfx_013_switch3.wav",
+      "selectionReason": "stratified_random_sfx",
+      "sizeBytes": 64846,
+      "ffprobe": {
+        "passed": true,
+        "codec": "pcm_s16le",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 0.367166,
+        "bitRate": 1412897,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "0.76"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.0236,
+        "midSeekMs": 0.00484,
+        "tailSeekMs": 0.0054
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 26,
+      "category": "sfx",
+      "filename": "gsa_sfx_044_uisfx_play.mp3",
+      "selectionReason": "adversarial_edge_smallest_size",
+      "sizeBytes": 5685,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 1,
+        "duration": 0.679184,
+        "bitRate": 66962,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "0.69"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.0254,
+        "midSeekMs": 0.00336,
+        "tailSeekMs": 0.00288
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 27,
+      "category": "faith",
+      "filename": "gsa_faith_014_wind_of_the_rainforest.mp3",
+      "selectionReason": "adversarial_edge_largest_size",
+      "sizeBytes": 141496976,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 3534.053856,
+        "bitRate": 320305,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "6.61"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.0236,
+        "midSeekMs": 0.01168,
+        "tailSeekMs": 0.01316
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 28,
+      "category": "sfx",
+      "filename": "gsa_sfx_003_click3.wav",
+      "selectionReason": "adversarial_edge_wav_format",
+      "sizeBytes": 15694,
+      "ffprobe": {
+        "passed": true,
+        "codec": "pcm_s16le",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 0.088526,
+        "bitRate": 1418250,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "0.66"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.0186,
+        "midSeekMs": 0.00364,
+        "tailSeekMs": 0.00308
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 29,
+      "category": "faith",
+      "filename": "gsa_faith_024_ebbs_and_flows.mp3",
+      "selectionReason": "adversarial_edge_longest_duration",
+      "sizeBytes": 141496968,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 3534.053856,
+        "bitRate": 320305,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "6.47"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.02992,
+        "midSeekMs": 0.017,
+        "tailSeekMs": 0.014721
+      },
+      "trackVerdict": "PASS"
+    },
+    {
+      "index": 30,
+      "category": "lifestyle",
+      "filename": "gsa_lifestyle_006_twisting_.mp3",
+      "selectionReason": "backfill_sample_30",
+      "sizeBytes": 10172873,
+      "ffprobe": {
+        "passed": true,
+        "codec": "mp3",
+        "sampleRate": 44100,
+        "channels": 2,
+        "duration": 317.831875,
+        "bitRate": 256056,
+        "error": null
+      },
+      "ffmpegDecode": {
+        "passed": true,
+        "exitCode": 0,
+        "stderr": "",
+        "durationSec": "1.22"
+      },
+      "bufferingBenchmark": {
+        "headerReadMs": 0.02512,
+        "midSeekMs": 0.01472,
+        "tailSeekMs": 0.01288
+      },
+      "trackVerdict": "PASS"
+    }
+  ],
+  "adversarialEdgeCases": [],
+  "bufferingBenchmarks": [],
+  "streamingHttpTests": [
+    {
+      "track": "news/gsa_news_025_scp-x5x_outer_thoughts_.mp3",
+      "headerRangePass": true,
+      "seekRangePass": true,
+      "statusCode": 206,
+      "headerContentRange": "bytes 0-65535/4323409",
+      "seekContentRange": "bytes 2161704-2194471/4323409",
+      "headerBytesReceived": 65536,
+      "seekBytesReceived": 32768
+    },
+    {
+      "track": "sfx/gsa_sfx_042_uisfx_level_up.mp3",
+      "headerRangePass": true,
+      "seekRangePass": true,
+      "statusCode": 206,
+      "headerContentRange": "bytes 0-11535/11536",
+      "seekContentRange": "bytes 5768-11535/11536",
+      "headerBytesReceived": 11536,
+      "seekBytesReceived": 5768
+    },
+    {
+      "track": "faith/gsa_faith_010_ancient_rite.mp3",
+      "headerRangePass": true,
+      "seekRangePass": true,
+      "statusCode": 206,
+      "headerContentRange": "bytes 0-65535/4663306",
+      "seekContentRange": "bytes 2331653-2364420/4663306",
+      "headerBytesReceived": 65536,
+      "seekBytesReceived": 32768
+    }
+  ],
+  "overallVerdict": "APPROVE",
+  "summary": {
+    "totalAudited": 30,
+    "passedCount": 30,
+    "failedCount": 0,
+    "passPercentage": "100.0%",
+    "inventoryCount": 230,
+    "corruptStubs": 0,
+    "magicBytesPassed": 230,
+    "magicBytesFailed": 0,
+    "httpStreamingPassed": true
+  }
+}

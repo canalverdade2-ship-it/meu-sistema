@@ -1,0 +1,16 @@
+GSA TV — Chamada da Grade V2 — QC PRELIMINAR
+Gerado em: 2026-09-06T21:44:21Z
+Master candidato: /home/opc/gsa-ai/work/chamada-grade-v2/output/GSA-TV-Chamada-Grade-V2-FINAL-CANDIDATE.mp4
+Visual candidato: /home/opc/gsa-ai/work/chamada-grade-v2/output/gsa-tv-chamada-grade-v2-visual-FINAL-CANDIDATE.mp4
+Duração alvo: 85.000 s
+Vídeo: H.264, 1920x1080, 30 fps
+Áudio: AAC, 48 kHz, estéreo
+Decode completo: OK
+Silêncio >=2s: nenhum
+Black frame >=0.30s: nenhum
+Freeze >=1.5s: nenhum
+Clicks/pops isolados sincronizados: 0
+Logos: 25 totais / 25 únicos / sem ausentes
+GSA Entrevista: ausente de config e locuções
+Contact sheet: /home/opc/gsa-ai/work/chamada-grade-v2/qc/FINAL-contact-2p5s.jpg
+Observação: promoção a FINAL depende da revisão visual humana desta contact sheet.

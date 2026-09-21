@@ -1,3 +1,5 @@
+import type { ProductVariationsPayload } from './productVariations';
+
 export type ImportSourceType = 'url' | 'excel' | 'pdf' | 'txt' | 'image';
 
 export interface ImportEvidence {
@@ -38,6 +40,7 @@ export interface ProductImportCandidate {
   confidence?: number;
   avisos: string[];
   imagens: string[];
+  variacoes?: ProductVariationsPayload;
   evidence?: ImportEvidence;
 
   // Added by user in review steps

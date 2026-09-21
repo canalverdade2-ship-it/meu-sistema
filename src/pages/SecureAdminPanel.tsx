@@ -18,6 +18,7 @@ interface SecureAdminPanelProps {
   colaboradorId?: string;
   colaboradorNome?: string;
   colaboradorModulos: string[];
+  isGsaTv?: boolean;
 }
 
 type SecureAdminContext = {
@@ -90,8 +91,15 @@ export function SecureAdminPanel(props: SecureAdminPanelProps) {
       setModules(nextModules);
       persistIdentity(nextName, nextModules);
       setChecking(false);
-    } catch (error) {
-      console.error('Falha ao atualizar permissões do colaborador:', error);
+    } catch (error: any) {
+      const errorMessage = String(error?.message || error || '');
+      const isTransientNetworkError = error instanceof TypeError || /failed to fetch|network|timeout|timed out|load failed/i.test(errorMessage);
+      if (isTransientNetworkError) {
+        console.warn('Falha temporária de rede ao validar permissões do colaborador:', error);
+        setChecking(false);
+        return;
+      }
+      console.warn('Falha ao validar sessão ou permissões do colaborador:', error);
       await revoke('Sua sessão ou suas permissões não puderam ser validadas. Entre novamente.');
     }
   }, [persistIdentity, props.adminType, props.colaboradorId, props.colaboradorModulos, props.colaboradorNome, revoke]);
@@ -107,15 +115,12 @@ export function SecureAdminPanel(props: SecureAdminPanelProps) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'colaborador_modulos', filter: `colaborador_id=eq.${props.colaboradorId}` }, refresh)
       .subscribe();
 
-    const interval = window.setInterval(refresh, 30_000);
-    const onVisibility = () => { if (document.visibilityState === 'visible') refresh(); };
+    const interval = window.setInterval(refresh, 60_000);
     const onRevoked = () => { void revoke('Sua sessão administrativa foi encerrada.'); };
-    document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('gsa-session-revoked', onRevoked);
 
     return () => {
       window.clearInterval(interval);
-      document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('gsa-session-revoked', onRevoked);
       supabase.removeChannel(channel).catch(console.error);
     };
@@ -141,6 +146,7 @@ export function SecureAdminPanel(props: SecureAdminPanelProps) {
         colaboradorId={props.colaboradorId}
         colaboradorNomeInicial={name}
         colaboradorModulos={modules}
+        isGsaTv={props.isGsaTv}
       />
     </Suspense>
   );

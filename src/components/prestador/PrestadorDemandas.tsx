@@ -138,7 +138,11 @@ export function PrestadorDemandas({ prestadorId, initialItemId }: { prestadorId:
       .select('id,tipo_evento,motivo,created_at')
       .eq('demanda_id', demandId)
       .order('created_at', { ascending: true });
-    if (!error) setHistory((data || []) as DemandHistory[]);
+    if (error) {
+      console.warn('[PrestadorDemandas] Erro ao carregar histórico da demanda:', error);
+      return;
+    }
+    setHistory((data || []) as DemandHistory[]);
   };
 
   useEffect(() => {
@@ -372,7 +376,7 @@ function StatusBadge({ status }: { status: DemandStatus }) {
 }
 
 function DemandActions({ demand, submitting, onAccept, onAction }: { demand: Demand; submitting: boolean; onAccept: () => void; onAction: (mode: Exclude<ActionMode, null>) => void }) {
-  const open = OPEN_STATUSES.includes(demand.status);
+  const open = (['aguardando_aceite', 'aberta', 'em_negociacao', 'contraproposta_admin_final'] as DemandStatus[]).includes(demand.status);
   const executable = demand.status === 'ativa' || demand.status === 'em_ajuste';
   return <div className="grid gap-2 border-t border-neutral-100 pt-5 sm:grid-cols-2 lg:grid-cols-3">{open && <><button disabled={submitting} onClick={onAccept} className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-black text-white disabled:opacity-50"><CheckCircle className="h-4 w-4" />Aceitar</button><button disabled={submitting} onClick={() => onAction('counteroffer')} className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-black text-white disabled:opacity-50"><DollarSign className="h-4 w-4" />Contraproposta</button><button disabled={submitting} onClick={() => onAction('reject')} className="flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-sm font-black text-white disabled:opacity-50"><XCircle className="h-4 w-4" />Recusar</button></>}{executable && <><button disabled={submitting} onClick={() => onAction('deliver')} className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-black text-white disabled:opacity-50"><Upload className="h-4 w-4" />Entregar</button><button disabled={submitting} onClick={() => onAction('return')} className="flex items-center justify-center gap-2 rounded-xl bg-orange-600 px-4 py-3 text-sm font-black text-white disabled:opacity-50"><ArrowRightLeft className="h-4 w-4" />Devolver</button></>}<button disabled={submitting} onClick={() => onAction('support')} className="flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-3 text-sm font-black text-white disabled:opacity-50"><MessageSquare className="h-4 w-4" />Suporte</button></div>;
 }

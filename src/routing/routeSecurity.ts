@@ -30,7 +30,7 @@ export function isRouteAllowed(
   if (area === 'public' && module === 'affiliates') {
     return isAffiliatePublicAccessRoute() || Boolean(session.clientId);
   }
-  if (area === 'advertiser') return Boolean(session.clientId) || Boolean(session.adminAuth);
+  if (area === 'advertiser') return true;
   if (area === 'admin') {
     if (!session.adminAuth) return false;
     return hasAdminModuleAccess(module, session.adminType || 'admin', session.colaboradorModulos || [], submodule);

@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingBag, Package, MapPin, Tag, Check, AlertCircle, Loader2, 
-  ChevronLeft, ChevronRight, ArrowRight, ArrowLeft, Coins, CreditCard, 
-  Wallet, Gift, Diamond, ShieldCheck, Lock, QrCode, FileText, 
-  Building, RefreshCw, CheckCircle2, Plus, Minus, Sparkles, ExternalLink,
-  Truck, Edit3, ChevronDown, ChevronUp
+  ArrowRight, ArrowLeft, Coins, CreditCard, 
+  Wallet, Gift, ShieldCheck, QrCode, FileText, 
+  CheckCircle2, Truck, Edit3, ChevronDown, ChevronUp
 } from 'lucide-react';
+import { fetchPublicVariantsByIds, applyVariantToProduct } from '../../../lib/productVariations';
 import { supabase } from '../../../lib/supabase';
+import { useRealtimeSubscription } from '../../../hooks/useRealtime';
 import { getProductDisplayCode } from '../../../lib/productIdentification';
 import { formatCurrency, generateUUID } from '../../../lib/utils';
 import { toast } from 'react-hot-toast';
@@ -29,6 +30,7 @@ type CartItem = {
   item_id: string;
   tipo: 'produto' | 'servico' | 'assinatura';
   quantidade: number;
+  produto_variante_id?: string | null;
   item_detalhes?: Produto | Servico | Assinatura | any;
   prazo_meses?: number;
   isBrinde?: boolean;
@@ -62,6 +64,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
 
   // Controle de exibição no mobile para não poluir tela
   const [expandMobileItems, setExpandMobileItems] = useState(false);
+
 
   // Ocultar WhatsApp flutuante no mobile durante o checkout
   useEffect(() => {
@@ -131,6 +134,11 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
   const [lojaPixDescontoPorcentagem, setLojaPixDescontoPorcentagem] = useState(5);
   const [lojaPixDescontoPermitirPontos, setLojaPixDescontoPermitirPontos] = useState(false);
   const [lojaPixDescontoPermitirCarteira, setLojaPixDescontoPermitirCarteira] = useState(false);
+
+  // Regenerar idempotência caso o carrinho mude para permitir novas tentativas após erros
+  useEffect(() => {
+    checkoutRequestId.current = generateUUID();
+  }, [cartItems, endereco, cupomDesconto, cupomEntrega, formaPagamento, numParcelas]);
   const [modalAlertaPix, setModalAlertaPix] = useState<{
     tipo: 'carteira' | 'pontos' | 'troca_pix';
     pendingValue?: number;
@@ -180,22 +188,29 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
         }
 
         const productIds = rawItems.filter((c: any) => c.tipo === 'produto').map((c: any) => c.item_id);
+        const variantIds = rawItems.filter((c: any) => c.tipo === 'produto' && c.produto_variante_id).map((c: any) => c.produto_variante_id);
         const serviceIds = rawItems.filter((c: any) => c.tipo === 'servico').map((c: any) => c.item_id);
         const subIds = rawItems.filter((c: any) => c.tipo === 'assinatura').map((c: any) => c.item_id);
 
-        const [prodRes, servRes, subRes] = await Promise.all([
+        const [prodRes, servRes, subRes, variants] = await Promise.all([
           productIds.length > 0 ? supabase.from('produtos').select('*').in('id', productIds) : Promise.resolve({ data: [] }),
           serviceIds.length > 0 ? supabase.from('servicos').select('*').in('id', serviceIds) : Promise.resolve({ data: [] }),
-          subIds.length > 0 ? supabase.from('assinaturas').select('*').in('id', subIds) : Promise.resolve({ data: [] })
+          subIds.length > 0 ? supabase.from('assinaturas').select('*').in('id', subIds) : Promise.resolve({ data: [] }),
+          variantIds.length > 0 ? fetchPublicVariantsByIds(variantIds) : Promise.resolve([])
         ]);
 
         const prodMap = new Map((prodRes.data || []).map((p: any) => [p.id, p]));
         const servMap = new Map((servRes.data || []).map((s: any) => [s.id, s]));
         const subMap = new Map((subRes.data || []).map((s: any) => [s.id, s]));
+        const varMap = new Map((variants || []).map((v: any) => [v.id, v]));
 
         const enriched: CartItem[] = rawItems.map((item: any) => {
           let detalhes = null;
-          if (item.tipo === 'produto') detalhes = prodMap.get(item.item_id);
+          if (item.tipo === 'produto') {
+            const baseProd = prodMap.get(item.item_id);
+            const variant = item.produto_variante_id ? varMap.get(item.produto_variante_id) : null;
+            detalhes = variant ? applyVariantToProduct(baseProd, variant) : baseProd;
+          }
           else if (item.tipo === 'servico') detalhes = servMap.get(item.item_id);
           else if (item.tipo === 'assinatura') detalhes = subMap.get(item.item_id);
 
@@ -205,6 +220,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
             tipo: item.tipo,
             quantidade: item.quantidade || 1,
             prazo_meses: item.prazo_meses,
+            produto_variante_id: item.produto_variante_id || null,
             item_detalhes: detalhes
           };
         }).filter(item => Boolean(item.item_detalhes));
@@ -230,22 +246,29 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
       }
 
       const productIds = items.filter((c: any) => c.tipo === 'produto').map((c: any) => c.item_id);
+      const variantIds = items.filter((c: any) => c.tipo === 'produto' && c.produto_variante_id).map((c: any) => c.produto_variante_id);
       const serviceIds = items.filter((c: any) => c.tipo === 'servico').map((c: any) => c.item_id);
       const subIds = items.filter((c: any) => c.tipo === 'assinatura').map((c: any) => c.item_id);
 
-      const [prodRes, servRes, subRes] = await Promise.all([
+      const [prodRes, servRes, subRes, variants] = await Promise.all([
         productIds.length > 0 ? supabase.from('produtos').select('*').in('id', productIds) : Promise.resolve({ data: [] }),
         serviceIds.length > 0 ? supabase.from('servicos').select('*').in('id', serviceIds) : Promise.resolve({ data: [] }),
-        subIds.length > 0 ? supabase.from('assinaturas').select('*').in('id', subIds) : Promise.resolve({ data: [] })
+        subIds.length > 0 ? supabase.from('assinaturas').select('*').in('id', subIds) : Promise.resolve({ data: [] }),
+        variantIds.length > 0 ? fetchPublicVariantsByIds(variantIds) : Promise.resolve([])
       ]);
 
       const prodMap = new Map((prodRes.data || []).map((p: any) => [p.id, p]));
       const servMap = new Map((servRes.data || []).map((s: any) => [s.id, s]));
       const subMap = new Map((subRes.data || []).map((s: any) => [s.id, s]));
+      const varMap = new Map((variants || []).map((v: any) => [v.id, v]));
 
       const enriched: CartItem[] = items.map((item: any) => {
         let detalhes = null;
-        if (item.tipo === 'produto') detalhes = prodMap.get(item.item_id);
+        if (item.tipo === 'produto') {
+          const baseProd = prodMap.get(item.item_id);
+          const variant = item.produto_variante_id ? varMap.get(item.produto_variante_id) : null;
+          detalhes = variant ? applyVariantToProduct(baseProd, variant) : baseProd;
+        }
         else if (item.tipo === 'servico') detalhes = servMap.get(item.item_id);
         else if (item.tipo === 'assinatura') detalhes = subMap.get(item.item_id);
 
@@ -255,6 +278,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
           tipo: item.tipo,
           quantidade: item.quantidade || 1,
           prazo_meses: item.prazo_meses,
+          produto_variante_id: item.produto_variante_id || null,
           item_detalhes: detalhes
         };
       });
@@ -334,7 +358,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
       if (clientId) {
         const { data: cliData, error: cliErr } = await supabase
           .from('clientes')
-          .select('id, nome, email, telefone, limite_credito_total, limite_credito_disponivel, opcao_pagamento_parcelado, max_parcelas, cep, endereco, numero, bairro, cidade, estado, saldo_carteira, saldo_pontos')
+          .select('id, nome, email, telefone, limite_credito_total, limite_credito_disponivel, limite_credito_bloqueado, opcao_pagamento_parcelado, max_parcelas, cep, endereco, numero, bairro, cidade, estado, saldo_carteira, saldo_pontos')
           .eq('id', clientId)
           .single();
           
@@ -345,23 +369,26 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
             telefone: cliData.telefone || '',
           });
           setLimiteCreditoTotal(Number(cliData.limite_credito_total || 0));
-          setLimiteCreditoDisponivel(Number(cliData.limite_credito_disponivel || 0));
+          setLimiteCreditoDisponivel(Math.max(Number(cliData.limite_credito_disponivel || 0) - Number(cliData.limite_credito_bloqueado || 0), 0));
           setSaldoCarteira(Number(cliData.saldo_carteira || 0));
           setSaldoPontos(Number(cliData.saldo_pontos || 0));
           setOpcaoPagamentoParcelado(cliData.opcao_pagamento_parcelado || false);
           setMaxParcelas(cliData.max_parcelas || 12);
 
           if (cliData.cep) {
-            setEndereco({
-              cep: cliData.cep || '',
-              logradouro: cliData.endereco || '',
-              bairro: cliData.bairro || '',
-              cidade: cliData.cidade || '',
-              uf: cliData.estado || '',
-              numero: cliData.numero || '',
-              complemento: ''
+            setIsEditingEndereco(prev => {
+              if (prev) return prev; // Se o usuário está editando ativamente, não sobrescreva
+              setEndereco({
+                cep: cliData.cep || '',
+                logradouro: cliData.endereco || '',
+                bairro: cliData.bairro || '',
+                cidade: cliData.cidade || '',
+                uf: cliData.estado || '',
+                numero: cliData.numero || '',
+                complemento: ''
+              });
+              return false;
             });
-            setIsEditingEndereco(false);
           } else {
             setIsEditingEndereco(true);
           }
@@ -448,6 +475,34 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
     fetchPromos();
     fetchDadosCredito();
   }, [clientId]);
+
+  useRealtimeSubscription(
+    [
+      {
+        table: 'loja_carrinhos',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: fetchCartItems,
+      },
+      {
+        table: 'clientes',
+        filter: clientId ? `id=eq.${clientId}` : undefined,
+        onChange: fetchDadosCredito,
+      },
+      {
+        table: 'produtos',
+        onChange: fetchCartItems,
+      },
+      {
+        table: 'cupons_loja',
+        onChange: () => {
+          if (isSelectorOpen && selectorCategory) {
+            fetchCoupons(selectorCategory);
+          }
+        },
+      },
+    ],
+    [clientId, isSelectorOpen, selectorCategory]
+  );
 
   // 4. Carregar cupons pendentes
   useEffect(() => {
@@ -950,11 +1005,23 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
 
     try {
       const productIds = cartItems.filter((c: any) => c.tipo === 'produto').map((c: any) => c.item_id);
+      const variantIds = cartItems.filter((c: any) => c.tipo === 'produto' && c.produto_variante_id).map((c: any) => c.produto_variante_id);
+      let dbVariants: any[] = [];
       if (productIds.length > 0) {
-        const { data: dbProducts } = await supabase
-          .from('produtos')
-          .select('id, valor, valor_promocional, desconto_ativo, desconto_fim_em, desconto_prazo_tipo, desconto_limite_quantidade_ativo, desconto_quantidade_limite, desconto_quantidade_utilizada, visivel_na_loja, estoque_disponivel, controle_estoque')
-          .in('id', productIds);
+        const [prodResult, varResult] = await Promise.all([
+          supabase
+            .from('produtos')
+            .select('id, valor, valor_promocional, desconto_ativo, desconto_fim_em, desconto_prazo_tipo, desconto_limite_quantidade_ativo, desconto_quantidade_limite, desconto_quantidade_utilizada, visivel_na_loja, estoque_disponivel, controle_estoque')
+            .in('id', productIds),
+          variantIds.length > 0
+            ? supabase
+                .from('produto_variantes')
+                .select('id, produto_id, valor, controle_estoque, estoque_disponivel, ativo')
+                .in('id', variantIds)
+            : Promise.resolve({ data: [] })
+        ]);
+        const dbProducts = prodResult.data;
+        dbVariants = varResult.data || [];
           
         if (dbProducts) {
           let priceChanged = false;
@@ -979,43 +1046,64 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
             }
           }
           if (priceChanged) {
-            toast.error('O preço de alguns produtos no seu carrinho foi atualizado. Recarregando...');
-            setTimeout(() => window.location.reload(), 2000);
+            toast.error('O preço de alguns produtos no seu carrinho foi atualizado.');
+            await fetchCartItems();
             return;
           }
         }
       }
 
-      const hasInvalidOrDeleted = cartItems.some((c: any) => 
-        !c.item_detalhes 
-        || (c.tipo === 'produto' && c.item_detalhes?.controle_estoque && (c.item_detalhes?.estoque_disponivel <= 0))
-      );
+      const hasInvalidOrDeleted = cartItems.some((c: any) => {
+        if (!c.item_detalhes) return true;
+        if (c.tipo !== 'produto') return false;
+        if (c.produto_variante_id) {
+          const dbVar = dbVariants.find((v: any) => v.id === c.produto_variante_id);
+          if (dbVar) {
+            if (dbVar.ativo === false) return true;
+            if (dbVar.controle_estoque && Number(dbVar.estoque_disponivel || 0) <= 0) return true;
+            return false;
+          }
+        }
+        return c.item_detalhes?.controle_estoque && (Number(c.item_detalhes?.estoque_disponivel || 0) <= 0);
+      });
       if (hasInvalidOrDeleted) {
         toast.error('Remova os produtos excluídos ou esgotados do carrinho antes de finalizar.');
         return;
       }
 
-      const itemSemEstoqueSuficiente = cartItems.find((c: any) => (
-        c.tipo === 'produto'
-        && c.item_detalhes?.controle_estoque
-        && Number(c.quantidade || 0) > Number(c.item_detalhes?.estoque_disponivel || 0)
-      ));
+      const itemSemEstoqueSuficiente = cartItems.find((c: any) => {
+        if (c.tipo !== 'produto') return false;
+        if (c.produto_variante_id) {
+          const dbVar = dbVariants.find((v: any) => v.id === c.produto_variante_id);
+          if (dbVar && dbVar.controle_estoque) {
+            return Number(c.quantidade || 0) > Number(dbVar.estoque_disponivel || 0);
+          }
+        }
+        return c.item_detalhes?.controle_estoque && Number(c.quantidade || 0) > Number(c.item_detalhes?.estoque_disponivel || 0);
+      });
       if (itemSemEstoqueSuficiente) {
+        let stockRestante = Number(itemSemEstoqueSuficiente.item_detalhes?.estoque_disponivel || 0);
+        if (itemSemEstoqueSuficiente.produto_variante_id) {
+          const dbVar = dbVariants.find((v: any) => v.id === itemSemEstoqueSuficiente.produto_variante_id);
+          if (dbVar && dbVar.controle_estoque) {
+            stockRestante = Number(dbVar.estoque_disponivel || 0);
+          }
+        }
         toast.error(
           `Estoque insuficiente para "${itemSemEstoqueSuficiente.item_detalhes?.nome || 'um produto'}": `
-          + `restam ${Number(itemSemEstoqueSuficiente.item_detalhes?.estoque_disponivel || 0)} unidade(s).`
+          + `restam ${stockRestante} unidade(s).`
         );
         return;
       }
 
       const { data: freshCli, error: freshErr } = await supabase
         .from('clientes')
-        .select('limite_credito_disponivel, saldo_carteira, saldo_pontos')
+        .select('limite_credito_disponivel, limite_credito_bloqueado, saldo_carteira, saldo_pontos')
         .eq('id', clientId)
         .single();
       if (freshErr) throw freshErr;
 
-      const freshLimite = Number(freshCli?.limite_credito_disponivel || 0);
+      const freshLimite = Math.max(Number(freshCli?.limite_credito_disponivel || 0) - Number(freshCli?.limite_credito_bloqueado || 0), 0);
       const freshCarteira = Number(freshCli?.saldo_carteira || 0);
       const freshPontos = Number(freshCli?.saldo_pontos || 0);
 
@@ -1051,6 +1139,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
             item_id: item.item_id,
             tipo: item.tipo,
             quantidade: item.quantidade,
+            ...(item.tipo === 'produto' ? { variante_id: item.produto_variante_id || null } : {}),
             ...(item.tipo === 'assinatura' ? { prazo_meses: item.prazo_meses || 1 } : {}),
           })),
           forma_pagamento: formaPagamento === 'credito_loja' ? 'credito_loja' : 'outros',
@@ -1072,16 +1161,17 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
           orcamentoId: orcamentoId,
           codigoOrcamento: codigoOrcamento,
           clienteId: clientId,
-          valorLiquido: totalHojeFinal,
           clienteNome: clienteInfo.nome,
           clienteEmail: clienteInfo.email,
           clienteTelefone: clienteInfo.telefone,
         });
 
+        if (!checkoutInfo.success) throw new Error(checkoutInfo.error || 'Não foi possível gerar a cobrança.');
+
         setPixModalData({
           orderId: orcamentoId,
           orderCode: codigoOrcamento,
-          total: totalHojeFinal,
+          total: checkoutInfo.total ?? totalHojeFinal,
           pixCode: checkoutInfo.pixCode || '',
           qrCodeUrl: checkoutInfo.qrCodeUrl || '',
           checkoutUrl: checkoutInfo.link,
@@ -1096,11 +1186,12 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
           orcamentoId: orcamentoId,
           codigoOrcamento: codigoOrcamento,
           clienteId: clientId,
-          valorLiquido: totalHojeFinal,
           clienteNome: clienteInfo.nome,
           clienteEmail: clienteInfo.email,
           clienteTelefone: clienteInfo.telefone,
         });
+
+        if (!checkoutInfo.success) throw new Error(checkoutInfo.error || 'Não foi possível gerar a cobrança.');
 
         checkoutRequestId.current = generateUUID();
         localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
@@ -1149,6 +1240,11 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
         ? 'Um dos produtos do carrinho saiu do catálogo. Remova-o antes de concluir a compra.'
         : raw || 'Falha ao processar compra. Tente novamente.';
       toast.error(friendly);
+      try {
+        await fetchCartItems();
+      } catch (cartErr) {
+        console.error('[CheckoutPage] Erro ao atualizar carrinho após falha no RPC:', cartErr);
+      }
     } finally {
       setIsSubmitting(false);
       isSubmittingRef.current = false;
@@ -1666,12 +1762,13 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                             {usarPontos && (
                               <div className="space-y-2.5 pt-2">
                                 <div className="flex items-center gap-2">
-                                  <input 
+                                  <input  
                                     type="number" 
                                     value={pontosAplicados || ''} 
                                     min="0"
                                     max={maxPontosValidos}
-                                    onChange={e => handlePontosChange(parseInt(e.target.value) || 0)}
+                                    inputMode="numeric"
+onChange={(e) => handlePontosChange(parseInt(e.target.value) || 0)}
                                     className="flex-1 rounded-xl border border-purple-400/40 bg-white px-3.5 py-2 text-xs font-black text-neutral-900 focus:outline-none" 
                                     placeholder="Ex: 500"
                                   />
@@ -1726,13 +1823,14 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
                             {usarSaldoCarteira && (
                               <div className="space-y-2.5 pt-2">
                                 <div className="flex items-center gap-2">
-                                  <input 
+                                  <input  
                                     type="number" 
                                     value={saldoCarteiraAplicado ? Number(saldoCarteiraAplicado.toFixed(2)) : ''} 
                                     min="0"
                                     max={maxSaldoValido}
                                     step="0.01"
-                                    onChange={e => handleSaldoCarteiraChange(parseFloat(e.target.value) || 0)}
+                                    inputMode="numeric"
+onChange={(e) => handleSaldoCarteiraChange(parseFloat(e.target.value) || 0)}
                                     className="flex-1 rounded-xl border border-emerald-400/40 bg-white px-3.5 py-2 text-xs font-black text-neutral-900 focus:outline-none" 
                                     placeholder="Ex: 50.00"
                                   />

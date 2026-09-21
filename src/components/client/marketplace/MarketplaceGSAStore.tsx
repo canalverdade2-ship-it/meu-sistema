@@ -1,46 +1,51 @@
-import { MarketplaceHome } from './MarketplaceHome';
-import { EcommerceHome } from '../store/EcommerceHome';
-import { ProductPage } from '../store/ProductPage';
-import { OrderSuccessPage } from '../store/OrderSuccessPage';
-import { CheckoutPage } from '../store/CheckoutPage';
-import { PurchasesPage } from '../store/PurchasesPage';
-import { WishlistPage } from '../store/WishlistPage';
-import { VaquinhaPublicPage } from '../store/VaquinhaPublicPage';
-import { StoreHub } from '../StoreHub';
-import { ClientGSAStore } from '../ClientGSAStore';
-import { EcommerceHeader } from '../store/EcommerceHeader';
-import { BlogHome } from '../store/BlogHome';
-import { BlogPostPage } from '../store/BlogPostPage';
-import { ClassifiedsHubPage } from './ClassifiedsHubPage';
+
+import React, { Suspense } from 'react';
 import { useAppLocation } from '../../../routing/useAppLocation';
 import { routes } from '../../../routing/routeCatalog';
 import { navigate } from '../../../routing/navigationService';
 
-import { TravelHubMenu } from './travel/TravelHubMenu';
-import { TravelOffersLandingPage } from './travel/TravelOffersLandingPage';
-import { TravelCategoryPage } from './travel/TravelCategoryPage';
-import { TravelPackageDetailPage } from './travel/TravelPackageDetailPage';
-import { TravelQuoteRequestPage } from './travel/TravelQuoteRequestPage';
-import { TravelReservationPage } from './travel/TravelReservationPage';
-import { MyTripsPage } from './travel/MyTripsPage';
-import { TravelProposalsPage } from './travel/TravelProposalsPage';
-import { TravelCancellationsPage } from './travel/TravelCancellationsPage';
-import { TravelSupportPage } from './travel/TravelSupportPage';
+const EcommerceHome = React.lazy(() => import('../store/EcommerceHome').then(m => ({ default: m.EcommerceHome })));
+const ProductPage = React.lazy(() => import('../store/ProductPage').then(m => ({ default: m.ProductPage })));
+const OrderSuccessPage = React.lazy(() => import('../store/OrderSuccessPage').then(m => ({ default: m.OrderSuccessPage })));
+const CheckoutPage = React.lazy(() => import('../store/CheckoutPage').then(m => ({ default: m.CheckoutPage })));
+const PurchasesPage = React.lazy(() => import('../store/PurchasesPage').then(m => ({ default: m.PurchasesPage })));
+const WishlistPage = React.lazy(() => import('../store/WishlistPage').then(m => ({ default: m.WishlistPage })));
+const CouponsPage = React.lazy(() => import('../store/CouponsPage').then(m => ({ default: m.CouponsPage })));
+const PromotionsPage = React.lazy(() => import('../store/PromotionsPage').then(m => ({ default: m.PromotionsPage })));
+const VaquinhaPublicPage = React.lazy(() => import('../store/VaquinhaPublicPage').then(m => ({ default: m.VaquinhaPublicPage })));
+const StoreHub = React.lazy(() => import('../StoreHub').then(m => ({ default: m.StoreHub })));
+const ClientGSAStore = React.lazy(() => import('../ClientGSAStore').then(m => ({ default: m.ClientGSAStore })));
+const EcommerceHeader = React.lazy(() => import('../store/EcommerceHeader').then(m => ({ default: m.EcommerceHeader })));
+const BlogHome = React.lazy(() => import('../store/BlogHome').then(m => ({ default: m.BlogHome })));
+const BlogPostPage = React.lazy(() => import('../store/BlogPostPage').then(m => ({ default: m.BlogPostPage })));
 
-import { ClassifiedDetailPage } from './classifieds/ClassifiedDetailPage';
-import { RealEstateMarketplacePage } from './classifieds/RealEstateMarketplacePage';
-import { VehiclesMarketplacePage } from './classifieds/VehiclesMarketplacePage';
-import { GeneralClassifiedsPage } from './classifieds/GeneralClassifiedsPage';
-import { MyClassifiedsPage } from './classifieds/MyClassifiedsPage';
-import { CreateListingWizard } from './classifieds/CreateListingWizard';
-import { MyNegotiationsPage } from './classifieds/MyNegotiationsPage';
-import { ClassifiedsClientDashboard } from './classifieds/ClassifiedsClientDashboard';
-import { MyClassifiedSalesPage } from './classifieds/MyClassifiedSalesPage';
-import { MyClassifiedCommissionsPage } from './classifieds/MyClassifiedCommissionsPage';
-import { HealthMarketplaceLandingPage } from './protection/HealthMarketplaceLandingPage';
-import { InsuranceMarketplaceLandingPage } from './protection/InsuranceMarketplaceLandingPage';
-import { ProtectionMarketplace } from './protection/ProtectionMarketplace';
-import { PublicVIPPresentationPage } from '../../public/PublicVIPPresentationPage';
+const ClassifiedsHubPage = React.lazy(() => import('./ClassifiedsHubPage').then(m => ({ default: m.ClassifiedsHubPage })));
+
+const TravelHubMenu = React.lazy(() => import('./travel/TravelHubMenu').then(m => ({ default: m.TravelHubMenu })));
+const TravelOffersLandingPage = React.lazy(() => import('./travel/TravelOffersLandingPage').then(m => ({ default: m.TravelOffersLandingPage })));
+const TravelCategoryPage = React.lazy(() => import('./travel/TravelCategoryPage').then(m => ({ default: m.TravelCategoryPage })));
+const TravelPackageDetailPage = React.lazy(() => import('./travel/TravelPackageDetailPage').then(m => ({ default: m.TravelPackageDetailPage })));
+const TravelQuoteRequestPage = React.lazy(() => import('./travel/TravelQuoteRequestPage').then(m => ({ default: m.TravelQuoteRequestPage })));
+const TravelReservationPage = React.lazy(() => import('./travel/TravelReservationPage').then(m => ({ default: m.TravelReservationPage })));
+const MyTripsPage = React.lazy(() => import('./travel/MyTripsPage').then(m => ({ default: m.MyTripsPage })));
+const TravelProposalsPage = React.lazy(() => import('./travel/TravelProposalsPage').then(m => ({ default: m.TravelProposalsPage })));
+const TravelCancellationsPage = React.lazy(() => import('./travel/TravelCancellationsPage').then(m => ({ default: m.TravelCancellationsPage })));
+const TravelSupportPage = React.lazy(() => import('./travel/TravelSupportPage').then(m => ({ default: m.TravelSupportPage })));
+
+const ClassifiedDetailPage = React.lazy(() => import('./classifieds/ClassifiedDetailPage').then(m => ({ default: m.ClassifiedDetailPage })));
+const RealEstateMarketplacePage = React.lazy(() => import('./classifieds/RealEstateMarketplacePage').then(m => ({ default: m.RealEstateMarketplacePage })));
+const VehiclesMarketplacePage = React.lazy(() => import('./classifieds/VehiclesMarketplacePage').then(m => ({ default: m.VehiclesMarketplacePage })));
+const GeneralClassifiedsPage = React.lazy(() => import('./classifieds/GeneralClassifiedsPage').then(m => ({ default: m.GeneralClassifiedsPage })));
+const MyClassifiedsPage = React.lazy(() => import('./classifieds/MyClassifiedsPage').then(m => ({ default: m.MyClassifiedsPage })));
+const CreateListingWizard = React.lazy(() => import('./classifieds/CreateListingWizard').then(m => ({ default: m.CreateListingWizard })));
+const MyNegotiationsPage = React.lazy(() => import('./classifieds/MyNegotiationsPage').then(m => ({ default: m.MyNegotiationsPage })));
+const ClassifiedsClientDashboard = React.lazy(() => import('./classifieds/ClassifiedsClientDashboard').then(m => ({ default: m.ClassifiedsClientDashboard })));
+const MyClassifiedSalesPage = React.lazy(() => import('./classifieds/MyClassifiedSalesPage').then(m => ({ default: m.MyClassifiedSalesPage })));
+const MyClassifiedCommissionsPage = React.lazy(() => import('./classifieds/MyClassifiedCommissionsPage').then(m => ({ default: m.MyClassifiedCommissionsPage })));
+const HealthMarketplaceLandingPage = React.lazy(() => import('./protection/HealthMarketplaceLandingPage').then(m => ({ default: m.HealthMarketplaceLandingPage })));
+const InsuranceMarketplaceLandingPage = React.lazy(() => import('./protection/InsuranceMarketplaceLandingPage').then(m => ({ default: m.InsuranceMarketplaceLandingPage })));
+const ProtectionMarketplace = React.lazy(() => import('./protection/ProtectionMarketplace').then(m => ({ default: m.ProtectionMarketplace })));
+const PublicVIPPresentationPage = React.lazy(() => import('../../public/PublicVIPPresentationPage').then(m => ({ default: m.PublicVIPPresentationPage })));
 
 interface MarketplaceGSAStoreProps {
   clientId?: string;
@@ -51,7 +56,7 @@ interface MarketplaceGSAStoreProps {
   onRequireAuth?: () => void;
 }
 
-export function MarketplaceGSAStore({
+function MarketplaceGSAStoreInner({
   clientId,
   initialTab = 'home',
   initialItemId,
@@ -68,7 +73,7 @@ export function MarketplaceGSAStore({
     section: 'produtos-assinaturas' | 'pacotes-viagem' | 'classificados' | 'saude' | 'seguros',
   ) => {
     if (section === 'produtos-assinaturas') {
-      handleNavigate(routes.marketplace.store.root());
+      handleNavigate(routes.marketplace.store.menu());
     } else if (section === 'pacotes-viagem') {
       handleNavigate(routes.marketplace.travelPackages.root());
     } else if (section === 'classificados') {
@@ -315,9 +320,33 @@ export function MarketplaceGSAStore({
     return <ClassifiedsHubPage onBack={backToMarketplace} isPublic />;
   }
 
+  // Rota de Menu Central da Loja & Serviços (GSA Store Hub, Trocas e Reembolsos)
+  if (
+    currentSubmodule === 'menu-loja' || 
+    currentSubmodule === 'loja-menu' || 
+    currentSubmodule === 'loja-trocas' || 
+    currentSubmodule === 'loja-reembolsos'
+  ) {
+    return (
+      <StoreHub
+        clientId={clientId}
+        onNavigate={(_module, tab, itemId) => {
+          if (tab === 'produtos' || tab === 'loja-produtos') {
+            handleNavigate(routes.marketplace.store.product(itemId || ''));
+          } else if (tab === 'assinaturas' || tab === 'loja-assinaturas') {
+            handleNavigate(routes.marketplace.store.subscription(itemId || ''));
+          }
+        }}
+        initialTab={currentSubmodule?.startsWith('loja-') ? currentSubmodule.replace('loja-', '') : (initialTab || 'hub')}
+        initialItemId={initialItemId || route.itemId}
+        onRequireAuth={onRequireAuth}
+        onBackToSite={() => handleNavigate(routes.marketplace.root())}
+        onBackToMarketplace={backToMarketplace}
+      />
+    );
+  }
+
   if (currentSubmodule?.startsWith('loja')) {
-    const tabMapped = currentSubmodule.replace('loja-', '');
-    
     // Se for rota de um produto específico, renderiza a ProductPage
     const targetProductId = route.itemId || initialItemId;
     if (['loja-produtos', 'loja-produto'].includes(currentSubmodule) && targetProductId) {
@@ -357,6 +386,26 @@ export function MarketplaceGSAStore({
       );
     }
 
+    // Se for rota de cupons da loja (Página Completa e Dedicada de Cupons)
+    if (currentSubmodule === 'loja-cupons' || currentSubmodule === 'loja-cupom') {
+      return (
+        <CouponsPage 
+          clientId={clientId}
+          onRequireAuth={onRequireAuth}
+        />
+      );
+    }
+
+    // Se for rota de promoções da loja (Página Completa e Dedicada de Promoções VIP)
+    if (currentSubmodule === 'loja-promocoes' || currentSubmodule === 'loja-promocao') {
+      return (
+        <PromotionsPage 
+          clientId={clientId}
+          onRequireAuth={onRequireAuth}
+        />
+      );
+    }
+
     // Se for rota de wishlist
     if (currentSubmodule === 'loja-wishlist') {
       return <WishlistPage clientId={clientId} onRequireAuth={onRequireAuth} />;
@@ -386,7 +435,7 @@ export function MarketplaceGSAStore({
       return (
         <div className="min-h-screen bg-[#f8f9fa]">
           <EcommerceHeader 
-            clientId={clientId}
+            clientId={clientId} 
             onOpenCart={() => handleNavigate(routes.marketplace.store.products() + '?modal=carrinho')}
             onRequireAuth={onRequireAuth}
           />
@@ -404,7 +453,7 @@ export function MarketplaceGSAStore({
       return (
         <div className="min-h-screen bg-[#f8f9fa]">
           <EcommerceHeader 
-            clientId={clientId}
+            clientId={clientId} 
             onOpenCart={() => handleNavigate(routes.marketplace.store.products() + '?modal=carrinho')}
             onRequireAuth={onRequireAuth}
           />
@@ -418,24 +467,6 @@ export function MarketplaceGSAStore({
         </div>
       );
     }
-
-    return (
-      <StoreHub
-        clientId={clientId}
-        onNavigate={(_module, tab, itemId) => {
-          if (tab === 'produtos' || tab === 'loja-produtos') {
-            handleNavigate(routes.marketplace.store.product(itemId || ''));
-          } else if (tab === 'assinaturas' || tab === 'loja-assinaturas') {
-            handleNavigate(routes.marketplace.store.subscription(itemId || ''));
-          }
-        }}
-        initialTab={tabMapped === 'loja' ? 'hub' : tabMapped}
-        initialItemId={initialItemId || route.itemId}
-        onRequireAuth={onRequireAuth}
-        onBackToSite={() => handleNavigate(routes.marketplace.root())}
-        onBackToMarketplace={backToMarketplace}
-      />
-    );
   }
 
   return (
@@ -444,7 +475,14 @@ export function MarketplaceGSAStore({
       onRequireAuth={onRequireAuth}
       onOpenCart={() => handleNavigate(routes.marketplace.store.products() + '?modal=carrinho')}
     />
+  );
+}
 
+export function MarketplaceGSAStore(props: MarketplaceGSAStoreProps) {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div></div>}>
+      <MarketplaceGSAStoreInner {...props} />
+    </Suspense>
   );
 }
 

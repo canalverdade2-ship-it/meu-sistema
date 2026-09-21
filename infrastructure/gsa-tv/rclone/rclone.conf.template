@@ -1,0 +1,62 @@
+# GSA TV — rclone configuration template
+# ATENÇÃO: este é um template. As credenciais reais são armazenadas SOMENTE
+#          no secret store da VPS (/opt/gsa-tv/secrets/) e nunca são commitadas.
+#
+# Como usar na VPS:
+#   1. Copiar este template: cp rclone.conf.template /opt/gsa-tv/config/rclone/rclone.conf
+#   2. Substituir os placeholders pelos valores reais do cofre de secrets.
+#   3. Definir permissões: chmod 600 /opt/gsa-tv/config/rclone/rclone.conf
+#   4. Verificar: rclone lsd gdrive-gsa-tv: --config /opt/gsa-tv/config/rclone/rclone.conf
+#
+# Escopos de acesso:
+#   - gdrive-gsa-tv: LEITURA da biblioteca (download de mídia para cache)
+#   - gdrive-gsa-tv-inbox: LEITURA/ESCRITA da pasta 00_INBOX (ingestão de novos arquivos)
+#
+# Permissões OAuth necessárias:
+#   - https://www.googleapis.com/auth/drive.readonly  (para gdrive-gsa-tv)
+#   - https://www.googleapis.com/auth/drive           (para gdrive-gsa-tv-inbox — somente a pasta)
+
+# ─── Conexão de leitura da biblioteca (download de mídia) ──────────────────
+[gdrive-gsa-tv]
+type = drive
+client_id     = PLACEHOLDER_CLIENT_ID
+client_secret = PLACEHOLDER_CLIENT_SECRET
+scope         = drive.readonly
+token         = PLACEHOLDER_TOKEN_JSON
+root_folder_id = PLACEHOLDER_GSA_TV_ROOT_FOLDER_ID
+# Configurações de performance e resiliência
+chunk_size    = 32M
+upload_cutoff = 50M
+acknowledge_abuse = false
+# Retry automático para 403/429
+# Controlado via flags do rclone: --retries 10 --retries-sleep 30s --low-level-retries 20
+
+# ─── Conexão de ingestão da pasta INBOX ───────────────────────────────────
+[gdrive-gsa-tv-inbox]
+type = drive
+client_id     = PLACEHOLDER_CLIENT_ID
+client_secret = PLACEHOLDER_CLIENT_SECRET
+scope         = drive
+token         = PLACEHOLDER_INBOX_TOKEN_JSON
+root_folder_id = PLACEHOLDER_INBOX_FOLDER_ID
+
+# ─── Comandos de referência (executar na VPS, nunca no browser) ──────────
+#
+# Verificar acesso:
+#   rclone lsd gdrive-gsa-tv: --config /opt/gsa-tv/config/rclone/rclone.conf
+#
+# Baixar arquivo com checksum e retry:
+#   rclone copy gdrive-gsa-tv:biblioteca/video.mp4 /opt/gsa-tv/cache/media/ \
+#     --config /opt/gsa-tv/config/rclone/rclone.conf \
+#     --checksum \
+#     --retries 10 \
+#     --retries-sleep 30s \
+#     --low-level-retries 20 \
+#     --progress
+#
+# Monitorar pasta INBOX por novos arquivos:
+#   rclone lsjson gdrive-gsa-tv-inbox: --config /opt/gsa-tv/config/rclone/rclone.conf
+#
+# Listar com metadados:
+#   rclone lsjson gdrive-gsa-tv: --config /opt/gsa-tv/config/rclone/rclone.conf \
+#     --hash --metadata

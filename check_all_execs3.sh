@@ -1,0 +1,1 @@
+sudo docker exec -e PGPASSWORD='evopass' evo-postgres psql -U evo -d n8n -t -c "SELECT status, \"workflowId\" FROM execution_entity ORDER BY id DESC LIMIT 10;"

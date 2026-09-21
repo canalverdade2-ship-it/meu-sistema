@@ -4,12 +4,12 @@ import { LogoGSA } from '../ui/LogoGSA';
 import { AccessibleDialog } from '../ui/AccessibleDialog';
 import { PartnerApplicationPage } from './PartnerApplicationPage';
 import { PartnersPage } from './PartnersPage';
-import { PrivacyPolicyDialog } from './PrivacyPolicyDialog';
+import { PrivacyPolicyPage } from './PrivacyPolicyPage';
 import { FreeToolsExperiencePage } from './FreeToolsExperiencePage';
 import { PublicFooter } from './final/PublicFooter';
 import { PublicHomeLanding } from './final/PublicHomeLanding';
 import { PublicServicesPage } from './final/PublicServicesPage';
-import { RequestChannelDialog, ServiceDetailsDialog } from './final/PublicServiceDialogs';
+import { RequestChannelDialog, ServiceDetailsDialog, type ServicePackageRequest } from './final/PublicServiceDialogs';
 import { PublicHeader } from './final/PublicHeader';
 import './final/PublicHomePlan3.css';
 import {
@@ -19,6 +19,7 @@ import {
   type PublicPage,
   type ServicePackage,
 } from '../../data/publicServiceCatalog';
+import { supabase } from '../../lib/supabase';
 
 const WHATSAPP_NUMBER = '5511920857756';
 const CONTACT_EMAIL = 'gsa.doc.adm@gmail.com';
@@ -44,8 +45,7 @@ export function GSAEnterpriseHomeFinal(props: GSAEnterpriseHomeFinalProps) {
   const [showIntro, setShowIntro] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(null);
-  const [requestPackage, setRequestPackage] = useState<ServicePackage | null>(null);
-  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [requestPackage, setRequestPackage] = useState<ServicePackageRequest | null>(null);
 
   const filteredPackages = useMemo(
     () => props.servicePackages.filter((item) => item.audience === props.publicAudience || item.audience === 'AMBOS'),
@@ -88,13 +88,73 @@ export function GSAEnterpriseHomeFinal(props: GSAEnterpriseHomeFinalProps) {
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
   };
 
-  const requestViaPortal = (item: ServicePackage) => {
-    const pendingRequest = JSON.stringify({ itemType: 'package', itemId: item.id, title: item.title, description: item.description, services: item.services, source: 'public_services', createdAt: new Date().toISOString() });
+  const handleWhatsAppRequest = (item: ServicePackageRequest) => {
+    setRequestPackage(null);
+    const servicesListText = item.isFullPackage
+      ? `• Pacote Completo (${item.selectedServices.map((s) => s.name).join(', ')})`
+      : item.selectedServices.map((s) => `• ${s.name}`).join('\n');
+
+    const message = [
+      '#SOLICITACAO_SERVICO_GSA',
+      'Olá! Gostaria de solicitar atendimento para serviços GSA HUB:',
+      '',
+      `📦 *Pacote:* ${item.package.title}`,
+      `🆔 *Pacote ID:* ${item.package.id}`,
+      `👤 *Perfil:* ${item.package.audience === 'PJ' ? 'Empresas (PJ)' : 'Pessoa Física (PF)'}`,
+      '🛠️ *Serviços Solicitados:*',
+      servicesListText,
+      '',
+      'Gostaria de dar andamento na minha solicitação pelo WhatsApp.',
+    ].join('\n');
+
+    openWhatsApp(message);
+  };
+
+  const handleEmailRequest = (item: ServicePackageRequest) => {
+    setRequestPackage(null);
+    const servicesListText = item.isFullPackage
+      ? `Pacote Completo: ${item.selectedServices.map((s) => s.name).join(', ')}`
+      : item.selectedServices.map((s) => `- ${s.name}`).join('\n');
+
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
+      `Atendimento - ${item.package.title}`
+    )}&body=${encodeURIComponent(
+      `Olá!\n\nSolicito atendimento para o pacote ${item.package.title}.\n\nServiços Selecionados:\n${servicesListText}\n\nDescrição do pacote: ${item.package.description}`
+    )}`;
+  };
+
+  const checkSessionAndProceed = async () => {
+    try {
+      const { data } = await supabase.auth.getSession();
+      const hasLocalSession = window.localStorage.getItem('_gsa_session') || window.sessionStorage.getItem('_gsa_session');
+      
+      if (data.session || hasLocalSession) {
+        window.location.href = '/cliente';
+      } else {
+        props.onClientLogin();
+      }
+    } catch (err) {
+      props.onClientLogin();
+    }
+  };
+
+  const requestViaPortal = (item: ServicePackageRequest) => {
+    const pendingRequest = JSON.stringify({
+      itemType: 'package',
+      itemId: item.package.id,
+      title: item.package.title,
+      description: item.package.description,
+      services: item.selectedServices,
+      isFullPackage: item.isFullPackage,
+      source: 'public_services',
+      createdAt: new Date().toISOString(),
+    });
     sessionStorage.setItem('gsa_pending_service_request', pendingRequest);
     localStorage.setItem('gsa_pending_service_request', pendingRequest);
     setRequestPackage(null);
     setSelectedPackage(null);
-    props.onClientLogin();
+    
+    checkSessionAndProceed();
   };
 
   const isPartnerApplication = props.publicPage === 'partners' && props.initialPartnerSlug === 'solicitar';
@@ -112,6 +172,7 @@ export function GSAEnterpriseHomeFinal(props: GSAEnterpriseHomeFinalProps) {
 
       {props.publicPage === 'home' && <PublicHomeLanding reduceMotion={Boolean(reduceMotion)} setPublicPage={props.setPublicPage} onGuestStore={props.onGuestStore} />}
       {props.publicPage === 'services' && <PublicServicesPage audience={props.publicAudience} setAudience={props.setPublicAudience} packages={filteredPackages} publicServices={props.publicServices} onBack={() => props.setPublicPage('home')} onSelect={(item) => { setSelectedPackage(item); props.onServiceDetailChange?.(getServicePackageSlug(item)); }} />}
+      {props.publicPage === 'privacy' && <PrivacyPolicyPage />}
       {props.publicPage === 'free-tools' && <FreeToolsExperiencePage onBack={() => props.setPublicPage('home')} onServices={() => props.setPublicPage('services')} onClientLogin={props.onClientLogin} />}
       {props.publicPage === 'partners' && (
         isPartnerApplication
@@ -119,10 +180,27 @@ export function GSAEnterpriseHomeFinal(props: GSAEnterpriseHomeFinalProps) {
           : <PartnersPage selectedSlug={props.initialPartnerSlug} onSelectPartner={(slug) => props.onPartnerDetailChange?.(slug)} onBack={() => props.setPublicPage('home')} />
       )}
 
-      {!isPartnerApplication && <PublicFooter setPublicPage={props.setPublicPage} onGuestStore={props.onGuestStore} onAdminLogin={props.onAdminLogin} onPrivacy={() => setPrivacyOpen(true)} />}
-      <ServiceDetailsDialog selectedPackage={selectedPackage} onClose={() => { setSelectedPackage(null); props.onServiceDetailChange?.(null); }} onInterest={(item) => { setSelectedPackage(null); props.onServiceDetailChange?.(null); setRequestPackage(item); }} />
-      <RequestChannelDialog selectedPackage={requestPackage} onClose={() => setRequestPackage(null)} onWhatsApp={(item) => { setRequestPackage(null); openWhatsApp(`Olá! Gostaria de atendimento sobre o pacote ${item.title}.`); }} onEmail={(item) => { window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Atendimento - ${item.title}`)}&body=${encodeURIComponent(item.description)}`; }} onPortal={requestViaPortal} />
-      <PrivacyPolicyDialog isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
+      {!isPartnerApplication && <PublicFooter setPublicPage={props.setPublicPage} onGuestStore={props.onGuestStore} onAdminLogin={props.onAdminLogin} />}
+      <ServiceDetailsDialog
+        selectedPackage={selectedPackage}
+        onClose={() => {
+          setSelectedPackage(null);
+          props.onServiceDetailChange?.(null);
+        }}
+        onInterest={(requestData) => {
+          setSelectedPackage(null);
+          props.onServiceDetailChange?.(null);
+          setRequestPackage(requestData);
+        }}
+      />
+      <RequestChannelDialog
+        requestData={requestPackage}
+        onClose={() => setRequestPackage(null)}
+        onWhatsApp={handleWhatsAppRequest}
+        onEmail={handleEmailRequest}
+        onPortal={requestViaPortal}
+      />
     </div>
   );
 }
+

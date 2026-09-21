@@ -41,12 +41,12 @@ export function ScrapingExecutionMonitorModal({ isOpen, onClose, automacao, onRe
 
   const lastLog = logs[logs.length - 1];
   
-  // O status SÓ é concluído se o ÚLTIMO log da execução atual for 'sucesso' ou progresso 100%
-  const isFinishedSuccess = lastLog?.status === 'sucesso' || lastLog?.passo === 'sucesso' || lastLog?.progresso === 100;
+  // O status SÓ é Concluído se ALGUM log da Execução atual for 'sucesso' ou progresso 100%
+  const isFinishedSuccess = logs.some(l => l.status === 'sucesso' || l.passo === 'sucesso' || l.progresso === 100);
   const isError = lastLog?.status === 'erro' || lastLog?.passo === 'erro';
   const isFinished = isFinishedSuccess || isError;
 
-  // Extrair estatísticas dos detalhes dos logs
+  // Extrair Estatísticas dos detalhes dos logs
   const logComDetalhes = [...logs].reverse().find(l => l.detalhes && (l.detalhes.novos !== undefined || l.detalhes.erros));
   const novosCount = logComDetalhes?.detalhes?.novos ?? (isFinishedSuccess ? (automacao?.produtos_count || 0) : 0);
   const atualizadosCount = logComDetalhes?.detalhes?.atualizados ?? 0;
@@ -163,7 +163,7 @@ export function ScrapingExecutionMonitorModal({ isOpen, onClose, automacao, onRe
             <div>
               <h3 className="font-black text-base">{automacao.nome}</h3>
               <p className="text-xs text-neutral-400">
-                {automacao.tipo === 'viagens' ? 'GSA Viagens' : 'GSA Store'} · Margem: <span className="text-emerald-400 font-bold">{automacao.margem_lucro}%</span> · Sync ID: <span className="font-mono text-indigo-300">{automacao.sync_id}</span>
+                {automacao.tipo === 'viagens' ? 'GSA Viagens' : 'GSA Store'} Â· Margem: <span className="text-emerald-400 font-bold">{automacao.margem_lucro}%</span> Â· Sync ID: <span className="font-mono text-indigo-300">{automacao.sync_id}</span>
               </p>
             </div>
           </div>
@@ -240,7 +240,7 @@ export function ScrapingExecutionMonitorModal({ isOpen, onClose, automacao, onRe
             <div className="space-y-1 pl-7">
               {listaErros.map((err, idx) => (
                 <p key={idx} className="font-mono text-red-700 bg-white/80 p-2 rounded-lg border border-red-100 font-semibold leading-relaxed">
-                  ⚠️ {err}
+                  âš ï¸ {err}
                 </p>
               ))}
             </div>
@@ -297,7 +297,7 @@ export function ScrapingExecutionMonitorModal({ isOpen, onClose, automacao, onRe
             ) : logs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-neutral-500 space-y-3">
                 <Terminal className="h-8 w-8 text-neutral-700" />
-                <p className="text-xs font-mono text-neutral-400">Nenhum log gravado ainda para esta automação.</p>
+                <p className="text-xs font-mono text-neutral-400">Nenhum log gravado ainda para esta Automação.</p>
                 {onReTrigger && (
                   <button
                     onClick={onReTrigger}
@@ -349,3 +349,4 @@ export function ScrapingExecutionMonitorModal({ isOpen, onClose, automacao, onRe
     </Modal>
   );
 }
+

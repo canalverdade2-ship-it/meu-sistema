@@ -775,12 +775,13 @@ export default function PremiosModule({ activeSubTab, initialItemId, colaborador
               <div>
                 <label className="block text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-3 ml-1">Prazo de Validade para Resgate</label>
                 <div className="flex gap-3">
-                  <input
+                  <input 
                     type="number"
                     min="1"
                     required
                     value={newPremio.validade_valor}
-                    onChange={e => setNewPremio({...newPremio, validade_valor: parseInt(e.target.value) || 1})}
+                    inputMode="numeric"
+onChange={(e) => setNewPremio({...newPremio, validade_valor: parseInt(e.target.value) || 1})}
                     className="w-24 rounded-2xl border border-neutral-100 bg-neutral-50 px-6 py-4 text-sm font-black text-neutral-900 focus:border-indigo-500 focus:outline-none text-center"
                   />
                   <select

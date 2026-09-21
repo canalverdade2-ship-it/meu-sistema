@@ -61,8 +61,8 @@ assert.match(brandPage, /Da primeira ideia a uma marca pronta/, 'A página deve 
 assert.match(brandPage, /Criação de nome/, 'A página deve oferecer desenvolvimento de nome');
 assert.match(brandPage, /Social media e conteúdo/, 'A página deve oferecer social media');
 assert.match(brandPage, /Nenhuma empresa séria pode garantir vendas/, 'A comunicação não pode prometer vendas garantidas');
-assert.match(homeLanding, /Empresa do Zero ao Digital/, 'O novo serviço deve aparecer no hall principal');
-assert.match(routeMatcher, /empresa-do-zero-ao-digital/, 'A nova URL deve ser reconhecida pelo roteamento');
+assert.match(homeLanding, /Identidade e Web Design/, 'O novo serviço deve aparecer no hall principal');
+assert.match(routeMatcher, /identidade-e-web-design/, 'A nova URL deve ser reconhecida pelo roteamento');
 assert.match(systemsPage, /Conhecer a jornada completa/, 'Sites e Sistemas deve direcionar para a nova jornada');
 
 assert.match(firstAccessMigration, /gsa_set_pin_and_login/, 'A rotina de primeiro acesso sem OTP deve ser localizada');
@@ -85,8 +85,8 @@ assert.match(privacy, /Não vendemos os dados enviados pelo site/, 'O aviso deve
 assert.match(metadata, /setCanonical/, 'O SEO público deve ser controlado por um único hook');
 assert.match(metadata, /'@type': 'ProfessionalService'/, 'Sites e Sistemas deve publicar dados estruturados adequados');
 
-assert.match(app, /lazy\(\(\) => import\('\.\/pages\/SecureAdminPanel'\)/, 'Painel administrativo seguro deve ser carregado sob demanda');
-assert.match(app, /default: module\.MarketplaceGSAStore/, 'Marketplace deve mapear a exportação nomeada no carregamento lazy');
+assert.match(app, /lazyWithRetry\(\(\) => import\('\.\/pages\/SecureAdminPanel'\)/, 'Painel administrativo seguro deve ser carregado sob demanda');
+assert.match(app, /lazyWithRetry\(\(\) => import\('\.\/components\/client\/marketplace\/MarketplaceGSAStore'\)/, 'Marketplace deve ser carregado sob demanda');
 assert.match(app, /readSafeReturnTo/, 'Redirecionamentos após login devem ser validados');
 assert.match(home, /params\.delete\('msg'\)/, 'Home deve remover somente o parâmetro de revogação');
 assert.match(appLocation, /safeMatchRoute/, 'O roteamento deve sobreviver a query strings malformadas');

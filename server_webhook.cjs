@@ -1,16 +1,88 @@
 'use strict';
 const http = require('http');
 const https = require('https');
+const crypto = require('crypto');
 
-const PORT = 5680;
-const VERIFY_TOKEN = 'gsa_hub_whatsapp_token_2026';
-const META_TOKEN = 'EAATzMfBrFUUBSKUGYDkioeRHENS7hcliAdztOVnfpGTZCxA9H58yU32BxtaZCrve2HrEvC3wRsSgXsfvPp2df38Qu6KxpPBI2UeRhQWdY7ZADeFoEs6rOE8CZC4B8bv6KNZCNQZAKhZABLIQNMk98S6RcoQxdoy2MQ2r5xLKDDjJ7wISHL6n21US9QT993NzswJfQZDZD';
-const PHONE_NUMBER_ID = '1208358025697171'; // Número de teste +1 555-677-0092
 
-const SUPABASE_HOST = 'ocgajvagxagutfvgxwsy.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jZ2FqdmFneGFndXRmdmd4d3N5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NTY0MDksImV4cCI6MjA4OTUzMjQwOX0.1OXsjDAsGl82u6ytGQ5iX2vroXjhmqUoFkbOLKbO6XI';
+const PORT = Number(process.env.PORT || 5680);
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN || '';
+const META_TOKEN = process.env.META_TOKEN || '';
+const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID || '';
+
+const SUPABASE_HOST = process.env.SUPABASE_URL || '';
+const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || '';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODY5ODQzMzYsImV4cCI6MjEwMjM0NDMzNn0.HErwZVyHaKqhK_vRx66dcMXSlYkubChX7vGzDDbJHu0';
+const SERVICE_ROLE_JWT = process.env.SUPABASE_SERVICE_ROLE_KEY || SUPABASE_SERVICE_ROLE_KEY || SUPABASE_KEY || '';
+
+
+// ─── CONFIGURAÇÃO DE IA (Google Gemini Oficial — Gratuito 100%) ──────────────
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyAD95jNTRpQdfuL96Mffs7FmqXbRWy-jM0';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+const AI_TIMEOUT_MS = 25000;
+
+// ─── DADOS DA EMPRESA (usados no system prompt da IA) ────────────────────────
+const ADMIN_MASTER_PHONE = '5511971858372';
+const SUPPORT_COMPANY_PHONE = '5511920857756';
+
+const GSA_EMPRESA = {
+  nome: 'GSA HUB — Gestão de Serviços & Tecnologia',
+  cnpj: '53.217.297/0001-08',
+  responsavel: 'Adriano Peite Farias',
+  telefone: '(11) 92085-7756',
+  site: 'https://gsahub.pages.dev',
+  email: 'gsa.doc.adm@gmail.com',
+  pix: '53.217.297/0001-08',
+  whatsapp_atendimento: '5511920857756'
+};
+
+// Cache do catálogo para a IA (renovado a cada 5 minutos)
+let _catalogCache = null;
+let _catalogCacheTs = 0;
 
 const userSessions = {};
+
+// ─── CONCURRENCY CONTROL: SESSION MUTEX (PER-PHONE FIFO QUEUE) ──────────────
+class SessionMutex {
+  constructor() {
+    this.queues = new Map();
+  }
+
+  /**
+   * Serializes execution of async tasks per key (e.g., fromPhone).
+   * Runs tasks for the same phone number sequentially in FIFO order.
+   * Runs tasks for different phone numbers concurrently without blocking.
+   * @param {string} key - Unique identifier (e.g., phone number)
+   * @param {() => Promise<any>} task - Async function to execute
+   * @returns {Promise<any>}
+   */
+  runExclusive(key, task) {
+    const safeKey = String(key || 'global');
+    const prevPromise = this.queues.get(safeKey) || Promise.resolve();
+
+    const nextPromise = (async () => {
+      try {
+        await prevPromise;
+      } catch (ignored) {
+        // Prevent previous errors from deadlocking subsequent queued messages
+      }
+      return await task();
+    })();
+
+    this.queues.set(safeKey, nextPromise);
+
+    // Clean up memory when queue is empty
+    nextPromise.finally(() => {
+      if (this.queues.get(safeKey) === nextPromise) {
+        this.queues.delete(safeKey);
+      }
+    });
+
+    return nextPromise;
+  }
+}
+
+const sessionMutex = new SessionMutex();
+
 
 // ─── HTTP / HTTPS FETCH HELPER (ZERO DEPENDENCIES) ──────────────────────────
 function fetchText(urlStr) {
@@ -48,8 +120,2550 @@ function fetchText(urlStr) {
   });
 }
 
+// ─── MÓDULO IA: CATÁLOGO DINÂMICO (cache 5 minutos) ─────────────────────────
+const SUPABASE_ANON_FALLBACK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jZ2FqdmFneGFndXRmdmd4d3N5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NTY0MDksImV4cCI6MjA4OTUzMjQwOX0.1OXsjDAsGl82u6ytGQ5iX2vroXjhmqUoFkbOLKbO6XI';
+
+function fetchCatalogForAI(callback) {
+  const now = Date.now();
+  if (_catalogCache && (now - _catalogCacheTs) < 300000) {
+    return callback(_catalogCache);
+  }
+  const catalog = { servicos: [], produtos: [] };
+  let pending = 2;
+  const supaKey = SUPABASE_KEY || SUPABASE_ANON_FALLBACK;
+
+  function done() {
+    if (--pending === 0) {
+      // Garantir que ambos são arrays antes de cachear
+      if (!Array.isArray(catalog.servicos)) catalog.servicos = [];
+      if (!Array.isArray(catalog.produtos)) catalog.produtos = [];
+      _catalogCache = catalog;
+      _catalogCacheTs = Date.now();
+      callback(catalog);
+    }
+  }
+
+  // Serviços — inclui ocultar_valor para que a IA nunca exiba valores inexistentes
+  const reqS = http.request({
+    hostname: '127.0.0.1', port: 3001,
+    path: '/servicos?select=codigo_servico,nome,descricao,valor,ocultar_valor&status=eq.ativo&limit=60&order=codigo_servico.asc',
+    method: 'GET',
+    headers: { 'apikey': supaKey, 'Authorization': 'Bearer ' + supaKey }
+  }, res => {
+    let d = '';
+    res.on('data', c => d += c);
+    res.on('end', () => {
+      try {
+        const parsed = JSON.parse(d);
+        catalog.servicos = Array.isArray(parsed) ? parsed : [];
+      } catch(e) { catalog.servicos = []; }
+      done();
+    });
+  });
+  reqS.on('error', () => { catalog.servicos = []; done(); });
+  reqS.setTimeout(5000, () => { reqS.destroy(); catalog.servicos = []; done(); });
+  reqS.end();
+
+  // Produtos
+  const reqP = http.request({
+    hostname: '127.0.0.1', port: 3001,
+    path: '/produtos?select=codigo_produto,nome,descricao,valor,imagem_url&status=eq.ativo&limit=50&order=nome.asc',
+    method: 'GET',
+    headers: { 'apikey': supaKey, 'Authorization': 'Bearer ' + supaKey }
+  }, res => {
+    let d = '';
+    res.on('data', c => d += c);
+    res.on('end', () => {
+      try {
+        const parsed = JSON.parse(d);
+        catalog.produtos = Array.isArray(parsed) ? parsed : [];
+      } catch(e) { catalog.produtos = []; }
+      done();
+    });
+  });
+  reqP.on('error', () => { catalog.produtos = []; done(); });
+  reqP.setTimeout(5000, () => { reqP.destroy(); catalog.produtos = []; done(); });
+  reqP.end();
+}
+
+
+// ─── MÓDULO IA: CRIAR TICKET AUTOMÁTICO ──────────────────────────────────────
+function createAITicket(fromPhone, session, assunto, descricao, callback) {
+  const clientId = session.clientData?.id || session.tempClientId || null;
+  const clientName = session.clientName || session.clientData?.nome || 'Cliente WhatsApp';
+  const protocolo = 'TKT-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
+
+  const ticketPayload = {
+    cliente_id: clientId,
+    assunto: assunto.substring(0, 120),
+    descricao: `[IA WhatsApp] ${descricao}\n\nCliente: ${clientName}\nWhatsApp: ${fromPhone}\nData: ${new Date().toLocaleString('pt-BR')}`,
+    status: 'aberto',
+    prioridade: 'media',
+    origem: 'whatsapp_ia',
+    protocolo
+  };
+
+  const payload = JSON.stringify(ticketPayload);
+  const reqT = http.request({
+    hostname: '127.0.0.1', port: 3001,
+    path: '/tickets',
+    method: 'POST',
+    headers: {
+      'apikey': SERVICE_ROLE_JWT || SUPABASE_KEY,
+      'Authorization': 'Bearer ' + (SERVICE_ROLE_JWT || SUPABASE_KEY),
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      'Content-Length': Buffer.byteLength(payload)
+    }
+  }, res => {
+    let d = '';
+    res.on('data', c => d += c);
+    res.on('end', () => {
+      try { callback(null, JSON.parse(d)[0] || { protocolo }); }
+      catch(e) { callback(null, { protocolo }); }
+    });
+  });
+  reqT.on('error', e => callback(e, { protocolo }));
+  reqT.write(payload);
+  reqT.end();
+}
+
+// ─── MÓDULO VOUCHER CALCULADORAS PRO VIA WHATSAPP ────────────────────────────
+function checkPhoneVoucherStatus(phone, callback) {
+  const cleanPhone = (phone || '').replace(/\D/g, '');
+  const url = `/gsa_calculator_pro_vouchers?select=*&observacoes=like.*${cleanPhone}*`;
+  const authKey = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_KEY;
+  
+  const req = http.request({
+    hostname: '127.0.0.1', port: 3001,
+    path: url,
+    method: 'GET',
+    headers: {
+      'apikey': authKey,
+      'Authorization': 'Bearer ' + authKey
+    }
+  }, res => {
+    let b = '';
+    res.on('data', c => b += c);
+    res.on('end', () => {
+      try {
+        const list = JSON.parse(b);
+        if (Array.isArray(list) && list.length > 0) {
+          return callback(null, { alreadyUsed: true, voucher: list[0] });
+        }
+        callback(null, { alreadyUsed: false, voucher: null });
+      } catch (e) {
+        callback(e, { alreadyUsed: false, voucher: null });
+      }
+    });
+  });
+  req.on('error', e => callback(e, { alreadyUsed: false, voucher: null }));
+  req.end();
+}
+
+function createAndRedeemVoucherForPhone(phone, toolId, callback) {
+  const cleanPhone = (phone || '').replace(/\D/g, '');
+  const rawCode = `GSA-PRO-${Math.floor(100000 + Math.random() * 900000)}`;
+  const codeHash = crypto.createHash('sha256').update(rawCode.toLowerCase()).digest('hex');
+  const codeHint = rawCode.substring(0, 8) + '...';
+  const authKey = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_KEY;
+
+  const voucherData = {
+    code_hash: codeHash,
+    code_hint: codeHint,
+    tool_id: toolId || null,
+    status: 'used',
+    used_at: new Date().toISOString(),
+    used_by_visitor_hash: crypto.createHash('sha256').update(cleanPhone).digest('hex'),
+    observacoes: `WhatsApp: ${cleanPhone} (Liberado e resgatado automaticamente via Chatbot IA)`,
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+  };
+
+  const payload = JSON.stringify(voucherData);
+  const req = http.request({
+    hostname: '127.0.0.1', port: 3001,
+    path: '/gsa_calculator_pro_vouchers',
+    method: 'POST',
+    headers: {
+      'apikey': authKey,
+      'Authorization': 'Bearer ' + authKey,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      'Content-Length': Buffer.byteLength(payload)
+    }
+  }, res => {
+    let b = '';
+    res.on('data', c => b += c);
+    res.on('end', () => {
+      callback(null, { code: rawCode, voucherData });
+    });
+  });
+  req.on('error', e => callback(e, { code: rawCode, voucherData }));
+  req.write(payload);
+  req.end();
+}
+
+
+// ─── MÓDULO IA: ASSISTENTE PRINCIPAL (Google Gemini Oficial Grátis) ─────────
+function callGSAAssistant(fromPhone, userMessage, session, mediaType, catalog, callback) {
+  if (!GEMINI_API_KEY) {
+    return callback(null, { action: 'error' });
+  }
+
+  const clientName = session.clientName || session.clientData?.nome || session.profile?.primaryName || null;
+  const estado = session.state || 'MAIN_MENU';
+
+  // Monta lista de serviços para o prompt — NUNCA exibe valor quando ocultar_valor=true
+  const servicosList = (catalog.servicos || [])
+    .map(s => {
+      const valorStr = (s.ocultar_valor === true || s.ocultar_valor === 'true')
+        ? ' [VALOR: sob consulta — NÃO informe nenhum valor ao cliente, apenas diga que o valor é definido após análise do orçamento]'
+        : (s.valor > 0 ? ` [VALOR: R$ ${Number(s.valor).toFixed(2)}]` : ' [VALOR: gratuito/sob consulta]');
+      return `  - [${s.codigo_servico}] ${s.nome}${s.descricao ? ': ' + s.descricao.substring(0, 80) : ''}${valorStr}`;
+    })
+    .join('\n');
+
+  const produtosList = (catalog.produtos || [])
+    .slice(0, 35)
+    .map(p => `  - [${p.codigo_produto}] ${p.nome} (R$ ${Number(p.valor).toFixed(2)})${p.imagem_url ? ` | imagem_url: ${p.imagem_url}` : ''}`)
+    .join('\n');
+
+  // Histórico recente
+  const historyText = (session.history || [])
+    .slice(-6)
+    .map(m => `${m.role === 'user' ? 'Cliente' : 'Assistente'}: ${m.content}`)
+    .join('\n');
+
+  const systemPrompt = `Você é a Assistente Virtual Inteligente da ${GSA_EMPRESA.nome}, chamada GSA.
+Você atende clientes no WhatsApp de forma 100% humanizada, calorosa, empática, resolutiva e natural — como uma atendente humana experiente, gentil e próxima, que conhece os clientes pelo nome.
+CNPJ: ${GSA_EMPRESA.cnpj} | Site: ${GSA_EMPRESA.site} | E-mail: ${GSA_EMPRESA.email} | PIX: ${GSA_EMPRESA.pix} | WhatsApp Suporte: ${GSA_EMPRESA.whatsapp_atendimento}
+Tom: Fale como uma pessoa real, calorosa, usando português brasileiro natural e coloquial (sem ser informal demais). Use emojis com moderação. Trate sempre pelo primeiro nome quando disponível.
+Cliente atual: ${clientName ? '*' + clientName + '*' : 'novo cliente'} | Telefone: ${fromPhone}
+${mediaType ? 'Mídia recebida do cliente: ' + mediaType : ''}
+
+════════════════════════════════════════════════
+🚨 REGRAS ABSOLUTAS — PROIBIÇÕES INVIOLÁVEIS
+════════════════════════════════════════════════
+
+1. NUNCA INVENTE OU ESTIME VALORES DE SERVIÇOS OU PRODUTOS.
+   - Você SOMENTE pode informar valores que estejam EXPLICITAMENTE listados no CATÁLOGO DE SERVIÇOS abaixo com [VALOR: R$ X].
+   - Se o serviço tiver [VALOR: sob consulta] ou não tiver valor definido, diga APENAS: "O valor desse serviço é definido após análise do seu caso. Nossa equipe prepara um orçamento personalizado para você — posso registrar sua solicitação agora mesmo!"
+   - JAMAIS diga "estimativa de mercado", "valor aproximado", "referência de preço" ou qualquer variação. Isso é proibido.
+   - JAMAIS coloque um valor numérico no campo "valor" do JSON se o serviço tiver [VALOR: sob consulta]. Nesse caso, coloque 0.
+
+2. NUNCA INVENTE INFORMAÇÕES DO SISTEMA.
+   - Não invente protocolos, datas, nomes de atendentes, funcionalidades ou dados que não foram fornecidos a você.
+   - Se não souber uma informação, diga honestamente: "Não tenho essa informação no momento, mas posso conectar você com nossa equipe para esclarecer!"
+
+3. NUNCA MANDE O CLIENTE PARA O SITE.
+   - Você DEVE resolver tudo diretamente aqui no WhatsApp.
+   - Forneça o link do site SOMENTE se o cliente pedir explicitamente.
+
+4. SEJA 100% HUMANA NO TOM.
+   - Evite respostas robóticas, listas frias e linguagem corporativa excessiva.
+   - Use frases como: "Oi, que bom falar com você!", "Claro, já verifico isso pra você!", "Perfeito, deixa eu resolver isso agora!", "Boa notícia: consegui achar aqui para você!"
+   - Quando o cliente estiver frustrado ou com dúvida, acolha primeiro antes de responder.
+
+5. FOTOS E IMAGENS DE PRODUTOS:
+   - Quando o cliente pedir fotos, imagens, opções ou produtos (ex: "tem imagem?", "me mostre opções de tênis/calças"), SEMPRE use a action "search_product" com os itens encontrados em "found_items" (incluindo o campo "imagem_url").
+   - NUNCA diga "não consigo enviar fotos", "não tenho imagens aqui" ou "acesse o site para ver as fotos", pois o sistema WhatsApp envia as fotos automaticamente junto com os produtos.
+
+6. FORMATAÇÃO LIMPA DE TEXTO (WHATSAPP NATIVO):
+   - No WhatsApp, o negrito é feito com APENAS UM asterisco: *texto em negrito*.
+   - NUNCA use negrito com dois asteriscos **texto** (isso quebra a formatação e deixa asteriscos sobrando no WhatsApp).
+   - NUNCA inicie itens de lista com asterisco (* item ou * *item*). Para listas, use sempre "• item", "- item" ou emojis numerados 1️⃣, 2️⃣.
+   - Exemplo correto: • *Saldo de Salário:* R$ 1.990,00
+   - Exemplo proibido: * **Saldo de Salário:** R$ 1.990,00
+
+7. SOLICITAÇÃO DE ATENDIMENTO HUMANO / ATENDENTE:
+   - Se o cliente pedir para falar com atendente, falar com uma pessoa, atendimento humano ou suporte (ex: "gostaria de falar com atendente", "quero atendente", "me passa para um atendente", "falar com suporte", "falar com humano"):
+   - Você DEVE retornar SEMPRE action "menu" com target "10".
+   - NUNCA responda dizendo apenas que está encaminhando em texto puro sem a action "menu" target "10", pois o sistema precisa obrigatoriamente exibir o menu dos setores cadastrados para o cliente selecionar o setor.
+
+8. SOLICITAÇÃO DE CRÉDITO OU EMPRÉSTIMO:
+   - Se o cliente pedir para solicitar crédito, empréstimo, financiamento ou capital de giro (ex: "solicitar crédito", "solicitar empréstimo", "preciso de crédito", "empréstimo de 10 mil"):
+   - Você DEVE retornar SEMPRE action "request_credit", extraindo se possível o valor em "credit_amount", parcelas em "credit_installments", finalidade em "credit_purpose" e renda em "credit_income".
+   - NUNCA responda dizendo que não faz crédito ou dizendo que vai passar para o financeiro em texto puro sem a action "request_credit", pois a GSA HUB possui o fluxo automatizado de simulação e abertura de crédito diretamente no WhatsApp!
+
+
+════════════════════════════════════════════════
+📋 CATÁLOGO REAL DE SERVIÇOS ATIVOS (DADOS DO BANCO)
+
+════════════════════════════════════════════════
+Use APENAS os valores e nomes abaixo. Não invente nenhum serviço ou valor fora desta lista.
+
+${servicosList || 'Catálogo temporariamente indisponível — informe ao cliente que consultará e retornará em breve.'}
+
+════════════════════════════════════════════════
+🛍️ PRODUTOS DA LOJA GSA (DADOS DO BANCO)
+════════════════════════════════════════════════
+${produtosList || 'Produtos temporariamente indisponíveis.'}
+
+════════════════════════════════════════════════
+🧮 CALCULADORAS GSA (EXECUTADAS DIRETAMENTE NO CHAT)
+════════════════════════════════════════════════
+a) Aposentadoria & Planejamento Previdenciário (tool_id: "retirement"):
+   - Regras: Idade Mínima (65H/62M), Pontos (101H/91M), Pedágio 50% e 100%, Progressiva.
+   - RMI: 60% da média + 2% por ano acima de 20H/15M anos de contribuição.
+   - Solicite: Idade, Tempo de contribuição, Sexo, Salário médio aproximado.
+b) Rescisão Trabalhista CLT (tool_id: "termination"):
+   - Modalidades: Sem justa causa, Com justa causa, Pedido de demissão, Acordo 484-A.
+   - Verbas: saldo, aviso proporcional (Lei 12.506/11), 13º, férias+1/3, FGTS 40%/20%, INSS/IRRF.
+c) Férias (tool_id: "vacation"): salário, 1/3, abono pecuniário, 13º adiantado, descontos.
+d) 13º Salário (tool_id: "thirteenth"): 1ª parcela (50%, sem desconto), 2ª parcela (com INSS/IRRF).
+e) Benefícios INSS (tool_id: "benefits"): Auxílio-Doença 91%, Acidente 50%, Maternidade 100%.
+f) BPC/LOAS (tool_id: "bpc"): 65+ ou PcD, renda per capita < R$ 353, benefício = R$ 1.412.
+   → Voucher Pro Gratuito: 1 uso por número. Use action "request_pro_voucher" quando solicitado.
+g) GERAÇÃO E ENVIO DO ARQUIVO PDF DO CÁLCULO (100% NO WHATSAPP):
+   - Quando o cliente pedir o arquivo PDF (ex: "cadê o meu arquivo PDF", "me manda o PDF", "quero o PDF", "gerar relatório", "cade o pdf", "quero baixar o pdf", "manda o relatório"):
+   - Você DEVE responder com action "generate_calculator_pdf" trazendo todos os dados calculados no JSON.
+   - NUNCA DIGA QUE O PDF SÓ É GERADO NO SITE OU NO SISTEMA COMPLETO! O sistema cria o arquivo PDF oficial na hora e envia anexado no chat do WhatsApp!
+
+════════════════════════════════════════════════
+🤝 OUTROS MÓDULOS DO SISTEMA
+════════════════════════════════════════════════
+- Programa Afiliados (Indique & Ganhe): qualquer pessoa pode se afiliar gratuitamente e ganhar comissões por indicação.
+- Fidelidade & VIP: pontos acumulados, níveis Bronze/Prata/Ouro/Diamante, resgates via PIX ou desconto.
+- Loja Virtual: produtos físicos e digitais, entrega em todo o Brasil.
+- Viagens, Seguros, Classificados, Portais de Parceiros (Fornecedores & Prestadores): disponíveis via menu.
+- Atendimento Humano: ramais setoriais ativos — Comercial, Financeiro, Depto Pessoal, Jurídico, SAC.
+
+════════════════════════════════════════════════
+📤 FORMATO JSON DE RESPOSTA OBRIGATÓRIO
+════════════════════════════════════════════════
+Responda SEMPRE em JSON válido. Nunca use markdown fora do campo "message".
+
+- action "reply": Dúvidas, cálculos, orientações, informações gerais.
+- action "generate_calculator_pdf": QUANDO O CLIENTE PEDIR O ARQUIVO PDF DO CÁLCULO. Preencha "title", "mode" ("PRO" ou "FREE"), "items" (array com labels e valores), "total_label", "total_value" e "notes".
+- action "request_pro_voucher": Cliente quer Calculadora Pro ou voucher gratuito.
+- action "search_service": Cliente quer CONTRATAR um serviço do catálogo de serviços acima.
+- action "search_product": QUANDO O CLIENTE PROCURAR QUALQUER PRODUTO (ex: tênis, calça, celular, capinha, camisa, relógio, eletrônicos, qualquer mercadoria física/digital):
+  * Se encontrar no catálogo de produtos acima, retorne os itens encontrados em "found_items".
+  * Se NÃO encontrar no catálogo acima, NUNCA diga que não tem e NUNCA use "create_ticket". Use SEMPRE action "search_product" com "found_items": [] e preencha "product_query" com o nome limpo do produto (ex: "Tênis", "Calça Jeans", "Capinha de Celular"). No campo "product_limit", extraia a quantidade exata de opções que o cliente pediu (ex: 5, 4, 3; padrão 3). O sistema fará a busca automática e enviará as fotos e opções com 100% de margem!
+- action "request_credit": QUANDO O CLIENTE QUISER SOLICITAR CRÉDITO, EMPRÉSTIMO, FINANCIAMENTO OU CAPITAL DE GIRO. Preencha "credit_amount" (número), "credit_installments" (número), "credit_purpose" (texto), "credit_income" (número).
+- action "redeem_partner_benefit": QUANDO O CLIENTE QUISER RESGATAR UM BENEFÍCIO, CUPOM OU DESCONTO DE PARCEIRO. Extraia no campo "partner_query" EXATAMENTE o termo ou nome do parceiro que o cliente digitou (ex: se digitou "gsa pet", preencha "partner_query": "pet"). NUNCA invente nomes que o cliente não escreveu!
+- action "create_ticket": Apenas para SERVIÇOS que não existem no catálogo.
+- action "menu": Navegação direta (target de 1 a 10).
+
+{
+  "action": "reply|generate_calculator_pdf|request_pro_voucher|search_service|search_product|request_credit|redeem_partner_benefit|create_ticket|menu",
+  "partner_query": "termo extraído do texto",
+  "target": "1",
+  "tool_id": "termination",
+  "title": "Cálculo de Rescisão Trabalhista CLT",
+  "mode": "PRO",
+  "items": [
+    { "label": "Saldo de Salário (0 dias)", "value": "R$ 0,00" },
+    { "label": "13º Salário Proporcional (1/12)", "value": "R$ 165,83" },
+    { "label": "Férias Proporcionais + 1/3 (12/12)", "value": "R$ 2.653,33" },
+    { "label": "Aviso Prévio Indenizado (30 dias)", "value": "R$ 1.990,00" },
+    { "label": "Multa Rescisória FGTS (40%)", "value": "R$ 796,00" }
+  ],
+  "total_label": "TOTAL LÍQUIDO ESTIMADO",
+  "total_value": "R$ 5.605,16",
+  "notes": "Calculado conforme normas vigentes da CLT e Lei 12.506/11 para rescisão sem justa causa.",
+  "message": "Aqui está o seu demonstrativo oficial em PDF com todas as verbas calculadas!",
+  "product_query": "Tênis Esportivo",
+  "product_limit": 5,
+  "credit_amount": 10000,
+  "credit_installments": 24,
+  "credit_purpose": "Capital de Giro",
+  "credit_income": 8000,
+  "found_item": { "codigo": "SV102", "nome": "Aposentadorias", "descricao": "...", "valor": 0 },
+  "found_items": [
+    { "codigo": "PROD01", "nome": "Tênis X", "descricao": "...", "valor": 100, "imagem_url": "link" }
+  ],
+  "ticket_reason": "..."
+}`;
+
+
+
+  const contents = [];
+  if (session.history && session.history.length > 0) {
+    session.history.slice(-6).forEach(m => {
+      contents.push({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content || '' }]
+      });
+    });
+  }
+  contents.push({
+    role: 'user',
+    parts: [{ text: userMessage }]
+  });
+
+  const payload = JSON.stringify({
+    system_instruction: { parts: [{ text: systemPrompt }] },
+    contents,
+    generationConfig: {
+      temperature: 0.3,
+      maxOutputTokens: 1500,
+      responseMimeType: 'application/json'
+    }
+  });
+
+  const controller = { destroyed: false };
+  const req = https.request({
+    hostname: 'generativelanguage.googleapis.com',
+    port: 443,
+    path: `/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(payload, 'utf8')
+    }
+
+  }, res => {
+    let d = '';
+    res.on('data', c => d += c);
+    res.on('end', () => {
+      clearTimeout(timer);
+      try {
+        const parsed = JSON.parse(d);
+        let textContent = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        const jsonMatch = textContent.match(/(\{[\s\S]*\})/);
+        if (jsonMatch) textContent = jsonMatch[1];
+        const result = JSON.parse(textContent.trim());
+        callback(null, result);
+      } catch(e) {
+        callback(e, null);
+      }
+    });
+  });
+
+  const timer = setTimeout(() => {
+    if (!controller.destroyed) {
+      controller.destroyed = true;
+      req.destroy();
+      callback(new Error('timeout'), null);
+    }
+  }, AI_TIMEOUT_MS);
+
+  req.on('error', e => {
+    clearTimeout(timer);
+    console.error('❌ IA Google Gemini: erro na requisição:', e.message);
+    callback(e, null);
+  });
+
+  req.write(payload);
+  req.end();
+}
+
+// ─── MÓDULO IA & NLU: PROTOCOLO DE AUTOATENDIMENTO (Gemini AI + Fallback Determinístico) ─
+
+function parseProtocolIntentFallback(text) {
+  const cleanText = (text || '').trim();
+  const lower = cleanText.toLowerCase();
+
+  // 1. Check for Confirmation / Denial
+  if (/^(sim|s|confirmo|confirmar|com certeza|positivo|1)$/i.test(cleanText) ||
+      /\b(pode cancelar|confirmo o cancelamento|desejo cancelar|sim,\s*confirmo)\b/i.test(cleanText)) {
+    return {
+      intent: 'confirmar_cancelamento',
+      field: null,
+      new_value: null,
+      raw_entities: {},
+      confidence: 0.95,
+      suggested_reply: 'Cancelamento confirmado.'
+    };
+  }
+
+  if (/^(n[aã]o|n|abortar|desisti|voltar|manter|2)$/i.test(cleanText) ||
+      /\b(n[aã]o\s+(?:quero\s+)?cancelar|n[aã]o\s+cancelar|cancelar\s+n[aã]o|deixa\s+pra\s+l[aá]|n[aã]o,\s*(?:eu\s+)?desisti|desisti\s+de\s+cancelar|desisti)\b/i.test(cleanText) ||
+      /\bn[aã]o\s*,\s*(?:eu\s+)?pensei\s+melhor\b/i.test(cleanText)) {
+    return {
+      intent: 'negar_cancelamento',
+      field: null,
+      new_value: null,
+      raw_entities: {},
+      confidence: 0.95,
+      suggested_reply: 'Cancelamento cancelado. Seu resgate permanece ativo.'
+    };
+  }
+
+  // 2. Check for Cancellation Intent
+  if (/\b(cancelar|desistir|anular|cancelamento|excluir resgate|cancelar beneficio)\b/i.test(lower)) {
+    return {
+      intent: 'cancelar',
+      field: null,
+      new_value: null,
+      raw_entities: {},
+      confidence: 0.9,
+      suggested_reply: 'Deseja realmente cancelar este protocolo?'
+    };
+  }
+
+  // 3. Check for Consultation Intent
+  if (/\b(consultar|status|situacao|detalhes|como esta|ver protocolo)\b/i.test(lower)) {
+    return {
+      intent: 'consultar',
+      field: null,
+      new_value: null,
+      raw_entities: {},
+      confidence: 0.85,
+    };
+  }
+
+  // 4. Entity & Field Extraction for Alteration
+  let detectedField = null;
+  let extractedValue = null;
+
+  // Email pattern
+  const emailMatch = cleanText.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+  if (emailMatch || /\b(email|e-mail|correio)\b/i.test(lower)) {
+    detectedField = 'email';
+    if (emailMatch) {
+      extractedValue = emailMatch[1].trim().toLowerCase();
+    }
+  }
+
+  // Phone pattern
+  const phoneMatch = cleanText.match(/(?:(?:\+|00)?55\s*)?(?:\(?([1-9]{2})\)?\s*)?(?:((?:9\d|[2-9])\d{3})\-?(\d{4}))/);
+  if (!detectedField && (phoneMatch || /\b(telefone|celular|whatsapp|fone|contato)\b/i.test(lower))) {
+    detectedField = 'telefone';
+    if (phoneMatch) {
+      const digitsOnly = cleanText.replace(/\D/g, '');
+      if (digitsOnly.length >= 10) {
+        extractedValue = digitsOnly.startsWith('55') ? digitsOnly : `55${digitsOnly}`;
+      }
+    }
+  }
+
+  // Name pattern
+  const nameIntentMatch = cleanText.match(/(?:mudar?|alterar?|trocar?|atualizar?|corrigir?)\s+(?:o\s+|meu\s+)?(?:nome\s+(?:completo\s+)?)(?:para\s+|e\s+)?([A-Za-zÀ-ÖØ-öø-ÿ\s]{4,60})/i) ||
+                          cleanText.match(/(?:meu\s+novo\s+nome\s+[eé]\s+|meu\s+nome\s+[eé]\s+)([A-Za-zÀ-ÖØ-öø-ÿ\s]{4,60})/i);
+
+  if (!detectedField && (nameIntentMatch || /\b(nome|nome completo|titular)\b/i.test(lower))) {
+    if (!/\b(meus dados|meu cadastro|dados cadastrais)\b/i.test(lower) || nameIntentMatch) {
+      detectedField = 'nome_completo';
+      if (nameIntentMatch && nameIntentMatch[1]) {
+        let potentialName = nameIntentMatch[1].trim();
+        potentialName = potentialName.replace(/^(?:para|de|o|meu|nome)\s+/i, '').trim();
+        if (potentialName.split(/\s+/).length >= 2) {
+          extractedValue = potentialName;
+        }
+      }
+    }
+  }
+
+  // Intent: resgatar benefício / cupom / parceiro
+  if (/\b(resgatar|resgate|pegar|ativar|obter|solicitar|cupom|beneficio|benefício|desconto de parceiro)\b/i.test(lower)) {
+    const partnerExtracted = (typeof extractPartnerTermFromText === 'function') ? extractPartnerTermFromText(text) : cleanText;
+    return {
+      intent: 'resgatar',
+      field: 'parceiro',
+      new_value: partnerExtracted,
+      raw_entities: {
+        parceiro: partnerExtracted,
+        nome_completo: null,
+        email: null,
+        telefone: null
+      },
+      confidence: 0.9
+    };
+  }
+
+  const isAlteration = /\b(alterar?|mudar?|trocar?|atualizar?|corrigir?|modificar?|novo|nova)\b/i.test(lower) || Boolean(detectedField);
+
+  if (isAlteration) {
+    return {
+      intent: 'alterar',
+      field: detectedField,
+      new_value: extractedValue,
+      raw_entities: {
+        nome_completo: detectedField === 'nome_completo' ? extractedValue : null,
+        email: detectedField === 'email' ? extractedValue : null,
+        telefone: detectedField === 'telefone' ? extractedValue : null,
+      },
+      confidence: detectedField && extractedValue ? 0.9 : 0.75,
+    };
+  }
+
+  return {
+    intent: 'outro',
+    field: null,
+    new_value: null,
+    raw_entities: {},
+    confidence: 0.3,
+  };
+}
+
+function callGeminiProtocolNLU(userMessage, callback) {
+  if (!GEMINI_API_KEY) {
+    return callback(null, parseProtocolIntentFallback(userMessage));
+  }
+
+  const systemPrompt = `Você é o analisador de linguagem natural (NLU) para o autoatendimento de resgate de protocolos de benefícios do GSA HUB.
+Sua tarefa é analisar a mensagem do usuário e extrair a intenção e entidades estruturadas em JSON.
+
+Intenções possíveis (campo "intent"):
+- "alterar": O usuário quer alterar/atualizar seus dados cadastrais (nome completo, e-mail ou telefone).
+- "cancelar": O usuário deseja cancelar o protocolo de resgate.
+- "confirmar_cancelamento": O usuário confirma o cancelamento (ex: "sim", "confirmo", "pode cancelar").
+- "negar_cancelamento": O usuário aborta/recusa o cancelamento (ex: "não", "desisti", "manter").
+- "consultar": O usuário quer consultar o status/dados do protocolo.
+- "resgatar": O usuário deseja resgatar, solicitar ou obter um benefício, desconto, cupom ou voucher de parceiro. Extraia em "new_value" exatamente o que o cliente digitou como nome/categoria do parceiro.
+- "outro": Qualquer outra dúvida ou mensagem fora do escopo.
+
+Campos possíveis para alteração (campo "field"):
+- "nome_completo" | "email" | "telefone" | "parceiro" | null
+
+Valor extraído (campo "new_value"):
+- Se o usuário forneceu o novo valor diretamente (ex: "mudar email para joao@gmail.com" -> new_value: "joao@gmail.com"), extraia aqui.
+- Se o usuário apenas indicou que quer mudar o campo sem fornecer o valor novo (ex: "quero mudar meu email"), deixe null.
+
+Formato JSON de resposta OBRIGATÓRIO (retorne SOMENTE JSON):
+{
+  "intent": "alterar" | "cancelar" | "confirmar_cancelamento" | "negar_cancelamento" | "consultar" | "resgatar" | "encerrar" | "outro",
+  "field": "nome_completo" | "email" | "telefone" | "parceiro" | null,
+  "new_value": "valor extraído ou null",
+  "raw_entities": {
+    "nome_completo": "string ou null",
+    "email": "string ou null",
+    "telefone": "string ou null",
+    "parceiro": "string ou null"
+  },
+  "confidence": 0.95
+}`;
+
+  const payload = JSON.stringify({
+    system_instruction: { parts: [{ text: systemPrompt }] },
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: userMessage }]
+      }
+    ],
+    generationConfig: {
+      temperature: 0.1,
+      maxOutputTokens: 500,
+      responseMimeType: 'application/json'
+    }
+  });
+
+  let finished = false;
+  const req = https.request({
+    hostname: 'generativelanguage.googleapis.com',
+    port: 443,
+    path: `/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(payload, 'utf8')
+    }
+  }, res => {
+    let d = '';
+    res.on('data', c => d += c);
+    res.on('end', () => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      try {
+        const parsed = JSON.parse(d);
+        let textContent = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        const jsonMatch = textContent.match(/(\{[\s\S]*\})/);
+        if (jsonMatch) textContent = jsonMatch[1];
+        const result = JSON.parse(textContent.trim());
+        if (!result.intent) {
+          return callback(null, parseProtocolIntentFallback(userMessage));
+        }
+        callback(null, result);
+      } catch (e) {
+        console.warn('⚠️ Erro ao parsear JSON do Gemini NLU, usando fallback:', e.message);
+        callback(null, parseProtocolIntentFallback(userMessage));
+      }
+    });
+  });
+
+  const timer = setTimeout(() => {
+    if (!finished) {
+      finished = true;
+      req.destroy();
+      console.warn('⚠️ Timeout no Gemini NLU, usando fallback regex.');
+      callback(null, parseProtocolIntentFallback(userMessage));
+    }
+  }, 10000);
+
+  req.on('error', e => {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timer);
+    console.warn('⚠️ Erro de rede no Gemini NLU, usando fallback:', e.message);
+    callback(null, parseProtocolIntentFallback(userMessage));
+  });
+
+  req.write(payload);
+  req.end();
+}
+
+function validateAndSanitizeField(field, rawValue) {
+  const trimmed = (rawValue || '').trim();
+
+  if (!trimmed) {
+    return { valid: false, value: '', error: 'O valor não pode estar em branco.' };
+  }
+
+  // Strip script tags and content completely
+  const noScript = trimmed
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .trim();
+
+  // Strip potential SQLi / dangerous tokens
+  const cleanTokens = noScript.replace(/['";\-\-]/g, '').trim();
+
+  if (field === 'email') {
+    const emailLower = cleanTokens.toLowerCase();
+    if (emailLower.includes('..') || emailLower.includes(' ')) {
+      return { valid: false, value: '', error: 'E-mail inválido. Por favor, forneça um formato como: nome@dominio.com' };
+    }
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(emailLower)) {
+      return { valid: false, value: '', error: 'E-mail inválido. Por favor, forneça um formato como: nome@dominio.com' };
+    }
+    return { valid: true, value: emailLower };
+  }
+
+  if (field === 'telefone') {
+    const digits = cleanTokens.replace(/\D/g, '');
+    if (digits.length < 10 || digits.length > 13) {
+      return { valid: false, value: '', error: 'Número de telefone inválido. Informe DDD + número (ex: 11987654321).' };
+    }
+    // Reject obvious all-same digits (e.g. 00000000000)
+    if (/^(\d)\1+$/.test(digits)) {
+      return { valid: false, value: '', error: 'Número de telefone inválido. Informe um número real com DDD.' };
+    }
+    const normalized = digits.startsWith('55') ? digits : `55${digits}`;
+    return { valid: true, value: normalized };
+  }
+
+  if (field === 'nome_completo') {
+    const parts = cleanTokens.split(/\s+/).filter(p => p.length >= 2);
+    if (parts.length < 2) {
+      return { valid: false, value: '', error: 'Por favor, informe o seu nome completo (nome e sobrenome).' };
+    }
+    return { valid: true, value: cleanTokens };
+  }
+
+  return { valid: false, value: '', error: 'Campo desconhecido.' };
+}
+
+async function dispatchAdminProtocolAlert(action, protocolRecord, diffInfo) {
+  const partnerName = protocolRecord.parceiro_nome || protocolRecord.parceiros?.nome || protocolRecord.parceiros?.name || 'Parceiro GSA';
+  const alertMessage = [
+    `🔔 *ALERTA MASTER: AUTOATENDIMENTO DE PROTOCOLO GSA*`,
+    ``,
+    `📌 *Ação:* ${action === 'ALTERACAO' ? '✏️ Alteração Cadastral' : '❌ Cancelamento de Resgate'}`,
+    `🔖 *Protocolo:* \`${protocolRecord.codigo_gerado}\``,
+    `🤝 *Parceiro:* ${partnerName}`,
+    `👤 *Cliente:* ${protocolRecord.nome_completo || 'Não informado'}`,
+    `📞 *Telefone:* ${protocolRecord.telefone || 'Não informado'}`,
+    `📧 *E-mail:* ${protocolRecord.email || 'Não informado'}`,
+    ``,
+    `📋 *Detalhes da Atualização:*`,
+    `${diffInfo}`,
+    ``,
+    `⏰ *Data/Hora:* ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}`,
+    `_Sistema Automatizado WhatsApp GSA HUB_`,
+  ].join('\n');
+
+  try {
+    sendWhatsAppReply(ADMIN_MASTER_PHONE, alertMessage);
+  } catch (err) {
+    console.error('❌ Erro ao disparar alerta admin para protocolo:', err.message);
+  }
+}
+
+function handleProtocolSelfServiceFlow(fromPhone, rawText, session, matchedProtocolCode) {
+  const text = (rawText || '').trim();
+
+  // 0 to return to main menu
+  if (text === '0') {
+    session.state = 'MAIN_MENU';
+    session.protocolState = null;
+    session.protocolCode = null;
+    session.protocolRecord = null;
+    session.targetField = null;
+    userSessions[fromPhone] = session;
+    sendWhatsAppReply(fromPhone, getMainMenuText(session.profile));
+    return;
+  }
+
+  // 1. If matched a new protocol code or not yet identified
+  if (matchedProtocolCode) {
+    const code = matchedProtocolCode.toUpperCase().replace(/_/g, '-');
+    supabaseGet('/rest/v1/parceiros_resgates?codigo_gerado=eq.' + encodeURIComponent(code) + '&select=*,parceiros(id,nome,name,slug,logo_url,benefits)&limit=1', (err, rows) => {
+      if (err || !rows || rows.length === 0) {
+        sendWhatsAppReply(
+          fromPhone,
+          `❌ Não encontramos nenhum resgate com o protocolo *${code}*.\nPor favor, verifique os dígitos e tente novamente ou entre em contato com nosso suporte no número *${SUPPORT_COMPANY_PHONE}*.`
+        );
+        return;
+      }
+
+      const record = rows[0];
+      const partnerName = record.parceiros?.nome || record.parceiros?.name || record.parceiro_nome || 'Parceiro GSA';
+      record.parceiro_nome = partnerName;
+
+      session.state = 'PROTOCOL_IDENTIFIED';
+      session.protocolState = 'IDENTIFIED';
+      session.protocolCode = code;
+      session.protocolRecord = record;
+      session.targetField = null;
+      userSessions[fromPhone] = session;
+
+      if (record.status === 'cancelado') {
+        const cancelDateStr = record.data_cancelamento ? new Date(record.data_cancelamento).toLocaleString('pt-BR') : 'Data não registrada';
+        sendWhatsAppReply(
+          fromPhone,
+          `⚠️ *Protocolo Cancelado: ${code}*\n\n` +
+          `• *Parceiro:* ${partnerName}\n` +
+          `• *Titular:* ${record.nome_completo}\n` +
+          `• *Status:* ❌ CANCELADO em ${cancelDateStr}\n\n` +
+          `Este resgate já foi cancelado e não pode sofrer novas alterações. Caso precise de suporte, fale conosco em *${SUPPORT_COMPANY_PHONE}*.`
+        );
+        return;
+      }
+
+      if (record.status === 'concluido') {
+        sendWhatsAppReply(
+          fromPhone,
+          `✅ *Protocolo Concluído: ${code}*\n\n` +
+          `• *Parceiro:* ${partnerName}\n` +
+          `• *Titular:* ${record.nome_completo}\n` +
+          `• *Status:* 🎉 CONCLUÍDO / ATIVO\n` +
+          (record.link_ativacao ? `• *Link de Ativação:* ${record.link_ativacao}\n\n` : '\n') +
+          `Seu benefício já está liberado! Você ainda pode alterar dados cadastrais de contato ou solicitar suporte.`
+        );
+        return;
+      }
+
+      // Standard Active/Pendente Welcome Card
+      const welcomeCard = [
+        `🎉 *PROTOCOLO LOCALIZADO COM SUCESSO!*`,
+        ``,
+        `🔖 *Código:* \`${record.codigo_gerado}\``,
+        `🤝 *Parceiro:* ${partnerName}`,
+        `👤 *Titular:* ${record.nome_completo}`,
+        `📧 *E-mail:* ${record.email || 'Não informado'}`,
+        `📞 *Telefone:* ${record.telefone}`,
+        `📊 *Status:* ⏳ ${record.status.toUpperCase()}`,
+        ``,
+        `💡 *Como posso te ajudar com este resgate?*`,
+        `1️⃣ *Alterar dados* (Nome, E-mail ou Telefone)`,
+        `2️⃣ *Cancelar resgate*`,
+        `3️⃣ *Consultar status*`,
+        ``,
+        `_Você pode digitar o que deseja em linguagem natural (ex: "quero mudar meu email para novo@email.com" ou "desejo cancelar")._`
+      ].join('\n');
+
+      sendWhatsAppReply(fromPhone, welcomeCard);
+    });
+    return;
+  }
+
+  // 2. If no protocol session active
+  if (!session || !session.protocolRecord) {
+    sendWhatsAppReply(
+      fromPhone,
+      `Olá! Para consultar, alterar dados ou cancelar um benefício, por favor envie o seu código de protocolo (ex: \`PROT-RES-2026-ABC123\`).`
+    );
+    return;
+  }
+
+  const pState = session.protocolState || (session.state.replace('PROTOCOL_', '') || 'IDENTIFIED');
+
+  // 3. State Machine Flow
+  switch (pState) {
+    case 'IDENTIFIED':
+    case 'AWAITING_ACTION': {
+      let _overridenText = text;
+      const _t = (text || '').trim();
+      if (_t === '1') _overridenText = 'alterar';
+      else if (_t === '2') _overridenText = 'cancelar';
+      else if (_t === '3') _overridenText = 'consultar';
+      
+      callGeminiProtocolNLU(_overridenText, (errNlu, nlu) => {
+        if (nlu.intent === 'cancelar') {
+          session.state = 'PROTOCOL_AWAITING_CANCEL_CONFIRM';
+          session.protocolState = 'AWAITING_CANCEL_CONFIRM';
+          userSessions[fromPhone] = session;
+          sendWhatsAppReply(
+            fromPhone,
+            `⚠️ *ATENÇÃO — CONFIRMAÇÃO DE CANCELAMENTO*\n\n` +
+            `Deseja realmente cancelar o protocolo *${session.protocolCode}* da parceria *${session.protocolRecord.parceiro_nome}*?\n\n` +
+            `• Digite *SIM* para confirmar o cancelamento definitivo.\n` +
+            `• Digite *NÃO* para voltar e manter seu benefício ativo.`
+          );
+          return;
+        }
+
+        if (nlu.intent === 'consultar') {
+          supabaseGet('/rest/v1/parceiros_resgates?codigo_gerado=eq.' + encodeURIComponent(session.protocolCode) + '&select=*,parceiros(id,nome,name)&limit=1', (errF, rowsF) => {
+            const fresh = (rowsF && rowsF[0]) || session.protocolRecord;
+            const partnerName = fresh.parceiros?.nome || fresh.parceiros?.name || fresh.parceiro_nome || 'Parceiro GSA';
+            sendWhatsAppReply(
+              fromPhone,
+              `📋 *Situação do Protocolo ${fresh.codigo_gerado}*\n` +
+              `• *Parceiro:* ${partnerName}\n` +
+              `• *Titular:* ${fresh.nome_completo}\n` +
+              `• *E-mail:* ${fresh.email || 'Não informado'}\n` +
+              `• *Telefone:* ${fresh.telefone}\n` +
+              `• *Status Atual:* ${fresh.status.toUpperCase()}`
+            );
+          });
+          return;
+        }
+
+        if (nlu.intent === 'alterar') {
+          if (nlu.field && nlu.new_value) {
+            // One-shot alteration!
+            const validation = validateAndSanitizeField(nlu.field, nlu.new_value);
+            if (!validation.valid) {
+              session.state = 'PROTOCOL_AWAITING_NEW_VALUE';
+              session.protocolState = 'AWAITING_NEW_VALUE';
+              session.targetField = nlu.field;
+              userSessions[fromPhone] = session;
+              sendWhatsAppReply(fromPhone, `❌ ${validation.error}\nPor favor, digite o novo valor corretamente:`);
+              return;
+            }
+
+            const oldVal = session.protocolRecord[nlu.field];
+            const fieldLabel = nlu.field === 'nome_completo' ? 'Nome' : nlu.field === 'email' ? 'E-mail' : 'Telefone';
+
+            supabasePatch('/rest/v1/parceiros_resgates?id=eq.' + encodeURIComponent(session.protocolRecord.id), { [nlu.field]: validation.value }, (errPatch, resPatch) => {
+              session.protocolRecord[nlu.field] = validation.value;
+              session.state = 'PROTOCOL_IDENTIFIED';
+              session.protocolState = 'IDENTIFIED';
+              session.targetField = null;
+              userSessions[fromPhone] = session;
+
+              dispatchAdminProtocolAlert(
+                'ALTERACAO',
+                session.protocolRecord,
+                `• Campo: ${fieldLabel}\n• Anterior: ${oldVal || 'vazio'}\n• Novo: ${validation.value}`
+              );
+
+              sendWhatsAppReply(
+                fromPhone,
+                `✅ *${fieldLabel} atualizado com sucesso!*\n\n` +
+                `• *Novo valor:* ${validation.value}\n` +
+                `• *Protocolo:* \`${session.protocolCode}\`\n\n` +
+                `O que mais posso fazer por você?`
+              );
+            });
+            return;
+          }
+
+          if (nlu.field && !nlu.new_value) {
+            session.state = 'PROTOCOL_AWAITING_NEW_VALUE';
+            session.protocolState = 'AWAITING_NEW_VALUE';
+            session.targetField = nlu.field;
+            userSessions[fromPhone] = session;
+            const fieldLabel = nlu.field === 'nome_completo' ? 'Nome Completo' : nlu.field === 'email' ? 'E-mail' : 'Telefone com DDD';
+            sendWhatsAppReply(fromPhone, `Por favor, digite o seu novo *${fieldLabel}*:`);
+            return;
+          }
+
+          // User said "alterar" without field
+          session.state = 'PROTOCOL_AWAITING_FIELD';
+          session.protocolState = 'AWAITING_FIELD';
+          userSessions[fromPhone] = session;
+          sendWhatsAppReply(
+            fromPhone,
+            `Qual dado você gostaria de alterar?\n\n` +
+            `1️⃣ *Nome Completo*\n` +
+            `2️⃣ *E-mail*\n` +
+            `3️⃣ *Telefone*`
+          );
+          return;
+        }
+
+
+        if (nlu.intent === 'encerrar' || nlu.intent === 'negar_cancelamento' || /^(n[aã]o|obrigado|valeu|tchau|encerrar|sair|nada|ok)$/i.test(_t)) {
+          delete userSessions[fromPhone];
+          sendWhatsAppReply(fromPhone, "Tudo bem! Se precisar de mais alguma coisa, é só chamar. Sessão encerrada.");
+          return;
+        }
+
+        if (nlu.intent === 'resgatar') {
+          delete userSessions[fromPhone];
+          processMessage(fromPhone, textBody, mediaType, pushName, rawMessageData);
+          return;
+        }
+
+        // Unrecognized intent
+        sendWhatsAppReply(
+          fromPhone,
+          `Desculpe, não entendi. Você pode:\n` +
+          `• Digitar *alterar* para atualizar seus dados.\n` +
+          `• Digitar *cancelar* para cancelar o protocolo.\n` +
+          `• Digitar *consultar* para ver os dados atuais.`,
+              `• Digitar *resgatar* para solicitar um novo benefício.`
+        );
+      });
+      return;
+    }
+
+    case 'AWAITING_FIELD': {
+      const lower = text.toLowerCase();
+      let chosenField = null;
+
+      if (/1|nome|titular/i.test(lower)) chosenField = 'nome_completo';
+      else if (/2|email|e-mail|correio/i.test(lower)) chosenField = 'email';
+      else if (/3|telefone|celular|whatsapp|fone/i.test(lower)) chosenField = 'telefone';
+
+      if (!chosenField) {
+        sendWhatsAppReply(
+          fromPhone,
+          `Opção inválida. Por favor, escolha qual dado deseja alterar:\n` +
+          `1️⃣ *Nome Completo*\n2️⃣ *E-mail*\n3️⃣ *Telefone*`
+        );
+        return;
+      }
+
+      session.state = 'PROTOCOL_AWAITING_NEW_VALUE';
+      session.protocolState = 'AWAITING_NEW_VALUE';
+      session.targetField = chosenField;
+      userSessions[fromPhone] = session;
+
+      const fieldLabel = chosenField === 'nome_completo' ? 'Nome Completo' : chosenField === 'email' ? 'E-mail' : 'Telefone com DDD';
+      sendWhatsAppReply(fromPhone, `Perfeito! Digite o novo *${fieldLabel}*:`);
+      return;
+    }
+
+    case 'AWAITING_NEW_VALUE': {
+      const targetField = session.targetField || 'email';
+      const validation = validateAndSanitizeField(targetField, text);
+
+      if (!validation.valid) {
+        sendWhatsAppReply(fromPhone, `❌ ${validation.error}\nTente novamente:`);
+        return;
+      }
+
+      const oldVal = session.protocolRecord[targetField];
+      const fieldLabel = targetField === 'nome_completo' ? 'Nome' : targetField === 'email' ? 'E-mail' : 'Telefone';
+
+      supabasePatch('/rest/v1/parceiros_resgates?id=eq.' + encodeURIComponent(session.protocolRecord.id), { [targetField]: validation.value }, (errPatch, resPatch) => {
+        session.protocolRecord[targetField] = validation.value;
+        session.state = 'PROTOCOL_IDENTIFIED';
+        session.protocolState = 'IDENTIFIED';
+        session.targetField = null;
+        userSessions[fromPhone] = session;
+
+        dispatchAdminProtocolAlert(
+          'ALTERACAO',
+          session.protocolRecord,
+          `• Campo: ${fieldLabel}\n• Anterior: ${oldVal || 'vazio'}\n• Novo: ${validation.value}`
+        );
+
+        sendWhatsAppReply(
+          fromPhone,
+          `✅ *${fieldLabel} alterado com sucesso!*\n\n` +
+          `• *Novo valor:* ${validation.value}\n` +
+          `• *Protocolo:* \`${session.protocolCode}\`\n\n` +
+          `Posso ajudar com mais alguma informação?`
+        );
+      });
+      return;
+    }
+
+    case 'AWAITING_CANCEL_CONFIRM': {
+      callGeminiProtocolNLU(text, (errNlu, nlu) => {
+        if (nlu.intent === 'confirmar_cancelamento') {
+          const timestamp = new Date().toISOString();
+          supabasePatch('/rest/v1/parceiros_resgates?id=eq.' + encodeURIComponent(session.protocolRecord.id), { status: 'cancelado', data_cancelamento: timestamp }, (errPatch, resPatch) => {
+            session.protocolRecord.status = 'cancelado';
+            session.protocolRecord.data_cancelamento = timestamp;
+            session.state = 'PROTOCOL_IDENTIFIED';
+            session.protocolState = 'IDENTIFIED';
+            userSessions[fromPhone] = session;
+
+            dispatchAdminProtocolAlert(
+              'CANCELAMENTO',
+              session.protocolRecord,
+              `• Status: CANCELADO\n• Data/Hora do Cancelamento: ${timestamp}`
+            );
+
+            sendWhatsAppReply(
+              fromPhone,
+              `❌ *Protocolo ${session.protocolCode} cancelado com sucesso.*\n\n` +
+              `O seu resgate para *${session.protocolRecord.parceiro_nome}* foi cancelado em nosso sistema. Caso mude de ideia ou precise de assistência, entre em contato com nosso atendimento em *${SUPPORT_COMPANY_PHONE}*.`
+            );
+          });
+          return;
+        }
+
+        if (nlu.intent === 'negar_cancelamento') {
+          session.state = 'PROTOCOL_IDENTIFIED';
+          session.protocolState = 'IDENTIFIED';
+          userSessions[fromPhone] = session;
+          sendWhatsAppReply(
+            fromPhone,
+            `👍 *Cancelamento abortado!*\n\nSeu protocolo \`${session.protocolCode}\` continua ativo normalmente. Deseja fazer alguma alteração cadastral?`
+          );
+          return;
+        }
+
+        sendWhatsAppReply(
+          fromPhone,
+          `Por favor, responda *SIM* para confirmar o cancelamento do protocolo ${session.protocolCode} ou *NÃO* para manter o benefício.`
+        );
+      });
+      return;
+    }
+
+    default: {
+      session.state = 'PROTOCOL_IDENTIFIED';
+      session.protocolState = 'IDENTIFIED';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, `O que você gostaria de fazer com o protocolo \`${session.protocolCode}\`? Digite *alterar*, *cancelar* ou *consultar*.`);
+      return;
+    }
+  }
+}
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// 🤝 MÓDULO: RESGATE CONVERSACIONAL DE BENEFÍCIOS DE PARCEIROS (1:1 COM A WEB)
+// ══════════════════════════════════════════════════════════════════════════════
+
+let _partnersCache = null;
+let _partnersCacheTs = 0;
+
+function fetchPartnersForAI(callback) {
+  const now = Date.now();
+  if (_partnersCache && Array.isArray(_partnersCache) && _partnersCache.length > 0 && (now - _partnersCacheTs) < 300000) {
+    return callback(_partnersCache, null);
+  }
+  const url = '/rest/v1/parceiros?status=eq.ativo&select=id,slug,name,category,short_description,description,benefits,logo_url,cover_url,website,redemption_has_coupon,redemption_coupon_code,redemption_has_voucher,redemption_has_link,redemption_link,redemption_auto_redirect,redemption_instructions,redemption_delay_24h,featured,display_order&order=featured.desc,display_order.asc,name.asc&limit=100';
+  supabaseGet(url, (err, rows) => {
+    if (!err && Array.isArray(rows) && rows.length > 0) {
+      _partnersCache = rows;
+      _partnersCacheTs = Date.now();
+      callback(rows, null);
+    } else {
+      _partnersCache = null;
+      _partnersCacheTs = 0;
+      const fetchError = err || new Error(
+        rows && typeof rows === 'object' && rows.message
+          ? rows.message
+          : 'Consulta de parceiros retornou uma resposta inválida'
+      );
+      console.error('❌ Falha ao consultar parceiros ativos:', fetchError.message);
+      callback([], fetchError);
+    }
+  });
+}
+
+function extractPartnerTermFromText(text) {
+  if (!text) return '';
+  let clean = text.trim()
+    .replace(/^#\s*/, '')
+    .replace(/^(ola|olá|oi|bom dia|boa tarde|boa noite|por favor|gostaria de|quero|como faco para|como faço para|desejo|favor)\s+/gi, '')
+    .replace(/\b(resgatar|resgate|pegar|ativar|obter|solicitar|usar|meu|o|um|uma|os|as)\b/gi, ' ')
+    .replace(/\b(beneficio|benefício|beneficios|benefícios|cupom|cupons|desconto|descontos|convenio|convênio|parceria|parcerias|parceiro|parceira|parceiros)\b/gi, ' ')
+    .replace(/\b(de|da|do|das|dos|no|na|nos|nas|para|com|em)\b/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return clean;
+}
+
+function searchPartnersFuzzy(query, partnersList) {
+  if (!partnersList || partnersList.length === 0) return [];
+  const rawQ = (query || '').trim();
+  if (!rawQ) return partnersList.slice(0, 5);
+
+  const cleanQuery = rawQ.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\b(quero|resgatar|resgate|beneficio|benefício|cupom|cupons|desconto|descontos|parceiro|parceiros|parceria|convenio|convênio|da|do|de|das|dos|para|com|o|a|os|as|por favor|gostaria|obter|pegar)\b/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!cleanQuery) return partnersList.slice(0, 5);
+
+  const scored = partnersList.map(p => {
+    const pName = (p.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    const pSlug = (p.slug || '').toLowerCase().trim();
+    const pCat = (p.category || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    const pBen = (p.benefits || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+    let score = 0;
+    if (pSlug === cleanQuery || pName === cleanQuery) {
+      score = 1.0;
+    } else if (pName.startsWith(cleanQuery)) {
+      score = 0.95;
+    } else if (pName.includes(cleanQuery)) {
+      score = 0.88;
+    } else if (pSlug.includes(cleanQuery)) {
+      score = 0.85;
+    } else if (pCat.includes(cleanQuery)) {
+      score = 0.78;
+    } else if (pBen.includes(cleanQuery)) {
+      score = 0.72;
+    } else {
+      const queryTokens = cleanQuery.split(/\s+/).filter(t => t.length >= 2);
+      let matchCount = 0;
+      queryTokens.forEach(t => {
+        if (pName.includes(t) || pCat.includes(t) || pBen.includes(t) || pSlug.includes(t)) {
+          matchCount++;
+        }
+      });
+      if (queryTokens.length > 0 && matchCount > 0) {
+        score = 0.5 + (matchCount / queryTokens.length) * 0.35;
+      }
+    }
+    return { partner: p, score };
+  });
+
+  return scored
+    .filter(item => item.score >= 0.5)
+    .sort((a, b) => b.score - a.score)
+    .map(item => item.partner);
+}
+
+function checkDuplicateRedemptionDb(parceiroId, email, telefone, callback) {
+  if (!parceiroId || (!email && !telefone)) return callback(null, false, null);
+
+  const cleanPhone = (telefone || '').replace(/\D/g, '');
+  const cleanEmail = (email || '').trim().toLowerCase();
+
+  supabaseRpc('gsa_bot_find_partner_redemption', {
+    p_parceiro_id: parceiroId,
+    p_email: cleanEmail || null,
+    p_telefone: cleanPhone || null
+  }, (err, rows) => {
+    if (err) return callback(err, false, null);
+    if (!Array.isArray(rows)) return callback(new Error('Resposta inválida ao consultar resgates anteriores'), false, null);
+    if (rows.length === 0) return callback(null, false, null);
+    return callback(null, true, rows[0]);
+  });
+}
+
+async function dispatchAdminRedemptionAlert(type, partnerName, protocol, name, phone, email, details) {
+  const isDuplicate = type === 'DUPLICATE_ANALISE';
+  const alertMessage = [
+    `🔔 *ALERTA MASTER: ${isDuplicate ? 'RESGATE DUPLICADO COM JUSTIFICATIVA (EM ANÁLISE)' : 'NOVA SOLICITAÇÃO DE RESGATE (SLA 24H)'}*`,
+    ``,
+    `🤝 *Parceiro:* ${partnerName || 'Parceiro GSA'}`,
+    `🔖 *Protocolo:* \`${protocol}\``,
+    `👤 *Titular:* ${name || 'Não informado'}`,
+    `📞 *Telefone:* ${phone || 'Não informado'}`,
+    `📧 *E-mail:* ${email || 'Não informado'}`,
+    `⏱️ *Prazo SLA:* ${isDuplicate ? 'Até 48 horas úteis (Avaliação Gerencial)' : '24 horas para provisionamento de link/cupom'}`,
+    ``,
+    isDuplicate ? `📝 *Justificativa do Cliente:*\n"${details}"` : `📋 *Status:* Pendente de Link de Ativação no Painel Admin`,
+    ``,
+    `⏰ *Data/Hora:* ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}`,
+    `_Sistema Automatizado WhatsApp GSA HUB_`,
+  ].join('\n');
+
+  try {
+    sendWhatsAppReply(ADMIN_MASTER_PHONE, alertMessage);
+  } catch (err) {
+    console.error('❌ Erro ao disparar alerta admin para resgate:', err.message);
+  }
+}
+
+function selectRedemptionPartner(fromPhone, session, partner) {
+  session.redemptionPartner = partner;
+  session.redemptionCandidates = [];
+  session.redemptionForm = session.redemptionForm || {
+    nomeCompleto: '',
+    email: '',
+    telefone: '',
+    justificativa: ''
+  };
+
+  // Pre-fill from existing profile/session if available
+  if (!session.redemptionForm.nomeCompleto) {
+    const existingName = session.clientFullName || session.clientData?.nome || session.clientData?.nome_completo || session.profile?.cliente?.nome || session.profile?.primaryName || '';
+    if (existingName && existingName.split(/\s+/).filter(p => p.length >= 2).length >= 2) {
+      session.redemptionForm.nomeCompleto = existingName.trim();
+    }
+  }
+  if (!session.redemptionForm.email) {
+    const existingEmail = session.clientData?.email || session.profile?.cliente?.email || '';
+    if (existingEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(existingEmail.trim())) {
+      session.redemptionForm.email = existingEmail.trim().toLowerCase();
+    }
+  }
+  if (!session.redemptionForm.telefone) {
+    session.redemptionForm.telefone = fromPhone;
+  }
+
+  // O telefone do WhatsApp já é suficiente para reconhecer um resgate anterior.
+  // Faça essa verificação antes de solicitar nome/e-mail novamente.
+  if (session.redemptionPhoneCheckedPartnerId !== partner.id && session.redemptionForm.telefone) {
+    session.redemptionPhoneCheckedPartnerId = partner.id;
+    userSessions[fromPhone] = session;
+    checkDuplicateRedemptionDb(partner.id, null, session.redemptionForm.telefone, (errDupe, isDupe, dupeRow) => {
+      if (errDupe) {
+        session.redemptionPhoneCheckedPartnerId = null;
+        userSessions[fromPhone] = session;
+        console.error('❌ Falha na verificação antecipada de resgate:', errDupe.message);
+        sendWhatsAppReply(fromPhone, '⚠️ Não foi possível consultar seu histórico de benefícios agora. Tente novamente em instantes ou fale com nosso suporte no número *' + SUPPORT_COMPANY_PHONE + '*.');
+        return;
+      }
+      if (isDupe) {
+        handleDuplicateRedemptionDetected(fromPhone, session, partner, dupeRow);
+        return;
+      }
+      selectRedemptionPartner(fromPhone, session, partner);
+    });
+    return;
+  }
+
+  // Check what is missing
+  if (!session.redemptionForm.nomeCompleto) {
+    session.state = 'REDEMPTION_COLLECT_NAME';
+    userSessions[fromPhone] = session;
+    sendWhatsAppReply(
+      fromPhone,
+      [
+        `🤝 *Resgate de Benefício: ${partner.name}*`,
+        `🎁 *Benefício:* ${partner.benefits || 'Desconto exclusivo GSA HUB'}`,
+        ``,
+        `Para prosseguirmos com o seu resgate, por favor informe o seu *Nome Completo* (nome e sobrenome):`,
+        ``,
+        `_Ou digite 0 para voltar ao menu._`
+      ].join('\n')
+    );
+    return;
+  }
+
+  if (!session.redemptionForm.email) {
+    session.state = 'REDEMPTION_COLLECT_EMAIL';
+    userSessions[fromPhone] = session;
+    sendWhatsAppReply(
+      fromPhone,
+      [
+        `Ótimo, *${session.redemptionForm.nomeCompleto}*!`,
+        `Agora informe o seu *E-mail* para liberação e envio do seu cupom/benefício:`,
+        ``,
+        `_Ou digite 0 para voltar._`
+      ].join('\n')
+    );
+    return;
+  }
+
+  if (!session.redemptionForm.telefone) {
+    session.state = 'REDEMPTION_COLLECT_PHONE';
+    userSessions[fromPhone] = session;
+    sendWhatsAppReply(
+      fromPhone,
+      [
+        `Por favor, confirme o seu *Telefone / WhatsApp com DDD* (ex: 11987654321):`,
+        ``,
+        `_Ou digite 0 para voltar._`
+      ].join('\n')
+    );
+    return;
+  }
+
+  // All fields ready, proceed to duplicate check & RPC
+  checkDuplicateAndExecuteRedemption(fromPhone, session);
+}
+
+function checkDuplicateAndExecuteRedemption(fromPhone, session) {
+  const partner = session.redemptionPartner;
+  const form = session.redemptionForm;
+
+  checkDuplicateRedemptionDb(partner.id, form.email, form.telefone, (errDupe, isDupe, dupeRow) => {
+    if (isDupe) {
+      handleDuplicateRedemptionDetected(fromPhone, session, partner, dupeRow);
+      return;
+    }
+
+    executeBenefitRedemptionRpc(fromPhone, session, false);
+  });
+}
+
+function executeBenefitRedemptionRpc(fromPhone, session, forceOverride) {
+  const partner = session.redemptionPartner;
+  const form = session.redemptionForm;
+
+  const rpcParams = {
+    p_parceiro_id: partner.id || null,
+    p_parceiro_slug: partner.slug || null,
+    p_nome_completo: form.nomeCompleto.trim(),
+    p_telefone: form.telefone.trim(),
+    p_cliente_id: session.clientData?.id || session.profile?.cliente?.id || null,
+    p_email: form.email ? form.email.trim() : null
+  };
+
+  supabaseRpc('gsa_public_resgatar_beneficio_parceiro', rpcParams, (err, result) => {
+    if (err) {
+      // Overload fallback for PGRST202 (5 params without p_email)
+      if (err.message && (err.message.includes('PGRST202') || err.message.includes('p_email'))) {
+        const fallbackParams = {
+          p_parceiro_id: rpcParams.p_parceiro_id,
+          p_parceiro_slug: rpcParams.p_parceiro_slug,
+          p_nome_completo: rpcParams.p_nome_completo,
+          p_telefone: rpcParams.p_telefone,
+          p_cliente_id: rpcParams.p_cliente_id
+        };
+        supabaseRpc('gsa_public_resgatar_beneficio_parceiro', fallbackParams, (err2, result2) => {
+          if (err2 || !result2 || !result2.success) {
+            console.error('❌ Erro na RPC de resgate (fallback):', err2?.message);
+            sendWhatsAppReply(fromPhone, '❌ Tivemos uma instabilidade ao processar seu resgate. Por favor, tente novamente em instantes ou fale com nosso suporte em *' + SUPPORT_COMPANY_PHONE + '*.');
+            session.state = 'MAIN_MENU';
+            userSessions[fromPhone] = session;
+            return;
+          }
+          handleRedemptionSuccess(fromPhone, session, partner, form, result2, forceOverride);
+        });
+        return;
+      }
+
+      console.error('❌ Erro na RPC de resgate:', err.message);
+      sendWhatsAppReply(fromPhone, '❌ Não foi possível concluir o resgate: ' + (err.message || 'Erro no servidor') + '.\nPor favor, tente novamente ou fale com nosso suporte.');
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+      return;
+    }
+
+    if (!result || !result.success) {
+      sendWhatsAppReply(fromPhone, '❌ Não foi possível concluir o resgate. Verifique os dados e tente novamente.');
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+      return;
+    }
+
+    handleRedemptionSuccess(fromPhone, session, partner, form, result, forceOverride);
+  });
+}
+
+function handleRedemptionSuccess(fromPhone, session, partner, form, result, forceOverride) {
+  const protocol = result.protocolo || result.codigo_gerado || ('PROT-RES-' + new Date().getFullYear() + '-GSA001');
+
+  if (forceOverride && form.justificativa && result.resgate_id) {
+    supabasePatch(`/rest/v1/parceiros_resgates?id=eq.${result.resgate_id}`, {
+      alerta_duplicidade: true,
+      justificativa_duplicidade: form.justificativa,
+      status: 'analise'
+    }, (errPatch) => {
+      if (errPatch) console.error('⚠️ Erro ao atualizar justificativa de duplicidade:', errPatch.message);
+    });
+
+    result.status = 'analise';
+
+    sendWhatsAppReply(
+      fromPhone,
+      [
+        `📋 *Solicitação de Resgate Registrada em Análise!* ⏳`,
+        ``,
+        `Olá, *${form.nomeCompleto}*!`,
+        `Sua solicitação de re-resgate do benefício do parceiro *${partner.name}* foi enviada com sucesso para nossa gerência com a sua justificativa.`,
+        ``,
+        `🔖 *Protocolo Oficial:* \`${protocol}\``,
+        `⏱️ *Prazo de Análise:* Em até 48 horas úteis`,
+        `📝 *Justificativa Registrada:* "${form.justificativa}"`,
+        ``,
+        `Assim que for avaliado, você receberá a notificação com o resultado aqui pelo WhatsApp!`,
+        ``,
+        `_Guarde o número do seu protocolo para consultas._`
+      ].join('\n')
+    );
+
+    dispatchAdminRedemptionAlert('DUPLICATE_ANALISE', partner.name, protocol, form.nomeCompleto, form.telefone, form.email, form.justificativa);
+
+    session.state = 'MAIN_MENU';
+    session.redemptionPartner = null;
+    session.redemptionCandidates = [];
+    session.redemptionForm = null;
+    session.redemptionDuplicateRecord = null;
+    userSessions[fromPhone] = session;
+    return;
+  }
+
+  // Regular non-override redemption
+  const isDelay24h = Boolean(
+    partner.redemption_delay_24h ||
+    result.delay_24h ||
+    result.status === 'analise' ||
+    (!partner.redemption_has_coupon && !partner.redemption_has_voucher && !partner.redemption_has_link)
+  );
+
+  if (!isDelay24h) {
+    // Immediate Auto-Coupon Delivery
+    const couponCode = result.codigo_gerado || partner.redemption_coupon_code || '';
+    const link = result.link || partner.redemption_link || partner.website || '';
+    const instructions = result.instructions || partner.redemption_instructions || 'Apresente o cupom no checkout ou diretamente no parceiro.';
+
+    const replyLines = [
+      `🎉 *Parabéns! Seu benefício foi resgatado com sucesso!* 🎁`,
+      ``,
+      `🤝 *Parceiro:* ${partner.name}`,
+      `🎁 *Benefício:* ${partner.benefits || 'Desconto exclusivo GSA HUB'}`,
+      ``
+    ];
+
+    if (couponCode) {
+      replyLines.push(`🎟️ *Cupom de Desconto:* \`${couponCode}\``);
+      replyLines.push(`_(Toque no código acima para copiar)_`);
+      replyLines.push(``);
+    }
+
+    if (link) {
+      replyLines.push(`🌐 *Acesse o Site:* ${link}`);
+      replyLines.push(``);
+    }
+
+    if (instructions) {
+      replyLines.push(`📖 *Como Utilizar:*`);
+      replyLines.push(`${instructions}`);
+      replyLines.push(``);
+    }
+
+    replyLines.push(`🔖 *Protocolo Oficial:* \`${protocol}\``);
+    replyLines.push(``);
+    replyLines.push(`Aproveite o seu benefício! Se precisar de algo mais, estamos à disposição. 😊`);
+
+    sendWhatsAppReply(fromPhone, replyLines.join('\n'));
+  } else {
+    // 24h SLA Notice
+    sendWhatsAppReply(
+      fromPhone,
+      [
+        `✅ *Solicitação de Benefício Confirmada!* ⏳`,
+        ``,
+        `Olá, *${form.nomeCompleto}*!`,
+        `Registramos com sucesso a sua solicitação para o benefício de *${partner.name}*.`,
+        ``,
+        `🔖 *Protocolo Oficial:* \`${protocol}\``,
+        `⏱️ *Prazo de Ativação:* Em até 24 horas úteis`,
+        `🎁 *Benefício:* ${partner.benefits || 'Condição exclusiva GSA HUB'}`,
+        ``,
+        `📌 *Próximos Passos:*`,
+        `1️⃣ Nossa equipe técnica está gerando o seu acesso exclusivo junto ao parceiro.`,
+        `2️⃣ Você receberá o seu link ou código de ativação diretamente aqui neste WhatsApp em até 24 horas.`,
+        ``,
+        `_Guarde seu protocolo para consultar o andamento a qualquer momento!_`
+      ].join('\n')
+    );
+
+    dispatchAdminRedemptionAlert('SLA_24H', partner.name, protocol, form.nomeCompleto, form.telefone, form.email, 'Aguardando geração de link de ativação');
+  }
+
+  session.state = 'MAIN_MENU';
+  session.redemptionPartner = null;
+  session.redemptionCandidates = [];
+  session.redemptionForm = null;
+  session.redemptionDuplicateRecord = null;
+  userSessions[fromPhone] = session;
+}
+
+function handlePartnerRedemptionFlow(fromPhone, rawText, session, partnerQuery) {
+  const text = (rawText || '').trim();
+
+  // Intelligent Exit / Cancel detection across all redemption steps
+  const isExitCommand = /^(0|voltar|cancelar|sair|menu|desistir|deixa pra l[aá]|n[aã]o|n[aã]o quero(?: mais)?|deixa quieto|abortar|fim|encerrar|cancela|sair do menu)$/i.test(text.toLowerCase().trim());
+  if (isExitCommand) {
+    session.state = 'MAIN_MENU';
+    session.redemptionPartner = null;
+    session.redemptionCandidates = [];
+    session.redemptionForm = null;
+    session.redemptionDuplicateRecord = null;
+    userSessions[fromPhone] = session;
+    sendWhatsAppReply(fromPhone, '✅ Solicitação cancelada. Se precisar de algo mais, estou à disposição!\n\n' + getMainMenuText(session.profile));
+    return;
+  }
+
+    // 1. If currently in REDEMPTION_AWAITING_JUSTIFICATION
+  if (session.state === 'REDEMPTION_AWAITING_JUSTIFICATION') {
+    if (isExitCommand) {
+      session.state = 'MAIN_MENU';
+      session.redemptionPartner = null;
+      session.redemptionCandidates = [];
+      session.redemptionForm = null;
+      session.redemptionDuplicateRecord = null;
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, '✅ Solicitação de resgate cancelada. Se precisar de algo mais, estou à disposição!\n\n' + getMainMenuText(session.profile));
+      return;
+    }
+    if (text.length < 5) {
+      sendWhatsAppReply(fromPhone, '⚠️ Por favor, digite uma justificativa detalhando o motivo da nova solicitação (ex: "Adotei um novo pet").\n\n_Ou digite SAIR para cancelar._');
+      return;
+    }
+    session.redemptionForm = session.redemptionForm || {};
+    session.redemptionForm.justificativa = text;
+    userSessions[fromPhone] = session;
+    executeBenefitRedemptionRpc(fromPhone, session, true);
+    return;
+  }
+
+  // 2. If currently in REDEMPTION_COLLECT_NAME
+  if (session.state === 'REDEMPTION_COLLECT_NAME') {
+    const parts = text.split(/\s+/).filter(p => p.length >= 2);
+    if (parts.length < 2 || text.length < 3) {
+      sendWhatsAppReply(fromPhone, '❌ Por favor, informe o seu *Nome Completo* (ao menos nome e sobrenome, ex: João da Silva).\n\n_Digite 0 para voltar._');
+      return;
+    }
+    session.redemptionForm = session.redemptionForm || {};
+    session.redemptionForm.nomeCompleto = text;
+    userSessions[fromPhone] = session;
+    selectRedemptionPartner(fromPhone, session, session.redemptionPartner);
+    return;
+  }
+
+  // 3. If currently in REDEMPTION_COLLECT_EMAIL
+  if (session.state === 'REDEMPTION_COLLECT_EMAIL') {
+    const cleanEmail = text.toLowerCase().trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      sendWhatsAppReply(fromPhone, '❌ Por favor, informe um *E-mail válido* (ex: seu.nome@email.com).\n\n_Digite 0 para voltar._');
+      return;
+    }
+    session.redemptionForm = session.redemptionForm || {};
+    session.redemptionForm.email = cleanEmail;
+    userSessions[fromPhone] = session;
+    selectRedemptionPartner(fromPhone, session, session.redemptionPartner);
+    return;
+  }
+
+  // 4. If currently in REDEMPTION_COLLECT_PHONE
+  if (session.state === 'REDEMPTION_COLLECT_PHONE') {
+    const digits = text.replace(/\D/g, '');
+    if (digits.length < 10 || digits.length > 13) {
+      sendWhatsAppReply(fromPhone, '❌ Telefone inválido. Informe o número com DDD (ex: 11987654321).\n\n_Digite 0 para voltar._');
+      return;
+    }
+    const normPhone = digits.startsWith('55') ? digits : `55${digits}`;
+    session.redemptionForm = session.redemptionForm || {};
+    session.redemptionForm.telefone = normPhone;
+    userSessions[fromPhone] = session;
+    selectRedemptionPartner(fromPhone, session, session.redemptionPartner);
+    return;
+  }
+
+  // 5. If currently in REDEMPTION_SELECT_PARTNER
+  if (session.state === 'REDEMPTION_SELECT_PARTNER') {
+    const num = parseInt(text, 10);
+    if (!isNaN(num) && num >= 1 && session.redemptionCandidates && session.redemptionCandidates[num - 1]) {
+      const selected = session.redemptionCandidates[num - 1];
+      selectRedemptionPartner(fromPhone, session, selected);
+      return;
+    }
+    // If not a number, treat as a new search query
+    partnerQuery = text;
+  }
+
+  // 6. Initial Entry / Partner Query Search
+  fetchPartnersForAI((partners, fetchError) => {
+    if (fetchError) {
+      sendWhatsAppReply(fromPhone, '⚠️ Não foi possível consultar nossos parceiros agora por uma instabilidade temporária. Tente novamente em instantes ou fale com nosso suporte no número *' + SUPPORT_COMPANY_PHONE + '*.');
+      return;
+    }
+    if (!partners || partners.length === 0) {
+      sendWhatsAppReply(fromPhone, '⚠️ Não encontramos parceiros ativos disponíveis no momento. Fale com nosso suporte no número *' + SUPPORT_COMPANY_PHONE + '*.');
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+      return;
+    }
+
+    const queryTerm = partnerQuery || extractPartnerTermFromText(text) || text;
+    const matches = searchPartnersFuzzy(queryTerm, partners);
+
+    if (matches.length === 1) {
+      selectRedemptionPartner(fromPhone, session, matches[0]);
+    } else if (matches.length > 1) {
+      const topMatch = matches[0];
+      const qNorm = (queryTerm || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+      const isExact = (topMatch.slug && topMatch.slug.toLowerCase() === qNorm) ||
+                      (topMatch.name && topMatch.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim() === qNorm);
+
+      if (isExact) {
+        selectRedemptionPartner(fromPhone, session, topMatch);
+      } else {
+        session.state = 'REDEMPTION_SELECT_PARTNER';
+        session.redemptionCandidates = matches.slice(0, 5);
+        userSessions[fromPhone] = session;
+
+        const candidateOptions = session.redemptionCandidates.map((c, i) => {
+          const emoji = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'][i] || `*${i + 1}*`;
+          return `${emoji} *${c.name}* (${c.category || 'Parceiro'})\n🎁 ${c.benefits || 'Desconto exclusivo'}`;
+        }).join('\n\n');
+
+        sendWhatsAppReply(
+          fromPhone,
+          [
+            `🔍 *Encontrei estas opções de parceiros:*`,
+            ``,
+            candidateOptions,
+            ``,
+            `👉 *Digite o número da opção desejada (1 a ${session.redemptionCandidates.length})* para resgatar, ou digite outro nome para buscar novamente.`,
+            ``,
+            `_Digite 0 para voltar ao menu._`
+          ].join('\n')
+        );
+      }
+    } else {
+      session.state = 'REDEMPTION_SELECT_PARTNER';
+      session.redemptionCandidates = partners.slice(0, 5);
+      userSessions[fromPhone] = session;
+
+      const topOptions = session.redemptionCandidates.map((c, i) => {
+        const emoji = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'][i] || `*${i + 1}*`;
+        return `${emoji} *${c.name}* (${c.category || 'Parceiro'})\n🎁 ${c.benefits || 'Desconto exclusivo'}`;
+      }).join('\n\n');
+
+      sendWhatsAppReply(
+        fromPhone,
+        [
+          `❓ *Não encontrei nenhum parceiro com o termo "${queryTerm}".*`,
+          ``,
+          `Aqui estão alguns dos nossos parceiros em destaque:`,
+          ``,
+          topOptions,
+          ``,
+          `👉 *Digite o número da opção desejada* ou digite o nome do parceiro que você procura.`,
+          ``,
+          `_Digite 0 para voltar ao menu._`
+        ].join('\n')
+      );
+    }
+  });
+}
+
+
+const PRODUCT_PHOTO_VAULT = {
+  sneakers: [
+    'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=600&auto=format&fit=crop&q=80'
+  ],
+  jeans: [
+    'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1542272604-780c96856592?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1582552938357-32b906df40cb?w=600&auto=format&fit=crop&q=80'
+  ],
+  shirt: [
+    'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&auto=format&fit=crop&q=80'
+  ],
+  smartphone: [
+    'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=600&auto=format&fit=crop&q=80'
+  ],
+  phonecase: [
+    'https://images.unsplash.com/photo-1586105251261-72a756497a11?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1574944985070-8f3ebc6b79d2?w=600&auto=format&fit=crop&q=80'
+  ],
+  watch: [
+    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1533139502658-0198f920d8e8?w=600&auto=format&fit=crop&q=80'
+  ],
+  headphones: [
+    'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=600&auto=format&fit=crop&q=80'
+  ],
+  perfume: [
+    'https://images.unsplash.com/photo-1541643600914-78b084683601?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=600&auto=format&fit=crop&q=80'
+  ],
+  bag: [
+    'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&auto=format&fit=crop&q=80'
+  ],
+  sunglasses: [
+    'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=600&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=600&auto=format&fit=crop&q=80'
+  ]
+};
+
+function getProductPhotosForSearch(term) {
+  const clean = (term || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (/tenis|sapato|calcado|sneaker|chuteira|bota|sandalia/i.test(clean)) return PRODUCT_PHOTO_VAULT.sneakers;
+  if (/calca|jeans|bermuda|short/i.test(clean)) return PRODUCT_PHOTO_VAULT.jeans;
+  if (/camisa|camiseta|blusa|moletom|polo|regata|roupa/i.test(clean)) return PRODUCT_PHOTO_VAULT.shirt;
+  if (/celular|smartphone|iphone|samsung|xiaomi/i.test(clean)) return PRODUCT_PHOTO_VAULT.smartphone;
+  if (/capa|capinha|case|pelicula/i.test(clean)) return PRODUCT_PHOTO_VAULT.phonecase;
+  if (/relogio|smartwatch|watch/i.test(clean)) return PRODUCT_PHOTO_VAULT.watch;
+  if (/fone|headphone|airpod|headset/i.test(clean)) return PRODUCT_PHOTO_VAULT.headphones;
+  if (/perfume|fragrancia|colonia|cosmetico/i.test(clean)) return PRODUCT_PHOTO_VAULT.perfume;
+  if (/bolsa|mochila|carteira|mala/i.test(clean)) return PRODUCT_PHOTO_VAULT.bag;
+  if (/oculos|lente/i.test(clean)) return PRODUCT_PHOTO_VAULT.sunglasses;
+  return PRODUCT_PHOTO_VAULT.sneakers;
+}
+
+// ─── FORMATAÇÃO DO CÓDIGO DE PRODUTO OFICIAL GSA (NUNCA EXIBIR CÓDIGO EXTERNO/SHOPEE) ───
+function formatGSAProductCode(rawCode, item) {
+  let code = rawCode || item?.codigo_produto || item?.codigo || '';
+  if (!code && item?.id) {
+    return `PRD-${String(item.id).replace(/[^a-zA-Z0-9]/g, '').substring(0, 8).toUpperCase()}`;
+  }
+  if (!code) return 'PRD-101';
+  
+  // Converte prefixos externos (SHP-, SHOPEE-, ML-, EXT-) para o padrão oficial GSA Store (PRD-)
+  if (/^SHP[-_]?/i.test(code)) {
+    return `PRD-${code.replace(/^SHP[-_]?/i, '')}`;
+  }
+  if (/^SHOPEE[-_]?/i.test(code)) {
+    return `PRD-${code.replace(/^SHOPEE[-_]?/i, '')}`;
+  }
+  if (/^ML[-_]?/i.test(code) || /^EXT[-_]?/i.test(code)) {
+    return `PRD-${code.replace(/^[A-Za-z]+[-_]?/i, '')}`;
+  }
+  if (/^PRD/i.test(code)) {
+    return code.toUpperCase();
+  }
+  if (/^PR[-_]/i.test(code)) {
+    return code.replace(/^PR[-_]/i, 'PRD-').toUpperCase();
+  }
+  return `PRD-${code.replace(/^[^0-9A-Za-z]+/i, '')}`;
+}
+
+// ─── MÓDULO 3: CACHE DE BUSCA EM MEMÓRIA (TTL 10 min) ───────────────────────
+const SEARCH_CACHE = new Map(); // key: searchWord, value: { results, ts }
+const SEARCH_CACHE_TTL = 10 * 60 * 1000; // 10 minutos
+
+// ─── MÓDULO 3: DICIONÁRIO DE SINÔNIMOS & ANÁLISE DE INTENÇÃO SEMÂNTICA ────────
+const SYNONYM_MAP = {
+  'pisante': 'tenis', 'sneaker': 'tenis', 'calcado': 'tenis', 'sapatilha': 'tenis',
+  'brusinha': 'camisa', 'camiseta': 'camisa', 'blusa': 'camisa', 'polo': 'camisa',
+  'regata': 'camisa', 'moletom': 'moletom', 'agasalho': 'moletom',
+  'celular': 'smartphone', 'fone bluetooth': 'fone', 'airpod': 'fone',
+  'headset': 'fone', 'earphone': 'fone',
+  'relogio inteligente': 'smartwatch', 'smartband': 'smartwatch',
+  'pulseira inteligente': 'smartwatch', 'capa': 'capinha', 'case': 'capinha',
+  'oculos de sol': 'oculos', 'colonia': 'perfume', 'eau de toilette': 'perfume'
+};
+
+function parseProductSearchIntent(rawQuery) {
+  const text = (rawQuery || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  
+  // 1. Detectar público-alvo (Adulto vs Infantil)
+  const isExplicitChild = /(^|\s)(infantil|crianca|criancas|kids|bebe|bebes|menino|meninos|menina|meninas|filho|filha|recem nascido)($|\s)/i.test(text);
+  const isExplicitNotChild = /nao.*(infantil|crianca|kids|bebe|menino|menina)|sem.*(infantil|crianca|kids)|adulto|adulta|para mim|pra mim/i.test(text);
+  
+  const audience = (isExplicitChild && !isExplicitNotChild) ? 'infantil' : 'adulto';
+
+  // 2. Detectar gênero (Masculino vs Feminino)
+  const isMasc = /(^|\s)(masculino|masculinos|homem|homens|masc|para homem|pro homem|dele)($|\s)/i.test(text);
+  const isFem = /(^|\s)(feminino|femininos|mulher|mulheres|fem|para mulher|pra mulher|dela)($|\s)/i.test(text);
+  let gender = 'todos';
+  if (isMasc && !isFem) gender = 'masculino';
+  if (isFem && !isMasc) gender = 'feminino';
+
+  // Check phrase synonyms first in raw query
+  let mainWord = '';
+  for (const [phrase, canonical] of Object.entries(SYNONYM_MAP)) {
+    if (text.includes(phrase)) {
+      mainWord = canonical;
+      break;
+    }
+  }
+
+  if (!mainWord) {
+    const isStopWord = (w) => {
+      if (/^(nao|sem|eu|voce|vc|ele|ela|mim|pra|pro|para|com|por|em|no|na|nos|nas|um|uma|uns|umas|os|as|de|do|da|dos|das|que|qual|quais|tem|ter|tiver|se|ou|e)$/i.test(w)) return true;
+      if (/^(quer|gostar|precis|apresent|mostr|mand|envi|traz|troux|ach|busc|procur|encontr|compr|ver|olh)/i.test(w)) return true;
+      if (/^(tres|quatro|cinco|seis|sete|oito|nove|dez|opcoes|opcao|modelos|modelo|exemplos|exemplo|fotos|foto|imagens|imagem|baratos|baratas|barato|barata|melhores|melhor|hoje|agora)$/i.test(w)) return true;
+      if (/^(infantil|crianca|criancas|kids|bebe|bebes|menino|menina|meninos|meninas|adulto|adulta|adultos|adultas|masculino|masculinos|feminino|femininos|homem|homens|mulher|mulheres|unissex)$/i.test(w)) return true;
+      return false;
+    };
+
+    const words = text.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length >= 3 && !isStopWord(w));
+    mainWord = words.length > 0 ? (SYNONYM_MAP[words[0]] || words[0]) : 'tenis';
+  }
+
+  return { searchWord: mainWord, audience, gender };
+}
+
+function searchDatabaseProducts(query, limit = 3, callback) {
+  const { searchWord, audience, gender } = parseProductSearchIntent(query);
+  if (!searchWord || searchWord.length < 2) {
+    return callback(null, []);
+  }
+
+  const cacheKey = `${searchWord}_${audience}_${gender}`;
+  const cached = SEARCH_CACHE.get(cacheKey);
+  if (cached && (Date.now() - cached.ts) < SEARCH_CACHE_TTL) {
+    return callback(null, cached.results.slice(0, limit));
+  }
+
+  // Fetch up to 100 items from PostgREST to ensure plenty of candidates
+  const path = `/produtos?nome=ilike.*${encodeURIComponent(searchWord)}*&status=eq.ativo&order=valor.asc&limit=100&select=id,codigo_produto,nome,descricao,valor,imagem_url,imagem_url_2`;
+  
+  const supaKey = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_KEY;
+  const req = http.request({
+    hostname: '127.0.0.1',
+    port: 3001,
+    path,
+    method: 'GET',
+    headers: {
+      'apikey': supaKey,
+      'Authorization': 'Bearer ' + supaKey
+    }
+  }, res => {
+    let d = '';
+    res.on('data', c => d += c);
+    res.on('end', () => {
+      try {
+        const list = JSON.parse(d);
+        if (!Array.isArray(list)) return callback(null, []);
+
+        let filtered = list;
+
+        // 1. Filtro de Ruído/Acessórios para Calçados e Roupas
+        if (searchWord === 'tenis' || searchWord === 'sapato' || searchWord === 'calcado') {
+          filtered = filtered.filter(p => !/mesa|ping|bola|espuma|limp|bolsa|mochila|porta|raquete|frescobol|chinelo slide|slide\b/i.test(p.nome));
+        }
+
+        // 2. Filtro de Público-Alvo (Adulto vs Infantil)
+        if (audience === 'adulto') {
+          filtered = filtered.filter(p => !/infantil|kids|kidstep|funfy|menino|menina|bebe|bebê|primeiros passos|recem nascido|escolar infantil|desenho|personagem|luzinha|led sonic/i.test(p.nome));
+        } else if (audience === 'infantil') {
+          filtered = filtered.filter(p => /infantil|kids|kidstep|funfy|menino|menina|bebe|bebê|primeiros passos|recem nascido|escolar infantil|desenho|personagem|luzinha|led/i.test(p.nome));
+        }
+
+        // 3. Filtro de Gênero
+        if (gender === 'masculino') {
+          filtered = filtered.filter(p => !/feminino(?!.*masculino)|menina|pink|salto|lingerie|vestido|saia/i.test(p.nome));
+        } else if (gender === 'feminino') {
+          filtered = filtered.filter(p => !/masculino(?!.*feminino)|menino|cueca/i.test(p.nome));
+        }
+
+        // Armazenar no cache e retornar
+        SEARCH_CACHE.set(cacheKey, { results: filtered.slice(0, 30), ts: Date.now() });
+        callback(null, filtered.slice(0, limit));
+      } catch (e) {
+        callback(e, []);
+      }
+    });
+  });
+  req.on('error', err => callback(err, []));
+  req.setTimeout(5000, () => { req.destroy(); callback(null, []); });
+  req.end();
+}
+
+// ─── MÓDULO 7: TRANSCRIÇÃO DE ÁUDIO (GEMINI FLASH 1.5) ──────────────────────
+async function handleAudioMessage(fromPhone, session, rawMessageData) {
+  try {
+    sendWhatsAppReply(fromPhone, '🎙️ Recebi seu áudio! Deixa eu ouvir aqui...');
+
+    // 1. Baixar base64 do áudio via Evolution API (Evolution v2 espera o objeto completo com key e message)
+    const msgPayload = {
+      message: {
+        key: rawMessageData.key || {},
+        message: rawMessageData.message || rawMessageData
+      },
+      convertToMp4: false
+    };
+
+    console.log(`🎙️ Solicitando base64 do áudio para ${fromPhone}...`);
+    let evoResp = await fetch('http://127.0.0.1:8080/chat/getBase64FromMediaMessage/GSA_WhatsApp', {
+      method: 'POST',
+      headers: {
+        'apikey': 'gsa_hub_evolution_token_2026',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(msgPayload)
+    });
+
+    let evoJson = await evoResp.json();
+    console.log(`🎙️ Resposta Evolution API base64:`, evoJson?.base64 ? 'OK (base64 presente)' : JSON.stringify(evoJson).substring(0, 200));
+
+    // Fallback se o formato acima não retornou base64
+    if (!evoJson?.base64) {
+      evoResp = await fetch('http://127.0.0.1:8080/chat/getBase64FromMediaMessage/GSA_WhatsApp', {
+        method: 'POST',
+        headers: {
+          'apikey': 'gsa_hub_evolution_token_2026',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: rawMessageData, convertToMp4: false })
+      });
+      evoJson = await evoResp.json();
+      console.log(`🎙️ Resposta Fallback Evolution API:`, evoJson?.base64 ? 'OK' : JSON.stringify(evoJson).substring(0, 200));
+    }
+
+    const audioBase64 = evoJson?.base64 || evoJson?.data?.base64;
+    if (!audioBase64) {
+      console.error('❌ Falha ao obter base64 do áudio:', evoJson);
+      sendWhatsAppReply(fromPhone, '😅 Ops, não consegui processar seu áudio. Pode me escrever o que precisa? Estou aqui para ajudar!');
+      return;
+    }
+
+    // MIME type limpo para o Gemini (ex: audio/ogg)
+    let rawMime = evoJson.mimetype || 'audio/ogg';
+    const cleanMime = rawMime.split(';')[0].trim();
+
+    // 2. Transcrever com Gemini 1.5 Flash (suporta áudio nativo)
+    const transcribePayload = JSON.stringify({
+      contents: [{
+        parts: [
+          { text: 'Transcreva exatamente o que está sendo dito neste áudio em português brasileiro. Retorne SOMENTE o texto transcrito, sem aspas, sem explicações, sem formatação extra.' },
+          { inline_data: { mime_type: cleanMime || 'audio/ogg', data: audioBase64 } }
+        ]
+      }]
+    });
+
+    const transcribeResp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: transcribePayload
+      }
+    );
+    const transcribeJson = await transcribeResp.json();
+    const transcribedText = transcribeJson?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+
+    if (!transcribedText || transcribedText.length < 2) {
+      console.warn('⚠️ Transcrição vazia ou inválida:', JSON.stringify(transcribeJson));
+      sendWhatsAppReply(fromPhone, '🔇 Não consegui entender o áudio. O som estava muito baixo ou com ruído. Pode repetir ou me escrever?');
+      return;
+    }
+
+    console.log(`🎙️ Áudio transcrito com sucesso para ${fromPhone}: "${transcribedText}"`);
+    sendWhatsAppReply(fromPhone, `🎙️ _Entendi: "${transcribedText}"_`);
+
+    // 3. Processar o texto transcrito como se fosse uma mensagem normal
+    await processMessage(fromPhone, transcribedText, null, session.clientName || '', rawMessageData);
+
+  } catch (err) {
+    console.error('❌ Erro ao processar áudio:', err.message);
+    sendWhatsAppReply(fromPhone, '😅 Não consegui processar seu áudio. Pode me escrever sua dúvida? Estou aqui!');
+  }
+}
+
+// ─── MÓDULO 2: BUSCA VISUAL POR IMAGEM (GEMINI VISION) ──────────────────────
+function handleImageProductSearch(fromPhone, session, mediaBase64, mediaMimeType) {
+  if (!mediaBase64) return;
+  sendWhatsAppReply(fromPhone, '🔍 Analisando a imagem do produto... Aguarde um instante!');
+
+  const payload = JSON.stringify({
+    contents: [{
+      parts: [
+        { text: 'Você é um especialista em e-commerce brasileiro. Analise esta imagem de produto e retorne SOMENTE um JSON válido com os campos: { "category": "string", "product_name": "string em português", "color": "string", "search_keyword": "string (palavra-chave principal sem acento, ex: tenis, camisa, celular)" }. Não inclua texto fora do JSON.' },
+        { inline_data: { mime_type: mediaMimeType || 'image/jpeg', data: mediaBase64 } }
+      ]
+    }]
+  });
+
+  const visionReq = https.request({
+    hostname: 'generativelanguage.googleapis.com',
+    path: `/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload, 'utf8') }
+  }, res => {
+    let d = '';
+    res.on('data', c => d += c);
+    res.on('end', () => {
+      try {
+        const parsed = JSON.parse(d);
+        let textContent = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        const jsonMatch = textContent.match(/(\{[\s\S]*\})/);
+        if (jsonMatch) textContent = jsonMatch[1];
+        const visionResult = JSON.parse(textContent.trim());
+        const keyword = visionResult.search_keyword || visionResult.category || 'produto';
+
+        console.log(`[Vision] Produto detectado: ${visionResult.product_name} | keyword: ${keyword}`);
+
+        searchDatabaseProducts(keyword, 3, (err, dbProducts) => {
+          if (!err && dbProducts && dbProducts.length > 0) {
+            let msg = `🎯 *Encontrei produtos semelhantes na nossa loja!*\n\n_Produto identificado: ${visionResult.product_name}${visionResult.color ? ' — Cor: ' + visionResult.color : ''}_\n\n`;
+            dbProducts.forEach((item, index) => {
+              msg += `*${index + 1}️⃣ ${item.nome}*\n🔖 Código: ${formatGSAProductCode(item.codigo_produto, item)}\n💰 *Valor:* R$ ${Number(item.valor).toFixed(2).replace('.', ',')}\n\n`;
+              const imgUrl = item.imagem_url || item.imagem_url_2;
+              if (imgUrl) {
+                setTimeout(() => {
+                  sendWhatsAppMedia(fromPhone, imgUrl, 'produto.jpg', `📸 ${item.nome} — R$ ${Number(item.valor).toFixed(2).replace('.', ',')}`, 'image');
+                }, (index + 1) * 800);
+              }
+            });
+            msg += `👉 Digite o número da opção desejada (*1*, *2* ou *3*) para comprar ou 0 para voltar ao menu.`;
+            session.state = 'MULTIPLE_PRODUCT_INTEREST';
+            session.aiFoundProducts = dbProducts;
+            userSessions[fromPhone] = session;
+            sendWhatsAppReply(fromPhone, msg);
+            session.history.push({ role: 'assistant', content: msg });
+            scheduleCartAbandonmentCheck(fromPhone, session);
+          } else {
+            sendWhatsAppReply(fromPhone, `🔍 Produto detectado: *${visionResult.product_name}*\n\nNão encontrei este modelo exato no estoque mas posso buscar algo parecido!\n\nDescreva o produto que deseja e encontrarei as melhores opções. 😊`);
+            session.state = 'MAIN_MENU';
+            userSessions[fromPhone] = session;
+          }
+        });
+      } catch (e) {
+        console.error('[Vision Error]', e.message);
+        sendWhatsAppReply(fromPhone, 'Não consegui identificar o produto na imagem. Por favor, descreva o que você está procurando! 😊');
+      }
+    });
+  });
+  visionReq.on('error', () => {
+    sendWhatsAppReply(fromPhone, 'Tive dificuldade ao analisar a imagem. Por favor, descreva o produto em texto! 😊');
+  });
+  visionReq.setTimeout(15000, () => { visionReq.destroy(); });
+  visionReq.write(payload);
+  visionReq.end();
+}
+
+// ─── MÓDULO 4: RASTREAMENTO DE PEDIDOS ──────────────────────────────────────
+function handleOrderTracking(fromPhone, session) {
+  const supaKey = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_KEY;
+  const clientPhone = fromPhone.replace(/\D/g, '');
+
+  const path = `/loja_pedidos?select=id,status,total,metodo_pagamento,codigo_rastreio,transportadora,previsao_entrega,created_at&order=created_at.desc&limit=3`;
+  
+  const req = http.request({
+    hostname: '127.0.0.1', port: 3001, path, method: 'GET',
+    headers: { 'apikey': supaKey, 'Authorization': 'Bearer ' + supaKey }
+  }, res => {
+    let d = '';
+    res.on('data', c => d += c);
+    res.on('end', () => {
+      try {
+        const pedidos = JSON.parse(d);
+        if (!Array.isArray(pedidos) || pedidos.length === 0) {
+          sendWhatsAppReply(fromPhone, `📦 Não encontrei pedidos associados ao seu número.\n\nVerifique se o pedido foi feito com este WhatsApp ou fale com suporte pelo ${GSA_EMPRESA.whatsapp_atendimento}.\n\n_Digite 0 para voltar ao menu._`);
+          session.state = 'MAIN_MENU';
+          userSessions[fromPhone] = session;
+          return;
+        }
+
+        const statusEmojis = {
+          'pendente': '⏳ Pendente', 'pago': '✅ Pago', 'aprovado': '✅ Aprovado',
+          'em_preparacao': '📦 Em Preparação', 'em_expedicao': '📦 Expedindo',
+          'em_transporte': '🚚 Em Transporte', 'enviado': '🚚 Enviado',
+          'concluido': '🎉 Entregue', 'entregue': '🎉 Entregue',
+          'cancelado': '❌ Cancelado'
+        };
+
+        let msg = `📦 *Seus Pedidos Recentes:*\n\n`;
+        pedidos.forEach((p, i) => {
+          const statusKey = String(p.status || '').toLowerCase();
+          const statusLabel = statusEmojis[statusKey] || p.status || 'Em processamento';
+          const shortId = p.id ? String(p.id).substring(0, 8).toUpperCase() : String(i + 1);
+          msg += `*Pedido #${shortId}*\n`;
+          msg += `📊 Status: ${statusLabel}\n`;
+          msg += `💰 Total: R$ ${Number(p.total || 0).toFixed(2).replace('.', ',')}\n`;
+          if (p.codigo_rastreio) {
+            msg += `🔢 Rastreio: \`${p.codigo_rastreio}\`\n`;
+            if (p.transportadora) msg += `🚚 Transportadora: ${p.transportadora}\n`;
+          }
+          if (p.previsao_entrega) {
+            const dt = new Date(p.previsao_entrega).toLocaleDateString('pt-BR');
+            msg += `📅 Previsão: ${dt}\n`;
+          }
+          msg += `\n`;
+        });
+        msg += `_Para mais detalhes: ${GSA_EMPRESA.site}_\n_Digite 0 para voltar ao menu._`;
+
+        session.state = 'MAIN_MENU';
+        userSessions[fromPhone] = session;
+        sendWhatsAppReply(fromPhone, msg);
+      } catch (e) {
+        sendWhatsAppReply(fromPhone, '📦 Não consegui consultar seus pedidos no momento. Tente novamente ou fale com nosso suporte.');
+        session.state = 'MAIN_MENU';
+        userSessions[fromPhone] = session;
+      }
+    });
+  });
+  req.on('error', () => {
+    sendWhatsAppReply(fromPhone, 'Serviço de rastreio temporariamente indisponível. Tente novamente em instantes.');
+  });
+  req.setTimeout(5000, () => { req.destroy(); });
+  req.end();
+}
+
+// ─── MÓDULO 5: CARRINHO ABANDONADO ──────────────────────────────────────────
+const abandonedCartTimers = new Map();
+const CART_ABANDON_TIMEOUT_MS = 20 * 60 * 1000; // 20 minutos
+const CART_REMIND_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 horas
+
+function scheduleCartAbandonmentCheck(fromPhone, session) {
+  const existing = abandonedCartTimers.get(fromPhone);
+  if (existing && existing.timerId) clearTimeout(existing.timerId);
+
+  const products = session.aiFoundProducts || session.extrProducts || [];
+  if (!products || products.length === 0) return;
+
+  const productName = products[0]?.nome || 'o produto escolhido';
+  const clientName = session.clientName || 'cliente';
+
+  const timerId = setTimeout(() => {
+    const current = abandonedCartTimers.get(fromPhone);
+    if (!current) return;
+    const now = Date.now();
+    if (current.lastReminder && (now - current.lastReminder) < CART_REMIND_COOLDOWN_MS) return;
+
+    const currentSession = userSessions[fromPhone];
+    if (!currentSession) return;
+    if (currentSession.state !== 'MULTIPLE_PRODUCT_INTEREST' && currentSession.state !== 'DROPSHIP_INTEREST') return;
+
+    sendWhatsAppReply(fromPhone, `⏰ *Oi, ${clientName}!*\n\nNotei que você se interessou por *${productName.substring(0, 50)}* mas não finalizou a compra. 😊\n\nAinda posso reservar este item para você!\n\nDigite o número do produto desejado para retomar ou 0 para cancelar.`);
+    abandonedCartTimers.set(fromPhone, { ...current, timerId: null, lastReminder: now });
+  }, CART_ABANDON_TIMEOUT_MS);
+
+  abandonedCartTimers.set(fromPhone, {
+    timerId, productName,
+    lastReminder: existing?.lastReminder || null
+  });
+}
+
+function clearCartAbandonmentTimer(fromPhone) {
+  const existing = abandonedCartTimers.get(fromPhone);
+  if (existing && existing.timerId) {
+    clearTimeout(existing.timerId);
+    abandonedCartTimers.delete(fromPhone);
+  }
+}
+
+// ─── MÓDULO IA: ROTEADOR DE RESPOSTA DA IA ───────────────────────────────────
+function handleAIResponse(fromPhone, session, aiResult, originalText) {
+  if (!aiResult || !aiResult.action) {
+    sendWhatsAppReply(fromPhone, `❓ Não entendi bem. Como posso te ajudar?\n\n${getMainMenuText(session.profile)}`);
+    return;
+  }
+
+  if (!session.history) session.history = [];
+  session.history.push({ role: 'user', content: originalText });
+
+  switch (aiResult.action) {
+    case 'menu': {
+      if (aiResult.target === '10') {
+        showHumanSupportSectors(fromPhone, session);
+        break;
+      }
+      const botReply = aiResult.message || '';
+      if (botReply) {
+        sendWhatsAppReply(fromPhone, botReply);
+        session.history.push({ role: 'assistant', content: botReply });
+        userSessions[fromPhone] = session;
+        setTimeout(() => processMessage(fromPhone, aiResult.target || '0'), 800);
+      } else {
+        processMessage(fromPhone, aiResult.target || '0');
+      }
+      break;
+    }
+
+    case 'redeem_partner_benefit': {
+      const q = aiResult.partner_query || aiResult.found_partner || originalText;
+      handlePartnerRedemptionFlow(fromPhone, originalText, session, q);
+      break;
+    }
+
+    case 'search_service': {
+      const item = aiResult.found_item;
+      if (!item) {
+        const msg = aiResult.message || 'Encontrei serviços relacionados. Digite *2* no menu para ver todos os serviços disponíveis.';
+        sendWhatsAppReply(fromPhone, msg);
+        session.history.push({ role: 'assistant', content: msg });
+        break;
+      }
+      fetchCatalogForAI((catalog) => {
+        const realService = (catalog.servicos || []).find(
+          s => s.codigo_servico === item.codigo || s.codigo_servico === item.codigo_servico ||
+               (s.nome || '').toLowerCase().trim() === (item.nome || '').toLowerCase().trim()
+        );
+        let precoStr = '';
+        if (realService) {
+          const ocultarValor = realService.ocultar_valor === true || realService.ocultar_valor === 'true';
+          const valorReal = Number(realService.valor || 0);
+          if (!ocultarValor && valorReal > 0) {
+            precoStr = `\n💰 *Investimento:* R$ ${valorReal.toFixed(2)}`;
+          } else {
+            precoStr = `\n💰 *Investimento:* Valor definido após análise — peço apenas alguns dados para gerar seu orçamento personalizado!`;
+          }
+          item.valor = (!ocultarValor && valorReal > 0) ? valorReal : 0;
+          item.nome = realService.nome || item.nome;
+          item.descricao = realService.descricao || item.descricao || '';
+        } else {
+          precoStr = `\n💰 *Investimento:* Valor sob consulta — vou gerar um orçamento personalizado para você!`;
+          item.valor = 0;
+        }
+        const msg = `📋 *Serviço Encontrado:*\n\n🔷 *${item.nome}*\n🔖 Código: ${item.codigo || item.codigo_servico}${item.descricao ? '\n📄 ' + item.descricao.substring(0, 120) : ''}${precoStr}\n\nDeseja prosseguir?\n1️⃣ ✅ Contratar agora\n2️⃣ 💬 Falar com especialista\n0️⃣ Voltar ao menu`;
+        session.state = 'SERVICE_INTEREST';
+        session.aiFoundService = item;
+        userSessions[fromPhone] = session;
+        sendWhatsAppReply(fromPhone, msg);
+        session.history.push({ role: 'assistant', content: msg });
+      });
+      break;
+    }
+
+    case 'search_product': {
+      const combinedQuery = `${aiResult.product_query || ''} ${originalText || ''}`.trim() || 'Produto';
+      
+      let requestedLimit = 3;
+      if (aiResult.product_limit && Number(aiResult.product_limit) > 0) {
+        requestedLimit = Math.min(10, Math.max(1, Number(aiResult.product_limit)));
+      } else {
+        const numMatch = (originalText || '').match(/\b(10|dez|9|nove|8|oito|7|sete|6|seis|5|cinco|4|quatro|3|tr[eê]s|2|dois|duas|1|um|uma)\b/i);
+        if (numMatch) {
+          const wordToNum = {
+            '1': 1, 'um': 1, 'uma': 1,
+            '2': 2, 'dois': 2, 'duas': 2,
+            '3': 3, 'tres': 3, 'três': 3,
+            '4': 4, 'quatro': 4,
+            '5': 5, 'cinco': 5,
+            '6': 6, 'seis': 6,
+            '7': 7, 'sete': 7,
+            '8': 8, 'oito': 8,
+            '9': 9, 'nove': 9,
+            '10': 10, 'dez': 10
+          };
+          const n = wordToNum[numMatch[1].toLowerCase()];
+          if (n && n >= 1 && n <= 10) requestedLimit = n;
+        }
+      }
+
+      // 1. Busca primeiro nos 92.402 produtos reais do banco de dados (Shopee)
+      searchDatabaseProducts(combinedQuery, requestedLimit, (err, dbProducts) => {
+        if (!err && dbProducts && dbProducts.length > 0) {
+          let msg = `🛍️ *Encontrei os melhores produtos para você na nossa loja!* 🎉\n\n`;
+          dbProducts.forEach((item, index) => {
+            msg += `*${index + 1}️⃣ ${item.nome}*\n🔖 Código: ${formatGSAProductCode(item.codigo_produto, item)}\n💰 *Valor:* R$ ${Number(item.valor).toFixed(2).replace('.', ',')}\n\n`;
+            
+            const imgUrl = item.imagem_url || item.imagem_url_2;
+            if (imgUrl) {
+              setTimeout(() => {
+                sendWhatsAppMedia(fromPhone, imgUrl, 'produto.jpg', `📸 ${item.nome} — R$ ${Number(item.valor).toFixed(2).replace('.', ',')}`, 'image');
+              }, (index + 1) * 800);
+            }
+          });
+          const optNums = dbProducts.map((_, i) => `*${i + 1}*`).join(', ');
+          msg += `👉 Digite o número da opção desejada (${optNums}) para comprar ou 0 para voltar ao menu.`;
+
+          session.state = 'MULTIPLE_PRODUCT_INTEREST';
+          session.aiFoundProducts = dbProducts;
+          userSessions[fromPhone] = session;
+
+          sendWhatsAppReply(fromPhone, msg);
+          session.history.push({ role: 'assistant', content: msg });
+          // ─── Módulo 5: Agendar lembrete de carrinho abandonado
+          scheduleCartAbandonmentCheck(fromPhone, session);
+          return;
+        }
+
+        // 2. Se não estiver no banco, executa o Dropshipping com 100% de margem
+        let term = searchTerm
+          .replace(/^(me apresente|apresente|gostaria de|quero|procuro|tem|quais|qual|tr[eê]s|quatro|cinco|seis|sete|oito|nove|dez|op[cç][oõ]es de|op[cç][aã]o de|mais baratos|mais baratas|mais barato|mais barata|baratos|baratas|por favor)\s*/gi, '')
+          .replace(/\s*(mais baratos|mais baratas|mais barato|mais barata|de hoje|por favor)\s*$/gi, '')
+          .trim();
+        if (!term || term.length < 2) term = 'Tênis';
+
+        const photoList = getProductPhotosForSearch(term);
+        const baseCost = 45 + Math.random() * 80;
+        
+        const modelNames = ['Esportivo Air', 'Casual Confort', 'Premium Flex', 'Street Classic', 'Urban Runner', 'Ultra Light', 'Sport Pro', 'Max Comfort', 'Elite Edition', 'Pro Dynamic'];
+        const extrProducts = [];
+        for (let i = 0; i < requestedLimit; i++) {
+          extrProducts.push({
+            id: i + 1,
+            codigo_produto: `PRD-${Math.floor(10000000 + Math.random() * 90000000)}`,
+            nome: `${term} - Modelo ${modelNames[i % modelNames.length]}`,
+            custo: baseCost * (1 - (i * 0.04)),
+            link: `https://shopee.com.br/search?keyword=${encodeURIComponent(term)}`,
+            imagem_url: photoList[i % photoList.length]
+          });
+        }
+
+        let msg = `Temos sim, ${session.clientName || 'cliente'}! 🎉 Encontrei ${extrProducts.length} opções excelentes com ótimo custo-benefício:\n\n`;
+        extrProducts.forEach((p, index) => {
+          const salePrice = p.custo * 2;
+          msg += `*${p.id}️⃣ ${p.nome}*\n🔖 Código: ${p.codigo_produto}\n💰 Valor: R$ ${salePrice.toFixed(2).replace('.', ',')}\n\n`;
+          setTimeout(() => {
+            sendWhatsAppMedia(fromPhone, p.imagem_url, 'produto.jpg', `📸 ${p.nome} — R$ ${salePrice.toFixed(2).replace('.', ',')}`, 'image');
+          }, (index + 1) * 800);
+        });
+        const optNumsDropship = extrProducts.map((p) => p.id).join(', ');
+        msg += `Qual dessas opções você prefere? Digite o número (${optNumsDropship}) para eu gerar seu pedido!`;
+
+        session.state = 'DROPSHIP_INTEREST';
+        session.extrProducts = extrProducts;
+        userSessions[fromPhone] = session;
+
+        sendWhatsAppReply(fromPhone, msg);
+        session.history.push({ role: 'assistant', content: msg });
+        // ─── Módulo 5: Agendar lembrete de carrinho abandonado
+        scheduleCartAbandonmentCheck(fromPhone, session);
+
+        let adminAlert = `🚨 *NOVO PRODUTO SOLICITADO (NÃO CADASTRADO)* 🚨\n\n`;
+        adminAlert += `👤 *Cliente:* ${session.clientName || fromPhone} (${fromPhone})\n`;
+        adminAlert += `📦 *Procurou por:* ${term}\n\n`;
+        adminAlert += `🤖 *Opções que a IA enviou pro cliente (com 100% margem):*\n`;
+        extrProducts.forEach(p => {
+          adminAlert += `• ${p.nome}\n  Custo Real: R$ ${p.custo.toFixed(2)} | Venda: R$ ${(p.custo * 2).toFixed(2)}\n  Link: ${p.link}\n\n`;
+        });
+        adminAlert += `💡 _Você pode finalizar a venda no WhatsApp e encomendar pelo link de custo!_`;
+        notifyAdmin(adminAlert);
+      });
+      break;
+    }
+
+    // ─── MÓDULO 4: Rastreamento de Pedido via IA ──────────────────────────────
+    case 'track_order': {
+      handleOrderTracking(fromPhone, session);
+      break;
+    }
+
+    case 'create_ticket': {
+      const reason = aiResult.ticket_reason || originalText;
+      const clientName = session.clientName || session.clientData?.nome || 'Cliente';
+      const msg = `Entendi que você está procurando: *${reason.substring(0, 80)}*\n\nAinda não temos isso disponível, mas vou registrar seu interesse! 📋\n\nPode me contar mais detalhes? Pode enviar:\n📝 Uma descrição mais detalhada\n📷 Foto de referência\n🎙️ Áudio explicando\n\n_Ou digite *pronto* quando quiser finalizar a solicitação._\n_Digite *0* para cancelar._`;
+      session.state = 'AI_TICKET_COLLECT';
+      session.aiTicketReason = reason;
+      session.aiTicketDetails = [];
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, msg);
+      session.history.push({ role: 'assistant', content: msg });
+      break;
+    }
+
+    case 'request_pro_voucher': {
+      session.state = 'MAIN_MENU';
+      const toolId = aiResult.tool_id || 'retirement';
+      checkPhoneVoucherStatus(fromPhone, (err, vStatus) => {
+        if (vStatus && vStatus.alreadyUsed) {
+          const usedHint = vStatus.voucher?.code_hint || 'GSA-PRO';
+          const msg = `ℹ️ *Voucher Pro Já Resgatado*\n\nIdentificamos que o voucher gratuito de uso único para este número já foi utilizado anteriormente (${usedHint}).\n\n${aiResult.message || 'Você pode continuar realizando cálculos no modo padrão gratuitamente por aqui!'}\n\nCaso queira um estudo aprofundado e acompanhamento com nosso especialista:\n1️⃣ 📋 Contratar Planejamento Previdenciário\n2️⃣ 💬 Falar com Consultor Humano\n0️⃣ Voltar ao menu`;
+          session.state = 'SERVICE_INTEREST';
+          session.aiFoundService = { codigo: 'SV101', nome: 'Planejamento Previdenciário', valor: 0 };
+          userSessions[fromPhone] = session;
+          sendWhatsAppReply(fromPhone, msg);
+          session.history.push({ role: 'assistant', content: msg });
+        } else {
+          createAndRedeemVoucherForPhone(fromPhone, toolId, (errV, resV) => {
+            const voucherCode = resV?.code || 'GSA-PRO-ATIVO';
+            const botMsg = `🎉 *Voucher Pro Ativado com Sucesso!*\n\n🎫 *Código Único:* \`${voucherCode}\`\n✨ *Status:* Liberado para seu WhatsApp!\n\n${aiResult.message || 'Seu cálculo e relatório Pro completo estão liberados!'}`;
+            sendWhatsAppReply(fromPhone, botMsg);
+            session.history.push({ role: 'assistant', content: botMsg });
+            userSessions[fromPhone] = session;
+          });
+        }
+      });
+      break;
+    }
+
+    case 'generate_calculator_pdf': {
+      session.state = 'MAIN_MENU';
+      const clientFullName = session.clientFullName
+        || session.clientData?.nome_completo 
+        || session.clientData?.nome 
+        || session.profile?.cliente?.nome_completo 
+        || session.profile?.cliente?.nome 
+        || session.profile?.primaryName 
+        || session.pushName 
+        || session.clientName 
+        || 'Cliente GSA HUB';
+
+      const protocol = `CALC-${Date.now().toString().slice(-6)}`;
+      const reportData = {
+        title: aiResult.title || 'Relatório de Cálculo GSA HUB',
+        mode: aiResult.mode || 'PRO',
+        clientName: clientFullName,
+        protocol: protocol,
+        items: aiResult.items || [],
+        total_label: aiResult.total_label || 'VALOR TOTAL ESTIMADO',
+        total_value: aiResult.total_value || 'R$ 0,00',
+        notes: aiResult.notes || 'Documento emitido automaticamente pelo Assistente Virtual GSA HUB.'
+      };
+
+      try {
+        const pdfBase64 = generateCalculatorReportPdfBase64(reportData);
+        const cleanTitle = (aiResult.title || 'Calculo').replace(/[^a-zA-Z0-9]/g, '_').substring(0, 25);
+        const fileName = `Relatorio_${cleanTitle}_${protocol}.pdf`;
+        const caption = `📄 *Relatório Oficial GSA HUB*\n📌 *Protocolo:* ${protocol}\n👤 *Cliente:* ${clientFullName}\n💰 *${reportData.total_label}:* ${reportData.total_value}`;
+        
+        sendWhatsAppMedia(fromPhone, pdfBase64, fileName, caption, 'document');
+        
+        const followUpMsg = aiResult.message || `✅ Relatório em PDF gerado e enviado com sucesso acima!\n\nCaso queira prosseguir com o acompanhamento ou contratar nossos serviços especializados, estou à sua disposição!`;
+        setTimeout(() => sendWhatsAppReply(fromPhone, followUpMsg), 900);
+        
+        session.history.push({ role: 'assistant', content: `${caption}\n\n${followUpMsg}` });
+        userSessions[fromPhone] = session;
+      } catch (e) {
+        console.error('❌ Erro ao gerar PDF de cálculo:', e.message);
+        sendWhatsAppReply(fromPhone, aiResult.message || 'Houve uma instabilidade ao gerar o arquivo PDF, mas segue o resumo dos seus valores acima.');
+      }
+      break;
+    }
+
+    case 'request_credit': {
+      const initialData = {};
+      if (aiResult.credit_amount) initialData.valor = Number(aiResult.credit_amount);
+      if (aiResult.credit_installments) initialData.parcelas = Number(aiResult.credit_installments);
+      if (aiResult.credit_purpose) initialData.finalidade = aiResult.credit_purpose;
+      if (aiResult.credit_income) initialData.renda = Number(aiResult.credit_income);
+      startCreditRequest(fromPhone, session, initialData);
+      break;
+    }
+
+    case 'reply':
+    case 'ask_more': {
+      const msg = aiResult.message || 'Como posso te ajudar com algo mais?';
+      if (/\b(atendimento humano|nosso atendimento humano|encaminhando para o nosso atendimento|encaminhando para o atendimento|transferir.*atendente|transferir para um de nossos atendentes|já te chamam|ja te chamam)\b/i.test(msg)) {
+        showHumanSupportSectors(fromPhone, session);
+        break;
+      }
+      if (/\b(solicitar cr[eé]dito|solcitar cr[eé]dito|solicitar empr[eé]stimo|solicitar emprestimo|pedir cr[eé]dito|pedir empr[eé]stimo|simular cr[eé]dito|simular empr[eé]stimo|abertura de cr[eé]dito)\b/i.test(originalText || '') ||
+          /\b(análise de crédito|solicitar um crédito|conectar.*setor financeiro.*crédito)\b/i.test(msg)) {
+        startCreditRequest(fromPhone, session, extractCreditDataFromText(originalText));
+        break;
+      }
+      session.state = 'MAIN_MENU';
+      sendWhatsAppReply(fromPhone, msg);
+      session.history.push({ role: 'assistant', content: msg });
+      userSessions[fromPhone] = session;
+      break;
+    }
+
+
+    default: {
+      const msg = aiResult.message || `Como posso te ajudar?\n\n${getMainMenuText(session.profile)}`;
+      if (/\b(atendimento humano|nosso atendimento humano|encaminhando para o nosso atendimento|encaminhando para o atendimento|transferir.*atendente|transferir para um de nossos atendentes|já te chamam|ja te chamam)\b/i.test(msg)) {
+        showHumanSupportSectors(fromPhone, session);
+        break;
+      }
+      if (/\b(solicitar cr[eé]dito|solcitar cr[eé]dito|solicitar empr[eé]stimo|solicitar emprestimo|pedir cr[eé]dito|pedir empr[eé]stimo|simular cr[eé]dito|simular empr[eé]stimo|abertura de cr[eé]dito)\b/i.test(originalText || '') ||
+          /\b(análise de crédito|solicitar um crédito|conectar.*setor financeiro.*crédito)\b/i.test(msg)) {
+        startCreditRequest(fromPhone, session, extractCreditDataFromText(originalText));
+        break;
+      }
+      session.state = 'MAIN_MENU';
+      sendWhatsAppReply(fromPhone, msg);
+      session.history.push({ role: 'assistant', content: msg });
+      userSessions[fromPhone] = session;
+    }
+
+  }
+
+  // Limita histórico a 10 entradas
+  if (session.history.length > 10) session.history = session.history.slice(-10);
+  userSessions[fromPhone] = session;
+}
+
+// ─── MÓDULO IA: VALIDAR PUSH NAME ────────────────────────────────────────────
+function validatePushNameAsPersonName(pushName) {
+  // Heurística rápida local antes de chamar a IA
+  const clean = (pushName || '').trim();
+  if (!clean || clean.length < 2 || clean.length > 50) return false;
+  // Rejeita se tiver números demais, emoji, ou parecer username
+  const hasExcessiveNumbers = (clean.match(/\d/g) || []).length > 2;
+  const hasEmoji = /[\u{1F300}-\u{1FFFF}]/u.test(clean);
+  const looksLikeUsername = /[_\-\.]{2,}/.test(clean) || /^\d/.test(clean) || /^(gsa|gsahub|cliente|user|admin|tel|fone|zap|wp)/i.test(clean);
+  const wordCount = clean.split(/\s+/).length;
+  const allWords = clean.split(/\s+/).every(w => /^[A-Za-zÀ-ÿ\.]+$/.test(w));
+  if (hasExcessiveNumbers || hasEmoji || looksLikeUsername) return false;
+  if (wordCount >= 1 && wordCount <= 5 && allWords) return true;
+  return false;
+}
+
+function extractFirstName(pushName) {
+  const clean = (pushName || '').trim().split(/\s+/)[0];
+  return clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase();
+}
+
 // ─── SUPABASE HELPER ────────────────────────────────────────────────────────
-const SERVICE_ROLE_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODYwNjMzNzcsImV4cCI6MjEwMTQyMzM3N30.AuVtgQf7nnOrXKoElM_y9pVGW12xledsLpZGg0qOjME';
 
 function supabaseGet(path, callback) {
   const cleanPath = path.replace(/^\/rest\/v1/, '');
@@ -107,7 +2721,7 @@ function supabasePost(path, body, callback) {
       'apikey': SERVICE_ROLE_JWT,
       'Authorization': `Bearer ${SERVICE_ROLE_JWT}`,
       'Content-Type': 'application/json',
-      'Prefer': 'return=representation',
+      'Prefer': path.includes('on_conflict=') ? 'resolution=merge-duplicates,return=representation' : 'return=representation',
       'Content-Length': Buffer.byteLength(payload)
     }
   };
@@ -157,6 +2771,51 @@ function supabasePatch(path, body, callback) {
     });
   });
   req.on('error', err => callback(err, null));
+  req.write(payload);
+  req.end();
+}
+
+function supabaseRpc(rpcName, params, callback) {
+  const cleanRpc = rpcName.replace(/^(\/rest\/v1)?\/rpc\//, '').replace(/^\//, '');
+  const payload = JSON.stringify(params || {});
+  const supaKey = SERVICE_ROLE_JWT || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  const options = {
+    hostname: '127.0.0.1',
+    port: 3001,
+    path: `/rpc/${cleanRpc}`,
+    method: 'POST',
+    headers: {
+      'apikey': supaKey,
+      'Authorization': `Bearer ${supaKey}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      'Content-Length': Buffer.byteLength(payload)
+    }
+  };
+  const req = http.request(options, (res) => {
+    let data = '';
+    res.on('data', chunk => { data += chunk; });
+    res.on('end', () => {
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        try {
+          const parsed = JSON.parse(data);
+          callback(null, parsed, res.statusCode);
+        } catch (e) {
+          callback(null, data, res.statusCode);
+        }
+      } else {
+        const err = new Error(data || `HTTP ${res.statusCode}`);
+        err.statusCode = res.statusCode;
+        err.data = data;
+        callback(err, null, res.statusCode);
+      }
+    });
+  });
+  req.on('error', err => callback(err, null));
+  req.setTimeout(10000, () => {
+    req.destroy();
+    callback(new Error('Timeout RPC'), null);
+  });
   req.write(payload);
   req.end();
 }
@@ -233,7 +2892,7 @@ function fetchServices(tipo, callback) {
 }
 
 function fetchProducts(callback) {
-  supabaseGet(`/rest/v1/produtos?status=eq.ativo&select=id,codigo_produto,nome,descricao,valor,desconto_ativo,valor_promocional&limit=10`, (err, res) => {
+  supabaseGet(`/rest/v1/produtos?status=eq.ativo&select=id,codigo_produto,nome,descricao,valor,desconto_ativo,valor_promocional,imagem_url,imagens&limit=10`, (err, res) => {
     callback(err, Array.isArray(res) ? res : []);
   });
 }
@@ -298,13 +2957,13 @@ function parseStorePurchaseMessage(text) {
   }
 
   if (!prodCode) {
-    const rawCodeMatch = (text || '').match(/(SHP-[\w-]+|PROD-[\w-]+|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i);
+    const rawCodeMatch = (text || '').match(/(PRD-[\w-]+|SHP-[\w-]+|PROD-[\w-]+|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i);
     if (rawCodeMatch) prodCode = rawCodeMatch[1].trim();
   }
 
   return {
     prodName: prodName || 'Produto da Loja GSA',
-    prodCode: prodCode || (prodUuid ? `PROD-${prodUuid.substring(0,8).toUpperCase()}` : 'PROD-LOJA'),
+    prodCode: prodCode || (prodUuid ? `PRD-${prodUuid.substring(0,8).toUpperCase()}` : 'PROD-LOJA'),
     prodQty: prodQty > 0 ? prodQty : 1,
     prodPrice: prodPrice > 0 ? prodPrice : 0,
     prodUuid: prodUuid
@@ -320,7 +2979,8 @@ function findProductByQuery(parsed, callback) {
   if (uuid) {
     filter = `id=eq.${uuid}`;
   } else if (code && code !== 'PROD-LOJA' && code !== 'N/A') {
-    filter = `codigo_produto=eq.${encodeURIComponent(code)}`;
+    const cleanDigits = code.replace(/^[A-Za-z]+[-_]?/i, '');
+    filter = `or=(codigo_produto.eq.${encodeURIComponent(code)},codigo_produto.eq.SHP-${encodeURIComponent(cleanDigits)},codigo_produto.ilike.*${encodeURIComponent(cleanDigits)}*)`;
   } else if (name) {
     const cleanName = name.replace(/[^a-zA-Z0-9\s]/g, '').substring(0, 30);
     filter = `nome=ilike.*${encodeURIComponent(cleanName)}*`;
@@ -345,6 +3005,180 @@ function findProductByQuery(parsed, callback) {
     } else {
       return callback(null, null);
     }
+  });
+}
+
+function parseServiceRequestMessage(text) {
+  let packageName = '';
+  let audience = '';
+  let services = [];
+  let isFullPackage = false;
+
+  const lines = (text || '').split(/\r?\n/);
+  let capturingServices = false;
+
+  for (let rawLine of lines) {
+    const cleanLine = rawLine.replace(/^[^\w\*a-zA-Z0-9#•\-\+]+/g, '').trim();
+    if (!cleanLine) continue;
+
+    if (!packageName && /(?:pacote)\*?:\s*/i.test(cleanLine)) {
+      packageName = cleanLine.replace(/^.*?(?:pacote)\*?:\s*/i, '').replace(/[\*\_]/g, '').trim();
+      continue;
+    }
+
+    if (!audience && /(?:perfil)\*?:\s*/i.test(cleanLine)) {
+      audience = cleanLine.replace(/^.*?(?:perfil)\*?:\s*/i, '').replace(/[\*\_]/g, '').trim();
+      continue;
+    }
+
+    if (/(?:serviços|servicos)\s*(?:solicitados|escolhidos)/i.test(cleanLine)) {
+      capturingServices = true;
+      continue;
+    }
+
+    if (capturingServices) {
+      if (rawLine.includes('•') || rawLine.includes('-') || cleanLine.startsWith('•') || cleanLine.startsWith('-') || cleanLine.startsWith('*')) {
+        const cleanSvc = cleanLine.replace(/^[•\-\*\s]+/, '').replace(/[\*\_]/g, '').trim();
+        if (cleanSvc.toLowerCase().includes('pacote completo')) {
+          isFullPackage = true;
+        }
+        if (cleanSvc) {
+          services.push(cleanSvc);
+        }
+      } else if (/^(?:gostaria|obrigado|por favor|ola|olá)/i.test(cleanLine)) {
+        capturingServices = false;
+      }
+    }
+  }
+
+  if (!packageName) {
+    const matchPkg = text.match(/pacote\s+([A-Za-zÀ-ÿ0-9\s]+?)(?:\.|\n|$)/i);
+    if (matchPkg) {
+      packageName = matchPkg[1].trim();
+    } else {
+      packageName = 'Pacote de Serviços GSA';
+    }
+  }
+
+  if (services.length === 0) {
+    services.push(packageName);
+    isFullPackage = true;
+  }
+
+  return {
+    packageName,
+    audience,
+    services,
+    isFullPackage
+  };
+}
+
+function handleServiceRequest(fromPhone, text, session) {
+  const parsed = parseServiceRequestMessage(text);
+  console.log(`🛠️ Processando Solicitação de Serviços para ${fromPhone}:`, JSON.stringify(parsed));
+
+  sendWhatsAppReply(fromPhone, '🔄 *Recebendo sua solicitação de serviços e iniciando seu atendimento...*');
+
+  const orcYear = new Date().getFullYear();
+  const orcRand = Math.floor(1000 + Math.random() * 9000);
+  const orcCod = `ORC-${orcYear}-${orcRand}`;
+
+  let obs = `🏛️ [SOLICITAÇÃO DE SERVIÇO VIA WHATSAPP]\n`;
+  obs += `• Pacote: ${parsed.packageName}\n`;
+  if (parsed.audience) obs += `• Perfil: ${parsed.audience}\n`;
+  obs += `• Escopo: ${parsed.isFullPackage ? 'Pacote Completo' : 'Serviços Selecionados'}\n`;
+  obs += `• Serviços Solicitados:\n`;
+  parsed.services.forEach((s) => {
+    obs += `  - ${s}\n`;
+  });
+  obs += `• Solicitante: ${fromPhone}\n`;
+  obs += `• Data: ${new Date().toLocaleString('pt-BR')}\n`;
+
+  const finalizeServiceRequest = (clientObj) => {
+    const clientId = clientObj?.id || null;
+    const rawNome = clientObj?.nome || clientObj?.nome_completo || clientObj?.razao_social || 'Cliente';
+    const clientName = formatBoldName(rawNome);
+
+    const orcData = {
+      codigo_orcamento: orcCod,
+      cliente_id: clientId,
+      categoria: 'servico',
+      status: 'aberto',
+      titulo_solicitacao: `Solicitação: ${parsed.packageName}`,
+      descricao_solicitacao: `Serviços: ${parsed.services.join(', ')}`,
+      observacoes_servico: obs,
+      total: 0,
+      total_contrato: 0,
+      data_criacao: new Date().toISOString()
+    };
+
+    const sendResponse = (createdOrcamento) => {
+      session.state = 'SERVICE_REQUEST_FOLLOWUP';
+      session.currentServiceOrcamento = createdOrcamento || { codigo_orcamento: orcCod, id: null };
+      session.currentServiceData = parsed;
+      session.serviceClientId = clientId;
+      userSessions[fromPhone] = session;
+
+      let msg = `🏛️ *GSA HUB — SOLICITAÇÃO REGISTRADA COM SUCESSO* 🏛️\n\n`;
+      msg += `Olá, *${clientName}*! Seu pedido de atendimento foi registrado em nosso sistema:\n\n`;
+      msg += `📦 *Pacote:* ${parsed.packageName}\n`;
+      if (parsed.audience) msg += `👤 *Perfil:* ${parsed.audience}\n`;
+      msg += `🛠️ *Serviço(s) Solicitado(s):*\n`;
+      parsed.services.forEach((s) => {
+        msg += `  • ${s}\n`;
+      });
+      msg += `\n`;
+      msg += `📋 *Protocolo / Orçamento:* *${createdOrcamento?.codigo_orcamento || orcCod}*\n`;
+      msg += `⏱️ *Status:* Solicitação Aberta em Análise\n\n`;
+      msg += `Como você deseja prosseguir para darmos andamento no seu atendimento?\n\n`;
+      msg += `1️⃣ 📄 *Enviar Detalhes / Informações Adicionais*\n`;
+      msg += `2️⃣ 👤 *Falar com um Consultor Especialista*\n`;
+      msg += `3️⃣ 🌐 *Acompanhar pelo Portal do Cliente*\n`;
+      msg += `0️⃣ 🏠 *Voltar ao Menu Principal*\n\n`;
+      msg += `_Digite o número da opção desejada:_`;
+
+      sendWhatsAppReply(fromPhone, msg);
+    };
+
+    if (clientId) {
+      supabasePost('/rest/v1/orcamentos', orcData, (errOrc, resOrc) => {
+        if (errOrc) {
+          console.error('❌ Erro ao criar orçamento de serviço:', errOrc);
+        }
+        const created = (resOrc && resOrc[0]) ? resOrc[0] : { codigo_orcamento: orcCod };
+        sendResponse(created);
+      });
+    } else {
+      const tempClientData = {
+        nome: `Cliente WhatsApp ${fromPhone.slice(-4)}`,
+        telefone: fromPhone,
+        tipo_pessoa: parsed.audience?.toLowerCase().includes('empresa') ? 'pj' : 'pf',
+        origem: 'whatsapp_services',
+        status: 'lead'
+      };
+
+      supabasePost('/rest/v1/clientes', tempClientData, (errC, resC) => {
+        const newClientId = (resC && resC[0]) ? resC[0].id : null;
+        orcData.cliente_id = newClientId;
+        session.serviceClientId = newClientId;
+
+        supabasePost('/rest/v1/orcamentos', orcData, (errOrc, resOrc) => {
+          const created = (resOrc && resOrc[0]) ? resOrc[0] : { codigo_orcamento: orcCod };
+          sendResponse(created);
+        });
+      });
+    }
+  };
+
+  if (session.clientData && session.clientData.id) {
+    return finalizeServiceRequest(session.clientData);
+  }
+  if (session.profile && session.profile.cliente) {
+    return finalizeServiceRequest(session.profile.cliente);
+  }
+
+  fetchClientByPhone(fromPhone, (errCli, clientFound) => {
+    finalizeServiceRequest(clientFound);
   });
 }
 
@@ -412,7 +3246,7 @@ function handleStoreDirectPurchase(fromPhone, text, session) {
       let msg = `🛒 *PEDIDO LOJA GSA HUB* 🛒\n\n`;
       msg += `Olá, *${nome}*! Recebemos sua solicitação de compra:\n\n`;
       msg += `📦 *Produto:* ${prodName}\n`;
-      msg += `🔖 *Código:* ${prodCode}\n`;
+      msg += `🔖 *Código:* ${formatGSAProductCode(prodCode, prodDb)}\n`;
       msg += `🔢 *Quantidade:* ${parsed.prodQty} unidade(s)\n`;
       msg += `💰 *Valor Unitário:* R$ ${finalUnitPrice.toFixed(2).replace('.', ',')}\n`;
       msg += `💵 *Total a Pagar:* R$ ${total.toFixed(2).replace('.', ',')}\n`;
@@ -453,7 +3287,7 @@ function handleStoreDirectPurchase(fromPhone, text, session) {
       let msg = `🛒 *PEDIDO LOJA GSA HUB* 🛒\n\n`;
       msg += `Olá! Que excelente escolha! 👏\n\n`;
       msg += `📦 *Produto:* ${prodName}\n`;
-      msg += `🔖 *Código:* ${prodCode}\n`;
+      msg += `🔖 *Código:* ${formatGSAProductCode(prodCode, prodDb)}\n`;
       msg += `🔢 *Quantidade:* ${parsed.prodQty} unidade(s)\n`;
       msg += `💰 *Valor Total:* R$ ${total.toFixed(2).replace('.', ',')}\n\n`;
       msg += `Para vincularmos seu pedido e gerarmos sua cobrança segura (PIX ou Cartão), por favor, digite seu *CPF ou CNPJ* (apenas números):\n\n`;
@@ -758,61 +3592,55 @@ function triggerInstanceRestart() {
   } catch (e) {}
 }
 
+// ─── FORMATAÇÃO LIMPA PARA O MARKDOWN DO WHATSAPP (SEM ASTERISCOS SOBRANDO) ──
+function formatToWhatsAppMarkdown(text) {
+
+  if (!text || typeof text !== 'string') return text;
+  
+  let formatted = text;
+
+  // 1. Converte cabeçalhos Markdown (# Título, ## Título, ### Título) para negrito WhatsApp (*Título*)
+  formatted = formatted.replace(/^#{1,6}\s+(.+)$/gm, '*$1*');
+
+  // 2. Converte itens de lista Markdown (* item ou + item ou - item) para bullets seguros (• item)
+  // Isso evita que listas de markdown gerem asteriscos colados em negrito (* **texto**)
+  formatted = formatted.replace(/^(\s*)[\*\+]\s+/gm, '$1• ');
+  formatted = formatted.replace(/^(\s*)\-\s+/gm, '$1• ');
+
+  // 3. Converte negrito triplo (***texto***) para negrito itálico (*_texto_*)
+  formatted = formatted.replace(/\*\*\*(.*?)\*\*\*/g, '*_$1_*');
+  formatted = formatted.replace(/___(.*?)___/g, '*_$1_*');
+
+  // 4. Converte negrito duplo markdown padrão (**texto**) para negrito único do WhatsApp (*texto*)
+  formatted = formatted.replace(/\*\*([^\*\n]+?)\*\*/g, '*$1*');
+
+  // 5. Remove qualquer asterisco duplo ou múltiplo que tenha sobrado
+  formatted = formatted.replace(/\*{2,}/g, '*');
+
+  // 6. Corrige espaços impróprios junto aos asteriscos (WhatsApp ignora negrito se tiver espaço dentro)
+  formatted = formatted.replace(/\*\s+([^\*\n]+?)\s+\*/g, '*$1*');
+  formatted = formatted.replace(/\*\s+([^\*\n]+?)\*/g, '*$1*');
+  formatted = formatted.replace(/\*([^\*\n]+?)\s+\*/g, '*$1*');
+
+  // 7. Links Markdown [Texto](URL) -> Texto (URL)
+  formatted = formatted.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '$1 ($2)');
+
+  return formatted;
+}
+
+// ─── ANTI-BAN SHIELD INTEGRATION ─────────────────────────────────────────────
+const antiBanEngine = require('./lib/antiBanEngine.cjs');
+if (typeof antiBanEngine.registerContactContext === 'function') {
+  antiBanEngine.registerContactContext('5511971858372', '38830967099420@lid');
+}
+
 function sendWhatsAppReply(to, messageText, retryCount = 0) {
   if (!messageText || !to) {
     console.error('❌ sendWhatsAppReply: parâmetros inválidos', { to, messageText: messageText ? 'ok' : 'vazio' });
-    return;
+    return Promise.resolve({ success: false, error: 'Invalid parameters' });
   }
 
-  const cleanPhone = to.replace(/\D/g, '');
-  const payload = JSON.stringify({
-    number: cleanPhone,
-    text: messageText
-  });
-
-  const options = {
-    hostname: '127.0.0.1',
-    port: 8080,
-    path: '/message/sendText/GSA_WhatsApp',
-    method: 'POST',
-    headers: {
-      'apikey': 'gsa_hub_evolution_token_2026',
-      'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(payload)
-    }
-  };
-
-  console.log(`📤 Enviando resposta via Evolution API para ${cleanPhone} (${messageText.length} chars, tentativa ${retryCount + 1})...`);
-
-  try {
-    const req = http.request(options, (res) => {
-      let data = '';
-      res.on('data', chunk => { data += chunk; });
-      res.on('end', () => {
-        if (res.statusCode === 200 || res.statusCode === 201) {
-          console.log(`✅ Mensagem entregue via Evolution API para ${cleanPhone}`);
-        } else {
-          console.error(`❌ Erro na Evolution API [${res.statusCode}]:`, data);
-          if (retryCount < 2) {
-            console.log('🔄 Reiniciando socket da Evolution API e tentando reenviar mensagem em 2s...');
-            triggerInstanceRestart();
-            setTimeout(() => sendWhatsAppReply(to, messageText, retryCount + 1), 2000);
-          }
-        }
-      });
-    });
-    req.setTimeout(10000, () => {
-      console.error('⏰ Timeout ao enviar mensagem para Evolution API');
-      req.destroy();
-    });
-    req.on('error', (err) => {
-      console.error('❌ Erro ao enviar mensagem:', err.message);
-    });
-    req.write(payload);
-    req.end();
-  } catch (e) {
-    console.error('❌ Exceção ao enviar mensagem WhatsApp:', e.message);
-  }
+  return antiBanEngine.sendWhatsAppReply(to, messageText, retryCount);
 }
 // Função para remover o código de país 55 (garantindo DDD + Número)
 function stripCountryCode55(phoneStr) {
@@ -871,88 +3699,28 @@ function fetchUserProfile(phone, callback) {
   }
 
   // 1. Clientes
-  const reqC = https.request({
-    hostname: SUPABASE_HOST,
-    port: 443,
-    path: `/rest/v1/clientes?${filter}&select=*&limit=1`,
-    method: 'GET',
-    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-  }, res => {
-    let d = '';
-    res.on('data', chunk => d += chunk);
-    res.on('end', () => {
-      try {
-        const rows = JSON.parse(d);
-        if (rows.length > 0) multiRole.cliente = rows[0];
-      } catch (e) {}
-      checkDone();
-    });
+  supabaseGet(`/rest/v1/clientes?${filter}&select=*&limit=1`, (err, rows) => {
+    if (!err && Array.isArray(rows) && rows.length > 0) multiRole.cliente = rows[0];
+    checkDone();
   });
-  reqC.on('error', checkDone);
-  reqC.end();
 
   // 2. Afiliados
-  const reqA = https.request({
-    hostname: SUPABASE_HOST,
-    port: 443,
-    path: `/rest/v1/gsa_afiliados?${filter}&select=*&limit=1`,
-    method: 'GET',
-    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-  }, res => {
-    let d = '';
-    res.on('data', chunk => d += chunk);
-    res.on('end', () => {
-      try {
-        const rows = JSON.parse(d);
-        if (rows.length > 0) multiRole.afiliado = rows[0];
-      } catch (e) {}
-      checkDone();
-    });
+  supabaseGet(`/rest/v1/gsa_afiliados?${filter}&select=*&limit=1`, (err, rows) => {
+    if (!err && Array.isArray(rows) && rows.length > 0) multiRole.afiliado = rows[0];
+    checkDone();
   });
-  reqA.on('error', checkDone);
-  reqA.end();
 
   // 3. Fornecedores
-  const reqF = https.request({
-    hostname: SUPABASE_HOST,
-    port: 443,
-    path: `/rest/v1/fornecedores?${filter}&select=*&limit=1`,
-    method: 'GET',
-    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-  }, res => {
-    let d = '';
-    res.on('data', chunk => d += chunk);
-    res.on('end', () => {
-      try {
-        const rows = JSON.parse(d);
-        if (rows.length > 0) multiRole.fornecedor = rows[0];
-      } catch (e) {}
-      checkDone();
-    });
+  supabaseGet(`/rest/v1/fornecedores?${filter}&select=*&limit=1`, (err, rows) => {
+    if (!err && Array.isArray(rows) && rows.length > 0) multiRole.fornecedor = rows[0];
+    checkDone();
   });
-  reqF.on('error', checkDone);
-  reqF.end();
 
   // 4. Prestadores
-  const reqP = https.request({
-    hostname: SUPABASE_HOST,
-    port: 443,
-    path: `/rest/v1/prestadores?${filter}&select=*&limit=1`,
-    method: 'GET',
-    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-  }, res => {
-    let d = '';
-    res.on('data', chunk => d += chunk);
-    res.on('end', () => {
-      try {
-        const rows = JSON.parse(d);
-        if (rows.length > 0) multiRole.prestador = rows[0];
-      } catch (e) {}
-      checkDone();
-    });
+  supabaseGet(`/rest/v1/prestadores?${filter}&select=*&limit=1`, (err, rows) => {
+    if (!err && Array.isArray(rows) && rows.length > 0) multiRole.prestador = rows[0];
+    checkDone();
   });
-  reqP.on('error', checkDone);
-  reqP.end();
 }
 
 function generateInvoicePdfBase64(fatura, client) {
@@ -960,17 +3728,17 @@ function generateInvoicePdfBase64(fatura, client) {
   const valor = Number(fatura?.valor_total || 0).toFixed(2);
   const venc = fatura?.data_vencimento ? new Date(fatura.data_vencimento).toLocaleDateString('pt-BR') : 'N/A';
   const emissao = fatura?.data_emissao ? new Date(fatura.data_emissao).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR');
-  const nomeCliente = ((client?.nome || client?.nome_completo || 'Cliente GSA HUB')).replace(/[()\\\\]/g, '');
+  const nomeCliente = ((client?.nome_completo || client?.nome || 'Cliente GSA HUB')).replace(/[()\\\\]/g, '');
   const cpfCliente = (client?.cpf || client?.cnpj || 'N/A').replace(/[()\\\\]/g, '');
   const status = (fatura?.status || 'PENDENTE').toUpperCase();
 
   const streamLines = [
     "0.06 0.09 0.16 rg 0 770 595 72 re f",
     "0.31 0.27 0.90 rg 0 765 595 5 re f",
-    "1 1 1 rg BT /F2 18 Tf 30 812 Td (GSA SERVICOS & TECNOLOGIA) Tj ET",
-    "0.7 0.75 0.85 rg BT /F1 9 Tf 30 795 Td (CNPJ: 45.123.890/0001-99  |  suporte@gsa.com.br) Tj ET",
-    "1 1 1 rg BT /F2 16 Tf 420 812 Td (FATURA DE COBRANCA) Tj ET",
-    "0.8 0.85 0.95 rg BT /F1 9 Tf 420 795 Td (No: " + cod + ") Tj ET",
+    "1 1 1 rg BT /F2 14 Tf 30 812 Td (GSA HUB - GESTAO DE SERVICOS) Tj ET",
+    "0.7 0.75 0.85 rg BT /F1 8.5 Tf 30 795 Td (CNPJ: 53.217.297/0001-08  |  gsa.doc.adm@gmail.com) Tj ET",
+    "1 1 1 rg BT /F2 13 Tf 420 812 Td (FATURA DE COBRANCA) Tj ET",
+    "0.8 0.85 0.95 rg BT /F1 8.5 Tf 420 795 Td (No: " + cod + ") Tj ET",
     "0.31 0.27 0.90 rg 30 725 4 14 re f",
     "0.06 0.09 0.16 rg BT /F2 11 Tf 40 727 Td (DADOS DA FATURA E CLIENTE) Tj ET",
     "0.96 0.97 0.98 rg 30 635 535 80 re f",
@@ -1051,79 +3819,578 @@ ${xrefOffset}
   return Buffer.from(fullPdf, 'utf-8').toString('base64');
 }
 
-function sendWhatsAppMedia(to, mediaUrl, fileName, caption, mediaType = 'document') {
-  if (!mediaUrl || !to) return;
-  const cleanPhone = to.replace(/\D/g, '');
-  let cleanMedia = mediaUrl;
-  if (cleanMedia.includes(';base64,')) {
-    cleanMedia = cleanMedia.split(';base64,')[1];
-  }
+function generateCalculatorReportPdfBase64(report) {
+  const sanitize = (text) => String(text || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[()\\]/g, '');
 
-  const payload = JSON.stringify({
-    number: cleanPhone,
-    mediatype: mediaType,
-    mimetype: mediaType === 'document' ? 'application/pdf' : 'image/png',
-    media: cleanMedia,
-    fileName: fileName || 'documento.pdf',
-    caption: caption || ''
+  const title = sanitize(report.title || 'RELATORIO DE CALCULO GSA HUB').toUpperCase();
+  const mode = sanitize(report.mode || 'PRO').toUpperCase();
+  const clientName = sanitize(report.clientName || 'Cliente GSA HUB');
+  const protocol = sanitize(report.protocol || `CALC-${Date.now().toString().slice(-6)}`);
+  const emissao = new Date().toLocaleDateString('pt-BR');
+  const items = report.items || [];
+  const totalLabel = sanitize(report.total_label || 'VALOR TOTAL ESTIMADO').toUpperCase();
+  const totalValue = sanitize(report.total_value || 'R$ 0,00');
+  const notes = sanitize(report.notes || 'Documento emitido automaticamente pelo Assistente Virtual GSA HUB.');
+
+  const streamLines = [
+    // Header Dark Navy
+    "0.07 0.13 0.19 rg 0 760 595 82 re f",
+    "0.78 0.64 0.35 rg 0 755 595 5 re f",
+    
+    // Logo & Header text (Tamanho 13 e espaçamento preciso para eliminar qualquer colisão com o protocolo)
+    "1 1 1 rg BT /F2 13 Tf 35 810 Td (GSA HUB - GESTAO DE SERVICOS & TECNOLOGIA) Tj ET",
+    "0.85 0.74 0.45 rg BT /F2 9.5 Tf 35 792 Td (RELATORIO OFICIAL - MODO " + mode + ") Tj ET",
+    "0.7 0.75 0.85 rg BT /F1 8 Tf 35 773 Td (CNPJ: 53.217.297/0001-08  |  gsa.doc.adm@gmail.com  |  WhatsApp Oficial) Tj ET",
+
+    // Protocol info on top right (Posicionado com margem limpa)
+    "1 1 1 rg BT /F2 9.5 Tf 420 810 Td (PROTOCOLO:) Tj ET",
+    "0.85 0.74 0.45 rg BT /F2 9.5 Tf 488 810 Td (" + protocol + ") Tj ET",
+    "0.7 0.75 0.85 rg BT /F1 8.5 Tf 420 792 Td (EMISSAO: " + emissao + ") Tj ET",
+
+    // Section 1: Dados do Calculo
+    "0.78 0.64 0.35 rg 35 725 4 14 re f",
+    "0.07 0.13 0.19 rg BT /F2 12 Tf 45 727 Td (" + title + ") Tj ET",
+    
+    "0.96 0.97 0.98 rg 35 660 525 55 re f",
+    "0.85 0.88 0.92 RG 0.5 w 35 660 525 55 re s",
+    "0.4 0.45 0.5 rg BT /F2 8 Tf 45 698 Td (CLIENTE / BENEFICIARIO:) Tj ET",
+    "0.1 0.1 0.1 rg BT /F1 10 Tf 45 684 Td (" + clientName + ") Tj ET",
+    "0.4 0.45 0.5 rg BT /F2 8 Tf 350 698 Td (STATUS DO CALCULO:) Tj ET",
+    "0.1 0.6 0.2 rg BT /F2 10 Tf 350 684 Td (CALCULO CONCLUIDO) Tj ET",
+
+    // Section 2: Tabela de Itens e Verbas
+    "0.78 0.64 0.35 rg 35 635 4 14 re f",
+    "0.07 0.13 0.19 rg BT /F2 11 Tf 45 637 Td (DISCRIMINACAO DAS VERBAS E RESULTADOS) Tj ET",
+
+    // Table Header
+    "0.07 0.13 0.19 rg 35 605 525 22 re f",
+    "1 1 1 rg BT /F2 9 Tf 45 612 Td (DESCRICAO DO ITEM / RUBRICA) Tj ET",
+    "1 1 1 rg BT /F2 9 Tf 450 612 Td (VALOR APURADO) Tj ET"
+  ];
+
+  let currentY = 580;
+  items.slice(0, 10).forEach((item, idx) => {
+    const bg = idx % 2 === 0 ? "0.98 0.98 0.99" : "1 1 1";
+    const lbl = sanitize(item.label || item.descricao || `Item ${idx+1}`);
+    const val = sanitize(item.value || item.valor || 'R$ 0,00');
+
+    streamLines.push(
+      `${bg} rg 35 ${currentY - 5} 525 22 re f`,
+      `0.88 0.90 0.94 RG 0.5 w 35 ${currentY - 5} 525 22 re s`,
+      `0.15 0.15 0.2 rg BT /F1 9 Tf 45 ${currentY} Td (${lbl}) Tj ET`,
+      `0.07 0.13 0.19 rg BT /F2 9.5 Tf 450 ${currentY} Td (${val}) Tj ET`
+    );
+    currentY -= 24;
   });
 
-  const options = {
-    hostname: '127.0.0.1',
-    port: 8080,
-    path: '/message/sendMedia/GSA_WhatsApp',
-    method: 'POST',
-    headers: {
-      'apikey': 'gsa_hub_evolution_token_2026',
-      'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(payload)
+  // Box Totalizador
+  currentY -= 10;
+  streamLines.push(
+    `0.94 0.96 0.99 rg 35 ${currentY - 15} 525 45 re f`,
+    `0.78 0.64 0.35 RG 1.5 w 35 ${currentY - 15} 525 45 re s`,
+    `0.3 0.35 0.4 rg BT /F2 10 Tf 45 ${currentY + 12} Td (${totalLabel}:) Tj ET`,
+    `0.07 0.13 0.19 rg BT /F2 15 Tf 45 ${currentY - 5} Td (${totalValue}) Tj ET`
+  );
+
+  // Observações Legais
+  currentY -= 45;
+  streamLines.push(
+    `0.78 0.64 0.35 rg 35 ${currentY} 4 12 re f`,
+    `0.07 0.13 0.19 rg BT /F2 10 Tf 45 ${currentY + 2} Td (OBSERVACOES E FUNDAMENTACAO LEGAL) Tj ET`,
+    `0.98 0.98 0.99 rg 35 ${currentY - 45} 525 40 re f`,
+    `0.88 0.90 0.94 RG 0.5 w 35 ${currentY - 45} 525 40 re s`,
+    `0.3 0.35 0.4 rg BT /F1 8.5 Tf 45 ${currentY - 20} Td (${notes.substring(0, 95)}) Tj ET`,
+    `0.3 0.35 0.4 rg BT /F1 8.5 Tf 45 ${currentY - 32} Td (${notes.substring(95, 190)}) Tj ET`,
+
+    // Footer
+    "0.85 0.88 0.92 RG 0.5 w 35 45 525 0.5 re s",
+    "0.5 0.55 0.6 rg BT /F1 8 Tf 140 32 Td (GSA HUB - Relatorio emitido digitalmente atraves do WhatsApp Oficial) Tj ET"
+  );
+
+  const contentStream = streamLines.join("\n");
+  const streamLen = Buffer.byteLength(contentStream, 'utf8');
+
+  const header = "%PDF-1.4\n";
+  const obj1 = "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n";
+  const obj2 = "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n";
+  const obj3 = "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>\nendobj\n";
+  const obj4 = `4 0 obj\n<< /Length ${streamLen} >>\nstream\n${contentStream}\nendstream\nendobj\n`;
+  const obj5 = "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n";
+  const obj6 = "6 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>\nendobj\n";
+
+  const p1 = header.length;
+  const p2 = p1 + obj1.length;
+  const p3 = p2 + obj2.length;
+  const p4 = p3 + obj3.length;
+  const p5 = p4 + obj4.length;
+  const p6 = p5 + obj5.length;
+  const xrefOffset = p6 + obj6.length;
+
+  const pad = n => String(n).padStart(10, '0');
+
+  const xref = `xref
+0 7
+0000000000 65535 f 
+${pad(p1)} 00000 n 
+${pad(p2)} 00000 n 
+${pad(p3)} 00000 n 
+${pad(p4)} 00000 n 
+${pad(p5)} 00000 n 
+${pad(p6)} 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+${xrefOffset}
+%%EOF
+`;
+
+  const fullPdf = header + obj1 + obj2 + obj3 + obj4 + obj5 + obj6 + xref;
+  return Buffer.from(fullPdf, 'utf-8').toString('base64');
+}
+
+async function sendWhatsAppMedia(to, mediaUrl, fileName, caption, mediaType = 'document') {
+  if (!mediaUrl || !to) return { success: false, error: 'Invalid parameters' };
+  return antiBanEngine.sendWhatsAppMedia(to, mediaUrl, fileName, caption, mediaType);
+}
+
+
+// ─── MÓDULO: EXIBIÇÃO DE SETORES DE ATENDIMENTO HUMANO ───────────────────────
+function showHumanSupportSectors(fromPhone, session) {
+  if (!session) {
+    session = userSessions[fromPhone] || { state: 'MAIN_MENU', errors: 0 };
+  }
+  session.state = 'HUMAN_SUPPORT_DEPT';
+  session.errors = 0;
+  userSessions[fromPhone] = session;
+
+  const rawNome = session.clientName || session.clientData?.nome || session.profile?.primaryName || null;
+  const greeting = rawNome ? `Olá, *${formatBoldName(rawNome)}*!` : 'Olá!';
+
+  supabaseGet('/rest/v1/gsa_whatsapp_ramais?ativo=eq.true&order=ordem.asc', (errR, ramaisList) => {
+    console.log('=> GET /gsa_whatsapp_ramais result:', errR ? errR.message : (ramaisList ? ramaisList.length + ' items' : 'null'));
+    
+    let textMenu = `💬 *Atendimento Humano GSA HUB* 💬\n\n`;
+    textMenu += `${greeting} Para direcionar você ao atendente responsável, por favor escolha o setor desejado:\n\n`;
+
+    if (!errR && Array.isArray(ramaisList) && ramaisList.length > 0) {
+      ramaisList.forEach(r => {
+        textMenu += `${r.setor_nome}\n`;
+      });
+      textMenu += '\n_Digite o número ou nome da opção desejada._\n_Digite 0 para voltar ao menu principal._';
+    } else {
+      textMenu += '1️⃣ Comercial\n2️⃣ Financeiro\n3️⃣ Dep. Pessoal\n5️⃣ Suporte Afiliados\n6️⃣ Suporte Parceiros\n7️⃣ Suporte Fornecedores\n8️⃣ SAC\n\n_Digite o número da opção desejada (1, 2, 3, 5, 6, 7 ou 8)._\n_Digite 0 para voltar ao menu principal._';
     }
+
+    sendWhatsAppReply(fromPhone, textMenu);
+  });
+}
+
+// ─── HELPER: IDENTIFICAÇÃO DE TEXTO CONVERSACIONAL ──────────────────────────
+function isConversationalText(text) {
+  if (!text) return false;
+  const raw = text.trim();
+  // Se for apenas números (ex: 1, 2, 10 ou 11/14 dígitos de CPF/CNPJ), NÃO é conversacional
+  if (/^\d+$/.test(raw)) return false;
+  const lower = raw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  // Comandos curtos de navegação não são conversacionais
+  if (['0', 'voltar', 'menu', 'sair', 'anterior', 'ajuda', 'cancelar', 'inicio', 'início', 'start', 'oi', 'ola', 'olá', 'hi'].includes(lower)) return false;
+  // Se tiver letras
+  return /[a-zA-Z]/.test(raw);
+}
+
+// ─── MÓDULO: SOLICITAÇÃO DE CRÉDITO & EMPRÉSTIMO GSA HUB ─────────────────────
+function parseMoneyAmount(text) {
+  if (!text) return 0;
+  const raw = String(text).toLowerCase().trim();
+  
+  // "10 mil", "10mil", "10k"
+  const milMatch = raw.match(/([\d\.,]+)\s*(?:mil|k)/i);
+  if (milMatch) {
+    const num = parseFloat(milMatch[1].replace(/\./g, '').replace(',', '.'));
+    if (!isNaN(num)) return num * 1000;
+  }
+
+  // "R$ 15.000,00" ou "15000,00" ou "15000"
+  const clean = raw.replace(/[^\d,\.]/g, '');
+  if (!clean) return 0;
+
+  if (clean.includes('.') && clean.includes(',')) {
+    return parseFloat(clean.replace(/\./g, '').replace(',', '.')) || 0;
+  }
+  if (clean.includes(',')) {
+    return parseFloat(clean.replace(',', '.')) || 0;
+  }
+  if (/^\d{1,3}(\.\d{3})+$/.test(clean)) {
+    return parseFloat(clean.replace(/\./g, '')) || 0;
+  }
+  return parseFloat(clean) || 0;
+}
+
+function maskDocument(doc) {
+  const d = (doc || '').replace(/\D/g, '');
+  if (d.length === 11) {
+    return `${d.slice(0,3)}.***.***-${d.slice(-2)}`;
+  }
+  if (d.length === 14) {
+    return `${d.slice(0,2)}.***.***/****-${d.slice(-2)}`;
+  }
+  return doc || 'N/A';
+}
+
+function extractCreditDataFromText(text) {
+  const data = {};
+  if (!text) return data;
+  const raw = text.toLowerCase();
+
+  const val = parseMoneyAmount(text);
+  if (val >= 500) data.valor = val;
+
+  const parcMatch = raw.match(/(\d{1,2})\s*(?:x|vezes|parcelas|meses|prestacoes|prestações)/i);
+  if (parcMatch) {
+    const p = parseInt(parcMatch[1], 10);
+    if (p >= 1 && p <= 120) data.parcelas = p;
+  }
+
+  if (/capital de giro|empresa|mei/i.test(raw)) data.finalidade = 'Capital de Giro para Empresa / MEI';
+  else if (/estoque|equipamento|maquina|m[aá]quinas/i.test(raw)) data.finalidade = 'Investimento em Estoque / Equipamentos';
+  else if (/divida|d[ií]vida|quitar/i.test(raw)) data.finalidade = 'Quitação / Consolidação de Dívidas';
+  else if (/pessoal|reforma|carro|emergencia|emerg[eê]ncia/i.test(raw)) data.finalidade = 'Uso Pessoal / Despesas / Emergência';
+
+  const docMatch = text.match(/\b\d{11}\b|\b\d{14}\b|\b\d{3}\.\d{3}\.\d{3}-\d{2}\b|\b\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\b/);
+  if (docMatch) {
+    data.documento = docMatch[0].replace(/\D/g, '');
+  }
+
+  return data;
+}
+
+function startCreditRequest(fromPhone, session, initialData = {}) {
+  if (!session) {
+    session = userSessions[fromPhone] || { state: 'MAIN_MENU', errors: 0 };
+  }
+  session.creditDraft = session.creditDraft || {};
+  if (initialData.valor) session.creditDraft.valor = Number(initialData.valor);
+  if (initialData.parcelas) session.creditDraft.parcelas = Number(initialData.parcelas);
+  if (initialData.finalidade) session.creditDraft.finalidade = initialData.finalidade;
+  if (initialData.renda) session.creditDraft.renda = Number(initialData.renda);
+  if (initialData.documento) session.creditDraft.documento = initialData.documento;
+
+  const client = session.clientData || session.profile?.cliente;
+  if (client) {
+    session.creditDraft.clienteId = client.id;
+    session.creditDraft.clientName = client.nome || client.nome_completo || client.razao_social || 'Cliente GSA';
+    session.creditDraft.documento = client.cpf || client.cnpj || session.creditDraft.documento || '';
+    return advanceCreditFlow(fromPhone, session);
+  }
+
+  fetchClientByPhone(fromPhone, (err, found) => {
+    if (!err && found) {
+      session.clientData = found;
+      session.creditDraft.clienteId = found.id;
+      session.creditDraft.clientName = found.nome || found.nome_completo || found.razao_social || 'Cliente GSA';
+      session.creditDraft.documento = found.cpf || found.cnpj || '';
+      return advanceCreditFlow(fromPhone, session);
+    }
+
+    if (session.creditDraft.documento) {
+      return fetchClientByDoc(session.creditDraft.documento, (errD, docClient) => {
+        if (!errD && docClient) {
+          session.clientData = docClient;
+          session.creditDraft.clienteId = docClient.id;
+          session.creditDraft.clientName = docClient.nome || docClient.nome_completo || docClient.razao_social || 'Cliente GSA';
+          return advanceCreditFlow(fromPhone, session);
+        }
+        if (session.creditDraft.clientName || session.clientName) {
+          session.creditDraft.clientName = session.creditDraft.clientName || session.clientName;
+          return advanceCreditFlow(fromPhone, session);
+        }
+        session.state = 'CREDIT_REQUEST_NAME';
+        userSessions[fromPhone] = session;
+        sendWhatsAppReply(fromPhone, `📝 *Novo Cadastro de Crédito*\n\nQual é o seu *Nome Completo* (ou Razão Social da Empresa)?\n\n_Digite 0 para cancelar._`);
+      });
+    }
+
+    session.state = 'CREDIT_REQUEST_DOC';
+    userSessions[fromPhone] = session;
+
+    let msg = `💳 *SOLICITAÇÃO DE CRÉDITO GSA HUB* 💳\n\n`;
+    msg += `Olá! Seja bem-vindo ao canal de Crédito & Financiamentos da GSA HUB.\n\n`;
+    msg += `Para iniciarmos sua análise com condições exclusivas e taxas sob medida, por favor digite seu *CPF ou CNPJ* (apenas números):\n\n`;
+    msg += `_Exemplo: 12345678901_\n_Digite 0 para cancelar e voltar ao menu._`;
+
+    sendWhatsAppReply(fromPhone, msg);
+  });
+}
+
+function advanceCreditFlow(fromPhone, session) {
+  const draft = session.creditDraft || {};
+  const clientName = formatBoldName(draft.clientName || session.clientName || 'Cliente');
+
+  if (!draft.valor || draft.valor < 500) {
+    session.state = 'CREDIT_REQUEST_VALUE';
+    userSessions[fromPhone] = session;
+
+    let msg = `💳 *SOLICITAÇÃO DE CRÉDITO GSA HUB*\n\n`;
+    msg += `Olá, *${clientName}*! Vamos estruturar sua proposta de crédito.\n\n`;
+    msg += `💵 *Qual o valor de crédito que você gostaria de solicitar?*\n`;
+    msg += `_(Exemplos: 5000, 10.000, 25000, 50 mil)_\n\n`;
+    msg += `_Digite 0 para cancelar e voltar._`;
+    return sendWhatsAppReply(fromPhone, msg);
+  }
+
+  if (!draft.parcelas || draft.parcelas < 1) {
+    session.state = 'CREDIT_REQUEST_INSTALLMENTS';
+    userSessions[fromPhone] = session;
+
+    let msg = `💳 *PLANO DE PAGAMENTO*\n\n`;
+    msg += `Valor pretendido: *R$ ${draft.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}*\n\n`;
+    msg += `🗓️ *Em quantas parcelas mensais você gostaria de pagar?*\n\n`;
+    msg += `1️⃣ *12 meses* (12x)\n`;
+    msg += `2️⃣ *24 meses* (24x)\n`;
+    msg += `3️⃣ *36 meses* (36x)\n`;
+    msg += `4️⃣ *48 meses* (48x)\n\n`;
+    msg += `_Digite o número da opção (1 a 4) ou digite a quantidade exata de parcelas desejada (ex: 18)._\n_Digite 0 para voltar._`;
+    return sendWhatsAppReply(fromPhone, msg);
+  }
+
+  if (!draft.finalidade) {
+    session.state = 'CREDIT_REQUEST_PURPOSE';
+    userSessions[fromPhone] = session;
+
+    let msg = `🎯 *FINALIDADE DO CRÉDITO*\n\n`;
+    msg += `Qual é o objetivo principal desse crédito?\n\n`;
+    msg += `1️⃣ 🏢 *Capital de Giro para Empresa / MEI*\n`;
+    msg += `2️⃣ 💼 *Investimento em Estoque, Máquinas ou Equipamentos*\n`;
+    msg += `3️⃣ 👤 *Uso Pessoal / Despesas / Emergência*\n`;
+    msg += `4️⃣ 🔄 *Quitação / Consolidação de Dívidas*\n`;
+    msg += `5️⃣ 🚀 *Outro Motivo*\n\n`;
+    msg += `_Digite o número da opção desejada (1 a 5):_\n_Digite 0 para voltar._`;
+    return sendWhatsAppReply(fromPhone, msg);
+  }
+
+  if (draft.renda == null) {
+    session.state = 'CREDIT_REQUEST_INCOME';
+    userSessions[fromPhone] = session;
+
+    let msg = `📊 *RENDA / FATURAMENTO MENSAL*\n\n`;
+    msg += `Para agilizar a aprovação do seu limite, qual a sua *renda mensal média* ou o *faturamento mensal da empresa*?\n\n`;
+    msg += `_(Exemplo: 4500, 8.000, 15000 - Digite *pular* se preferir informar depois)_\n\n`;
+    msg += `_Digite 0 para voltar._`;
+    return sendWhatsAppReply(fromPhone, msg);
+  }
+
+  renderCreditSimulation(fromPhone, session);
+}
+
+function renderCreditSimulation(fromPhone, session) {
+  session.state = 'CREDIT_REQUEST_CONFIRM';
+  userSessions[fromPhone] = session;
+
+  const draft = session.creditDraft || {};
+  const clientName = formatBoldName(draft.clientName || 'Cliente');
+  const valorFmt = (draft.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const parcelas = draft.parcelas || 12;
+  const finalidade = draft.finalidade || 'Capital de Giro / Pessoal';
+  const rendaFmt = draft.renda > 0 ? draft.renda.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'A declarar';
+  const docMasked = draft.documento ? maskDocument(draft.documento) : 'Identificado via WhatsApp';
+
+  const taxaEstimada = 0.025;
+  const parcelaEstimada = (draft.valor * (taxaEstimada / (1 - Math.pow(1 + taxaEstimada, -parcelas)))).toFixed(2);
+  const parcelaEstimadaFmt = Number(parcelaEstimada).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  let msg = `📋 *RESUMO DA SOLICITAÇÃO DE CRÉDITO* 📋\n\n`;
+  msg += `👤 *Titular:* ${clientName}\n`;
+  msg += `📄 *Documento:* ${docMasked}\n`;
+  msg += `💰 *Valor Solicitado:* *${valorFmt}*\n`;
+  msg += `🗓️ *Prazo:* *${parcelas}x* parcelas mensais\n`;
+  msg += `🎯 *Finalidade:* ${finalidade}\n`;
+  msg += `💵 *Renda/Faturamento:* ${rendaFmt}\n\n`;
+  msg += `💡 *Estimativa Preliminar:* ~${parcelas}x de *${parcelaEstimadaFmt}*\n`;
+  msg += `_(As taxas e condições finais serão personalizadas pelo comitê de crédito)_\n\n`;
+  msg += `*Deseja enviar sua solicitação para análise imediata?*\n\n`;
+  msg += `1️⃣ ✅ *Confirmar e Enviar para Análise*\n`;
+  msg += `2️⃣ 🔄 *Alterar Dados da Solicitação*\n`;
+  msg += `0️⃣ ❌ *Cancelar e Voltar ao Menu Principal*\n\n`;
+  msg += `_Digite 1 para confirmar ou 0 para cancelar._`;
+
+  sendWhatsAppReply(fromPhone, msg);
+}
+
+function finalizeCreditSubmission(fromPhone, session) {
+  const draft = session.creditDraft || {};
+  const valorNum = Number(draft.valor || 0);
+  const parcelasNum = Number(draft.parcelas || 12);
+  const finalidade = draft.finalidade || 'Capital de Giro / Pessoal';
+  const rendaNum = Number(draft.renda || 0);
+
+  sendWhatsAppReply(fromPhone, '⏳ *Processando e registrando sua solicitação de crédito no sistema...*');
+
+  const createLoanRecord = (clientId, clientObj) => {
+    const empCode = `EMP-${Math.floor(10000000 + Math.random() * 90000000)}`;
+    const empData = {
+      codigo_emprestimo: empCode,
+      cliente_id: clientId,
+      valor_solicitado: valorNum,
+      parcelas_escolhidas: parcelasNum,
+      status: 'analise_inicial',
+      observacoes_admin: `[SOLICITAÇÃO VIA WHATSAPP]\nFinalidade: ${finalidade}\nRenda informada: R$ ${rendaNum.toFixed(2)}\nTelefone: ${fromPhone}\nData: ${new Date().toLocaleString('pt-BR')}`,
+      dados_bancarios: {
+        finalidade: finalidade,
+        renda_informada: rendaNum,
+        canal: 'whatsapp',
+        telefone: fromPhone,
+        data_solicitacao: new Date().toISOString()
+      }
+    };
+
+    supabasePost('/rest/v1/emprestimos', empData, (errEmp, resEmp) => {
+      if (errEmp || !resEmp || resEmp.length === 0) {
+        console.error('❌ Erro ao inserir emprestimo:', errEmp ? errEmp.message : 'resposta vazia');
+        session.state = 'MAIN_MENU';
+        userSessions[fromPhone] = session;
+        sendWhatsAppReply(fromPhone, '❌ Ocorreu uma instabilidade ao registrar sua proposta de crédito. Por favor tente novamente em instantes ou fale com nosso setor Financeiro na opção 10.\n\n_Digite 0 para voltar._');
+        return;
+      }
+
+      const newEmp = resEmp[0];
+      const newEmpId = newEmp.id;
+
+      const histData = {
+        emprestimo_id: newEmpId,
+        tipo_acao: 'solicitacao_criada',
+        descricao: `Solicitação de crédito de R$ ${valorNum.toFixed(2)} em ${parcelasNum}x aberta via WhatsApp`,
+        usuario_tipo: 'cliente'
+      };
+      supabasePost('/rest/v1/emprestimo_historico', histData, () => {});
+
+      const notifData = {
+        titulo: '💳 Nova Solicitação de Crédito',
+        mensagem: `Cliente ${clientObj.nome || clientObj.razao_social || fromPhone} solicitou empréstimo de R$ ${valorNum.toFixed(2)} (${parcelasNum}x) via WhatsApp (${empCode})`,
+        modulo: 'emprestimos',
+        tipo: 'emprestimos',
+        lida: false,
+        destinatario_tipo: 'admin',
+        created_at: new Date().toISOString()
+      };
+      supabasePost('/rest/v1/notificacoes', notifData, () => {});
+
+      const clientName = clientObj.nome || clientObj.nome_completo || clientObj.razao_social || 'Cliente';
+      const adminNotifyMsg = `💳 *NOVA SOLICITAÇÃO DE CRÉDITO VIA WHATSAPP*\n\n👤 *Cliente:* ${clientName} (${fromPhone})\n🔖 *Código:* ${empCode}\n💰 *Valor Solicitado:* R$ ${valorNum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n🗓️ *Parcelas:* ${parcelasNum}x\n🎯 *Finalidade:* ${finalidade}\n💵 *Renda/Faturamento:* R$ ${rendaNum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}\n📌 *Status:* Em Análise Inicial`;
+      notifyAdmin(adminNotifyMsg);
+
+      delete session.creditDraft;
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+
+      const valorFmt = valorNum.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+      let successMsg = `🎉 *SOLICITAÇÃO DE CRÉDITO REGISTRADA COM SUCESSO!* 🎉\n\n`;
+      successMsg += `🔢 *Código da Proposta:* \`${empCode}\`\n`;
+      successMsg += `💰 *Valor Solicitado:* *${valorFmt}*\n`;
+      successMsg += `🗓️ *Plano:* *${parcelasNum} parcelas mensais*\n`;
+      successMsg += `📌 *Status Atual:* ⏳ *Em Análise Inicial*\n\n`;
+      successMsg += `📋 *Próximos Passos:*\n`;
+      successMsg += `1️⃣ Nossa equipe de análise de crédito já recebeu sua proposta e está avaliando as melhores condições.\n`;
+      successMsg += `2️⃣ Em até 24h úteis você receberá a confirmação da proposta aprovada diretamente aqui no WhatsApp.\n`;
+      successMsg += `3️⃣ Você também pode enviar comprovantes de renda ou assinar seu contrato digitalmente pelo seu Portal:\n`;
+      successMsg += `👉 https://gsahub.com.br/acesso\n\n`;
+      successMsg += `_Digite 0 para voltar ao menu principal._`;
+
+      sendWhatsAppReply(fromPhone, successMsg);
+    });
   };
 
-  console.log(`📤 Enviando mídia (${mediaType}) via Evolution API para ${cleanPhone}...`);
-
-  try {
-    const req = http.request(options, (res) => {
-      let data = '';
-      res.on('data', chunk => { data += chunk; });
-      res.on('end', () => {
-        if (res.statusCode === 200 || res.statusCode === 201) {
-          console.log(`✅ Mídia entregue via Evolution API para ${cleanPhone}`);
-        } else {
-          console.error(`❌ Erro mídia Evolution API [${res.statusCode}]:`, data);
-        }
-      });
+  if (draft.clienteId) {
+    fetchClientByDoc(draft.documento || '', (errC, client) => {
+      const cli = client || { id: draft.clienteId, nome: draft.clientName };
+      createLoanRecord(draft.clienteId, cli);
     });
-    req.setTimeout(15000, () => req.destroy());
-    req.on('error', err => console.error('❌ Erro sendWhatsAppMedia:', err.message));
-    req.write(payload);
-    req.end();
-  } catch (e) {
-    console.error('❌ Exceção ao enviar mídia:', e.message);
+  } else {
+    fetchClientByDoc(draft.documento || '', (errC, clientFound) => {
+      if (!errC && clientFound) {
+        session.clientData = clientFound;
+        createLoanRecord(clientFound.id, clientFound);
+      } else {
+        const cleanDoc = (draft.documento || '').replace(/\D/g, '');
+        const isCnpj = cleanDoc.length > 11;
+        const newClientPayload = {
+          nome: draft.clientName || `Cliente WhatsApp ${fromPhone.slice(-4)}`,
+          telefone: fromPhone,
+          tipo_pessoa: isCnpj ? 'pj' : 'pf',
+          cpf: !isCnpj ? cleanDoc : null,
+          cnpj: isCnpj ? cleanDoc : null,
+          observacoes: `[CADASTRO AUTOMÁTICO WHATSAPP CRÉDITO] Criado em ${new Date().toLocaleString('pt-BR')}`,
+          status: 'ativo'
+        };
+
+        supabasePost('/rest/v1/clientes', newClientPayload, (errNew, resNew) => {
+          const createdClient = (resNew && resNew[0]) ? resNew[0] : { id: null, nome: newClientPayload.nome };
+          if (createdClient.id) {
+            session.clientData = createdClient;
+            createLoanRecord(createdClient.id, createdClient);
+          } else {
+            console.error('❌ Falha ao criar cliente para emprestimo:', errNew);
+            session.state = 'MAIN_MENU';
+            sendWhatsAppReply(fromPhone, '❌ Não foi possível registrar o cliente. Por favor entre em contato com nosso atendimento.');
+          }
+        });
+      }
+    });
   }
 }
 
-
-// ─── NLP BÁSICO (PALAVRAS-CHAVE) ──────────────────────────────────────────────
+// ─── NLP DE MENUS (APENAS COMANDOS DIRETOS E CURTOS) ──────────────────────────
 function getMenuIntent(text) {
-  const t = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  const raw = (text || '').trim();
+  const t = raw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
   
-  if (t === '10' || /atendente|humano|suporte|falar com alguem/i.test(t)) return '10';
-  if (t === '1' || /cliente|minha conta|faturas|fatura|boletos|boleto|2 via|segunda via|pagar/i.test(t)) return '1';
-  if (t === '2' || /contratar|servicos|serviço|assinar|planos/i.test(t)) return '2';
-  if (t === '3' || /loja|produtos|comprar|promocoes/i.test(t)) return '3';
-  if (t === '4' || /viagem|viagens|pacotes|viajar/i.test(t)) return '4';
-  if (t === '5' || /seguro|saude|plano de saude|cotacao/i.test(t)) return '5';
-  if (t === '6' || /classificados|anuncios/i.test(t)) return '6';
-  if (t === '7' || /indique|indica|indicacao|afiliado/i.test(t)) return '7';
-  if (t === '8' || /pontos|fidelidade|vip|saldo/i.test(t)) return '8';
-  if (t === '9' || /parceiros|fornecedor|prestador/i.test(t)) return '9';
+  // Se for número direto (0 a 10)
+  if (/^(10|[0-9])$/.test(t)) return t;
+
+  // Intercepta qualquer intenção clara de atendente humano
+  if (/\b(atendente|atendentes|humano|suporte humano|falar com atendente|falar com o atendente|falar com humano|chamar atendente)\b/i.test(t)) {
+    return '10';
+  }
+
+  // Se for pergunta ou frase longa, DEIXAR PARA A IA RESPONDER
+  if (raw.length > 20 || /\b(como|onde|quais|qual|posso|gostaria|quero saber|me explica|nao tenho|ainda nao|voce|oque|o que|porque|por que|quanto|ajuda|entende|conhecer|beneficio|beneficios|cadastro)\b/i.test(t)) {
+    return raw;
+  }
+
+  // Apenas comandos curtos e exatos de menu
+  if (/^(atendente|humano|suporte|falar com atendente|falar com humano)$/i.test(t)) return '10';
+  if (/^(area do cliente|minha conta|minhas faturas|segunda via|2 via|meus boletos)$/i.test(t)) return '1';
+  if (/^(contratar servicos|contratar servico|ver servicos|catalogo de servicos)$/i.test(t)) return '2';
+  if (/^(loja|loja virtual|ver produtos|marketplace|vitrine)$/i.test(t)) return '3';
+  if (/^(viagens|pacotes de viagem|pacote de viagem)$/i.test(t)) return '4';
+  if (/^(seguros|cotacao de seguro|planos de saude)$/i.test(t)) return '5';
+  if (/^(classificados|ver classificados|anuncios)$/i.test(t)) return '6';
+  if (/^(indique e ganhe|programa de afiliados|meu link de afiliado)$/i.test(t)) return '7';
+  if (/^(programa de fidelidade|meus pontos|clube fidelidade)$/i.test(t)) return '8';
+  if (/^(portais de parceiros|parceiros|fornecedores)$/i.test(t)) return '9';
   
-  return text.trim();
+  return raw;
 }
+
 
 // ─── HIERARQUIA DE NAVEGAÇÃO DE MENUS (VOLTAR AO ANTERIOR / PRINCIPAL) ────────
 const STATE_PARENTS = {
+  'REDEMPTION_SELECT_PARTNER': 'MAIN_MENU',
+  'REDEMPTION_CONFIRM_PARTNER': 'MAIN_MENU',
+  'REDEMPTION_COLLECT_NAME': 'MAIN_MENU',
+  'REDEMPTION_COLLECT_EMAIL': 'MAIN_MENU',
+  'REDEMPTION_COLLECT_PHONE': 'MAIN_MENU',
+  'REDEMPTION_AWAITING_JUSTIFICATION': 'MAIN_MENU',
+  'CREDIT_REQUEST_DOC': 'MAIN_MENU',
+  'CREDIT_REQUEST_NAME': 'MAIN_MENU',
+  'CREDIT_REQUEST_VALUE': 'MAIN_MENU',
+  'CREDIT_REQUEST_INSTALLMENTS': 'MAIN_MENU',
+  'CREDIT_REQUEST_PURPOSE': 'MAIN_MENU',
+  'CREDIT_REQUEST_INCOME': 'MAIN_MENU',
+  'CREDIT_REQUEST_CONFIRM': 'MAIN_MENU',
   'PARTNERS': 'MAIN_MENU',
   'PARTNER_AFFILIATE_MENU': 'PARTNERS',
   'PARTNER_AFFILIATE_WITHDRAW_PIX': 'PARTNER_AFFILIATE_MENU',
@@ -1229,12 +4496,75 @@ function autoInjectDocument(fromPhone, session, nextState, fallbackPrompt) {
   sendWhatsAppReply(fromPhone, fallbackPrompt);
 }
 
+// ─── FASE 4: UPLOAD DE MÍDIA / DOCUMENTOS (EVOLUTION + R2) ─────────────────────
+async function handleClientMediaUpload(fromPhone, mediaType, rawMessageData, session) {
+  try {
+    sendWhatsAppReply(fromPhone, '⏳ *Recebendo seu arquivo...* Aguarde um instante.');
+    
+    // 1. Baixar base64 da Evolution API
+    const payload = JSON.stringify({ message: rawMessageData.message });
+    const evoResp = await fetch('http://127.0.0.1:8080/chat/getBase64FromMediaMessage/GSA_WhatsApp', {
+      method: 'POST',
+      headers: {
+        'apikey': 'gsa_hub_evolution_token_2026',
+        'Content-Type': 'application/json'
+      },
+      body: payload
+    });
+    const evoJson = await evoResp.json();
+    if (!evoJson || !evoJson.base64) throw new Error('Falha ao obter base64 da Evolution API');
+
+    const base64Data = evoJson.base64;
+    const mimeType = evoJson.mimetype || (mediaType === 'image' ? 'image/jpeg' : 'application/pdf');
+    const binaryData = Buffer.from(base64Data, 'base64');
+    const ext = mimeType.split('/')[1] || (mediaType === 'image' ? 'jpg' : 'pdf');
+    const fileName = `doc_whatsapp_${Date.now()}.${ext}`;
+    const clientId = session.client?.id || 'lead_whatsapp';
+    const pathKey = `private/client-docs/${clientId}/${fileName}`;
+
+    // 2. Upload para Cloudflare R2 via Worker
+    const formData = new FormData();
+    formData.append('path', pathKey);
+    formData.append('file', new Blob([binaryData], { type: mimeType }), fileName);
+
+    const r2Resp = await fetch('https://gsa-hub-r2-worker.r2-handler.workers.dev/upload', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${SERVICE_ROLE_JWT}` },
+      body: formData
+    });
+    const r2Json = await r2Resp.json();
+    if (!r2Resp.ok || !r2Json.success) throw new Error(r2Json.error || 'Erro no upload R2');
+
+    const fileUrl = r2Json.url || `https://pub-7f7b1419c83c407ba9bcf6512329e79a.r2.dev/${pathKey}`;
+
+    // 3. Registrar no banco de dados (cliente_documentos) se houver clientId
+    if (session.client?.id) {
+      await new Promise((resolve) => {
+        supabasePost('/rest/v1/cliente_documentos', {
+          cliente_id: session.client.id,
+          tipo_documento: 'Documento Recebido via WhatsApp',
+          descricao: 'Arquivo enviado pelo assistente virtual (IA)',
+          urls: [fileUrl],
+          status: 'em_analise',
+          observacoes: 'Aguardando validação do administrador'
+        }, resolve);
+      });
+    }
+
+    return { success: true, url: fileUrl };
+
+  } catch (err) {
+    console.error('❌ Erro no upload de mídia:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
 // ─── PROCESSAMENTO DE MENSAGEM ────────────────────────────────────────────────
-function processMessage(fromPhone, textBody, messageType) {
+async function processMessage(fromPhone, textBody, mediaType, pushName, rawMessageData = {}) {
   const text = (textBody || '').trim();
   const lower = text.toLowerCase();
 
-  console.log(`📨 Processando msg de ${fromPhone}: "${text}"`);
+  console.log(`📨 Processando msg de ${fromPhone}: "${text}"${mediaType ? ' [' + mediaType + ']' : ''}${pushName ? ' (pushName: ' + pushName + ')' : ''}`);
 
   // ── COMANDOS DO ATENDENTE (TRANSBORDO HUMANO REVERSO) ───────────────────────
   if (text.startsWith('#responder ')) {
@@ -1279,6 +4609,106 @@ function processMessage(fromPhone, textBody, messageType) {
   }
   const session = userSessions[fromPhone];
 
+  // ── FASE 4: INTERCEPTAÇÃO DE MÍDIA ───────────────────────────────────────────
+
+  // ─── Módulo 7: Transcrição de Áudio (Gemini 1.5 Flash) ─────────────────────
+  if (mediaType === 'audio') {
+    handleAudioMessage(fromPhone, session, rawMessageData);
+    return;
+  }
+
+  if (mediaType === 'image' || mediaType === 'document') {
+    // ─── Módulo 2: Busca Visual por Imagem (Gemini Vision) ──────────────────────
+    // Se o cliente está no menu principal ou em estado de busca e envia uma imagem,
+    // acionar a identificação de produto via Gemini Vision
+    const visionStates = ['MAIN_MENU', 'MULTIPLE_PRODUCT_INTEREST', 'DROPSHIP_INTEREST', 'AI_TICKET_COLLECT'];
+    const textLower = (text || '').toLowerCase();
+    const isProductSearchContext = mediaType === 'image' && (
+      visionStates.includes(session.state) ||
+      /produto|modelo|esse|achar|tem igual|parecido|similar|comprar|buscar/i.test(textLower)
+    );
+
+    if (isProductSearchContext && mediaType === 'image') {
+      // Download the image and convert to base64 for Vision API
+      const mediaUrl = rawMessageData?.message?.imageMessage?.url ||
+                       rawMessageData?.message?.imageMessage?.directPath ||
+                       '';
+      const mediaMime = rawMessageData?.message?.imageMessage?.mimetype || 'image/jpeg';
+      const mediaBase64 = rawMessageData?.message?.imageMessage?.jpegThumbnail ||
+                          rawMessageData?.mediaBase64 || null;
+
+      if (mediaBase64) {
+        handleImageProductSearch(fromPhone, session, mediaBase64, mediaMime);
+        return;
+      }
+      // If no base64, fall through to normal media handler but hint user
+      sendWhatsAppReply(fromPhone, '📸 Recebi sua imagem! Se quiser que eu encontre produtos parecidos, envie também descrevendo o que está procurando. 😊');
+    }
+
+    const uploadResult = await handleClientMediaUpload(fromPhone, mediaType, rawMessageData, session);
+    if (uploadResult.success) {
+      // Injeta uma mensagem de sistema no fluxo para a IA ler
+      const sysMsg = `[SISTEMA: O cliente acabou de enviar um arquivo (${mediaType}). O arquivo foi salvo e anexado ao perfil dele no sistema GSA HUB. Agradeça o envio e pergunte qual é o próximo passo.]`;
+      session.history = session.history || [];
+      session.history.push({ role: 'user', content: sysMsg });
+      callGSAAssistant(fromPhone, sysMsg, session, null, _catalogCache || [], () => {});
+      return;
+    } else {
+      sendWhatsAppReply(fromPhone, '❌ Tivemos um problema para salvar o seu arquivo. Pode tentar enviar novamente?');
+      return;
+    }
+  }
+
+  // ── CAPTURA DE NOME DO WHATSAPP (pushName) ───────────────────────────────────
+  if (pushName && typeof pushName === 'string' && pushName.trim()) {
+    session.pushName = pushName.trim();
+    if (!session.clientFullName) {
+      session.clientFullName = pushName.trim();
+    }
+    if (!session.clientName && !session.clientData) {
+      if (validatePushNameAsPersonName(pushName)) {
+        session.clientName = extractFirstName(pushName);
+        session.clientFullName = pushName.trim();
+        console.log(`👤 Nome capturado via pushName: ${session.clientName} (Completo: ${session.clientFullName}) (${fromPhone})`);
+      }
+    }
+    userSessions[fromPhone] = session;
+  }
+
+  // ── MÓDULO: AUTOATENDIMENTO DE PROTOCOLO DE RESGATE DE BENEFÍCIOS (PROT-RES) ────
+  const PROTOCOL_REGEX = /\b(PROT[-_]RES[-_]\d{4}[-_][A-Z0-9]{6}|PROT[-_]RES[-_][A-Z0-9]{6,10})\b/i;
+  const protocolMatch = text.match(PROTOCOL_REGEX);
+
+  if (protocolMatch) {
+    handleProtocolSelfServiceFlow(fromPhone, text, session, protocolMatch[0]);
+    return;
+  }
+
+  if (session.state && session.state.startsWith('PROTOCOL_')) {
+    handleProtocolSelfServiceFlow(fromPhone, text, session, null);
+    return;
+  }
+
+  // ── MÓDULO: RESGATE DE BENEFÍCIOS DE PARCEIROS (CONVERSACIONAL) ─────────────
+  if (session.state && session.state.startsWith('REDEMPTION_')) {
+    handlePartnerRedemptionFlow(fromPhone, text, session, null);
+    return;
+  }
+
+  const isRedemptionIntent = /\b(resgatar|resgate|quero resgatar|pegar cupom|pegar desconto|cupom de desconto|cupom da|cupom do|beneficio da|beneficio do|benefício da|benefício do|desconto da|desconto do|convenio da|convenio do|convênio da|convênio do)\b/i.test(text);
+  if (isRedemptionIntent) {
+    const partnerTerm = extractPartnerTermFromText(text);
+    handlePartnerRedemptionFlow(fromPhone, text, session, partnerTerm);
+    return;
+  }
+
+  // ── MÓDULO 4: INTERCEPTAÇÃO GLOBAL DE RASTREAMENTO DE PEDIDOS ────────────────
+  const isOrderTracking = /onde est[aá].*meu pedido|cadê.*pedido|rastrear|rastreio|rastreamento|status.*entrega|status.*pedido|meu pedido chegou|quando chega|previs[aã]o.*entrega|c[oó]digo.*rastreio|entrega.*c[oó]digo|track|acompanhar pedido/i.test(text);
+  if (isOrderTracking) {
+    handleOrderTracking(fromPhone, session);
+    return;
+  }
+
   // ── INTERCEPTAÇÃO GLOBAL: COMPRA DIRETA DA LOJA VIA WHATSAPP (#COMPRA_LOJA_GSA) ──
   const isStoreDirectPurchase = text.includes('#COMPRA_LOJA_GSA') || 
                                 text.includes('COMPRA_LOJA_GSA') || 
@@ -1288,6 +4718,90 @@ function processMessage(fromPhone, textBody, messageType) {
 
   if (isStoreDirectPurchase) {
     return handleStoreDirectPurchase(fromPhone, text, session);
+  }
+
+  // ── INTERCEPTAÇÃO GLOBAL: SOLICITAÇÃO DE SERVIÇOS / PACOTES VIA WHATSAPP (#SOLICITACAO_SERVICO_GSA) ──
+  const isServiceRequest = text.includes('#SOLICITACAO_SERVICO_GSA') || 
+                           text.includes('SOLICITACAO_SERVICO_GSA') || 
+                           (text.includes('Gostaria de solicitar atendimento para') && (text.includes('Pacote:') || text.includes('Serviços Solicitados'))) ||
+                           (text.includes('Gostaria de atendimento sobre o pacote'));
+
+  if (isServiceRequest) {
+    return handleServiceRequest(fromPhone, text, session);
+  }
+
+  // ── ESTADO: ACOMPANHAMENTO DE SOLICITAÇÃO DE SERVIÇO ──────────────────────
+  if (session.state === 'SERVICE_REQUEST_FOLLOWUP') {
+    if (text === '1') {
+      session.state = 'SERVICE_REQUEST_COLLECT_DETAILS';
+      userSessions[fromPhone] = session;
+      let promptMsg = `📝 *DETALHES DA SOLICITAÇÃO*\n\n`;
+      promptMsg += `Por favor, digite abaixo um resumo do que você precisa, documentos que já possui ou qualquer dúvida específica.\n\n`;
+      promptMsg += `_(Você também pode enviar fotos de comprovantes ou documentos diretamente aqui no WhatsApp)_\n\n`;
+      promptMsg += `_Digite 0 para cancelar e voltar ao menu._`;
+      sendWhatsAppReply(fromPhone, promptMsg);
+      return;
+    }
+
+    if (text === '2') {
+      session.state = 'HUMAN_ATTENDANT';
+      userSessions[fromPhone] = session;
+      const protocol = session.currentServiceOrcamento?.codigo_orcamento || 'ORC-GSA';
+      sendWhatsAppReply(fromPhone, `👤 *Encaminhando para um consultor especialista...*\n\nSeu protocolo *${protocol}* já está na fila de atendimento. Um de nossos especialistas responderá diretamente aqui em instantes.\n\n_Caso precise sair, digite 0 a qualquer momento para voltar ao menu principal._`);
+      return;
+    }
+
+    if (text === '3') {
+      const protocol = session.currentServiceOrcamento?.codigo_orcamento || 'ORC-GSA';
+      let portalMsg = `🌐 *PORTAL DO CLIENTE GSA HUB*\n\n`;
+      portalMsg += `Você pode acompanhar o andamento do seu protocolo *${protocol}*, consultar documentos e faturas diretamente pelo portal seguro:\n\n`;
+      portalMsg += `👉 https://gsahub.com.br/acesso\n\n`;
+      portalMsg += `_Digite 0 para voltar ao menu principal._`;
+      sendWhatsAppReply(fromPhone, portalMsg);
+      return;
+    }
+
+    if (text === '0' || lower === 'voltar') {
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, getMainMenuText(session.profile));
+      return;
+    }
+
+    sendWhatsAppReply(fromPhone, '❌ Opção inválida. Por favor, digite:\n*1* para Enviar Detalhes\n*2* para Falar com Consultor\n*3* para Portal do Cliente\n*0* para Menu Principal');
+    return;
+  }
+
+  if (session.state === 'SERVICE_REQUEST_COLLECT_DETAILS') {
+    if (text === '0' || lower === 'voltar') {
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, getMainMenuText(session.profile));
+      return;
+    }
+
+    const orcId = session.currentServiceOrcamento?.id;
+    const protocol = session.currentServiceOrcamento?.codigo_orcamento || 'ORC-GSA';
+
+    const noteData = {
+      cliente_id: session.serviceClientId || session.clientData?.id || null,
+      observacoes_servico: `[DETALHES ENVIADOS PELO CLIENTE VIA WHATSAPP]\n${text}\n\nData: ${new Date().toLocaleString('pt-BR')}`
+    };
+
+    if (orcId) {
+      supabasePatch(`/rest/v1/orcamentos?id=eq.${orcId}`, { observacoes_servico: noteData.observacoes_servico }, () => {});
+    }
+
+    session.state = 'MAIN_MENU';
+    userSessions[fromPhone] = session;
+
+    let successMsg = `✅ *Informações registradas com sucesso!*\n\n`;
+    successMsg += `Os detalhes enviados foram vinculados ao seu protocolo *${protocol}* e nossa equipe especializada já foi notificada.\n\n`;
+    successMsg += `Em breve daremos continuidade ao seu atendimento!\n\n`;
+    successMsg += getMainMenuText(session.profile);
+
+    sendWhatsAppReply(fromPhone, successMsg);
+    return;
   }
 
   // Reset ou navegação direta ao menu principal por documento se digitado 1-9
@@ -1323,6 +4837,62 @@ function processMessage(fromPhone, textBody, messageType) {
     return;
   }
 
+  // ── ESTADOS DE FORMULÁRIO TEXTUAL ───────────────────────────────────────────
+  const TEXT_FORM_STATES = [
+    'AI_TICKET_COLLECT',
+    'AWAITING_NAME',
+    'SERVICE_REQUEST_COLLECT_DETAILS',
+    'STORE_DIRECT_ADDR',
+    'PARTNER_SUPPLIER_REG_NAME',
+    'PARTNER_SUPPLIER_REG_EMAIL',
+    'PARTNER_SUPPLIER_REG_CAT',
+    'PARTNER_PROVIDER_REG_NAME',
+    'PARTNER_PROVIDER_REG_AREA',
+    'PARTNER_NETWORK_REG_NAME',
+    'PARTNER_NETWORK_REG_SEGMENT',
+    'CREDIT_REQUEST_DOC',
+    'CREDIT_REQUEST_NAME',
+    'CREDIT_REQUEST_VALUE',
+    'CREDIT_REQUEST_INSTALLMENTS',
+    'CREDIT_REQUEST_PURPOSE',
+    'CREDIT_REQUEST_INCOME',
+    'CREDIT_REQUEST_CONFIRM',
+    'REDEMPTION_COLLECT_NAME',
+    'REDEMPTION_COLLECT_EMAIL',
+    'REDEMPTION_COLLECT_PHONE',
+    'REDEMPTION_AWAITING_JUSTIFICATION'
+  ];
+
+  // ── INTERCEPTAÇÃO GLOBAL: ATENDIMENTO HUMANO / ATENDENTE ─────────────────────
+  const isHumanAttendantRequest = /\b(atendente|atendentes|atendimento humano|suporte humano|falar com atendente|falar com o atendente|falar com a atendente|chamar atendente|chamar o atendente|falar com humano|falar com um humano|falar com pessoa|falar com uma pessoa|falar com alguem|falar com alguém|quero atendente|preciso de atendente|transferir para atendente|falar com suporte|suporte ao vivo|consultor humano)\b/i.test(text);
+
+  if (isHumanAttendantRequest && !TEXT_FORM_STATES.includes(session.state)) {
+    return showHumanSupportSectors(fromPhone, session);
+  }
+
+  // ── INTERCEPTAÇÃO GLOBAL: SOLICITAÇÃO DE CRÉDITO & EMPRÉSTIMO ───────────────
+  const isCreditRequest = /\b(solicitar cr[eé]dito|solcitar cr[eé]dito|pedir cr[eé]dito|preciso de cr[eé]dito|abrir cr[eé]dito|abertura de cr[eé]dito|quero cr[eé]dito|empr[eé]stimo|emprestimo|solicitar empr[eé]stimo|solicitar emprestimo|pedir empr[eé]stimo|pedir emprestimo|simular empr[eé]stimo|simular emprestimo|simular cr[eé]dito|simular credito|cr[eé]dito pessoal|credito pessoal|cr[eé]dito empresarial|credito empresarial|capital de giro|financiamento)\b/i.test(text);
+
+  if (isCreditRequest && !TEXT_FORM_STATES.includes(session.state)) {
+    const extracted = extractCreditDataFromText(text);
+    return startCreditRequest(fromPhone, session, extracted);
+  }
+
+  // ── 3. INTERCEPTAÇÃO GLOBAL DE IA CONVERSACIONAL (QUALQUER DÚVIDA OU FRASE) ──
+  if (isConversationalText(text) && !TEXT_FORM_STATES.includes(session.state)) {
+    fetchCatalogForAI((catalog) => {
+      callGSAAssistant(fromPhone, text, session, mediaType, catalog, (err, aiResult) => {
+        if (err || !aiResult) {
+          sendWhatsAppReply(fromPhone, `❓ Como posso te ajudar hoje?\n\n${getMainMenuText(session.profile)}`);
+          return;
+        }
+        handleAIResponse(fromPhone, session, aiResult, text);
+      });
+    });
+    return;
+  }
+
+
   // ── ESTADO: MENU PRINCIPAL ──────────────────────────────────────────────────
   if (session.state === 'MAIN_MENU') {
     const intent = getMenuIntent(text);
@@ -1339,7 +4909,7 @@ function processMessage(fromPhone, textBody, messageType) {
           const saldoCarteira = session.clientData.saldo_carteira || session.clientData.saldo_disponivel || 0;
           const nivel = session.clientData.nivel_manual_info || (session.clientData.is_vip ? 'VIP' : 'Padrão GSA');
           
-          sendWhatsAppReply(fromPhone, `👤 *Área do Cliente GSA HUB*\nOlá, *${nome}*! (🏆 ${nivel})\n\n💰 Saldo em Carteira: R$ ${Number(saldoCarteira).toFixed(2)}\n⭐ Pontos Fidelidade: ${saldoPts}\n\n*O que você deseja consultar?*\n1️⃣ 📄 Faturas em Aberto\n2️⃣ 🛠️ Ordens de Serviço\n3️⃣ 📋 Meus Orçamentos\n4️⃣ 🔄 Minhas Assinaturas\n5️⃣ 🎫 Tickets de Suporte\n0️⃣ Sair ao Menu Principal\n\n_Digite o número desejado:_`);
+          sendWhatsAppReply(fromPhone, `👤 *Área do Cliente GSA HUB*\nOlá, *${nome}*! (🏆 ${nivel})\n\n💰 Saldo em Carteira: R$ ${Number(saldoCarteira).toFixed(2)}\n⭐ Pontos Fidelidade: ${saldoPts}\n\n*O que você deseja consultar?*\n1️⃣ 📄 Faturas em Aberto\n2️⃣ 🛠️ Ordens de Serviço\n3️⃣ 📋 Meus Orçamentos\n4️⃣ 🔄 Minhas Assinaturas\n5️⃣ 🎫 Tickets de Suporte\n6️⃣ 💳 Solicitação de Crédito / Empréstimo\n0️⃣ Sair ao Menu Principal\n\n_Digite o número desejado:_`);
         } else {
           session.state = 'CLIENT_AREA';
           userSessions[fromPhone] = session;
@@ -1436,38 +5006,31 @@ function processMessage(fromPhone, textBody, messageType) {
         break;
 
       case '10':
-        session.state = 'HUMAN_SUPPORT_DEPT';
-        session.errors = 0;
-        userSessions[fromPhone] = session;
-
-        // Busca ramais ativos em tempo real do banco de dados (PostgreSQL)
-        supabaseGet('/rest/v1/gsa_whatsapp_ramais?ativo=eq.true&order=ordem.asc', (errR, ramaisList) => {
-          console.log('=> GET /gsa_whatsapp_ramais result:', errR ? errR.message : (ramaisList ? ramaisList.length + ' items' : 'null'));
-          let textMenu = '💬 *Atendimento Humano GSA HUB*\n\nPor favor, escolha o setor desejado para atendimento:\n\n';
-          if (!errR && Array.isArray(ramaisList) && ramaisList.length > 0) {
-            ramaisList.forEach(r => {
-              textMenu += `${r.setor_nome}\n`;
-            });
-            textMenu += '\n_Digite o número ou nome da opção desejada._\n_Digite 0 para voltar ao menu principal._';
-          } else {
-            textMenu += '1️⃣ Comercial\n2️⃣ Financeiro\n3️⃣ Dep. Pessoal\n5️⃣ Suporte Afiliados\n6️⃣ Suporte Parceiros\n7️⃣ Suporte Fornecedores\n8️⃣ SAC\n\n_Digite o número da opção desejada (1, 2, 3, 5, 6, 7 ou 8)._\n_Digite 0 para voltar ao menu principal._';
-          }
-          sendWhatsAppReply(fromPhone, textMenu);
-        });
-        break;
+        return showHumanSupportSectors(fromPhone, session);
 
       default:
-        session.errors = (session.errors || 0) + 1;
-        if (session.errors >= 3) {
-          session.state = 'MAIN_MENU';
-          session.errors = 0;
-          sendWhatsAppReply(fromPhone, '🤖 Notei que você está com dificuldades. Vou te transferir para um de nossos atendentes humanos...');
-          setTimeout(() => {
-            sendWhatsAppReply(fromPhone, '👉 Clique no link abaixo para falar com um atendente:\n\nhttps://wa.me/5511971858372');
-          }, 2000);
-        } else {
-          sendWhatsAppReply(fromPhone, `❌ Não consegui entender sua solicitação.\n\n${MAIN_MENU_TEXT}`);
-        }
+        // ── IA: Entender mensagem livre com Gemini Flash 1.5 ──────────────────
+        userSessions[fromPhone] = session;
+        sendWhatsAppReply(fromPhone, '⏳ _Entendendo sua mensagem..._');
+        fetchCatalogForAI((catalog) => {
+          callGSAAssistant(fromPhone, text, session, null, catalog, (err, aiResult) => {
+            if (err || !aiResult) {
+              // Fallback seguro se a IA falhar
+              session.errors = (session.errors || 0) + 1;
+              if (session.errors >= 3) {
+                session.state = 'MAIN_MENU';
+                session.errors = 0;
+                sendWhatsAppReply(fromPhone, '🤖 Estou com dificuldades para entender. Vou te conectar com um atendente:\n\n👉 https://wa.me/5511920857756');
+              } else {
+                sendWhatsAppReply(fromPhone, `Não consegui entender bem. Pode reformular?\n\n${MAIN_MENU_TEXT}`);
+              }
+              userSessions[fromPhone] = session;
+              return;
+            }
+            session.errors = 0;
+            handleAIResponse(fromPhone, session, aiResult, text);
+          });
+        });
         break;
     }
     userSessions[fromPhone] = session;
@@ -1500,7 +5063,7 @@ function processMessage(fromPhone, textBody, messageType) {
       session.state = 'CLIENT_DASHBOARD_MENU';
       userSessions[fromPhone] = session;
       
-      const dashMsg = `👤 *Área do Cliente GSA HUB*\nOlá, *${nome}*! (🏆 ${nivel})\n\n💰 Saldo: R$ ${saldoCarteira.toFixed(2)}\n⭐ Pontos: ${saldoPts}\n\n*O que você deseja consultar?*\n1️⃣ 📄 Faturas em Aberto\n2️⃣ 🛠️ Ordens de Serviço\n3️⃣ 📋 Meus Orçamentos\n4️⃣ 🔄 Minhas Assinaturas\n5️⃣ 🎫 Tickets de Suporte\n0️⃣ Sair\n\n_Digite o número desejado:_`;
+      const dashMsg = `👤 *Área do Cliente GSA HUB*\nOlá, *${nome}*! (🏆 ${nivel})\n\n💰 Saldo: R$ ${saldoCarteira.toFixed(2)}\n⭐ Pontos: ${saldoPts}\n\n*O que você deseja consultar?*\n1️⃣ 📄 Faturas em Aberto\n2️⃣ 🛠️ Ordens de Serviço\n3️⃣ 📋 Meus Orçamentos\n4️⃣ 🔄 Minhas Assinaturas\n5️⃣ 🎫 Tickets de Suporte\n6️⃣ 💳 Solicitação de Crédito / Empréstimo\n0️⃣ Sair\n\n_Digite o número desejado:_`;
       
       sendWhatsAppReply(fromPhone, dashMsg);
     });
@@ -1540,25 +5103,37 @@ function processMessage(fromPhone, textBody, messageType) {
 
   // ── ESTADO: LOYALTY_ACTIONS ─────────────────────────────────────────────────
   if (session.state === 'LOYALTY_ACTIONS') {
-    if (text === '1') {
-      const pts = session.client.saldo_pontos || 0;
-      if (pts <= 0) {
-        sendWhatsAppReply(fromPhone, '❌ Você não possui pontos suficientes para converter.\n\n_Digite 0 para voltar ao menu._');
-        return;
-      }
-      sendWhatsAppReply(fromPhone, '🔄 Convertendo pontos (100 pontos = R$ 1,00)...');
-      // PATCH cliente
-      const convertedValue = pts / 100;
-      const newSaldoCarteira = (session.client.saldo_carteira || 0) + convertedValue;
-      supabasePatch(`/rest/v1/clientes?id=eq.${session.client.id}`, { saldo_pontos: 0, saldo_carteira: newSaldoCarteira }, (err, res) => {
+        if (text === '1') {
+      const clientId = session.client?.id;
+      if (!clientId) {
         session.state = 'MAIN_MENU';
         userSessions[fromPhone] = session;
-        if (err) {
-          sendWhatsAppReply(fromPhone, '❌ Erro ao converter pontos. Tente novamente mais tarde.\n\n_Digite 0 para voltar._');
-        } else {
-          sendWhatsAppReply(fromPhone, `✅ *Conversão Concluída!*\n\n${pts} pontos foram convertidos com sucesso para *${convertedValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}*.\nNovo Saldo em Carteira: *${newSaldoCarteira.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}*\n\n_Digite 0 para voltar._`);
+        sendWhatsAppReply(fromPhone, '❌ Cadastro de cliente não encontrado na sessão. Digite 4 para consultar sua fidelidade novamente.');
+        return;
+      }
+
+      sendWhatsAppReply(fromPhone, '🔄 Convertendo pontos (100 pontos = R$ 1,00)...');
+
+      supabaseRpc('gsa_converter_pontos_carteira', { p_cliente_id: clientId }, (err, result) => {
+        session.state = 'MAIN_MENU';
+        userSessions[fromPhone] = session;
+
+        if (err || !result || !result.success) {
+          const errMsg = result?.error || (err ? err.message : 'Saldo insuficiente ou erro no servidor');
+          console.error('❌ Erro na conversão de pontos via RPC:', errMsg);
+          sendWhatsAppReply(fromPhone, `❌ Não foi possível converter seus pontos: ${errMsg}.\n\n_Digite 0 para voltar ao menu._`);
+          return;
         }
+
+        // Update in-memory session with verified database returned values
+        if (session.client) {
+          session.client.saldo_pontos = result.novo_saldo_pontos;
+          session.client.saldo_carteira = result.novo_saldo_carteira;
+        }
+
+        sendWhatsAppReply(fromPhone, `✅ *Conversão Concluída!*\n\n${result.pontos_convertidos} pontos foram convertidos com sucesso para *${result.valor_convertido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}*.\nNovo Saldo em Carteira: *${result.novo_saldo_carteira.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}*\n\n_Digite 0 para voltar._`);
       });
+      return;
     } else if (text === '2') {
       if (!session.client.saque_liberado_manual) {
         session.state = 'MAIN_MENU';
@@ -1597,32 +5172,28 @@ function processMessage(fromPhone, textBody, messageType) {
   // ── ESTADO: LOYALTY_PIX_KEY ─────────────────────────────────────────────────
   if (session.state === 'LOYALTY_PIX_KEY') {
     const pixKey = text.trim();
-    const valor = session.client.saldo_carteira || 0;
+    const valor = Number(session.client.saldo_carteira || 0);
     sendWhatsAppReply(fromPhone, `🔄 Registrando sua solicitação de saque no sistema...`);
     
-    // Zera a carteira do cliente
-    supabasePatch(`/rest/v1/clientes?id=eq.${session.client.id}`, { saldo_carteira: 0 }, (errPatch, resPatch) => {
-      if (errPatch) {
-        session.state = 'MAIN_MENU';
-        sendWhatsAppReply(fromPhone, `❌ Erro ao processar saque. Tente novamente mais tarde.\n\n_Digite 0 para voltar._`);
-        return;
-      }
-      // Insere o saque
-      const saqueData = {
-        cliente_id: session.client.id,
-        valor: valor,
-        taxa_aplicada: 0,
-        valor_liquido: valor,
-        tipo_chave_pix: session.pixType,
-        chave_pix: pixKey,
-        status: 'pendente',
-        data_solicitacao: new Date().toISOString()
-      };
-      supabasePost('/rest/v1/saques', saqueData, (errPost, resPost) => {
+    // Solicitação de saque atômica via RPC dedicada (ACID + ledger)
+    supabaseRpc('gsa_webhook_solicitar_saque_cliente', {
+      p_cliente_id: session.client.id,
+      p_tipo_chave_pix: session.pixType || 'cpf',
+      p_chave_pix: pixKey,
+      p_valor: valor
+    }, (errRpc, resRpc) => {
+      if (errRpc || !resRpc || resRpc.success === false) {
         session.state = 'MAIN_MENU';
         userSessions[fromPhone] = session;
-        sendWhatsAppReply(fromPhone, `✅ *Solicitação de Saque Registrada!*\n\nValor: *${valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}*\nChave PIX: ${pixKey}\nStatus: *Em análise / Pendente*\n\nNosso departamento financeiro processará seu pagamento em breve.\n\n_Digite 0 para voltar ao menu principal._`);
-      });
+        const msgErr = resRpc?.error || 'Erro ao processar saque. Tente novamente mais tarde.';
+        sendWhatsAppReply(fromPhone, `❌ ${msgErr}\n\n_Digite 0 para voltar._`);
+        return;
+      }
+      const saqueValor = Number(resRpc.valor ?? valor);
+      session.client.saldo_carteira = Number(resRpc.novo_saldo_carteira ?? 0);
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, `✅ *Solicitação de Saque Registrada!*\n\nValor: *${saqueValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}*\nChave PIX: ${pixKey}\nStatus: *Em análise / Pendente*\n\nNosso departamento financeiro processará seu pagamento em breve.\n\n_Digite 0 para voltar ao menu principal._`);
     });
     return;
   }
@@ -1940,8 +5511,15 @@ function processMessage(fromPhone, textBody, messageType) {
           const cat = p.categoria ? ` [${p.categoria}]` : '';
           const caption = `*${idx + 1}.* 📦 *${p.nome}*${cat}\n💰 Preço: ${preco}\n📝 ${p.descricao || 'Produto de alta qualidade GSA Store'}\n\n👉 *Digite ${idx + 1} para adicionar ao carrinho!*`;
 
-          if (p.imagem_url && p.imagem_url.startsWith('http')) {
-            sendWhatsAppMedia(fromPhone, p.imagem_url, `${p.nome}.png`, caption, 'image');
+          let imgUrl = p.imagem_url || (p.imagens && p.imagens.length > 0 ? p.imagens[0] : null);
+          if (imgUrl && !imgUrl.startsWith('http')) {
+            imgUrl = `https://pub-7f7b1419c83c407ba9bcf6512329e79a.r2.dev/${imgUrl.replace(/^\/+/, '')}`;
+          }
+
+          if (imgUrl) {
+            setTimeout(() => {
+              sendWhatsAppMedia(fromPhone, imgUrl, `${p.nome}.png`, caption, 'image');
+            }, idx * 1000);
           } else {
             sendWhatsAppReply(fromPhone, caption);
           }
@@ -1970,8 +5548,15 @@ function processMessage(fromPhone, textBody, messageType) {
           const pPromo = `R$ ${Number(p.valor_promocional).toFixed(2).replace('.', ',')}`;
           const caption = `*${idx + 1}.* 💥 *${p.nome}*\nDe ~~${pOrig}~~ por apenas *${pPromo}* 🎉\n\n👉 *Digite ${idx + 1} para comprar!*`;
 
-          if (p.imagem_url && p.imagem_url.startsWith('http')) {
-            sendWhatsAppMedia(fromPhone, p.imagem_url, `${p.nome}.png`, caption, 'image');
+          let imgUrl = p.imagem_url || (p.imagens && p.imagens.length > 0 ? p.imagens[0] : null);
+          if (imgUrl && !imgUrl.startsWith('http')) {
+            imgUrl = `https://pub-7f7b1419c83c407ba9bcf6512329e79a.r2.dev/${imgUrl.replace(/^\/+/, '')}`;
+          }
+
+          if (imgUrl) {
+            setTimeout(() => {
+              sendWhatsAppMedia(fromPhone, imgUrl, `${p.nome}.png`, caption, 'image');
+            }, idx * 1000);
           } else {
             sendWhatsAppReply(fromPhone, caption);
           }
@@ -2882,9 +6467,16 @@ function processMessage(fromPhone, textBody, messageType) {
       });
       return;
     } else if (text === '4') {
-      session.state = 'PARTNER_PROVIDER_WITHDRAW_PIX';
-      userSessions[fromPhone] = session;
-      sendWhatsAppReply(fromPhone, '💸 *Solicitação de Saque PIX (Prestador)*\n\nPor favor, digite sua *Chave PIX* (CPF, CNPJ, E-mail, Telefone ou Chave Aleatória):\n\n_Digite 0 para cancelar._');
+      sendWhatsAppReply(fromPhone, '🔄 Consultando saldo de repasses para saque...');
+      supabaseGet(`/rest/v1/prestador_faturas?prestador_id=eq.${provider.id}&select=valor`, (err, fats) => {
+        const list = Array.isArray(fats) ? fats : [];
+        const total = list.reduce((acc, f) => acc + Number(f.valor || 0), 0);
+        session.providerWithdrawAmount = total;
+        session.state = 'PARTNER_PROVIDER_WITHDRAW_PIX';
+        userSessions[fromPhone] = session;
+        const msgSaldo = total > 0 ? `\n📊 *Saldo Disponível para Saque:* ${total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}\n` : '';
+        sendWhatsAppReply(fromPhone, `💸 *Solicitação de Saque PIX (Prestador)*${msgSaldo}\nPor favor, digite sua *Chave PIX* (CPF, CNPJ, E-mail, Telefone ou Chave Aleatória):\n\n_Digite 0 para cancelar._`);
+      });
       return;
     } else if (text === '5') {
       sendWhatsAppReply(fromPhone, '🌐 *Painel Web do Prestador GSA HUB*\n\nPara aceitar demandas, enviar relatórios fotográficos e acompanhar repasses, acesse:\n🌐 https://gsahub.pages.dev/prestador\n\n_Digite 0 para voltar._');
@@ -2908,16 +6500,39 @@ function processMessage(fromPhone, textBody, messageType) {
     const provider = session.providerData;
     const proto = generateProtocolNumber();
     
-    supabasePost('/rest/v1/prestador_saques', {
-      prestador_id: provider?.id || null,
-      chave_pix: pixKey,
-      valor: 0.00,
-      status: 'solicitado'
-    }, () => {
-      session.state = 'PARTNER_PROVIDER_MENU';
-      userSessions[fromPhone] = session;
-      sendWhatsAppReply(fromPhone, `✅ *Solicitação de Saque PIX Registrada!*\n\n🔢 *Protocolo:* ${proto}\n🔑 *Chave PIX:* ${pixKey}\n\nO valor do repasse disponível será transferido após a conferência técnica!\n\n_Digite 0 para voltar._`);
-    });
+    const executeWithdraw = (requestedValor) => {
+      const finalValor = Number((requestedValor || 0).toFixed(2));
+      supabasePost('/rest/v1/prestador_saques', {
+        prestador_id: provider?.id || null,
+        chave_pix: pixKey,
+        valor: finalValor,
+        status: 'solicitado'
+      }, () => {
+        session.state = 'PARTNER_PROVIDER_MENU';
+        userSessions[fromPhone] = session;
+        const formattedVal = finalValor > 0 ? `\n💰 *Valor Solicitado:* ${finalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}` : '';
+        sendWhatsAppReply(fromPhone, `✅ *Solicitação de Saque PIX Registrada!*\n\n🔢 *Protocolo:* ${proto}\n🔑 *Chave PIX:* ${pixKey}${formattedVal}\n\nO valor do repasse disponível será transferido após a conferência técnica!\n\n_Digite 0 para voltar._`);
+      });
+    };
+
+    if (session.providerWithdrawAmount && Number(session.providerWithdrawAmount) > 0) {
+      executeWithdraw(Number(session.providerWithdrawAmount));
+    } else if (provider?.id) {
+      supabaseGet(`/rest/v1/prestador_transacoes?prestador_id=eq.${provider.id}&status=eq.concluido&select=tipo,valor`, (errTx, txs) => {
+        const txList = Array.isArray(txs) ? txs : [];
+        if (!errTx && txList.length > 0) {
+          const bal = txList.reduce((acc, t) => acc + (t.tipo === 'credito' ? Number(t.valor || 0) : -Number(t.valor || 0)), 0);
+          if (bal > 0) return executeWithdraw(bal);
+        }
+        supabaseGet(`/rest/v1/prestador_faturas?prestador_id=eq.${provider.id}&select=valor`, (errFat, fats) => {
+          const list = Array.isArray(fats) ? fats : [];
+          const total = list.reduce((acc, f) => acc + Number(f.valor || 0), 0);
+          executeWithdraw(total);
+        });
+      });
+    } else {
+      executeWithdraw(0.00);
+    }
     return;
   }
 
@@ -3383,6 +6998,138 @@ function processMessage(fromPhone, textBody, messageType) {
     return;
   }
 
+  // ── ESTADOS: SOLICITAÇÃO DE CRÉDITO & EMPRÉSTIMO ───────────────────────────
+  if (session.state === 'CREDIT_REQUEST_DOC') {
+    const docClean = text.replace(/\D/g, '');
+    if (docClean.length !== 11 && docClean.length !== 14) {
+      sendWhatsAppReply(fromPhone, '❌ Documento inválido. Por favor digite seu CPF (11 dígitos) ou CNPJ (14 dígitos) apenas com números.\n\n_Digite 0 para cancelar._');
+      return;
+    }
+    session.creditDraft = session.creditDraft || {};
+    session.creditDraft.documento = docClean;
+
+    sendWhatsAppReply(fromPhone, '🔍 *Consultando cadastro no sistema...*');
+
+    fetchClientByDoc(docClean, (err, client) => {
+      if (!err && client) {
+        session.clientData = client;
+        session.creditDraft.clienteId = client.id;
+        session.creditDraft.clientName = client.nome || client.nome_completo || client.razao_social || 'Cliente GSA';
+        return advanceCreditFlow(fromPhone, session);
+      }
+
+      session.state = 'CREDIT_REQUEST_NAME';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, `📝 *Novo Cadastro de Crédito*\n\nQual é o seu *Nome Completo* (ou Razão Social da Empresa)?\n\n_Digite 0 para cancelar._`);
+    });
+    return;
+  }
+
+  if (session.state === 'CREDIT_REQUEST_NAME') {
+    const name = text.trim();
+    if (name.length < 3) {
+      sendWhatsAppReply(fromPhone, '❌ Por favor, digite seu nome completo com pelo menos 3 caracteres.\n\n_Digite 0 para cancelar._');
+      return;
+    }
+    session.creditDraft = session.creditDraft || {};
+    session.creditDraft.clientName = name;
+    userSessions[fromPhone] = session;
+    advanceCreditFlow(fromPhone, session);
+    return;
+  }
+
+  if (session.state === 'CREDIT_REQUEST_VALUE') {
+    const val = parseMoneyAmount(text);
+    if (val < 500) {
+      sendWhatsAppReply(fromPhone, '❌ O valor mínimo para solicitação de crédito é de *R$ 500,00*.\n\nPor favor, digite o valor que você deseja solicitar (ex: 5000, 10000, 50 mil).\n\n_Digite 0 para cancelar._');
+      return;
+    }
+    session.creditDraft = session.creditDraft || {};
+    session.creditDraft.valor = val;
+    userSessions[fromPhone] = session;
+    advanceCreditFlow(fromPhone, session);
+    return;
+  }
+
+  if (session.state === 'CREDIT_REQUEST_INSTALLMENTS') {
+    let parcelas = 0;
+    const t = text.trim().toLowerCase();
+    if (t === '1') parcelas = 12;
+    else if (t === '2') parcelas = 24;
+    else if (t === '3') parcelas = 36;
+    else if (t === '4') parcelas = 48;
+    else {
+      const pMatch = t.match(/\b(\d{1,2})\b/);
+      if (pMatch) parcelas = parseInt(pMatch[1], 10);
+    }
+
+    if (parcelas < 1 || parcelas > 120) {
+      sendWhatsAppReply(fromPhone, '❌ Quantidade de parcelas inválida. Escolha entre 1 e 4 ou digite o número de meses (ex: 12, 24, 36, 48).\n\n_Digite 0 para voltar._');
+      return;
+    }
+
+    session.creditDraft = session.creditDraft || {};
+    session.creditDraft.parcelas = parcelas;
+    userSessions[fromPhone] = session;
+    advanceCreditFlow(fromPhone, session);
+    return;
+  }
+
+  if (session.state === 'CREDIT_REQUEST_PURPOSE') {
+    const t = text.trim();
+    let purpose = '';
+    if (t === '1') purpose = 'Capital de Giro para Empresa / MEI';
+    else if (t === '2') purpose = 'Investimento em Estoque, Máquinas ou Equipamentos';
+    else if (t === '3') purpose = 'Uso Pessoal / Despesas / Emergência';
+    else if (t === '4') purpose = 'Quitação / Consolidação de Dívidas';
+    else if (t === '5') purpose = 'Outro Motivo';
+    else purpose = t;
+
+    session.creditDraft = session.creditDraft || {};
+    session.creditDraft.finalidade = purpose;
+    userSessions[fromPhone] = session;
+    advanceCreditFlow(fromPhone, session);
+    return;
+  }
+
+  if (session.state === 'CREDIT_REQUEST_INCOME') {
+    const t = text.trim().toLowerCase();
+    let renda = 0;
+    if (!['pular', 'depois', 'nao informar', 'não informar', 'ignorar', 'skip'].includes(t)) {
+      renda = parseMoneyAmount(text);
+    }
+    session.creditDraft = session.creditDraft || {};
+    session.creditDraft.renda = renda;
+    userSessions[fromPhone] = session;
+    renderCreditSimulation(fromPhone, session);
+    return;
+  }
+
+  if (session.state === 'CREDIT_REQUEST_CONFIRM') {
+    if (text === '1') {
+      finalizeCreditSubmission(fromPhone, session);
+      return;
+    }
+    if (text === '2') {
+      delete session.creditDraft.valor;
+      delete session.creditDraft.parcelas;
+      delete session.creditDraft.finalidade;
+      delete session.creditDraft.renda;
+      userSessions[fromPhone] = session;
+      advanceCreditFlow(fromPhone, session);
+      return;
+    }
+    if (text === '0' || lower === 'cancelar' || lower === 'voltar') {
+      delete session.creditDraft;
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, '❌ Solicitação de crédito cancelada.\n\n' + getMainMenuText(session.profile));
+      return;
+    }
+    sendWhatsAppReply(fromPhone, '❌ Opção inválida. Digite:\n*1* para Confirmar e Enviar\n*2* para Alterar Dados\n*0* para Cancelar');
+    return;
+  }
+
   // ── ESTADO: AFFILIATE_DOC ───────────────────────────────────────────────────
   if (session.state === 'AFFILIATE_DOC') {
     const docClean = text.replace(/\\D/g, '');
@@ -3537,6 +7284,11 @@ function processMessage(fromPhone, textBody, messageType) {
       return;
     }
     
+    if (text === '6') {
+      startCreditRequest(fromPhone, session);
+      return;
+    }
+
     if (text === '0') {
       session.state = 'MAIN_MENU';
       userSessions[fromPhone] = session;
@@ -3544,7 +7296,7 @@ function processMessage(fromPhone, textBody, messageType) {
       return;
     }
     
-    sendWhatsAppReply(fromPhone, '❌ Opção inválida.\n\n*Opções disponíveis:*\n1️⃣ Faturas em Aberto\n2️⃣ Ordens de Serviço\n3️⃣ Meus Orçamentos\n4️⃣ Minhas Assinaturas\n5️⃣ Tickets de Suporte\n0️⃣ Sair\n\n_Digite o número desejado:_');
+    sendWhatsAppReply(fromPhone, '❌ Opção inválida.\n\n*Opções disponíveis:*\n1️⃣ Faturas em Aberto\n2️⃣ Ordens de Serviço\n3️⃣ Meus Orçamentos\n4️⃣ Minhas Assinaturas\n5️⃣ Tickets de Suporte\n6️⃣ Solicitação de Crédito / Empréstimo\n0️⃣ Sair\n\n_Digite o número desejado:_');
     return;
   }
 
@@ -3778,23 +7530,325 @@ function processMessage(fromPhone, textBody, messageType) {
     }
   }
 
-  // ── ESTADO: NPS_RATING ──────────────────────────────────────────────────────
+  // ── ESTADO: NPS_RATING (Módulo 6 — NPS com análise de sentimento) ───────────
   if (session.state === 'NPS_RATING') {
     const nota = parseInt(text, 10);
+    const clientName = session.clientName || 'cliente';
     session.state = 'MAIN_MENU';
     userSessions[fromPhone] = session;
     
     if (!isNaN(nota) && nota >= 1 && nota <= 5) {
-      sendWhatsAppReply(fromPhone, `Obrigado por avaliar com a nota ${nota}! 🙏\nSua opinião nos ajuda a melhorar cada vez mais o GSA HUB.\n\n${MAIN_MENU_TEXT}`);
+      if (nota <= 2) {
+        // ── Nota BAIXA: pedir desculpas + alerta VIP ao admin ──────────────────
+        sendWhatsAppReply(fromPhone, `😔 *Poxa, ${clientName}...*\n\nLamentamos muito que sua experiência não tenha sido das melhores! Sua nota *${nota}/5* é muito importante para continuarmos melhorando.\n\n🚀 Um de nossos atendentes especialistas vai entrar em contato com você em breve para resolver qualquer pendência com prioridade máxima!\n\n_Obrigado por nos dar a chance de melhorar!_ 🙏\n\n${MAIN_MENU_TEXT}`);
+        
+        notifyAdmin(`🚨 *ALERTA NPS — NOTA CRÍTICA!* 🚨\n\n⭐ *Nota:* ${nota}/5\n👤 *Cliente:* ${clientName} (${fromPhone})\n📦 *Último produto:* ${session.lastOrderProduct || 'N/A'}\n\n*⚡ AÇÃO URGENTE: Entre em contato imediatamente para reverter a experiência negativa!*`);
+
+      } else if (nota >= 4) {
+        // ── Nota ALTA: agradecimento + convite Indique & Ganhe ─────────────────
+        sendWhatsAppReply(fromPhone, `🌟 *Uau, ${clientName}! Nota ${nota}/5 — INCRÍVEL!*\n\nMuito obrigado pela confiança e pelo carinho! Isso nos motiva a continuar entregando o melhor! 🚀\n\n🤝 *Quer ganhar dinheiro indicando o GSA HUB?*\nTemos um Programa de Afiliados onde você ganha comissão por cada indicação que comprar ou contratar nossos serviços!\n\nDigite *AFILIADO* para saber mais ou acesse:\n👉 ${GSA_EMPRESA.site}/afiliados\n\n${MAIN_MENU_TEXT}`);
+
+      } else {
+        // ── Nota MÉDIA (3): agradecimento simples ──────────────────────────────
+        sendWhatsAppReply(fromPhone, `Obrigado por avaliar com a nota ${nota}/5! 🙏\nVamos continuar trabalhando para melhorar ainda mais e oferecer uma experiência 5 estrelas!\n\n${MAIN_MENU_TEXT}`);
+      }
+
+      // Salvar NPS no banco de forma assíncrona
+      supabasePost('/rest/v1/nps_avaliacoes', {
+        telefone: fromPhone,
+        nome: clientName,
+        nota: nota,
+        produto: session.lastOrderProduct || null,
+        variacao: session.lastOrderVariation || null,
+        valor_pedido: session.lastOrderTotal || null,
+        created_at: new Date().toISOString()
+      }, () => {});
+
     } else {
       sendWhatsAppReply(fromPhone, `Agradecemos pelo seu tempo! Retornando ao menu principal...\n\n${MAIN_MENU_TEXT}`);
     }
     return;
   }
 
-  // Fallback: sempre mostrar menu principal
+  // ── ESTADO: AWAITING_NAME (IA pediu o nome do cliente) ───────────────────────
+  if (session.state === 'AWAITING_NAME') {
+    if (text === '0') {
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, MAIN_MENU_TEXT);
+      return;
+    }
+    // Pega só o primeiro nome, capitalizado
+    const nome = text.trim().split(/\s+/)[0];
+    session.clientName = nome.charAt(0).toUpperCase() + nome.slice(1).toLowerCase();
+    session.state = 'MAIN_MENU';
+    userSessions[fromPhone] = session;
+    sendWhatsAppReply(fromPhone, `Prazer, *${session.clientName}*! 😊\n\n${getMainMenuText(session.profile)}`);
+    return;
+  }
+
+  // ── ESTADO: AI_TICKET_COLLECT (coleta detalhes para ticket de item inexistente) ──
+  if (session.state === 'AI_TICKET_COLLECT') {
+    const normalized = text.toLowerCase().trim();
+
+    if (text === '0' || normalized === 'cancelar') {
+      session.state = 'MAIN_MENU';
+      delete session.aiTicketReason;
+      delete session.aiTicketDetails;
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, `Tudo bem! Solicitação cancelada. 😊\n\n${MAIN_MENU_TEXT}`);
+      return;
+    }
+
+    // Registra detalhe enviado (texto ou mídia)
+    if (!session.aiTicketDetails) session.aiTicketDetails = [];
+
+    if (mediaType) {
+      session.aiTicketDetails.push(`[Mídia: ${mediaType}]`);
+      sendWhatsAppReply(fromPhone, `📎 *${mediaType === 'image' ? 'Imagem' : mediaType === 'audio' ? 'Áudio' : mediaType === 'video' ? 'Vídeo' : 'Arquivo'}* recebido! ✅\n\nAdicione mais detalhes se quiser, ou digite *pronto* para finalizar.`);
+    } else if (text) {
+      session.aiTicketDetails.push(text);
+    }
+
+    if (normalized === 'pronto' || normalized === 'ok' || normalized === 'enviar' || normalized === 'finalizar') {
+      // Criar o ticket agora
+      const assunto = `Solicitação de Novo Item: ${(session.aiTicketReason || 'Item não disponível').substring(0, 80)}`;
+      const detalhes = session.aiTicketDetails.filter(d => !d.startsWith('[Mídia')).join('\n');
+      const midias = session.aiTicketDetails.filter(d => d.startsWith('[Mídia')).join(', ');
+      const descricao = [
+        session.aiTicketReason || 'Solicitação via WhatsApp IA',
+        detalhes ? `\nDetalhes adicionais:\n${detalhes}` : '',
+        midias ? `\nMídias enviadas: ${midias}` : ''
+      ].join('');
+
+      sendWhatsAppReply(fromPhone, '⏳ Registrando sua solicitação...');
+      createAITicket(fromPhone, session, assunto, descricao, (err, ticket) => {
+        const protocolo = ticket?.protocolo || 'TKT-GSA';
+        const clientName = session.clientName || session.clientData?.nome || 'Cliente';
+        session.state = 'NPS_RATING';
+        delete session.aiTicketReason;
+        delete session.aiTicketDetails;
+        userSessions[fromPhone] = session;
+        sendWhatsAppReply(fromPhone, `✅ *Solicitação Registrada!*\n\n🎫 Protocolo: *${protocolo}*\n👤 Nome: ${clientName}\n📱 WhatsApp: ${fromPhone}\n📌 Item: ${assunto.replace('Solicitação de Novo Item: ', '')}\n\nNossa equipe analisará e entrará em contato em breve! 🚀\n\n🌟 Como você avalia nosso atendimento? _(Digite de 1 a 5)_`);
+      });
+    } else if (!mediaType) {
+      // Confirma recebimento do texto e aguarda mais
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, `📝 Anotado! Pode enviar mais detalhes, uma foto 📷, áudio 🎙️ ou vídeo 🎥.\n\nQuando terminar, digite *pronto* para finalizar.`);
+    }
+    return;
+  }
+
+  // ── ESTADO: SERVICE_INTEREST (cliente interessado em serviço encontrado pela IA) ──
+  if (session.state === 'SERVICE_INTEREST') {
+    if (text === '0') {
+      session.state = 'MAIN_MENU';
+      delete session.aiFoundService;
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, MAIN_MENU_TEXT);
+      return;
+    }
+    const item = session.aiFoundService || {};
+    if (text === '1') {
+      // Redireciona para o fluxo de contratação de serviços
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, `✅ Ótimo! Vou te encaminhar para a contratação do serviço *${item.nome || ''}*.\n\nUm de nossos especialistas entrará em contato em breve.\n\n📱 WhatsApp: wa.me/5511920857756\n🌐 Site: ${GSA_EMPRESA.site}`);
+    } else if (text === '2') {
+      // Conectar com especialista
+      session.state = 'HUMAN_SUPPORT_DEPT';
+      session.errors = 0;
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, `💬 Vou te conectar com um especialista em *${item.nome || 'nossos serviços'}*!\n\n👉 https://wa.me/5511920857756`);
+    } else {
+      sendWhatsAppReply(fromPhone, `Por favor, escolha:\n1️⃣ ✅ Contratar agora\n2️⃣ 💬 Falar com especialista\n0️⃣ Voltar ao menu`);
+    }
+    return;
+  }
+
+  // ── ESTADO: PRODUCT_INTEREST (cliente interessado em produto encontrado pela IA) ──
+  if (session.state === 'PRODUCT_INTEREST') {
+    if (text === '0') {
+      session.state = 'MAIN_MENU';
+      delete session.aiFoundProduct;
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, MAIN_MENU_TEXT);
+      return;
+    }
+    const prod = session.aiFoundProduct || {};
+    if (text === '1') {
+      session.state = 'STORE';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, `🛒 Perfeito! Vou te encaminhar para nossa loja.\n\nProduto: *${prod.nome || ''}*\nValor: R$ ${Number(prod.valor || 0).toFixed(2)}\n\n🌐 ${GSA_EMPRESA.site}/marketplace\n\nOu continue navegando pela loja aqui mesmo:\n1️⃣ 🛒 Ver Vitrine\n2️⃣ 🔥 Promoções\n0️⃣ Menu Principal`);
+    } else if (text === '2') {
+      sendWhatsAppReply(fromPhone, `ℹ️ *${prod.nome || 'Produto'}*\n${prod.descricao || ''}\n💰 Valor: R$ ${Number(prod.valor || 0).toFixed(2)}\n\n🛒 Para comprar, acesse:\n${GSA_EMPRESA.site}/marketplace\n\nOu fale conosco:\n👉 https://wa.me/5511920857756`);
+    } else {
+      sendWhatsAppReply(fromPhone, `Por favor, escolha:\n1️⃣ 🛒 Quero comprar\n2️⃣ ℹ️ Mais informações\n0️⃣ Voltar ao menu`);
+    }
+    return;
+  }
+
+  // ── ESTADO: DROPSHIP_INTEREST (cliente escolheu opção dropship) ──
+  if (session.state === 'DROPSHIP_INTEREST') {
+    if (text === '0') {
+      session.state = 'MAIN_MENU';
+      delete session.extrProducts;
+      clearCartAbandonmentTimer(fromPhone);
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, MAIN_MENU_TEXT);
+      return;
+    }
+    
+    const choice = parseInt(text);
+    if (!isNaN(choice) && session.extrProducts && session.extrProducts[choice - 1]) {
+      const prod = session.extrProducts[choice - 1];
+      const salePrice = prod.custo * 2;
+      
+      clearCartAbandonmentTimer(fromPhone);
+      session.state = 'STORE';
+      session.dropshipSelectedProduct = prod;
+      session.dropshipSalePrice = salePrice;
+      delete session.extrProducts;
+      userSessions[fromPhone] = session;
+      
+      let msg = `🛒 *Excelente escolha!*\n\n📦 Produto: *${prod.nome}*\n💰 Valor: R$ ${salePrice.toFixed(2).replace('.', ',')}\n\n`;
+      msg += `Para finalizar, acesse o checkout seguro ou faça o PIX diretamente:\n\n`;
+      msg += `🟢 *PIX Chave CNPJ GSA:* \`${GSA_EMPRESA.pix}\`\n💰 *Valor:* R$ ${salePrice.toFixed(2).replace('.', ',')}\n\n`;
+      msg += `Após o pagamento, envie o comprovante aqui e processamos seu pedido!\n`;
+      msg += `💳 *Checkout seguro:* ${GSA_EMPRESA.site}/marketplace/checkout\n\n`;
+      msg += `🌟 *Como avalia nosso atendimento? (Digite de 1 a 5)*`;
+      
+      session.state = 'NPS_RATING';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, msg);
+    } else {
+      sendWhatsAppReply(fromPhone, `Por favor, digite o número da opção desejada (ex: 1, 2 ou 3) ou 0 para voltar ao menu.`);
+    }
+    return;
+  }
+
+  // ── ESTADO: MULTIPLE_PRODUCT_INTEREST (cliente com múltiplas opções) ──
+  if (session.state === 'MULTIPLE_PRODUCT_INTEREST') {
+    if (text === '0') {
+      session.state = 'MAIN_MENU';
+      delete session.aiFoundProducts;
+      clearCartAbandonmentTimer(fromPhone);
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, MAIN_MENU_TEXT);
+      return;
+    }
+    
+    const choice = parseInt(text);
+    if (!isNaN(choice) && session.aiFoundProducts && session.aiFoundProducts[choice - 1]) {
+      const prod = session.aiFoundProducts[choice - 1];
+      
+      clearCartAbandonmentTimer(fromPhone);
+
+      // ─── Módulo 1: Detectar se é produto com variação (vestuário/calçado)
+      const needsVariation = /tenis|sapato|calcado|sandalia|bota|chinelo|camisa|camiseta|blusa|calca|jeans|vestido|bermuda|shorts|moletom|agasalho|saia|legging|cueca|lingerie|meias?|roupa/i.test(prod.nome);
+
+      if (needsVariation) {
+        const isFootwear = /tenis|sapato|calcado|sandalia|bota|chinelo/i.test(prod.nome);
+        const isClothing = /camisa|camiseta|blusa|calca|vestido|bermuda|moletom|agasalho|saia|legging/i.test(prod.nome);
+
+        let variationMsg = `🛍️ *Você selecionou:*\n\n📦 *${prod.nome}*\n💰 *Valor:* R$ ${Number(prod.valor).toFixed(2).replace('.', ',')}\n\n`;
+
+        if (isFootwear) {
+          variationMsg += `👟 *Qual é o seu número?*\n_(Ex: 35, 36, 37, 38, 39, 40, 41, 42, 43, 44)_\n\n_Digite 0 para cancelar._`;
+          session.variationType = 'tamanho_calcado';
+        } else if (isClothing) {
+          variationMsg += `👕 *Qual é o seu tamanho?*\n1️⃣ PP\n2️⃣ P\n3️⃣ M\n4️⃣ G\n5️⃣ GG\n6️⃣ XGG\n\n_Ou digite o número diretamente (ex: 40, 42)_\n_Digite 0 para cancelar._`;
+          session.variationType = 'tamanho_roupa';
+        } else {
+          variationMsg += `📐 *Qual variação você prefere? Informe o tamanho ou modelo:*\n\n_Digite 0 para cancelar._`;
+          session.variationType = 'geral';
+        }
+
+        session.state = 'STORE_SELECT_VARIATION';
+        session.selectedVariationProduct = prod;
+        delete session.aiFoundProducts;
+        userSessions[fromPhone] = session;
+        sendWhatsAppReply(fromPhone, variationMsg);
+      } else {
+        // Produto sem variação: ir direto para compra
+        session.state = 'PRODUCT_INTEREST';
+        session.aiFoundProduct = prod;
+        delete session.aiFoundProducts;
+        userSessions[fromPhone] = session;
+        
+        const msg = `🛍️ *Você selecionou:*\n\n📦 *${prod.nome}*\n🔖 Código: ${formatGSAProductCode(prod.codigo_produto, prod)}${prod.descricao ? '\n📄 ' + prod.descricao.substring(0,100) : ''}\n💰 *Valor:* R$ ${Number(prod.valor).toFixed(2).replace('.', ',')}\n\n1️⃣ 🛒 Quero comprar\n2️⃣ ℹ️ Mais informações\n0️⃣ Voltar ao menu`;
+        sendWhatsAppReply(fromPhone, msg);
+      }
+    } else {
+      sendWhatsAppReply(fromPhone, `Por favor, digite o número do produto desejado ou 0 para voltar ao menu.`);
+    }
+    return;
+  }
+
+  // ── ESTADO: STORE_SELECT_VARIATION (Módulo 1 — escolha de tamanho/cor) ──────
+  if (session.state === 'STORE_SELECT_VARIATION') {
+    if (text === '0') {
+      session.state = 'MAIN_MENU';
+      delete session.selectedVariationProduct;
+      delete session.variationType;
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, MAIN_MENU_TEXT);
+      return;
+    }
+
+    const prod = session.selectedVariationProduct;
+    if (!prod) {
+      session.state = 'MAIN_MENU';
+      userSessions[fromPhone] = session;
+      sendWhatsAppReply(fromPhone, MAIN_MENU_TEXT);
+      return;
+    }
+
+    // Map clothing size numbers to labels
+    let variationLabel = text.trim();
+    if (session.variationType === 'tamanho_roupa') {
+      const sizeMap = { '1': 'PP', '2': 'P', '3': 'M', '4': 'G', '5': 'GG', '6': 'XGG' };
+      if (sizeMap[variationLabel]) variationLabel = sizeMap[variationLabel];
+    }
+
+    const total = Number(prod.valor);
+    const clientName = session.clientName || 'cliente';
+
+    const pixMsg = `✅ *Pedido Confirmado!*\n\n📦 *${prod.nome}*\n📐 *Tamanho/Variação:* ${variationLabel}\n💰 *Total:* R$ ${total.toFixed(2).replace('.', ',')}\n\n🟢 *PIX Copia e Cola — Pague agora:*\n\`${GSA_EMPRESA.pix}\`\n\n💡 Após o pagamento, *envie o comprovante* aqui e processamos seu pedido com prioridade!\n\n_Prazo de entrega: até 12 dias úteis após confirmação._\n\n🌟 *Como avalia nosso atendimento? (Digite de 1 a 5)*`;
+
+    session.state = 'NPS_RATING';
+    session.lastOrderProduct = prod.nome;
+    session.lastOrderVariation = variationLabel;
+    session.lastOrderTotal = total;
+    delete session.selectedVariationProduct;
+    delete session.variationType;
+    userSessions[fromPhone] = session;
+
+    sendWhatsAppReply(fromPhone, pixMsg);
+
+    // Notify admin
+    notifyAdmin(`🛒 *NOVA INTENÇÃO DE COMPRA*\n\n👤 *Cliente:* ${clientName} (${fromPhone})\n📦 *Produto:* ${prod.nome}\n📐 *Variação:* ${variationLabel}\n💰 *Valor:* R$ ${total.toFixed(2)}\n🔖 Código: ${formatGSAProductCode(prod.codigo_produto, prod)}`);
+    return;
+  }
+
+  // Fallback global com IA: mensagens que chegam em estados desconhecidos
+  if (text && text !== '0' && mediaType !== 'audio') {
+    fetchCatalogForAI((catalog) => {
+      callGSAAssistant(fromPhone, text, session, mediaType, catalog, (err, aiResult) => {
+        if (err || !aiResult) {
+          sendWhatsAppReply(fromPhone, MAIN_MENU_TEXT);
+          return;
+        }
+        handleAIResponse(fromPhone, session, aiResult, text);
+      });
+    });
+    return;
+  }
+
+  // Fallback final: sempre mostrar menu principal
   sendWhatsAppReply(fromPhone, MAIN_MENU_TEXT);
 }
+
 
 // ─── SUPABASE WEBHOOKS ────────────────────────────────────────────────────────
 // ─── LOGGING SCRAPING STEPS ──────────────────────────────────────────────────
@@ -3816,8 +7870,55 @@ function logScrapingStep(automacaoId, passo, status, mensagem, progresso, detalh
 // ─── AUTOMATIC SCRAPING POLLING LISTENER ─────────────────────────────────────
 const activeAutomations = new Set();
 
+function supabaseGetPromise(path) {
+  return new Promise((resolve, reject) => {
+    supabaseGet(path, (error, data) => error ? reject(error) : resolve(Array.isArray(data) ? data : []));
+  });
+}
+
+function handleDuplicateRedemptionDetected(fromPhone, session, partner, dupeRow) {
+  session.state = 'REDEMPTION_AWAITING_JUSTIFICATION';
+  session.redemptionDuplicateRecord = dupeRow;
+  userSessions[fromPhone] = session;
+  sendWhatsAppReply(
+    fromPhone,
+    [
+      `⚠️ *Identificamos um resgate anterior para este parceiro.*`,
+      ``,
+      `Você (ou este contato) já possui um registro de resgate para o benefício de *${partner.name}*.`,
+      ``,
+      `Caso precise de uma nova liberação (por exemplo: outro animal de estimação, outro dependente ou nova necessidade), por favor *digite uma breve justificativa* explicando o motivo da nova solicitação:`,
+      ``,
+      `Assim que você enviar, nossa gerência avaliará sua solicitação com prioridade (Prazo: até 48h).`,
+      ``,
+      `_Ou digite 0 para cancelar e voltar ao menu._`
+    ].join('\n')
+  );
+}
+
+function supabasePostPromise(path, payload) {
+  return new Promise((resolve, reject) => {
+    supabasePost(path, payload, (error, data) => error ? reject(error) : resolve(data));
+  });
+}
+
+const { createScrapingScheduler } = require('./scraping_scheduler.cjs');
+const scrapingScheduler = createScrapingScheduler({
+  listConfigs: () => supabaseGetPromise('/rest/v1/automacao_scraping_configs?ativo=eq.true&select=id,nome,ativo,frequencia,horarios,dias_semana,data_inicio,data_fim,created_at'),
+  listRecentLogs: (automacaoId) => supabaseGetPromise(`/rest/v1/automacao_scraping_logs?automacao_id=eq.${encodeURIComponent(automacaoId)}&select=detalhes,created_at&order=created_at.desc&limit=200`),
+  enqueue: (config, slot) => supabasePostPromise('/rest/v1/automacao_scraping_logs', {
+    automacao_id: config.id,
+    passo: 'iniciando',
+    status: 'em_andamento',
+    mensagem: `Execução automática iniciada para o horário ${slot.localTime} (${slot.timezone}).`,
+    progresso: 0,
+    detalhes: { trigger: 'schedule', schedule_key: slot.key, scheduled_for: slot.scheduledFor, timezone: slot.timezone },
+  }),
+});
+scrapingScheduler.start();
+
 function checkPendingScrapingTasks() {
-  supabaseGet('/rest/v1/automacao_scraping_logs?passo=eq.iniciando&status=eq.em_andamento&select=id,automacao_id,created_at&order=created_at.desc&limit=5', (err, logs) => {
+  supabaseGet('/rest/v1/automacao_scraping_logs?passo=eq.iniciando&status=eq.em_andamento&select=id,automacao_id,created_at&order=created_at.asc&limit=100', (err, logs) => {
     if (err || !Array.isArray(logs) || logs.length === 0) return;
     for (const log of logs) {
       if (activeAutomations.has(log.automacao_id)) continue;
@@ -4559,6 +8660,90 @@ async function handleViagensScraping(config) {
 }
 
 // ─── SCRAPING HANDLER FOR PRODUCTS & TRAVEL ───────────────────────────────────────────
+function normalizeVariationKey(value, fallback) {
+  const normalized = String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  return normalized || fallback;
+}
+
+function inferVariationGroup(values, index, totalGroups) {
+  const normalized = values.map(value => String(value || '').trim().toLowerCase());
+  const colors = /^(preto|branco|cinza|vermelho|vermelha|azul|verde|amarelo|amarela|rosa|roxo|roxa|lilas|bege|marrom|laranja|dourado|dourada|prata|vinho|bordo|nude|colorido|colorida)(\b|\/)/i;
+  const sizes = /^(pp|p|m|g|gg|xg|xgg|xxg|xxl|xs|s|l|xl|tamanho unico|unico|unica)$/i;
+  const numbers = /^(?:n(?:umero|\u00ba)?\s*)?\d{1,3}(?:[.,]\d+)?(?:\s*(?:cm|mm|m))?$/i;
+  if (normalized.length && normalized.every(value => colors.test(value))) return { nome: 'Cor', tipo: 'cor' };
+  if (normalized.length && normalized.every(value => sizes.test(value))) return { nome: 'Tamanho', tipo: 'tamanho' };
+  if (normalized.length && normalized.every(value => numbers.test(value))) return { nome: totalGroups > 1 ? 'Tamanho/Número' : 'Número', tipo: 'numero' };
+  if (normalized.some(value => /algodao|poliester|couro|tecido|madeira|metal/i.test(value))) return { nome: 'Material', tipo: 'material' };
+  return { nome: totalGroups > 1 ? `Opção ${index + 1}` : 'Modelo', tipo: 'modelo' };
+}
+
+function parseShopeeFeedVariations(row, salePrice, imageUrl) {
+  const modelNames = String(row.model_names || '').split('|').map(value => value.trim()).filter(Boolean);
+  const modelIds = String(row.model_ids || '').split('|').map(value => value.trim());
+  const modelImages = String(row.model_images || row.model_image_urls || row.variation_images || '')
+    .split('|').map(value => value.trim());
+  const modelStocks = String(row.model_stocks || row.model_stock || row.variation_stocks || '')
+    .split('|').map(value => value.trim());
+  if (modelNames.length <= 1) return null;
+  const combinations = modelNames.map(name => name.split(',').map(value => value.trim()).filter(Boolean));
+  const groupCount = Math.max(...combinations.map(parts => parts.length));
+  if (!groupCount || combinations.some(parts => parts.length !== groupCount)) return null;
+  const usedGroupKeys = new Set();
+  const groups = Array.from({ length: groupCount }, (_, groupIndex) => {
+    const values = [...new Set(combinations.map(parts => parts[groupIndex]))];
+    const inferred = inferVariationGroup(values, groupIndex, groupCount);
+    const baseGroupKey = normalizeVariationKey(inferred.nome, `grupo_${groupIndex + 1}`);
+    let groupKey = baseGroupKey;
+    let groupSuffix = 2;
+    while (usedGroupKeys.has(groupKey)) groupKey = `${baseGroupKey}_${groupSuffix++}`;
+    usedGroupKeys.add(groupKey);
+    const usedOptionKeys = new Set();
+    return {
+      chave: groupKey, nome: inferred.nome, tipo: inferred.tipo, ordem: groupIndex,
+      opcoes: values.map((value, optionIndex) => {
+        const baseOptionKey = normalizeVariationKey(value, `opcao_${optionIndex + 1}`);
+        let optionKey = baseOptionKey;
+        let suffix = 2;
+        while (usedOptionKeys.has(optionKey)) optionKey = `${baseOptionKey}_${suffix++}`;
+        usedOptionKeys.add(optionKey);
+        const firstVariantIndex = combinations.findIndex(parts => parts[groupIndex] === value);
+        const rawImage = modelImages[firstVariantIndex] || '';
+        const variationImageUrl = /^https?:\/\//i.test(rawImage)
+          ? rawImage
+          : rawImage ? `https://cf.shopee.com.br/file/${rawImage}` : null;
+        return { chave: optionKey, nome: value, valor: value, imagem_url: variationImageUrl, ordem: optionIndex };
+      })
+    };
+  });
+  const seenCombinations = new Set();
+  const variantes = combinations.map((parts, variantIndex) => {
+    const selecoes = {};
+    groups.forEach((group, groupIndex) => {
+      selecoes[group.chave] = group.opcoes.find(item => item.nome === parts[groupIndex]).chave;
+    });
+    const externalId = modelIds[variantIndex] || `${row.itemid || row.item_id || 'shopee'}-${variantIndex + 1}`;
+    const rawStockStr = modelStocks[variantIndex];
+    const hasExplicitStock = /^\d+$/.test(rawStockStr || '');
+    const parsedStock = hasExplicitStock ? Number(rawStockStr) : 99;
+    return {
+      chave: `shopee_${externalId}`, nome: modelNames[variantIndex], valor_custo: salePrice, valor: null,
+      controle_estoque: hasExplicitStock, estoque_disponivel: parsedStock,
+      imagem_url: modelImages[variantIndex]
+        ? (/^https?:\/\//i.test(modelImages[variantIndex]) ? modelImages[variantIndex] : `https://cf.shopee.com.br/file/${modelImages[variantIndex]}`)
+        : null,
+      ativo: true,
+      origem_externa_id: externalId, selecoes
+    };
+  }).filter((variant) => {
+    const signature = JSON.stringify(variant.selecoes, Object.keys(variant.selecoes).sort());
+    if (seenCombinations.has(signature)) return false;
+    seenCombinations.add(signature);
+    return true;
+  });
+  return { grupos: groups, variantes };
+}
+
 async function handleProductScraping(bodyData) {
   let automacaoId = null;
   try {
@@ -4719,7 +8904,8 @@ async function handleProductScraping(bodyData) {
                   imagem_url: imageUrl,
                   desconto_percentual: discountPctNum,
                   rating: itemRating,
-                  shopee_shop: row.shop_name || row.seller_name || 'Vendedor Shopee'
+                  shopee_shop: row.shop_name || row.seller_name || 'Vendedor Shopee',
+                  variacoes: parseShopeeFeedVariations(row, salePrice, imageUrl)
                 });
                 shopeeCount++;
               }
@@ -4890,6 +9076,16 @@ async function handleProductScraping(bodyData) {
                 if (fornConfigs.length > 0) {
                   supabasePost('/rest/v1/produto_fornecedor_config?on_conflict=produto_id', fornConfigs, () => {});
                 }
+                for (const savedProduct of resArr) {
+                  const match = fornConfigsMap.find(item => item.storeCode === savedProduct.codigo_produto);
+                  if (!match?.prod?.variacoes) continue;
+                  supabasePost('/rest/v1/rpc/gsa_replace_product_variations', {
+                    p_produto_id: savedProduct.id,
+                    p_variacoes: match.prod.variacoes
+                  }, (variationError) => {
+                    if (variationError) console.error(`❌ Erro ao salvar variações de ${savedProduct.codigo_produto}:`, variationError?.message || variationError);
+                  });
+                }
               } else {
                 console.error('❌ Erro no lote de produtos:', errP?.message || errP);
               }
@@ -4930,58 +9126,187 @@ async function handleProductScraping(bodyData) {
   });
 }
 
-function handleSupabaseWebhook(req, res, bodyData) {
+async function getAdminPhone() {
+  return new Promise((resolve) => {
+    supabaseGet('/rest/v1/system_settings?chave=eq.whatsapp_admin_notificacoes&select=valor&limit=1', (err, res) => {
+      if (!err && Array.isArray(res) && res.length > 0 && res[0].valor) {
+        let phone = String(res[0].valor).replace(/\D/g, '');
+        if (phone.length >= 10 && !phone.startsWith('55')) phone = '55' + phone;
+        return resolve(phone);
+      }
+      resolve('5511920857756');
+    });
+  });
+}
+
+async function notifyAdmin(message) {
+  try {
+    const adminPhone = await getAdminPhone();
+    sendWhatsAppReply(adminPhone, message);
+  } catch(e) {
+    console.error('Erro em notifyAdmin:', e.message);
+  }
+}
+
+async function handleSupabaseWebhook(req, res, bodyData) {
   try {
     const data = JSON.parse(bodyData);
-    console.log('📥 Supabase Webhook Recebido:', JSON.stringify(data).substring(0, 300));
+    console.log('📥 Supabase Webhook Recebido:', JSON.stringify(data).substring(0, 200));
 
     const { type, table, record, old_record } = data;
-    if (!record || (!record.telefone && !record.telefone_contato)) {
-      console.warn('⚠️ Registro sem telefone associado. Ignorando notificação.');
-      return;
-    }
+    if (!record) return;
 
-    // Format phone
-    let rawPhone = record.telefone || record.telefone_contato;
-    let phone = String(rawPhone).replace(/\D/g, '');
-    if (!phone.startsWith('55') && phone.length >= 10) phone = '55' + phone;
+    // Helper to get client phone safely
+    const getClientPhone = (rec) => {
+      if (!rec) return null;
+      let rawPhone = rec.telefone || rec.telefone_contato || rec.celular;
+      if (!rawPhone) return null;
+      let phone = String(rawPhone).replace(/\D/g, '');
+      if (!phone.startsWith('55') && phone.length >= 10) phone = '55' + phone;
+      return phone;
+    };
 
     const getDisplayName = (rec) => {
+      if (!rec) return 'CLIENTE/PARCEIRO';
       return (rec.nome || rec.nome_completo || rec.razao_social || rec.nome_fantasia || 'Cliente/Parceiro').toUpperCase();
     };
 
-    const nome = getDisplayName(record);
-    const tabelaUpper = String(table).toUpperCase();
+    const resolveClientContact = async (clienteId, rec) => {
+      let phone = getClientPhone(rec);
+      let name = getDisplayName(rec);
+      if (phone && name && name !== 'CLIENTE/PARCEIRO') {
+        return { phone, name };
+      }
+      const targetId = clienteId || (rec ? rec.cliente_id : null);
+      if (!targetId) {
+        return { phone, name };
+      }
+      return new Promise((resolve) => {
+        supabaseGet(`/rest/v1/clientes?id=eq.${encodeURIComponent(targetId)}&select=id,nome,razao_social,nome_fantasia,telefone,celular,telefone_contato&limit=1`, (err, rows) => {
+          if (!err && Array.isArray(rows) && rows[0]) {
+            const p = getClientPhone(rows[0]) || phone;
+            const n = getDisplayName(rows[0]);
+            return resolve({ phone: p, name: (name && name !== 'CLIENTE/PARCEIRO') ? name : n });
+          }
+          resolve({ phone, name });
+        });
+      });
+    };
 
-    if (type === 'INSERT') {
-      const msg = `🎉 *Boas-vindas ao GSA HUB, ${nome}!* 🎉\n\nSeu cadastro no painel de *${tabelaUpper}* foi realizado com sucesso!\n\nAgora você pode acessar todas as funcionalidades do sistema.\nSe precisar de ajuda, digite *0* para falar com o suporte.`;
-      sendWhatsAppReply(phone, msg);
-    } else if (type === 'UPDATE') {
-      if (!old_record) return;
+    const contact = await resolveClientContact(record.cliente_id, record);
+    const clientPhone = contact.phone;
+    const clientName = contact.name;
 
-      const ignoreFields = ['id', 'created_at', 'updated_at', 'senha', 'token', 'avatar_url', 'ultimo_acesso'];
-      const changed = [];
-
-      for (const key of Object.keys(record)) {
-        if (ignoreFields.includes(key.toLowerCase())) continue;
-        const oldVal = old_record[key];
-        const newVal = record[key];
-        
-        // Tratar nulos e indefinidos para evitar falsos positivos
-        const oldStr = (oldVal === null || oldVal === undefined) ? 'Vazio' : String(oldVal).trim();
-        const newStr = (newVal === null || newVal === undefined) ? 'Vazio' : String(newVal).trim();
-
-        if (oldStr !== newStr) {
-          const friendlyKey = key.replace(/_/g, ' ').toUpperCase();
-          changed.push(`🔹 *${friendlyKey}:*\nDe: _${oldStr}_\nPara: _${newStr}_`);
+    const safeSendClientReply = (phone, msg) => {
+      if (!phone || !msg) return;
+      sessionMutex.runExclusive(phone, async () => {
+        try {
+          await sendWhatsAppReply(phone, msg);
+        } catch (errSend) {
+          console.error('❌ Erro enviando notificação WhatsApp via mutex:', errSend.message);
         }
-      }
+      });
+    };
 
-      if (changed.length > 0) {
-        const msg = `🔔 *ATUALIZAÇÃO DE CADASTRO (${tabelaUpper})*\n\nOlá, *${nome}*!\nHouve uma movimentação no seu cadastro no sistema GSA HUB.\n\nVeja o que mudou:\n\n${changed.join('\n\n')}\n\n_Para dúvidas, fale com nosso suporte enviando a palavra HUMANO._`;
-        sendWhatsAppReply(phone, msg);
-      }
+    // ==========================================
+    // FASE 2 & FASE 3: Roteamento de Notificações
+    // ==========================================
+
+    switch (table.toLowerCase()) {
+      
+      // 👤 CLIENTES
+      case 'clientes':
+      case 'parceiros':
+      case 'afiliados':
+        if (type === 'INSERT') {
+          // Fase 2: Admin Notif
+          notifyAdmin(`🚨 *NOVO CADASTRO RECEBIDO* 🚨\n\n👤 *Nome:* ${clientName}\n📱 *Contato:* ${record.telefone || record.telefone_contato || 'N/A'}\n📊 *Tipo:* ${table.toUpperCase()}`);
+          
+          // Fase 3: Client Notif
+          if (clientPhone) {
+            safeSendClientReply(clientPhone, `🎉 *Boas-vindas ao GSA HUB, ${clientName}!* 🎉\n\nSeu cadastro foi concluído com sucesso.\nVocê já tem acesso a todos os nossos serviços, loja e clube de benefícios!\n\n_Para falar com um atendente humano a qualquer momento, digite HUMANO._`);
+          }
+        }
+        break;
+
+      // 🛒 PEDIDOS DA LOJA
+      case 'loja_pedidos':
+        if (type === 'INSERT') {
+          // Fase 2: Admin
+          notifyAdmin(`💰 *NOVA VENDA (LOJA) V2* 💰\n\n🛍️ *Pedido:* #${record.id || 'N/A'}\n👤 *Cliente ID:* ${record.cliente_id || 'N/A'}\n💵 *Valor Total:* R$ ${Number(record.total || 0).toFixed(2)}\n💳 *Método:* ${record.metodo_pagamento || 'N/A'}`);
+        } else if (type === 'UPDATE' && old_record) {
+          const oldStatus = String(old_record.status).toLowerCase();
+          const newStatus = String(record.status).toLowerCase();
+          
+          if (oldStatus !== newStatus) {
+            // Fase 2: Admin
+            notifyAdmin(`🔄 *ATUALIZAÇÃO DE PEDIDO #${record.id}*\nStatus alterado de *${oldStatus}* para *${newStatus}*.\nCliente ID: ${record.cliente_id}`);
+            
+            // Fase 3: Client
+            if (clientPhone) {
+              let msgStatus = '';
+              if (newStatus === 'pago' || newStatus === 'aprovado') msgStatus = '✅ *Pagamento Aprovado!* Seu pedido já está sendo preparado.';
+              else if (newStatus === 'em_expedicao' || newStatus === 'em_preparacao') msgStatus = '📦 *Em Preparação!* Seu pedido está sendo embalado com todo cuidado.';
+              else if (newStatus === 'em_transporte' || newStatus === 'enviado') msgStatus = '🚚 *Saiu para Entrega!* Seu pedido já está a caminho.';
+              else if (newStatus === 'concluido' || newStatus === 'entregue') msgStatus = '🎉 *Pedido Entregue!* Esperamos que aproveite muito seu produto.\nSe puder, nos avalie!';
+              else if (newStatus === 'cancelado') msgStatus = '❌ *Pedido Cancelado.* Se você teve algum problema com o pagamento, fale com nosso suporte!';
+              
+              if (msgStatus) {
+                safeSendClientReply(clientPhone, `Olá, ${clientName}!\n\n${msgStatus}\n\n*Pedido:* #${record.id}`);
+              }
+            }
+          }
+        }
+        break;
+
+      // 📄 DOCUMENTOS
+      case 'cliente_documentos':
+        if (type === 'INSERT') {
+          // Fase 2
+          notifyAdmin(`📄 *NOVO DOCUMENTO RECEBIDO*\n\n👤 *Cliente ID:* ${record.cliente_id}\n📝 *Tipo:* ${record.tipo_documento}\n📋 *Descrição:* ${record.descricao || '-'}`);
+        } else if (type === 'UPDATE' && old_record) {
+          const oldStatus = String(old_record.status).toLowerCase();
+          const newStatus = String(record.status).toLowerCase();
+          if (oldStatus !== newStatus && clientPhone) {
+            if (newStatus === 'aprovado') {
+              safeSendClientReply(clientPhone, `✅ *Documento Aprovado!*\n\nOlá, ${clientName}. Seu documento (${record.tipo_documento}) foi analisado e aprovado com sucesso!`);
+            } else if (newStatus === 'recusado' || newStatus === 'reprovado') {
+              safeSendClientReply(clientPhone, `⚠️ *Atenção com seu Documento*\n\nOlá, ${clientName}. Seu documento (${record.tipo_documento}) foi *recusado* pela nossa equipe.\n\nMotivo/Obs: ${record.observacoes || 'Verifique se a imagem está nítida.'}\n\nPor favor, envie novamente aqui pelo WhatsApp mesmo!`);
+            }
+          }
+        }
+        break;
+
+      // ✈️ VIAGENS E ORÇAMENTOS
+      case 'viagens_orcamentos':
+        if (type === 'INSERT') {
+          // Fase 2: Admin alert for complex lead
+          notifyAdmin(`✈️ *NOVA SOLICITAÇÃO DE COTAÇÃO DE VIAGEM* ✈️\n\n🎫 *Protocolo:* ${record.protocolo}\n👤 *Cliente ID:* ${record.cliente_id}\n📍 *Origem:* ${record.origem}\n🗺️ *Destino:* ${record.destino}\n🗓️ *Ida:* ${record.data_ida} | *Volta:* ${record.data_volta || 'N/A'}\n👥 *Adultos:* ${record.adultos} | *Crianças:* ${record.criancas || 0}\n🛎️ *Hospedagem:* ${record.preferencia_hospedagem || 'Padrão'}\n📝 *Obs:* ${record.observacoes || '-'}\n\n⚠️ *Ação Necessária:* Acesse o painel para montar o pacote e enviar o link de pagamento!`);
+        }
+        break;
+
+      // 🛠️ SERVIÇOS & OS & ORÇAMENTOS
+      case 'orcamentos':
+      case 'os_servicos':
+      case 'servicos_contratados':
+        if (type === 'INSERT') {
+          notifyAdmin(`🛠️ *NOVA SOLICITAÇÃO (ORÇAMENTO/OS/SERVIÇO)*\n\n📋 *ID:* #${record.id}\n👤 *Cliente ID:* ${record.cliente_id || 'N/A'}\n💸 *Valor:* R$ ${Number(record.total || record.valor_total || 0).toFixed(2)}\n📝 *Tipo:* ${table.toUpperCase()}`);
+        } else if (type === 'UPDATE' && old_record) {
+          const oldStatus = String(old_record.status).toLowerCase();
+          const newStatus = String(record.status).toLowerCase();
+          
+          if (oldStatus !== newStatus && clientPhone) {
+            // Fase 3
+            safeSendClientReply(clientPhone, `🛠️ *Atualização de Serviço*\n\nOlá, ${clientName}!\nO status do seu serviço (#${record.codigo_orcamento || record.id}) foi alterado para: *${newStatus.toUpperCase()}*.\n\nAcompanhe os detalhes diretamente com a IA!`);
+          }
+        }
+        break;
+
+      default:
+        // Ignoring other tables for direct notifications to prevent spam
+        break;
     }
+
   } catch (err) {
     console.error('❌ Erro processando webhook Supabase:', err.message);
   }
@@ -5034,6 +9359,51 @@ const server = http.createServer((req, res) => {
       return res.end(JSON.stringify([...GSA_PACOTES_NACIONAIS, ...GSA_PACOTES_INTERNACIONAIS, ...GSA_PACOTES_PROMOCOES], null, 2));
     }
 
+    // ── FASE 7: API DE BUSCA WEB DROPSHIPPING ──
+    if (urlPath.startsWith('/api/dropship-search') && req.method === 'GET') {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.setHeader('Content-Type', 'application/json');
+      
+      const q = urlObj.searchParams.get('q') || 'Produto';
+      const baseCost = 40 + Math.random() * 100;
+      const imgKeyword = encodeURIComponent(q.split(' ')[0] || 'produto');
+      
+      const products = [
+        {
+          id: `ext_${Math.floor(Math.random()*1000)}`,
+          codigo_produto: 'DROP-001',
+          nome: `${q} - Modelo Alpha`,
+          descricao: 'Produto importado exclusivo GSA.',
+          valor: baseCost * 2,
+          imagem_url: `https://loremflickr.com/300/300/${imgKeyword}`,
+          status: 'ativo'
+        },
+        {
+          id: `ext_${Math.floor(Math.random()*1000)}`,
+          codigo_produto: 'DROP-002',
+          nome: `${q} - Modelo Beta`,
+          descricao: 'Produto importado exclusivo GSA.',
+          valor: (baseCost * 0.85) * 2,
+          imagem_url: `https://loremflickr.com/300/300/${imgKeyword}`,
+          status: 'ativo'
+        },
+        {
+          id: `ext_${Math.floor(Math.random()*1000)}`,
+          codigo_produto: 'DROP-003',
+          nome: `${q} - Modelo Gamma`,
+          descricao: 'Produto importado exclusivo GSA.',
+          valor: (baseCost * 0.7) * 2,
+          imagem_url: `https://loremflickr.com/300/300/${imgKeyword}`,
+          status: 'ativo'
+        }
+      ];
+      
+      notifyAdmin(`🚨 *NOVA BUSCA DROPSHIP NO SITE* 🚨\n\n🔍 Termo: *${q}*\nO site acabou de exibir os 3 produtos com 100% de margem para o cliente.\nSe ele fechar pedido, aparecerá como pedido DROP.`);
+
+      return res.end(JSON.stringify(products));
+    }
+
     // Verificação do webhook (GET)
     if (req.method === 'GET' && urlPath.includes('/webhook')) {
       const mode = urlObj.searchParams.get('hub.mode');
@@ -5075,6 +9445,9 @@ const server = http.createServer((req, res) => {
 
           let fromPhone = '';
           let textBody = '';
+          let pushName = '';
+          let mediaType = null;
+
 
           // 1. Formato Evolution API
           if (data.data && data.data.key) {
@@ -5089,20 +9462,52 @@ const server = http.createServer((req, res) => {
 
             let rawJid = data.data.key.remoteJid || '';
             const altJid = data.data.key.remoteJidAlt || '';
-            if (rawJid.includes('@lid') && altJid && !altJid.includes('@lid')) {
-              rawJid = altJid;
-            } else if (!rawJid || rawJid.includes('@lid')) {
-              rawJid = altJid || rawJid;
-            }
+            const addressingMode = data.data.key.addressingMode || '';
+            const participant = data.data.key.participant || '';
 
+            let actualTargetJid = rawJid;
             if (rawJid.includes('@lid')) {
-              // Não processar jids de LID interno sem telefone válido
-              return;
+              actualTargetJid = rawJid;
+              fromPhone = (altJid || '').split('@')[0].split(':')[0].replace(/\D/g, '');
+            } else if (altJid.includes('@lid')) {
+              actualTargetJid = altJid;
+              fromPhone = rawJid.split('@')[0].split(':')[0].replace(/\D/g, '');
+            } else {
+              fromPhone = (rawJid || altJid).split('@')[0].split(':')[0].replace(/\D/g, '');
+              actualTargetJid = rawJid || altJid;
             }
 
-            fromPhone = rawJid.split('@')[0].split(':')[0].replace(/\D/g, '');
-            textBody = data.data.message?.conversation || data.data.message?.extendedTextMessage?.text || '';
-          } 
+            // If fromPhone is still empty, try extracting from participant or rawJid
+            if (!fromPhone) {
+              fromPhone = (participant || rawJid).split('@')[0].split(':')[0].replace(/\D/g, '');
+            }
+
+            // Register contact context with antiBanEngine so outgoing responses route to valid WhatsApp JID / LID
+            if (fromPhone && actualTargetJid) {
+              antiBanEngine.registerContactContext(fromPhone, actualTargetJid, data.data.key);
+            }
+
+            // ── Captura pushName e tipo de mídia ──────────────────────────────
+            pushName = data.data.pushName || data.data.key?.pushName || '';
+            const msgData = data.data.message || {};
+
+            if (msgData.imageMessage) {
+              mediaType = 'image';
+              textBody = msgData.imageMessage.caption || '';
+            } else if (msgData.audioMessage || msgData.pttMessage) {
+              mediaType = 'audio';
+              textBody = '';
+            } else if (msgData.videoMessage) {
+              mediaType = 'video';
+              textBody = msgData.videoMessage.caption || '';
+            } else if (msgData.documentMessage) {
+              mediaType = 'document';
+              textBody = msgData.documentMessage.fileName || '';
+            } else {
+              textBody = msgData.conversation || msgData.extendedTextMessage?.text || '';
+            }
+
+          }
           // 2. Formato Meta API
           else if (data.entry && data.entry[0]) {
             const change = data.entry[0].changes && data.entry[0].changes[0];
@@ -5119,12 +9524,16 @@ const server = http.createServer((req, res) => {
             return;
           }
 
-          try {
-            processMessage(fromPhone, textBody);
-          } catch (errProcess) {
-            console.error('❌ Exceção ao processar mensagem:', errProcess);
-            sendWhatsAppReply(fromPhone, '❌ Desculpe, ocorreu uma falha ao processar sua mensagem. Digite 0 para voltar ao menu principal.');
-          }
+          sessionMutex.runExclusive(fromPhone, async () => {
+            try {
+              const rawMessageData = data.data || {};
+              await processMessage(fromPhone, textBody, mediaType, pushName, rawMessageData);
+            } catch (errProcess) {
+              console.error(`❌ Exceção ao processar mensagem para ${fromPhone}:`, errProcess);
+              sendWhatsAppReply(fromPhone, '❌ Desculpe, ocorreu uma falha ao processar sua mensagem. Digite 0 para voltar ao menu principal.');
+            }
+          });
+
         } catch (e) {
           console.error('❌ Erro ao processar POST:', e.message, '| body:', body.substring(0, 200));
         }
@@ -5160,13 +9569,45 @@ process.on('unhandledRejection', (reason) => {
   console.error('❌ Promise rejeitada:', reason);
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log('');
-  console.log('🚀 ════════════════════════════════════════════════');
-  console.log(`🚀  GSA HUB WhatsApp Chatbot — Porta ${PORT} ATIVA`);
-  console.log('🚀 ════════════════════════════════════════════════');
-  console.log(`📡  Supabase: ${SUPABASE_HOST}`);
-  console.log(`📱  Phone ID: ${PHONE_NUMBER_ID}`);
-  console.log(`🔐  Token: ${VERIFY_TOKEN}`);
-  console.log('');
-});
+if (require.main === module) {
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log('');
+    console.log('🚀 ════════════════════════════════════════════════');
+    console.log(`🚀  GSA HUB WhatsApp Chatbot — Porta ${PORT} ATIVA`);
+    console.log('🚀 ════════════════════════════════════════════════');
+    console.log(`📡  Supabase: ${SUPABASE_HOST}`);
+    console.log(`📱  Phone ID: ${PHONE_NUMBER_ID}`);
+    console.log(`🔐  Token: ${VERIFY_TOKEN}`);
+    console.log('');
+  });
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    SessionMutex,
+    sessionMutex,
+    callGeminiProtocolNLU,
+    parseProtocolIntentFallback,
+    validateAndSanitizeField,
+    dispatchAdminProtocolAlert,
+    handleProtocolSelfServiceFlow,
+    handlePartnerRedemptionFlow,
+    searchPartnersFuzzy,
+    fetchPartnersForAI,
+    checkDuplicateRedemptionDb,
+    dispatchAdminRedemptionAlert,
+    executeBenefitRedemptionRpc,
+    selectRedemptionPartner,
+    extractPartnerTermFromText,
+    supabaseRpc,
+    supabaseGet,
+    supabasePost,
+    supabasePatch,
+    userSessions,
+    processMessage,
+    sendWhatsAppReply,
+    ADMIN_MASTER_PHONE,
+    SUPPORT_COMPANY_PHONE,
+    server
+  };
+}

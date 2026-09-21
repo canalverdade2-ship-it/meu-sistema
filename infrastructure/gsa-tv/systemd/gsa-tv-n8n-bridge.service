@@ -1,0 +1,26 @@
+[Unit]
+Description=GSA TV n8n private automation bridge
+After=docker.service network-online.target gsa-tv-n8n-network.service
+Requires=gsa-tv-n8n-network.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=opc
+Group=gsa-tv
+EnvironmentFile=/opt/gsa-tv/n8n-bridge/.env
+ExecStart=/usr/bin/node /opt/gsa-tv/n8n-bridge/server.js
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+CapabilityBoundingSet=
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

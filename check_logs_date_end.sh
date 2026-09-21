@@ -1,0 +1,1 @@
+PGPASSWORD='GSA_SENHA_FORTE_2026' psql -h 127.0.0.1 -p 5433 -U supabase_admin -d gsahub -t -c "SELECT passo, status, mensagem, progresso, created_at FROM automacao_scraping_logs WHERE automacao_id = 'dfb0bfe3-6d14-468e-9126-52e947925f04' ORDER BY created_at DESC LIMIT 1;"

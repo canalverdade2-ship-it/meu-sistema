@@ -1284,12 +1284,13 @@ const enviarOfertaQuitacao = async () => {
                   Juros À Vista (30 dias) (%)
                 </label>
                 <div className="relative rounded-xl shadow-sm">
-                  <input
+                  <input 
                     type="number"
                     min="0"
                     step="0.01"
                     value={jurosAvista}
-                    onChange={e => setJurosAvista(e.target.value)}
+                    inputMode="numeric"
+onChange={(e) => setJurosAvista(e.target.value)}
                     className="w-full pl-4 pr-10 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                     placeholder="20"
                   />
@@ -1307,12 +1308,13 @@ const enviarOfertaQuitacao = async () => {
                   Juros por Parcela adicional (%)
                 </label>
                 <div className="relative rounded-xl shadow-sm">
-                  <input
+                  <input 
                     type="number"
                     min="0"
                     step="0.01"
                     value={jurosParcelado}
-                    onChange={e => setJurosParcelado(e.target.value)}
+                    inputMode="numeric"
+onChange={(e) => setJurosParcelado(e.target.value)}
                     className="w-full pl-4 pr-10 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-sm font-bold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                     placeholder="15"
                   />
@@ -1593,10 +1595,11 @@ const enviarOfertaQuitacao = async () => {
 
                               <div>
                                 <label className="block text-[10px] font-black text-neutral-500 uppercase tracking-wider mb-1">Novo Limite Total Aprovado (R$)</label>
-                                <input
+                                <input 
                                   type="number"
                                   value={limiteAprovado}
-                                  onChange={e => setLimiteAprovado(e.target.value)}
+                                  inputMode="numeric"
+onChange={(e) => setLimiteAprovado(e.target.value)}
                                   className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 bg-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                                 />
                               </div>
@@ -1624,10 +1627,11 @@ const enviarOfertaQuitacao = async () => {
                             <div className="space-y-4">
                               <div>
                                 <label className="block text-[10px] font-black text-neutral-500 uppercase tracking-wider mb-1">Valor do Limite Aprovado (R$)</label>
-                                <input
+                                <input 
                                   type="number"
                                   value={limiteAprovado}
-                                  onChange={e => setLimiteAprovado(e.target.value)}
+                                  inputMode="numeric"
+onChange={(e) => setLimiteAprovado(e.target.value)}
                                   className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 bg-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                                 />
                               </div>
@@ -1891,10 +1895,11 @@ const enviarOfertaQuitacao = async () => {
 
                 <div>
                   <label className="block text-[10px] font-black uppercase text-neutral-500 tracking-wider mb-1">Novo Limite Total (R$)</label>
-                  <input
+                  <input 
                     type="number"
                     value={novoLimiteTotal}
-                    onChange={e => setNovoLimiteTotal(e.target.value)}
+                    inputMode="numeric"
+onChange={(e) => setNovoLimiteTotal(e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 bg-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                   />
                 </div>

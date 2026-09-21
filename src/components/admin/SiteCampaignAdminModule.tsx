@@ -2,20 +2,21 @@ import { FormEvent, ReactNode, useCallback, useEffect, useMemo, useState } from 
 import {
   Archive, BarChart3, BellRing, CalendarClock, CheckCircle2, Copy, Eye,
   History, ImagePlus, MousePointerClick, Pause, Pencil, Play, Plus,
-  RefreshCw, Search, X,
+  RefreshCw, Search, Trash2, X,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { callAdminRpc } from '../../lib/adminRpc';
 import { supabase } from '../../lib/supabase';
 import { uploadToR2, getR2PublicUrl } from '../../lib/r2Storage';
 import type {
-  SiteCampaign, SiteCampaignAdminOverview, SiteCampaignAudience,
+  SiteCampaign, SiteCampaignAction, SiteCampaignAdminOverview, SiteCampaignAudience,
   SiteCampaignCategory, SiteCampaignDevice, SiteCampaignFormat,
   SiteCampaignFrequency, SiteCampaignPayload, SiteCampaignStatus,
   SiteCampaignTemplate,
 } from '../../types/siteCampaigns';
 import { useConfirm } from '../../hooks/useConfirm';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 const EMPTY: SiteCampaignAdminOverview = {
   campaigns: [], history: [], analytics: { by_device: [], by_page: [], by_day: [] },
@@ -101,6 +102,8 @@ export function SiteCampaignAdminModule() {
   const [starts, setStarts] = useState('');
   const [ends, setEnds] = useState('');
   const [saving, setSaving] = useState(false);
+  const [canDelete, setCanDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [working, setWorking] = useState<string | null>(null);
   const [uploading, setUploading] = useState<'desktop' | 'mobile' | null>(null);
   const confirmHook = useConfirm();
@@ -114,6 +117,17 @@ export function SiteCampaignAdminModule() {
     finally { setLoading(false); }
   }, []);
   useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void callAdminRpc<{ allowed_actions?: SiteCampaignAction[] }>('gsa_admin_site_campaign_my_permissions')
+      .then(permissions => setCanDelete(Array.isArray(permissions?.allowed_actions) && permissions.allowed_actions.includes('delete')))
+      .catch(error => { console.error(error); setCanDelete(false); });
+  }, []);
+
+  useRealtimeSubscription([
+    { table: 'system_settings', filter: 'key=eq.site_campaigns', onChange: () => void load(true), debounceMs: 300 },
+    { table: 'site_campaigns', onChange: () => void load(true), debounceMs: 300 },
+    { table: 'site_campaign_events', onChange: () => void load(true), debounceMs: 300 },
+  ], [load]);
 
   const filtered = useMemo(() => overview.campaigns.filter(c => (status === 'all' || c.status === status) && (!search.trim() || `${c.internal_name} ${c.title} ${CATEGORIES[c.category]} ${FORMATS[c.format]}`.toLowerCase().includes(search.trim().toLowerCase()))), [overview.campaigns, search, status]);
   const set = <K extends keyof SiteCampaignPayload>(key: K, value: SiteCampaignPayload[K]) => setForm(v => ({ ...v, [key]: value }));
@@ -175,6 +189,29 @@ export function SiteCampaignAdminModule() {
     catch (error) { toast.error(message(error, 'Não foi possível duplicar.')); }
     finally { setWorking(null); }
   };
+  const remove = async (campaign: SiteCampaign) => {
+    if (!['draft', 'archived'].includes(campaign.status)) return;
+    const confirmed = await confirmHook.confirm({
+      title: 'Confirmar exclusão',
+      message: `Excluir permanentemente “${campaign.internal_name}”?\n\nO histórico da exclusão permanecerá registrado para auditoria.`,
+      confirmLabel: 'Excluir',
+      cancelLabel: 'Cancelar',
+    });
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      await callAdminRpc('gsa_admin_delete_site_campaign', { p_campaign_id: campaign.id });
+      toast.success('Campanha excluída e ação registrada no histórico.');
+      setEditing(undefined);
+      await load(true);
+    } catch (error) {
+      console.error(error);
+      toast.error(message(error, 'Não foi possível excluir a campanha.'));
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   if (loading) return <Box className="p-12 text-center text-sm font-bold text-neutral-500">Carregando Central de Avisos e Campanhas...</Box>;
 
@@ -192,12 +229,18 @@ export function SiteCampaignAdminModule() {
 
     {editing !== undefined && <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/65 p-3 backdrop-blur-sm" onMouseDown={e => e.target === e.currentTarget && setEditing(undefined)}><div role="dialog" aria-modal="true" className="max-h-[95vh] w-full max-w-6xl overflow-y-auto rounded-[2rem] bg-[#f7f6f3]"><div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-5 py-4"><div><p className="text-[10px] font-black uppercase tracking-[.2em] text-amber-700">Central de Avisos e Campanhas</p><h2 className="text-xl font-black">{editing ? 'Editar campanha' : 'Nova campanha'}</h2></div><button onClick={() => setEditing(undefined)} className="rounded-xl border p-2"><X className="h-5 w-5"/></button></div><form onSubmit={save} className="grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_360px]"><div className="space-y-4">
       <Box className="space-y-4 p-5"><h3 className="font-black">1. Identificação e conteúdo</h3><div className="grid gap-4 sm:grid-cols-2"><Field label="Nome interno"><input className={input} maxLength={120} value={form.internal_name} onChange={e => set('internal_name', e.target.value)}/></Field><Field label="Categoria"><select className={input} value={form.category} onChange={e => set('category', e.target.value as SiteCampaignCategory)}>{Object.entries(CATEGORIES).map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></Field></div><Field label="Título público"><input className={input} maxLength={160} value={form.title} onChange={e => set('title', e.target.value)}/></Field><Field label="Subtítulo"><input className={input} maxLength={220} value={form.subtitle || ''} onChange={e => set('subtitle', e.target.value)}/></Field><Field label="Descrição"><textarea className={input} rows={5} maxLength={1800} value={form.body || ''} onChange={e => set('body', e.target.value)}/></Field></Box>
-      <Box className="space-y-4 p-5"><h3 className="font-black">2. Formato e identidade</h3><div className="grid gap-4 sm:grid-cols-3"><Field label="Formato"><select className={input} value={form.format} onChange={e => set('format', e.target.value as SiteCampaignFormat)}>{Object.entries(FORMATS).map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></Field><Field label="Modelo"><select className={input} value={form.template} onChange={e => set('template', e.target.value as SiteCampaignTemplate)}>{Object.entries(TEMPLATES).map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></Field><Field label="Prioridade"><input className={input} type="number" min={1} max={1000} value={form.priority} onChange={e => set('priority', Number(e.target.value))}/></Field></div></Box>
+      <Box className="space-y-4 p-5"><h3 className="font-black">2. Formato e identidade</h3><div className="grid gap-4 sm:grid-cols-3"><Field label="Formato"><select className={input} value={form.format} onChange={e => set('format', e.target.value as SiteCampaignFormat)}>{Object.entries(FORMATS).map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></Field><Field label="Modelo"><select className={input} value={form.template} onChange={e => set('template', e.target.value as SiteCampaignTemplate)}>{Object.entries(TEMPLATES).map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></Field><Field label="Prioridade"><input  className={input} type="number" min={1} max={1000} value={form.priority} inputMode="numeric"
+onChange={(e) => set('priority', Number(e.target.value))}/></Field></div></Box>
       <Box className="space-y-4 p-5"><h3 className="font-black">3. Imagens responsivas</h3><div className="grid gap-4 sm:grid-cols-2">{(['desktop','mobile'] as const).map(variant => <Field key={variant} label={`Imagem para ${variant === 'desktop' ? 'computador' : 'celular'}`}><input className={input} value={(variant === 'desktop' ? form.image_desktop_url : form.image_mobile_url) || ''} onChange={e => set(variant === 'desktop' ? 'image_desktop_url' : 'image_mobile_url', e.target.value)}/><label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs font-black"><ImagePlus className="h-4 w-4"/>{uploading === variant ? 'Enviando...' : 'Selecionar arquivo'}<input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={uploading !== null} onChange={e => { const f=e.target.files?.[0]; if(f) void upload(f,variant); e.currentTarget.value=''; }}/></label></Field>)}</div><Field label="Texto alternativo"><input className={input} maxLength={180} value={form.image_alt || ''} onChange={e => set('image_alt',e.target.value)}/></Field></Box>
       <Box className="space-y-4 p-5"><h3 className="font-black">4. Botões e destinos</h3><div className="grid gap-4 sm:grid-cols-2"><Field label="Botão principal"><input className={input} value={form.cta_label || ''} onChange={e => set('cta_label',e.target.value)}/></Field><Field label="Destino principal"><input className={input} placeholder="/servicos ou https://..." value={form.cta_url || ''} onChange={e => set('cta_url',e.target.value)}/></Field><Field label="Botão secundário"><input className={input} value={form.secondary_cta_label || ''} onChange={e => set('secondary_cta_label',e.target.value)}/></Field><Field label="Destino secundário"><input className={input} value={form.secondary_cta_url || ''} onChange={e => set('secondary_cta_url',e.target.value)}/></Field></div><Field label="Abertura"><select className={input} value={form.cta_target} onChange={e => set('cta_target',e.target.value as '_self'|'_blank')}><option value="_self">Mesma página</option><option value="_blank">Nova aba para link externo</option></select></Field></Box>
       <Box className="space-y-4 p-5"><h3 className="font-black">5. Público e posicionamento</h3><div className="grid gap-4 sm:grid-cols-2"><Field label="Páginas" hint="Uma por linha: *, /, /servicos/*"><textarea className={input} rows={5} value={pages} onChange={e => setPages(e.target.value)}/></Field><div className="space-y-4"><Field label="Público"><select className={input} value={form.audience} onChange={e => set('audience',e.target.value as SiteCampaignAudience)}>{Object.entries(AUDIENCES).map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></Field><div><p className="mb-2 text-xs font-black uppercase text-neutral-500">Dispositivos</p>{DEVICES.map(([v,l]) => <label key={v} className="mr-4 inline-flex items-center gap-2 text-sm"><input type="checkbox" checked={form.devices.includes(v)} onChange={() => toggleDevice(v)}/>{l}</label>)}</div></div></div></Box>
-      <Box className="space-y-4 p-5"><h3 className="font-black">6. Agendamento e frequência</h3><div className="grid gap-4 sm:grid-cols-2"><Field label="Início"><input className={input} type="datetime-local" value={starts} onChange={e => setStarts(e.target.value)}/></Field><Field label="Encerramento"><input className={input} type="datetime-local" value={ends} onChange={e => setEnds(e.target.value)}/></Field><Field label="Frequência"><select className={input} value={form.frequency_model} onChange={e => set('frequency_model',e.target.value as SiteCampaignFrequency)}>{Object.entries(FREQUENCIES).map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></Field>{form.frequency_model === 'interval_days' && <Field label="Intervalo em dias"><input className={input} type="number" min={1} max={365} value={form.frequency_value || 1} onChange={e => set('frequency_value',Number(e.target.value))}/></Field>}<Field label="Fechamento automático (segundos)"><input className={input} type="number" min={1} max={3600} value={form.auto_close_seconds || ''} onChange={e => set('auto_close_seconds',e.target.value ? Number(e.target.value) : null)}/></Field></div><div className="grid gap-2 sm:grid-cols-3"><Toggle label="Pode fechar" checked={form.dismissible} change={v => set('dismissible',v)}/><Toggle label="Clique fora" checked={form.dismiss_on_backdrop} disabled={!form.dismissible} change={v => set('dismiss_on_backdrop',v)}/><Toggle label="Tecla Esc" checked={form.dismiss_on_escape} disabled={!form.dismissible} change={v => set('dismiss_on_escape',v)}/></div></Box>
-      <div className="flex justify-end gap-2 border-t pt-5"><button type="button" onClick={() => setEditing(undefined)} className="rounded-xl border bg-white px-5 py-3 text-sm font-black">Cancelar</button><button type="submit" disabled={saving || uploading !== null} className="rounded-xl bg-neutral-950 px-6 py-3 text-sm font-black text-white disabled:opacity-50">{saving ? 'Salvando...' : editing ? 'Salvar alterações' : 'Criar rascunho'}</button></div>
+      <Box className="space-y-4 p-5"><h3 className="font-black">6. Agendamento e frequência</h3><div className="grid gap-4 sm:grid-cols-2"><Field label="Início"><input className={input} type="datetime-local" value={starts} onChange={e => setStarts(e.target.value)}/></Field><Field label="Encerramento"><input className={input} type="datetime-local" value={ends} onChange={e => setEnds(e.target.value)}/></Field><Field label="Frequência"><select className={input} value={form.frequency_model} onChange={e => set('frequency_model',e.target.value as SiteCampaignFrequency)}>{Object.entries(FREQUENCIES).map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></Field>{form.frequency_model === 'interval_days' && <Field label="Intervalo em dias"><input  className={input} type="number" min={1} max={365} value={form.frequency_value || 1} inputMode="numeric"
+onChange={(e) => set('frequency_value',Number(e.target.value))}/></Field>}<Field label="Fechamento automático (segundos)"><input  className={input} type="number" min={1} max={3600} value={form.auto_close_seconds || ''} inputMode="numeric"
+onChange={(e) => set('auto_close_seconds',e.target.value ? Number(e.target.value) : null)}/></Field></div><div className="grid gap-2 sm:grid-cols-3"><Toggle label="Pode fechar" checked={form.dismissible} change={v => set('dismissible',v)}/><Toggle label="Clique fora" checked={form.dismiss_on_backdrop} disabled={!form.dismissible} change={v => set('dismiss_on_backdrop',v)}/><Toggle label="Tecla Esc" checked={form.dismiss_on_escape} disabled={!form.dismissible} change={v => set('dismiss_on_escape',v)}/></div></Box>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-5">
+        <div>{editing && canDelete && <button type="button" disabled={deleting || !['draft', 'archived'].includes(editing.status)} onClick={() => void remove(editing)} title={!['draft', 'archived'].includes(editing.status) ? 'Encerre e arquive a campanha antes de excluí-la.' : undefined} className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-black text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-45"><Trash2 className="h-4 w-4"/>{deleting ? 'Excluindo...' : 'Excluir campanha'}</button>}</div>
+        <div className="flex gap-2"><button type="button" onClick={() => setEditing(undefined)} disabled={deleting} className="rounded-xl border bg-white px-5 py-3 text-sm font-black disabled:opacity-50">Cancelar</button><button type="submit" disabled={saving || deleting || uploading !== null} className="rounded-xl bg-neutral-950 px-6 py-3 text-sm font-black text-white disabled:opacity-50">{saving ? 'Salvando...' : editing ? 'Salvar alterações' : 'Criar rascunho'}</button></div>
+      </div>
     </div><Preview value={form}/></form></div></div>}
   </section>;
 }

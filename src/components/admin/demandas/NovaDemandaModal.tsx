@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { X, Upload, AlertCircle, CheckCircle2, User, Building2, Calendar, Flag, FileText, Link } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { toast } from 'react-hot-toast';
-import { generateCode } from '../../../lib/utils';
 import { logService } from '../../../lib/logService';
-import { demandService } from '../../../lib/demandService';
 import { notificationService } from '../../../lib/notificationService';
-import { uploadToR2, getR2PublicUrl } from '../../../lib/r2Storage';
+import { uploadToR2, removeFromR2 } from '../../../lib/r2Storage';
+import { useRealtimeSubscription } from '../../../hooks/useRealtime';
+import { callAdminRpc, createAdminRequestId } from '../../../lib/adminRpc';
 
 interface Props {
   colaboradorId?: string;
@@ -44,29 +44,31 @@ export function NovaDemandaModal({ colaboradorId, colaboradorNome, onClose, onSu
   const [colaboradores, setColaboradores] = useState<any[]>([]);
   const [prestadores, setPrestadores] = useState<any[]>([]);
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchData = async () => {
-      try {
-        const [os, colab, prest] = await Promise.all([
-          supabase.from('ordens_servico').select('id, codigo_os, cliente:clientes(nome), orcamentos:orcamento_id(anexos)').eq('status', 'andamento').order('data_inicio', { ascending: false }),
-          supabase.from('colaboradores').select('id, nome').eq('status', 'ativo'),
-          supabase.from('prestadores').select('id, nome_razao').eq('status', 'ativo'),
-        ]);
-        if (isMounted) {
-          setOss(os.data || []);
-          setColaboradores(colab.data || []);
-          setPrestadores(prest.data || []);
-        }
-      } catch (error) {
-        console.error('Erro ao buscar dados iniciais:', error);
-        toast.error('Erro ao buscar dados iniciais.');
-      }
-    };
-    fetchData();
+  const fetchData = async () => {
+    try {
+      const [os, colab, prest] = await Promise.all([
+        supabase.from('ordens_servico').select('id, codigo_os, cliente:clientes(nome), orcamentos:orcamento_id(anexos)').eq('status', 'andamento').order('data_inicio', { ascending: false }),
+        supabase.from('colaboradores').select('id, nome').eq('status', 'ativo'),
+        supabase.from('prestadores').select('id, nome_razao').eq('status', 'ativo'),
+      ]);
+      setOss(os.data || []);
+      setColaboradores(colab.data || []);
+      setPrestadores(prest.data || []);
+    } catch (error) {
+      console.error('Erro ao buscar dados iniciais:', error);
+      toast.error('Erro ao buscar dados iniciais.');
+    }
+  };
 
-    return () => { isMounted = false; };
+  useEffect(() => {
+    void fetchData();
   }, []);
+
+  useRealtimeSubscription([
+    { table: 'ordens_servico', onChange: fetchData, debounceMs: 300 },
+    { table: 'colaboradores', onChange: fetchData, debounceMs: 300 },
+    { table: 'prestadores', onChange: fetchData, debounceMs: 300 },
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,6 +81,7 @@ export function NovaDemandaModal({ colaboradorId, colaboradorNome, onClose, onSu
       return;
     }
     setIsSubmitting(true);
+    const uploadedPaths: string[] = [];
     try {
       const arquivosUrls: any[] = [];
       if (arquivos.length > 0) {
@@ -87,7 +90,8 @@ export function NovaDemandaModal({ colaboradorId, colaboradorNome, onClose, onSu
           const path = `briefings/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
           try {
             const uploaded = await uploadToR2(file, 'entregas_demandas', path);
-            return uploaded.url ?? getR2PublicUrl(uploaded.path);
+            uploadedPaths.push(uploaded.path);
+            return uploaded.path;
           } catch (uploadErr) {
             console.error('Erro ao enviar anexo do briefing:', uploadErr);
             return null;
@@ -112,46 +116,37 @@ export function NovaDemandaModal({ colaboradorId, colaboradorNome, onClose, onSu
         detalhes,
         prioridade,
         prazo_limite: new Date(prazoLimite).toISOString(),
-        status: tipoDestino === 'pool' ? 'aberta' : 'aberta',
-        status_aceite: tipoDestino === 'pool' ? 'aceito' : 'pendente_aceite',
         arquivos_briefing: arquivosUrls,
         link_entrega: linkEntrega || null,
         os_id: selectedOs || null,
         colaborador_id: tipoDestino === 'colaborador' ? destinoId : null,
         prestador_id: tipoDestino === 'prestador' ? destinoId : null,
         valor_proposto_admin: valorProposto ? Number(valorProposto) : null,
-        codigo_demanda: generateCode('DEM'),
-        created_at: new Date().toISOString(),
       };
 
       let nova = null;
       try {
-        const result = await supabase.from('prestador_demandas').insert(payload).select().single();
-        if (result.error) throw result.error;
-        nova = result.data;
+        nova = await callAdminRpc<any>('gsa_admin_create_provider_demand', {
+          p_payload: payload,
+          p_request_id: createAdminRequestId(),
+        });
       } catch (error) {
         console.error('Erro ao criar demanda:', error);
+        if (uploadedPaths.length) await removeFromR2(uploadedPaths);
         toast.error('Erro ao criar demanda.');
         setIsSubmitting(false);
         return;
       }
 
-      // Histórico
-      await demandService.addDemandHistory({
-        demandaId: nova.id,
-        tipoEvento: 'criacao',
-        motivo: `Demanda criada pelo administrador. Prioridade: ${prioridade.toUpperCase()}. Prazo: ${prazoLimite}.`,
-        colaboradorOrigemId: colaboradorId || null
-      });
-
       // Notificações
       if (tipoDestino === 'colaborador' && destinoId) {
         // Notifica o colaborador específico
-        await notificationService.notifyAdmin(
+        await notificationService.notifyColaborador(
+          destinoId,
           `📋 Nova Demanda Atribuída`,
           `Uma nova demanda "${titulo}" foi atribuída a você. Prioridade: ${prioridade.toUpperCase()}.`,
           'demandas', 'demanda_atribuida',
-          { adminId: destinoId, itemId: nova.id, prioridade: prioridade === 'urgente' ? 'urgente' : 'alta' }
+          { itemId: nova.id, prioridade: prioridade === 'urgente' ? 'urgente' : 'alta' }
         );
       } else if (tipoDestino === 'prestador' && destinoId) {
         // Notifica o Prestador Externo
@@ -372,11 +367,12 @@ export function NovaDemandaModal({ colaboradorId, colaboradorNome, onClose, onSu
                     </div>
                     <div>
                       <label className="block text-xs font-black uppercase tracking-widest text-neutral-500 mb-2">Valor Proposto (R$)</label>
-                      <input
+                      <input 
                         type="number"
                         step="0.01"
                         value={valorProposto}
-                        onChange={e => setValorProposto(e.target.value)}
+                        inputMode="numeric"
+onChange={(e) => setValorProposto(e.target.value)}
                         placeholder="0,00"
                         className="w-full rounded-2xl bg-neutral-100 border-none px-5 py-4 text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
                       />

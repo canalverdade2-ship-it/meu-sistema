@@ -1,0 +1,192 @@
+[
+  {
+    "file": "20260315000002_fix_promocoes_schema.sql",
+    "missingTables": [],
+    "missingFuncs": [
+      "generate_promo_code"
+    ],
+    "missingCols": []
+  },
+  {
+    "file": "20260609000001_add_visualizado_promocoes.sql",
+    "missingTables": [],
+    "missingFuncs": [],
+    "missingCols": [
+      {
+        "table": "cliente_promocoes",
+        "column": "visualizado"
+      }
+    ]
+  },
+  {
+    "file": "20260717200000_hub_classificados_schema.sql",
+    "missingTables": [
+      "classificados_configuracoes",
+      "classificados_anuncio_midias",
+      "classificados_comprovantes"
+    ],
+    "missingFuncs": [],
+    "missingCols": []
+  },
+  {
+    "file": "20260717201000_hub_classificados_rpcs.sql",
+    "missingTables": [],
+    "missingFuncs": [
+      "rpc_enviar_proposta_classificado",
+      "rpc_admin_moderar_mensagem_classificado",
+      "rpc_admin_concluir_transacao_classificado"
+    ],
+    "missingCols": []
+  },
+  {
+    "file": "20260718120000_gsa_saude_complete.sql",
+    "missingTables": [],
+    "missingFuncs": [
+      "gsa_client_saude_listar",
+      "gsa_client_saude_abrir_atendimento",
+      "gsa_client_saude_aceitar_proposta",
+      "gsa_saude_registrar_comissao_ativacao",
+      "gsa_client_saude_registrar_documento"
+    ],
+    "missingCols": []
+  },
+  {
+    "file": "20260721191000_classifieds_real_proposals.sql",
+    "missingTables": [],
+    "missingFuncs": [
+      "gsa_client_classified_context",
+      "gsa_client_classified_create_proposal",
+      "gsa_client_classified_list_messages",
+      "gsa_client_classified_send_message"
+    ],
+    "missingCols": []
+  },
+  {
+    "file": "20260721210000_add_refund_response_columns.sql",
+    "missingTables": [],
+    "missingFuncs": [],
+    "missingCols": [
+      {
+        "table": "viagens_transacoes",
+        "column": "resposta_admin"
+      }
+    ]
+  },
+  {
+    "file": "20260723233000_free_tools_pro_access.sql",
+    "missingTables": [],
+    "missingFuncs": [
+      "gsa_admin_search_calculator_pro_clients",
+      "gsa_admin_grant_calculator_pro",
+      "gsa_admin_revoke_calculator_pro_grant"
+    ],
+    "missingCols": []
+  },
+  {
+    "file": "20260723234500_fix_calculator_pro_client_search.sql",
+    "missingTables": [],
+    "missingFuncs": [
+      "gsa_admin_search_calculator_pro_clients"
+    ],
+    "missingCols": []
+  },
+  {
+    "file": "20260723235000_secure_calculator_pro_admin_module.sql",
+    "missingTables": [],
+    "missingFuncs": [
+      "gsa_calculator_pro_require_settings_access",
+      "gsa_admin_search_calculator_pro_clients",
+      "gsa_admin_grant_calculator_pro",
+      "gsa_admin_revoke_calculator_pro_grant"
+    ],
+    "missingCols": []
+  },
+  {
+    "file": "20260724213000_saude_direct_quote_cleanup.sql",
+    "missingTables": [
+      "gsa_catalogo_legado_arquivo"
+    ],
+    "missingFuncs": [],
+    "missingCols": []
+  },
+  {
+    "file": "20260728040000_fix_exception_handlers.sql",
+    "missingTables": [],
+    "missingFuncs": [
+      "gsa_admin_grant_calculator_pro",
+      "gsa_admin_grant_calculator_pro"
+    ],
+    "missingCols": []
+  },
+  {
+    "file": "20260803172000_whatsapp_bidirectional_pendencies.sql",
+    "missingTables": [
+      "whatsapp_pendencias_ativas"
+    ],
+    "missingFuncs": [
+      "gsa_registrar_pendencia_whatsapp"
+    ],
+    "missingCols": []
+  },
+  {
+    "file": "20260805151500_update_public_facing_actors.sql",
+    "missingTables": [],
+    "missingFuncs": [
+      "handle_realtime_notifications",
+      "gsa_admin_aprovar_solicitacao_limite",
+      "gsa_admin_ajustar_limite_manual",
+      "gsa_admin_cancel_subscription_order"
+    ],
+    "missingCols": []
+  },
+  {
+    "file": "20260812090000_create_gsa_hero_banners.sql",
+    "missingTables": [
+      "gsa_hero_banners"
+    ],
+    "missingFuncs": [],
+    "missingCols": []
+  },
+  {
+    "file": "20260812140000_product_reviews_and_ratings_system.sql",
+    "missingTables": [],
+    "missingFuncs": [
+      "trg_fn_update_produto_rating_summary"
+    ],
+    "missingCols": [
+      {
+        "table": "produtos",
+        "column": "avaliacao_media"
+      },
+      {
+        "table": "produtos",
+        "column": "total_avaliacoes"
+      },
+      {
+        "table": "produtos",
+        "column": "comentarios_importados"
+      }
+    ]
+  },
+  {
+    "file": "20260814103000_setup_group_gift_vaquinhas.sql",
+    "missingTables": [
+      "loja_vaquinhas",
+      "loja_vaquinha_contribuicoes"
+    ],
+    "missingFuncs": [
+      "gsa_criar_vaquinha",
+      "gsa_obter_vaquinha",
+      "gsa_confirmar_contribuicao_vaquinha"
+    ],
+    "missingCols": []
+  },
+  {
+    "file": "20260826160000_admin_list_partner_redemptions_rpc.sql",
+    "missingTables": [],
+    "missingFuncs": [
+      "gsa_admin_complete_partner_redemption"
+    ],
+    "missingCols": []
+  }
+]

@@ -14,6 +14,13 @@ const baseHeaders: Record<string, string> = {
   'X-Content-Type-Options': 'nosniff',
 };
 
+type BudgetAttachment = {
+  nome: string;
+  url: string;
+  tipo?: string;
+  tamanho?: number;
+};
+
 type BudgetPayload = {
   nome: string;
   email: string;
@@ -23,6 +30,7 @@ type BudgetPayload = {
   website: string;
   started_at: string;
   metadata: Record<string, string>;
+  anexos?: BudgetAttachment[];
 };
 
 const BRAND_PROJECT_TYPES = new Set([
@@ -108,6 +116,26 @@ function metadata(value: unknown): Record<string, string> {
   };
 }
 
+function normalizeAttachments(value: unknown): BudgetAttachment[] {
+  if (!Array.isArray(value)) return [];
+  const valid: BudgetAttachment[] = [];
+  for (const item of value.slice(0, 5)) {
+    if (!item || typeof item !== 'object') continue;
+    const raw = item as Record<string, unknown>;
+    const url = text(raw.url, 1_000);
+    const nome = text(raw.nome, 160);
+    if (!url || !url.startsWith('https://')) continue;
+    if (!nome) continue;
+    valid.push({
+      nome,
+      url,
+      tipo: text(raw.tipo, 100) || undefined,
+      tamanho: typeof raw.tamanho === 'number' && Number.isFinite(raw.tamanho) ? Math.round(raw.tamanho) : undefined,
+    });
+  }
+  return valid;
+}
+
 export function normalizePayload(value: unknown): BudgetPayload | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const payload = value as Record<string, unknown>;
@@ -123,6 +151,8 @@ export function normalizePayload(value: unknown): BudgetPayload | null {
   if (![10, 11].includes(telefone.length) || !VALID_PROJECT_TYPES.has(tipo)) return null;
   if (solicitacao.length < 20 || !startedAt) return null;
 
+  const anexos = normalizeAttachments(payload.anexos);
+
   return {
     nome,
     email,
@@ -132,6 +162,7 @@ export function normalizePayload(value: unknown): BudgetPayload | null {
     website,
     started_at: startedAt,
     metadata: metadata(payload.metadata),
+    ...(anexos.length > 0 ? { anexos } : {}),
   };
 }
 

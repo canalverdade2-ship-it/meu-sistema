@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { formatCurrency, copyToClipboard, generateUUID } from '../../lib/utils';
+import { navigate } from '../../routing/navigationService';
 import {
   cancelAffiliatePayout,
   createAffiliateLink,
@@ -35,6 +36,7 @@ import type {
 } from '../../features/affiliates/types';
 import { Modal } from '../ui/Modal';
 import { useWhatsAppDocument } from '../../hooks/useWhatsAppDocument';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import { generateExtratoPDF } from '../../lib/pdf';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
 import { supabase } from '../../lib/supabase';
@@ -78,7 +80,7 @@ const commissionStatus: Record<AffiliateCommissionStatus, { label: string; class
   pendente: { label: 'Em carência', className: 'bg-amber-50 text-amber-700' },
   disponivel: { label: 'Disponível', className: 'bg-emerald-50 text-emerald-700' },
   paga: { label: 'Paga', className: 'bg-indigo-50 text-indigo-700' },
-  estornada: { label: 'Estornada', className: 'bg-rose-50 text-rose-700' },
+  revertida: { label: 'Estornada', className: 'bg-rose-50 text-rose-700' },
 };
 
 const payoutStatus: Record<AffiliatePayoutStatus, { label: string; className: string }> = {
@@ -139,8 +141,24 @@ export function ClientAffiliatePanel({ clientId: _clientId }: { clientId: string
     void load();
   }, []);
 
+  useRealtimeSubscription(
+    [
+      { table: 'gsa_afiliados', onChange: () => void load(true) },
+      { table: 'saques', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },
+      { table: 'carteira_lancamentos', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },
+      { table: 'indicacoes', filter: _clientId ? `indicador_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },
+      { table: 'points_transactions', filter: _clientId ? `client_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },
+      { table: 'pontos_movimentacoes', filter: _clientId ? `cliente_id=eq.${_clientId}` : undefined, onChange: () => void load(true) },
+    ],
+    [_clientId]
+  );
+
   useEffect(() => {
     if (!snapshot.affiliate) return;
+    if (snapshot.affiliate.nomeDivulgacao && snapshot.affiliate.nomeDivulgacao.trim().length >= 2) {
+      navigate('/afiliados/dashboard');
+      return;
+    }
     setProfileForm({
       nomeDivulgacao: snapshot.affiliate.nomeDivulgacao,
       pixTipo: snapshot.affiliate.pixTipo || 'cpf',
@@ -166,6 +184,7 @@ export function ClientAffiliatePanel({ clientId: _clientId }: { clientId: string
       });
       setSnapshot(data);
       toast.success('Seu perfil de afiliado está ativo!');
+      navigate('/afiliados/dashboard');
     } catch (reason: any) {
       toast.error(reason?.message || 'Não foi possível ativar seu perfil de afiliado.');
     } finally {
@@ -469,7 +488,7 @@ export function ClientAffiliatePanel({ clientId: _clientId }: { clientId: string
                   const formattedCommissions = snapshot.commissions.map(c => ({
                     data: c.criadoEm,
                     descricao: `Comissão - ${c.programaNome} (${c.percentual}%)`,
-                    tipo: c.status === 'estornada' ? 'saida' : 'entrada',
+                    tipo: c.status === 'revertida' ? 'saida' : 'entrada',
                     valor: c.valor
                   }));
                   
@@ -509,7 +528,7 @@ export function ClientAffiliatePanel({ clientId: _clientId }: { clientId: string
                     </p>
                     {commission.status === 'pendente' && commission.disponivelEm && <p className="mt-1 text-[11px] font-bold text-amber-700">Liberação prevista: {formatDate(commission.disponivelEm)}</p>}
                   </div>
-                  <p className={`text-lg font-black ${commission.status === 'estornada' ? 'text-rose-600 line-through' : 'text-emerald-600'}`}>{formatCurrency(commission.valor)}</p>
+                  <p className={`text-lg font-black ${commission.status === 'revertida' ? 'text-rose-600 line-through' : 'text-emerald-600'}`}>{formatCurrency(commission.valor)}</p>
                 </div>
               );
             })}

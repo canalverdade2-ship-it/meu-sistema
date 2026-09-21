@@ -1,0 +1,763 @@
+{
+  "inventory_node_verification": {
+    "UI_MOD": {
+      "total": 15,
+      "passed": 15,
+      "failed": []
+    },
+    "UI_PAGE": {
+      "total": 72,
+      "passed": 72,
+      "failed": []
+    },
+    "UI_FORM": {
+      "total": 54,
+      "passed": 54,
+      "failed": []
+    },
+    "UI_BTN": {
+      "total": 118,
+      "passed": 107,
+      "failed": [
+        {
+          "id": "UI-BTN-048",
+          "loc": "ClientExtrato",
+          "comp": "clientextrato"
+        },
+        {
+          "id": "UI-BTN-049",
+          "loc": "ClientExtrato",
+          "comp": "clientextrato"
+        },
+        {
+          "id": "UI-BTN-070",
+          "loc": "TravelPackageDetailModal",
+          "comp": "travelpackagedetailmodal"
+        },
+        {
+          "id": "UI-BTN-071",
+          "loc": "SaudeModule",
+          "comp": "saudemodule"
+        },
+        {
+          "id": "UI-BTN-072",
+          "loc": "SegurosModule",
+          "comp": "segurosmodule"
+        },
+        {
+          "id": "UI-BTN-080",
+          "loc": "CareersPublicPage",
+          "comp": "careerspublicpage"
+        },
+        {
+          "id": "UI-BTN-091",
+          "loc": "CrowdfundingModal",
+          "comp": "crowdfundingmodal"
+        },
+        {
+          "id": "UI-BTN-100",
+          "loc": "FornecedorFinanceiro",
+          "comp": "fornecedorfinanceiro"
+        },
+        {
+          "id": "UI-BTN-111",
+          "loc": "FinancialDashboard",
+          "comp": "financialdashboard"
+        },
+        {
+          "id": "UI-BTN-112",
+          "loc": "FinancialDashboard",
+          "comp": "financialdashboard"
+        },
+        {
+          "id": "UI-BTN-118",
+          "loc": "ClientVIPModal",
+          "comp": "clientvipmodal"
+        }
+      ]
+    },
+    "UI_TBL": {
+      "total": 42,
+      "passed": 42,
+      "failed": []
+    },
+    "UI_MDL": {
+      "total": 48,
+      "passed": 24,
+      "failed": [
+        {
+          "id": "UI-MDL-024",
+          "loc": "NovaFaturaModal",
+          "comp": "novafaturamodal"
+        },
+        {
+          "id": "UI-MDL-025",
+          "loc": "NovoAcordoModal",
+          "comp": "novoacordomodal"
+        },
+        {
+          "id": "UI-MDL-026",
+          "loc": "CollaboratorModal",
+          "comp": "collaboratormodal"
+        },
+        {
+          "id": "UI-MDL-027",
+          "loc": "FunctionModal",
+          "comp": "functionmodal"
+        },
+        {
+          "id": "UI-MDL-028",
+          "loc": "DeletionRequestReviewModal",
+          "comp": "deletionrequestreviewmodal"
+        },
+        {
+          "id": "UI-MDL-029",
+          "loc": "ProductRequestModal",
+          "comp": "productrequestmodal"
+        },
+        {
+          "id": "UI-MDL-030",
+          "loc": "DeliveryModal",
+          "comp": "deliverymodal"
+        },
+        {
+          "id": "UI-MDL-031",
+          "loc": "SupplierProfileModal",
+          "comp": "supplierprofilemodal"
+        },
+        {
+          "id": "UI-MDL-032",
+          "loc": "AffiliateLinkModal",
+          "comp": "affiliatelinkmodal"
+        },
+        {
+          "id": "UI-MDL-033",
+          "loc": "AffiliatePayoutModal",
+          "comp": "affiliatepayoutmodal"
+        },
+        {
+          "id": "UI-MDL-034",
+          "loc": "CreativeUploadModal",
+          "comp": "creativeuploadmodal"
+        },
+        {
+          "id": "UI-MDL-035",
+          "loc": "AdProposalNegotiationModal",
+          "comp": "adproposalnegotiationmodal"
+        },
+        {
+          "id": "UI-MDL-036",
+          "loc": "GsaTvMediaUploadModal",
+          "comp": "gsatvmediauploadmodal"
+        },
+        {
+          "id": "UI-MDL-037",
+          "loc": "GsaTvUrlImportModal",
+          "comp": "gsatvurlimportmodal"
+        },
+        {
+          "id": "UI-MDL-038",
+          "loc": "GsaTvScheduleSlotModal",
+          "comp": "gsatvscheduleslotmodal"
+        },
+        {
+          "id": "UI-MDL-039",
+          "loc": "GsaTvAiProjectModal",
+          "comp": "gsatvaiprojectmodal"
+        },
+        {
+          "id": "UI-MDL-040",
+          "loc": "GsaTvEmergencySlateModal",
+          "comp": "gsatvemergencyslatemodal"
+        },
+        {
+          "id": "UI-MDL-041",
+          "loc": "WhatsAppHealthModal",
+          "comp": "whatsapphealthmodal"
+        },
+        {
+          "id": "UI-MDL-042",
+          "loc": "SiteCampaignModal",
+          "comp": "sitecampaignmodal"
+        },
+        {
+          "id": "UI-MDL-043",
+          "loc": "TravelBookingModal",
+          "comp": "travelbookingmodal"
+        },
+        {
+          "id": "UI-MDL-044",
+          "loc": "HealthQuoteModal",
+          "comp": "healthquotemodal"
+        },
+        {
+          "id": "UI-MDL-045",
+          "loc": "InsuranceQuoteModal",
+          "comp": "insurancequotemodal"
+        },
+        {
+          "id": "UI-MDL-046",
+          "loc": "ClassifiedsOfferModal",
+          "comp": "classifiedsoffermodal"
+        },
+        {
+          "id": "UI-MDL-047",
+          "loc": "CareersApplicationModal",
+          "comp": "careersapplicationmodal"
+        }
+      ]
+    },
+    "DB_TBL": {
+      "total": 294,
+      "passed": 263,
+      "failed": [
+        {
+          "id": "DB-TBL-004",
+          "table": "gsa_access_tokens"
+        },
+        {
+          "id": "DB-TBL-009",
+          "table": "gsa_admin_permissions"
+        },
+        {
+          "id": "DB-TBL-012",
+          "table": "gsa_audit_trail"
+        },
+        {
+          "id": "DB-TBL-028",
+          "table": "gsa_device_fingerprints"
+        },
+        {
+          "id": "DB-TBL-029",
+          "table": "gsa_ip_allowlist"
+        },
+        {
+          "id": "DB-TBL-030",
+          "table": "gsa_ip_blocklist"
+        },
+        {
+          "id": "DB-TBL-031",
+          "table": "gsa_login_challenges"
+        },
+        {
+          "id": "DB-TBL-032",
+          "table": "gsa_password_history"
+        },
+        {
+          "id": "DB-TBL-037",
+          "table": "gsa_refresh_tokens"
+        },
+        {
+          "id": "DB-TBL-038",
+          "table": "gsa_role_assignments"
+        },
+        {
+          "id": "DB-TBL-039",
+          "table": "gsa_security_logs"
+        },
+        {
+          "id": "DB-TBL-042",
+          "table": "gsa_session_events"
+        },
+        {
+          "id": "DB-TBL-043",
+          "table": "gsa_session_revocations"
+        },
+        {
+          "id": "DB-TBL-049",
+          "table": "gsa_two_factor_tokens"
+        },
+        {
+          "id": "DB-TBL-050",
+          "table": "gsa_user_sessions"
+        },
+        {
+          "id": "DB-TBL-065",
+          "table": "carteira_estornos"
+        },
+        {
+          "id": "DB-TBL-067",
+          "table": "carteira_lancamentos_bloqueados"
+        },
+        {
+          "id": "DB-TBL-071",
+          "table": "faturas_juros_multas"
+        },
+        {
+          "id": "DB-TBL-072",
+          "table": "faturas_parcelas"
+        },
+        {
+          "id": "DB-TBL-073",
+          "table": "fintech_payout_batches"
+        },
+        {
+          "id": "DB-TBL-074",
+          "table": "fintech_reconciliation_logs"
+        },
+        {
+          "id": "DB-TBL-080",
+          "table": "transacoes_pix_split"
+        },
+        {
+          "id": "DB-TBL-083",
+          "table": "loja_carrinho_cupons"
+        },
+        {
+          "id": "DB-TBL-084",
+          "table": "loja_comprovantes_devolucao"
+        },
+        {
+          "id": "DB-TBL-092",
+          "table": "loja_pedidos_historico_status"
+        },
+        {
+          "id": "DB-TBL-093",
+          "table": "loja_promocoes_regras"
+        },
+        {
+          "id": "DB-TBL-104",
+          "table": "produtos_variantes_estoque"
+        },
+        {
+          "id": "DB-TBL-130",
+          "table": "demandas_historico_interacoes"
+        },
+        {
+          "id": "DB-TBL-145",
+          "table": "prestadores_disponibilidade_slots"
+        },
+        {
+          "id": "DB-TBL-146",
+          "table": "prestadores_especialidades"
+        },
+        {
+          "id": "DB-TBL-147",
+          "table": "prestadores_repasses_historico"
+        }
+      ]
+    },
+    "DB_RPC": {
+      "total": 692,
+      "passed": 692,
+      "failed": []
+    },
+    "API_EDGE": {
+      "total": 17,
+      "passed": 17,
+      "failed": []
+    },
+    "API_WH": {
+      "total": 15,
+      "passed": 12,
+      "failed": [
+        {
+          "id": "API-WH-005",
+          "route": "/feeds/viagens/nacionais"
+        },
+        {
+          "id": "API-WH-006",
+          "route": "/feeds/viagens/internacionais"
+        },
+        {
+          "id": "API-WH-007",
+          "route": "/feeds/viagens/promoc"
+        }
+      ]
+    },
+    "API_END": {
+      "total": 10,
+      "passed": 6,
+      "failed": [
+        {
+          "id": "API-END-005",
+          "service": "InfinitePay Checkout V2 Orders",
+          "file": "src/utils/infinitePay.ts"
+        },
+        {
+          "id": "API-END-007",
+          "service": "Cloudflare R2 Worker Auth Proxy",
+          "file": "src/lib/r2StorageWorkerClient.ts"
+        },
+        {
+          "id": "API-END-009",
+          "service": "ViaCEP Postal Code Lookup",
+          "file": "src/components/client/AddressStep.tsx"
+        },
+        {
+          "id": "API-END-010",
+          "service": "BrasilAPI CNPJ Lookup",
+          "file": "src/utils/documentValidation.ts"
+        }
+      ]
+    }
+  },
+  "cross_reconciliation": {
+    "total_canonical_edges": 80,
+    "grafo_count": 80,
+    "rastreabilidade_count": 80,
+    "testes_count": 80,
+    "missing_in_rastreab": [],
+    "missing_in_testes": [],
+    "missing_in_grafo": []
+  },
+  "edge_wiring_probes": [
+    {
+      "edge_id": "EDGE-001",
+      "component": "ClientLoginPage.tsx",
+      "component_found": true,
+      "component_path": "src/pages/ClientLoginPage.tsx",
+      "handler": "handleLoginSubmit",
+      "handler_found": false,
+      "service": "sessionService.loginClient",
+      "service_found": false,
+      "endpoint_or_table": "RPC gsa_auth_login_client / Edge gsa-auth-session",
+      "backend_found": true,
+      "wiring_status": "PARTIAL"
+    },
+    {
+      "edge_id": "EDGE-002",
+      "component": "RestrictedAccessHubPage.tsx",
+      "component_found": true,
+      "component_path": "src/pages/RestrictedAccessHubPage.tsx",
+      "handler": "handleCodeSubmit",
+      "handler_found": false,
+      "service": "sessionService.loginColaborador",
+      "service_found": true,
+      "endpoint_or_table": "RPC gsa_auth_login_collaborator",
+      "backend_found": true,
+      "wiring_status": "CONFIRMED"
+    },
+    {
+      "edge_id": "EDGE-003",
+      "component": "useAutoLogout.ts",
+      "component_found": true,
+      "component_path": "src/hooks/useAutoLogout.ts",
+      "handler": "pingSessionCycle",
+      "handler_found": false,
+      "service": "sessionService.pingSession",
+      "service_found": true,
+      "endpoint_or_table": "RPC gsa_ping_session",
+      "backend_found": true,
+      "wiring_status": "CONFIRMED"
+    },
+    {
+      "edge_id": "EDGE-004",
+      "component": "AcessosModule.tsx",
+      "component_found": true,
+      "component_path": "src/components/admin/AcessosModule.tsx",
+      "handler": "handleSaveCollaborator",
+      "handler_found": true,
+      "service": "",
+      "service_found": false,
+      "endpoint_or_table": "RPC gsa_admin_save_collaborator",
+      "backend_found": true,
+      "wiring_status": "CONFIRMED"
+    },
+    {
+      "edge_id": "EDGE-005",
+      "component": "AcessosModule.tsx",
+      "component_found": true,
+      "component_path": "src/components/admin/AcessosModule.tsx",
+      "handler": "handleRotateCredential",
+      "handler_found": true,
+      "service": "",
+      "service_found": false,
+      "endpoint_or_table": "RPC gsa_admin_rotate_collaborator_credential",
+      "backend_found": true,
+      "wiring_status": "CONFIRMED"
+    },
+    {
+      "edge_id": "EDGE-006",
+      "component": "deleteRequest.ts",
+      "component_found": true,
+      "component_path": "src/lib/deleteRequest.ts",
+      "handler": "requestSensitiveDeletion",
+      "handler_found": false,
+      "service": "",
+      "service_found": false,
+      "endpoint_or_table": "RPC gsa_admin_create_deletion_request",
+      "backend_found": true,
+      "wiring_status": "PARTIAL"
+    },
+    {
+      "edge_id": "EDGE-007",
+      "component": "ConfiguracoesModule.tsx",
+      "component_found": true,
+      "component_path": "src/components/admin/ConfiguracoesModule.tsx",
+      "handler": "handleSaveSettings",
+      "handler_found": true,
+      "service": "",
+      "service_found": false,
+      "endpoint_or_table": "RPC gsa_admin_update_settings_secure",
+      "backend_found": true,
+      "wiring_status": "CONFIRMED"
+    },
+    {
+      "edge_id": "EDGE-008",
+      "component": "BusinessRegistrationPage.tsx",
+      "component_found": true,
+      "component_path": "src/pages/BusinessRegistrationPage.tsx",
+      "handler": "handleBusinessRegister",
+      "handler_found": false,
+      "service": "clientOperationalWrite",
+      "service_found": true,
+      "endpoint_or_table": "RPC gsa_client_registration_challenge / PostgREST",
+      "backend_found": true,
+      "wiring_status": "CONFIRMED"
+    },
+    {
+      "edge_id": "EDGE-009",
+      "component": "AreaVIPModule.tsx",
+      "component_found": true,
+      "component_path": "src/components/admin/AreaVIPModule.tsx",
+      "handler": "handleChangeLevelManual",
+      "handler_found": false,
+      "service": "",
+      "service_found": false,
+      "endpoint_or_table": "RPC gsa_admin_set_client_level_manual",
+      "backend_found": true,
+      "wiring_status": "PARTIAL"
+    },
+    {
+      "edge_id": "EDGE-010",
+      "component": "ClientAreaVIP.tsx",
+      "component_found": true,
+      "component_path": "src/components/client/ClientAreaVIP.tsx",
+      "handler": "handleSubscribeVip",
+      "handler_found": false,
+      "service": "",
+      "service_found": false,
+      "endpoint_or_table": "RPC gsa_client_subscribe_vip",
+      "backend_found": true,
+      "wiring_status": "PARTIAL"
+    },
+    {
+      "edge_id": "EDGE-011",
+      "component": "ClientProfile.tsx",
+      "component_found": true,
+      "component_path": "src/components/client/ClientProfile.tsx",
+      "handler": "handleSaveProfile",
+      "handler_found": true,
+      "service": "clientOperationalWrite",
+      "service_found": true,
+      "endpoint_or_table": "RPC gsa_client_operational_write",
+      "backend_found": true,
+      "wiring_status": "CONFIRMED"
+    },
+    {
+      "edge_id": "EDGE-012",
+      "component": "FaturasList.tsx",
+      "component_found": true,
+      "component_path": "src/components/client/financeiro/FaturasList.tsx",
+      "handler": "handlePayInvoiceWallet",
+      "handler_found": false,
+      "service": "",
+      "service_found": false,
+      "endpoint_or_table": "RPC gsa_client_pagar_fatura",
+      "backend_found": true,
+      "wiring_status": "PARTIAL"
+    },
+    {
+      "edge_id": "EDGE-013",
+      "component": "pixService.ts",
+      "component_found": true,
+      "component_path": "src/lib/pixService.ts",
+      "handler": "createDynamicPix",
+      "handler_found": false,
+      "service": "createInfinitePayOrderCheckout",
+      "service_found": true,
+      "endpoint_or_table": "InfinitePay Checkout V2 / Edge gsa-payments",
+      "backend_found": true,
+      "wiring_status": "CONFIRMED"
+    },
+    {
+      "edge_id": "EDGE-014",
+      "component": "server_webhook.cjs",
+      "component_found": false,
+      "component_path": null,
+      "handler": "handleInfinitePayWebhook",
+      "handler_found": false,
+      "service": "SessionMutex -> Database Transaction",
+      "service_found": false,
+      "endpoint_or_table": "VPS Daemon Porta 5680 / PostgreSQL",
+      "backend_found": true,
+      "wiring_status": "PARTIAL"
+    },
+    {
+      "edge_id": "EDGE-015",
+      "component": "ClientPontos.tsx",
+      "component_found": true,
+      "component_path": "src/components/client/ClientPontos.tsx",
+      "handler": "handleConvertPoints",
+      "handler_found": false,
+      "service": "",
+      "service_found": false,
+      "endpoint_or_table": "RPC gsa_client_convert_points",
+      "backend_found": true,
+      "wiring_status": "PARTIAL"
+    },
+    {
+      "edge_id": "EDGE-016",
+      "component": "ClientTransferencias.tsx",
+      "component_found": true,
+      "component_path": "src/components/client/ClientTransferencias.tsx",
+      "handler": "handleTransferBalance",
+      "handler_found": false,
+      "service": "",
+      "service_found": false,
+      "endpoint_or_table": "RPC gsa_client_request_transfer",
+      "backend_found": true,
+      "wiring_status": "PARTIAL"
+    },
+    {
+      "edge_id": "EDGE-017",
+      "component": "ClientTransferencias.tsx",
+      "component_found": true,
+      "component_path": "src/components/client/ClientTransferencias.tsx",
+      "handler": "handleReverseTransfer",
+      "handler_found": false,
+      "service": "",
+      "service_found": false,
+      "endpoint_or_table": "RPC gsa_client_reverse_transfer",
+      "backend_found": true,
+      "wiring_status": "PARTIAL"
+    },
+    {
+      "edge_id": "EDGE-018",
+      "component": "CreditWithdrawalModal.tsx",
+      "component_found": true,
+      "component_path": "src/components/client/CreditWithdrawalModal.tsx",
+      "handler": "handleRequestCreditWithdrawal",
+      "handler_found": false,
+      "service": "",
+      "service_found": false,
+      "endpoint_or_table": "RPC gsa_client_request_withdrawal",
+      "backend_found": true,
+      "wiring_status": "PARTIAL"
+    },
+    {
+      "edge_id": "EDGE-019",
+      "component": "CreditWithdrawalsAdminPanel.tsx",
+      "component_found": true,
+      "component_path": "src/components/admin/super-domains/financeiro/CreditWithdrawalsAdminPanel.tsx",
+      "handler": "handleMarkWithdrawalPaid",
+      "handler_found": false,
+      "service": "",
+      "service_found": false,
+      "endpoint_or_table": "RPC gsa_admin_processar_saque",
+      "backend_found": true,
+      "wiring_status": "PARTIAL"
+    },
+    {
+      "edge_id": "EDGE-020",
+      "component": "ClientMeuCredito.tsx",
+      "component_found": true,
+      "component_path": "src/components/client/ClientMeuCredito.tsx",
+      "handler": "handleRequestLoan",
+      "handler_found": false,
+      "service": "clientOperationalWrite",
+      "service_found": true,
+      "endpoint_or_table": "RPC gsa_client_operational_write",
+      "backend_found": true,
+      "wiring_status": "CONFIRMED"
+    },
+    {
+      "edge_id": "EDGE-021",
+      "component": "EmprestimosModule.tsx",
+      "component_found": true,
+      "component_path": "src/components/admin/EmprestimosModule.tsx",
+      "handler": "handleApproveLoan",
+      "handler_found": false,
+      "service": "",
+      "service_found": false,
+      "endpoint_or_table": "RPC gsa_admin_emprestimo_aprovar",
+      "backend_found": true,
+      "wiring_status": "PARTIAL"
+    },
+    {
+      "edge_id": "EDGE-022",
+      "component": "CobrancaModule.tsx",
+      "component_found": true,
+      "component_path": "src/components/admin/CobrancaModule.tsx",
+      "handler": "handleGenerateDebtAgreement",
+      "handler_found": false,
+      "service": "",
+      "service_found": false,
+      "endpoint_or_table": "RPC gsa_admin_gerar_acordo_cobranca",
+      "backend_found": true,
+      "wiring_status": "PARTIAL"
+    },
+    {
+      "edge_id": "EDGE-023",
+      "component": "ProductPage.tsx",
+      "component_found": true,
+      "component_path": "src/components/client/store/ProductPage.tsx",
+      "handler": "handleAddToCart",
+      "handler_found": true,
+      "service": "clientOperationalWrite",
+      "service_found": true,
+      "endpoint_or_table": "RPC gsa_client_operational_write",
+      "backend_found": true,
+      "wiring_status": "CONFIRMED"
+    },
+    {
+      "edge_id": "EDGE-024",
+      "component": "CheckoutPage.tsx",
+      "component_found": true,
+      "component_path": "src/components/client/store/CheckoutPage.tsx",
+      "handler": "handleExecuteCheckout",
+      "handler_found": false,
+      "service": "",
+      "service_found": false,
+      "endpoint_or_table": "RPC gsa_client_checkout_store / gsa_client_checkout_store_base_20260817",
+      "backend_found": true,
+      "wiring_status": "PARTIAL"
+    },
+    {
+      "edge_id": "EDGE-025",
+      "component": "PurchasesPage.tsx",
+      "component_found": true,
+      "component_path": "src/components/client/store/PurchasesPage.tsx",
+      "handler": "handleRequestReturn",
+      "handler_found": false,
+      "service": "clientOperationalWrite",
+      "service_found": true,
+      "endpoint_or_table": "RPC gsa_client_operational_write",
+      "backend_found": true,
+      "wiring_status": "CONFIRMED"
+    }
+  ],
+  "status_integrity_audit": {
+    "INVENTARIO_COMPLETO.md": {
+      "total_VALIDADO_mentions": 1,
+      "actual_claims_of_VALIDADO": 0,
+      "claims_sample": [],
+      "total_ANALISADO_ESTATICAMENTE": 13
+    },
+    "MATRIZ_RASTREABILIDADE.md": {
+      "total_VALIDADO_mentions": 4,
+      "actual_claims_of_VALIDADO": 3,
+      "claims_sample": [
+        "1. **Crit\u00e9rio para Eleva\u00e7\u00e3o de Status para `VALIDADO`**:",
+        "- Um item de rastreabilidade s\u00f3 poder\u00e1 transitar de `ANALISADO ESTATICAMENTE` para `VALIDADO` ap\u00f3s a execu\u00e7\u00e3o de teste din\u00e2mico automatizado (Vitest, Playwright ou script SQL transacional) que comprove:",
+        "- Nenhuma aresta ou fluxo poder\u00e1 ser marcado como `VALIDADO` por presun\u00e7\u00e3o ou mock parcial que altere o comportamento real do sistema."
+      ],
+      "total_ANALISADO_ESTATICAMENTE": 83
+    },
+    "GRAFO_CONEXOES.md": {
+      "total_VALIDADO_mentions": 2,
+      "actual_claims_of_VALIDADO": 1,
+      "claims_sample": [
+        "2. **Rigor Cient\u00edfico de Status**: Nenhuma aresta recebeu status `VALIDADO` prematuro. O Milestone 2 executar\u00e1 os testes din\u00e2micos de ponta a ponta especificados na Matriz de Testes de Conex\u00f5es."
+      ],
+      "total_ANALISADO_ESTATICAMENTE": 161
+    },
+    "MATRIZ_TESTES_CONEXOES.md": {
+      "total_VALIDADO_mentions": 1,
+      "actual_claims_of_VALIDADO": 0,
+      "claims_sample": [],
+      "total_ANALISADO_ESTATICAMENTE": 162
+    }
+  }
+}

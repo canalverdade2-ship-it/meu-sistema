@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+const root = 'C:/Users/Adriano Farias/Downloads/remix-9.10_-grupo-gsa---gestão-de-serviços - Copia (4)';
+const env = fs.readFileSync(`${root}/.env`, 'utf8');
+const get = (key) => env.match(new RegExp(`^${key}=(.*)$`, 'm'))?.[1]?.trim().replace(/^['\"]|['\"]$/g, '') || '';
+const url = get('VITE_SUPABASE_URL');
+const key = get('VITE_SUPABASE_ANON_KEY') || get('VITE_SUPABASE_ANON_KEY');
+if (!url || !key) throw new Error('Supabase URL/key ausentes');
+const response = await fetch(`${url}/rest/v1/`, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
+if (!response.ok) throw new Error(`OpenAPI HTTP ${response.status}`);
+const spec = await response.json();
+const paths = spec.paths || {};
+const names = ['gsa_client_credit_withdrawal_quote','gsa_client_create_credit_withdrawal','gsa_client_submit_credit_withdrawal_documents','gsa_client_credit_withdrawals','gsa_client_cancel_credit_withdrawal','gsa_admin_credit_withdrawals','gsa_admin_credit_withdrawal_details','gsa_admin_decide_credit_withdrawal','gsa_admin_mark_credit_withdrawal_paid'];
+for (const name of names) console.log(`${name}=${Boolean(paths[`/rpc/${name}`])}`);

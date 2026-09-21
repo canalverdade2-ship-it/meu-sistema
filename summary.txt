@@ -1,0 +1,561 @@
+                  <div className="block lg:hidden rounded-2xl border border-neutral-200/90 bg-white p-4 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <ShoppingBag className="h-4 w-4 text-[#17345f]" />
+                        <div>
+                          <span className="text-xs font-black uppercase tracking-wider text-neutral-900 block">
+                            Resumo Rápido
+                          </span>
+                          <span className="text-[11px] text-neutral-500 font-medium">
+                            {cartItems.length} {cartItems.length === 1 ? 'item' : 'itens'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-black text-[#17345f]">
+                          {formatCurrency(totalHojeFinal)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setExpandMobileItems(!expandMobileItems)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-[11px] font-bold transition-colors cursor-pointer"
+                          title={expandMobileItems ? 'Recolher detalhes' : 'Ver detalhes dos itens'}
+                        >
+                          <span>{expandMobileItems ? 'Ocultar' : 'Ver itens'}</span>
+                          {expandMobileItems ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Lista retrátil de itens apenas se o usuário quiser expandir */}
+                    {expandMobileItems && (
+                      <div className="pt-2 border-t border-neutral-100 max-h-48 overflow-y-auto divide-y divide-neutral-100 text-xs space-y-2 animate-in fade-in duration-200">
+                        {cartItems.map((item) => {
+                          const isProduct = item.tipo === 'produto';
+                          const regularPrice = item.item_detalhes?.valor || 0;
+                          const basePrice = isProduct ? (getProductQuantityPriceBreakdown(item.item_detalhes, item.quantidade).subtotalFinal / item.quantidade) : regularPrice;
+                          const itemSubtotalBase = basePrice * item.quantidade;
+                          const itemPixDiscount = (isPixDiscountEligible && isProduct && checkPixDiscountApplies(item.item_detalhes, pixSettings)) 
+                            ? Number((itemSubtotalBase * (pixPercentage / 100)).toFixed(2)) 
+                            : 0;
+                          const itemFinalPrice = Number(Math.max(0, itemSubtotalBase - itemPixDiscount).toFixed(2));
+
+                          return (
+                            <div key={item.id} className="pt-2 first:pt-0 flex items-center justify-between gap-2">
+                              <span className="truncate flex-1 font-medium text-neutral-800">
+                                {item.quantidade}x {item.item_detalhes?.nome || 'Item'}
+                              </span>
+                              <span className="font-bold text-neutral-900 shrink-0">
+                                {formatCurrency(itemFinalPrice)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Linhas Financeiras Condensadas no Mobile */}
+                    <div className="pt-2 border-t border-neutral-100 space-y-1.5 text-xs text-neutral-600">
+                      <div className="flex justify-between">
+                        <span>Subtotal</span>
+                        <span className="font-bold text-neutral-900">{formatCurrency(subtotalInicial)}</span>
+                      </div>
+                      {(descontoPromocoes > 0 || descontoPontos > 0 || descontoCalculado > 0 || descontoCarteira > 0 || (isPix && pixDiscountValue > 0)) && (
+                        <div className="flex justify-between text-emerald-600 font-bold">
+                          <span>Descontos / Benefícios</span>
+                          <span>- {formatCurrency(descontoPromocoes + descontoPontos + descontoCalculado + descontoCarteira + (isPix ? pixDiscountValue : 0))}</span>
+                        </div>
+                      )}
+                      {temProdutos && (
+                        <div className="flex justify-between">
+                          <span>Frete</span>
+                          <span className={taxaEntregaFinal === 0 ? 'text-emerald-700 font-bold' : 'font-bold text-neutral-900'}>
+                            {taxaEntregaFinal === 0 ? 'Grátis' : formatCurrency(taxaEntregaFinal)}
+                          </span>
+                        </div>
+                      )}
+                      {formaPagamento === 'credito_loja' && valorJurosCredito > 0 && (
+                        <div className="flex justify-between text-indigo-700 font-bold">
+                          <span>Juros Crédito GSA</span>
+                          <span>+ {formatCurrency(valorJurosCredito)}</span>
+                        </div>
+                      )}
+                      <div className="pt-1.5 border-t border-neutral-200 flex justify-between items-baseline">
+                        <span className="font-black text-neutral-800 uppercase tracking-wider text-xs">Total Previsto:</span>
+                        <span className="text-lg font-black text-[#17345f]">{formatCurrency(totalHojeFinal)}</span>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl bg-amber-50 p-2 text-center text-[11px] font-black text-amber-800 border border-amber-200/80 flex items-center justify-center gap-1">
+                      <Coins className="h-3.5 w-3.5 text-amber-600" />
+                      <span>+{totalPontosGanhos} pts VIP a ganhar</span>
+                    </div>
+                  </div>
+
+                  {/* Versão Desktop Completa (Fixa na lateral direita) */}
+                  <div className="hidden lg:block sticky top-24 rounded-3xl border border-neutral-200/90 bg-white p-6 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between border-b border-neutral-100 pb-3.5">
+                      <div className="flex items-center gap-2">
+                        <ShoppingBag className="h-4 w-4 text-[#17345f]" />
+                        <h3 className="text-xs font-black uppercase tracking-wider text-neutral-900">
+                          Prévia do Pedido
+                        </h3>
+                      </div>
+                      <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-bold text-neutral-600">
+                        {cartItems.length} {cartItems.length === 1 ? 'item' : 'itens'}
+                      </span>
+                    </div>
+
+                    {/* Itens compactos */}
+                    <div className="max-h-56 overflow-y-auto space-y-2.5 pr-1 divide-y divide-neutral-100 text-xs">
+                      {cartItems.map((item) => {
+                        const isProduct = item.tipo === 'produto';
+                        const regularPrice = item.item_detalhes?.valor || 0;
+                        const basePrice = isProduct ? (getProductQuantityPriceBreakdown(item.item_detalhes, item.quantidade).subtotalFinal / item.quantidade) : regularPrice;
+                        const itemSubtotalBase = basePrice * item.quantidade;
+                        const itemPixDiscount = (isPixDiscountEligible && isProduct && checkPixDiscountApplies(item.item_detalhes, pixSettings)) 
+                          ? Number((itemSubtotalBase * (pixPercentage / 100)).toFixed(2)) 
+                          : 0;
+                        const itemFinalPrice = Number(Math.max(0, itemSubtotalBase - itemPixDiscount).toFixed(2));
+                        const itemPontos = Math.floor(itemFinalPrice);
+
+                        return (
+                          <div key={item.id} className="pt-2 first:pt-0 flex items-center justify-between gap-2">
+                            <div className="truncate flex-1 min-w-0">
+                              <span className="font-bold text-neutral-900 truncate block">{item.item_detalhes?.nome || 'Item'}</span>
+                              <div className="flex items-center gap-2 text-[10px] text-neutral-500 font-medium">
+                                <span>{item.quantidade}x</span>
+                                <span className="text-amber-700 font-bold">👑 +{itemPontos} pts</span>
+                                {isPixDiscountEligible && itemPixDiscount > 0 && (
+                                  <span className="text-emerald-700 font-bold bg-emerald-50 px-1 rounded">-{pixPercentage}% PIX</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              {isPixDiscountEligible && itemPixDiscount > 0 && (
+                                <span className="text-[10px] font-semibold text-neutral-400 line-through block">
+                                  {formatCurrency(itemSubtotalBase)}
+                                </span>
+                              )}
+                              <span className={`font-black ${isPixDiscountEligible && itemPixDiscount > 0 ? 'text-emerald-700' : 'text-neutral-900'}`}>
+                                {formatCurrency(itemFinalPrice)}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Discriminação Completa de Lançamentos na Prévia */}
+                    <div className="border-t border-neutral-200/80 pt-3 space-y-2 text-xs font-medium text-neutral-600">
+                      <div className="flex justify-between">
+                        <span>Subtotal dos itens</span>
+                        <span className="font-bold text-neutral-900">{formatCurrency(subtotalInicial)}</span>
+                      </div>
+
+                      {descontoPromocoes > 0 && (
+                        <div className="flex justify-between text-emerald-600 font-bold">
+                          <span>Descontos promocionais</span>
+                          <span>- {formatCurrency(descontoPromocoes)}</span>
+                        </div>
+                      )}
+
+                      {descontoPontos > 0 && (
+                        <div className="flex justify-between text-amber-700 font-bold">
+                          <span>Pontos VIP ({pontosAplicados.toLocaleString()} pts)</span>
+                          <span>- {formatCurrency(descontoPontos)}</span>
+                        </div>
+                      )}
+
+                      {descontoCalculado > 0 && (
+                        <div className="flex justify-between text-blue-600 font-bold">
+                          <span>Cupom ({cupomDesconto?.codigo_cupom})</span>
+                          <span>- {formatCurrency(descontoCalculado)}</span>
+                        </div>
+                      )}
+
+                      {descontoCarteira > 0 && (
+                        <div className="flex justify-between text-emerald-700 font-bold">
+                          <span>Saldo da Carteira</span>
+                          <span>- {formatCurrency(descontoCarteira)}</span>
+                        </div>
+                      )}
+
+                      {temProdutos && (
+                        <div className="flex justify-between">
+                          <span>Frete / Entrega</span>
+                          <span className={`font-bold ${taxaEntregaFinal === 0 ? 'text-emerald-700 uppercase tracking-wider' : 'text-neutral-900'}`}>
+                            {taxaEntregaFinal === 0 ? 'Frete Grátis' : formatCurrency(taxaEntregaFinal)}
+                          </span>
+                        </div>
+                      )}
+
+                      {isPix && pixDiscountValue > 0 && (
+                        <div className="flex items-center justify-between text-emerald-700 font-black bg-emerald-50/80 px-2.5 py-1.5 rounded-lg border border-emerald-200/60">
+                          <span className="flex items-center gap-1">
+                            <QrCode className="h-3.5 w-3.5" /> Desconto {pixPercentage}% PIX:
+                          </span>
+                          <span>- {formatCurrency(pixDiscountValue)}</span>
+                        </div>
+                      )}
+
+                      {formaPagamento === 'credito_loja' && valorJurosCredito > 0 && (
+                        <div className="flex justify-between text-indigo-700 font-bold">
+                          <span>Juros Crédito GSA ({taxaJurosAplicada}%)</span>
+                          <span>+ {formatCurrency(valorJurosCredito)}</span>
+                        </div>
+                      )}
+
+                      <div className="border-t border-neutral-200 pt-2.5 flex items-baseline justify-between">
+                        <span className="text-xs font-black uppercase tracking-wider text-neutral-800">Total Previsto:</span>
+                        <span className="text-xl font-black text-[#17345f]">{formatCurrency(totalHojeFinal)}</span>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl bg-amber-50 p-2.5 text-center text-xs font-black text-amber-800 border border-amber-200/80 flex items-center justify-center gap-1.5">
+                      <Coins className="h-4 w-4 text-amber-600" />
+                      <span>Ganhe +{totalPontosGanhos} pontos VIP nesta compra</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* ========================================================= */
+              /* ETAPA 3: RESUMO COMPLETO DO PEDIDO (AMPLO E DETALHADO) */
+              /* ========================================================= */
+              <div className="space-y-6 animate-in fade-in duration-300">
+                
+                {/* Cards de Confirmação Rápida (Grid de 3 Colunas) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  
+                  {/* Card 1: Endereço de Entrega */}
+                  <div className="bg-white rounded-2xl p-5 border border-neutral-200/90 shadow-xs flex flex-col justify-between space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black uppercase tracking-wider text-[#17345f] flex items-center gap-1.5">
+                          <MapPin className="h-4 w-4 text-blue-600" /> Entrega
+                        </span>
+                        <button 
+                          onClick={() => setEtapaCheckout(1)}
+                          className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                        >
+                          <Edit3 className="h-3 w-3" /> Editar
+                        </button>
+                      </div>
+                      {temProdutos ? (
+                        <div className="text-xs text-neutral-700 font-medium leading-relaxed">
+                          <p className="font-bold text-neutral-900">{endereco.logradouro}, {endereco.numero}</p>
+                          <p>{endereco.bairro} — {endereco.cidade}/{endereco.uf}</p>
+                          <p className="text-[10px] text-neutral-500 font-mono">CEP: {endereco.cep}</p>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-neutral-500 font-medium">Serviços / Assinaturas digitais sem entrega física.</p>
+                      )}
+                    </div>
+                    <div className="pt-2 border-t border-neutral-100 flex items-center gap-1.5 text-[11px] font-bold text-emerald-700">
+                      <Truck className="h-3.5 w-3.5" />
+                      <span>{taxaEntregaFinal === 0 ? 'Frete Grátis' : `Frete: ${formatCurrency(taxaEntregaFinal)}`}</span>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Forma de Pagamento */}
+                  <div className="bg-white rounded-2xl p-5 border border-neutral-200/90 shadow-xs flex flex-col justify-between space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black uppercase tracking-wider text-[#17345f] flex items-center gap-1.5">
+                          <CreditCard className="h-4 w-4 text-emerald-600" /> Pagamento
+                        </span>
+                        <button 
+                          onClick={() => setEtapaCheckout(2)}
+                          className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                        >
+                          <Edit3 className="h-3 w-3" /> Editar
+                        </button>
+                      </div>
+                      <div className="text-xs text-neutral-700 font-medium">
+                        {formaPagamento === 'pix' && (
+                          <p className="font-black text-emerald-700 flex items-center gap-1.5">
+                            <QrCode className="h-4 w-4" />
+                            <span>PIX Instantâneo {isPixDiscountEligible ? `(-${pixPercentage}% OFF)` : (pixDiscountBlockedByPoints || pixDiscountBlockedByWallet) ? '(Sem desc. por uso de saldo/pontos)' : ''}</span>
+                          </p>
+                        )}
+                        {formaPagamento === 'cartao' && <p className="font-bold text-neutral-900">Cartão de Crédito (Valor Cheio)</p>}
+                        {formaPagamento === 'boleto' && <p className="font-bold text-neutral-900">Boleto Bancário (Valor Cheio)</p>}
+                        {formaPagamento === 'credito_loja' && (
+                          <p className="font-bold text-indigo-900">
+                            Crédito GSA Store ({numParcelas}x de {formatCurrency(totalHojeFinal / numParcelas)})
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-neutral-100 text-[11px] text-neutral-500 font-medium flex items-center gap-1">
+                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                      <span>Processamento criptografado</span>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Benefícios Aplicados */}
+                  <div className="bg-white rounded-2xl p-5 border border-neutral-200/90 shadow-xs flex flex-col justify-between space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black uppercase tracking-wider text-[#17345f] flex items-center gap-1.5">
+                          <Tag className="h-4 w-4 text-amber-600" /> Benefícios
+                        </span>
+                        <button 
+                          onClick={() => setEtapaCheckout(2)}
+                          className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                        >
+                          <Edit3 className="h-3 w-3" /> Editar
+                        </button>
+                      </div>
+                      <div className="text-xs text-neutral-700 font-medium space-y-0.5">
+                        {cupomDesconto && <p className="text-blue-700 font-bold">Cupom: {cupomDesconto.codigo_cupom}</p>}
+                        {usarPontos && <p className="text-amber-700 font-bold">Pontos: {pontosAplicados.toLocaleString()} pts (-{formatCurrency(descontoPontos)})</p>}
+                        {usarSaldoCarteira && <p className="text-emerald-700 font-bold">Carteira: -{formatCurrency(descontoCarteira)}</p>}
+                        {!cupomDesconto && !usarPontos && !usarSaldoCarteira && (
+                          <p className="text-neutral-400">Nenhum benefício adicional aplicado.</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-neutral-100 text-[11px] font-black text-amber-800 flex items-center gap-1">
+                      <Gift className="h-3.5 w-3.5 text-amber-600" />
+                      <span>+{totalPontosGanhos} pts a ganhar</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tabela de Itens e Discriminação Financeira Completa */}
+                <div className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-200/90 shadow-sm space-y-6">
+                  
+                  {/* Cabeçalho da Lista */}
+                  <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#17345f]/10 text-[#17345f]">
+                        <ShoppingBag className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-base font-black text-neutral-900 uppercase tracking-wide">
+                          Itens do Pedido
+                        </h2>
+                        <p className="text-xs text-neutral-500 font-medium">
+                          {cartItems.length} {cartItems.length === 1 ? 'item selecionado' : 'itens selecionados'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Lista Completa dos Itens com Desconto PIX e Pontos por Item */}
+                  <div className="divide-y divide-neutral-100">
+                    {cartItems.map((item) => {
+                      const isProduct = item.tipo === 'produto';
+                      const displayCode = isProduct ? getProductDisplayCode(item.item_detalhes as any) : null;
+                      const hasDiscount = isProduct && hasActiveProductDiscount(item.item_detalhes);
+                      const regularPrice = item.item_detalhes?.valor || 0;
+                      const basePrice = isProduct ? (getProductQuantityPriceBreakdown(item.item_detalhes, item.quantidade).subtotalFinal / item.quantidade) : regularPrice;
+                      const itemSubtotalBase = basePrice * item.quantidade;
+
+                      // Se PIX estiver ativo e elegível, aplica desconto no item
+                      const itemPixDiscount = (isPixDiscountEligible && isProduct && checkPixDiscountApplies(item.item_detalhes, pixSettings)) 
+                        ? Number((itemSubtotalBase * (pixPercentage / 100)).toFixed(2)) 
+                        : 0;
+                      const itemFinalPrice = Number(Math.max(0, itemSubtotalBase - itemPixDiscount).toFixed(2));
+                      const itemPontos = Math.floor(itemFinalPrice);
+
+                      return (
+                        <div key={item.id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="flex items-center gap-4 min-w-0">
+                            {item.item_detalhes?.imagem_url ? (
+                              <img 
+                                src={item.item_detalhes.imagem_url} 
+                                alt={item.item_detalhes.nome} 
+                                className="h-16 w-16 rounded-2xl object-cover border border-neutral-200 shrink-0" 
+                              />
+                            ) : (
+                              <div className="h-16 w-16 rounded-2xl bg-neutral-100 border border-neutral-200 flex items-center justify-center shrink-0 text-neutral-400">
+                                <Package className="h-8 w-8" />
+                              </div>
+                            )}
+
+                            <div className="space-y-1.5 min-w-0">
+                              <h4 className="text-sm font-black text-neutral-900 truncate">
+                                {item.item_detalhes?.nome || 'Item do Catálogo'}
+                              </h4>
+                              <div className="flex flex-wrap items-center gap-2.5 text-xs text-neutral-500 font-medium">
+                                {displayCode && <span className="font-mono bg-neutral-100 px-2 py-0.5 rounded text-[11px] font-bold">{displayCode}</span>}
+                                <span>Quantidade: <strong className="text-neutral-800">{item.quantidade}x</strong></span>
+                                {item.prazo_meses && <span>({item.prazo_meses} meses)</span>}
+                                
+                                {/* Badge de Pontos VIP do Item */}
+                                <span className="inline-flex items-center gap-1 text-[11px] font-black text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/70">
+                                  <Coins className="h-3 w-3 text-amber-600" />
+                                  +{itemPontos} pts
+                                </span>
+
+                                {/* Badge de Desconto PIX se for PIX */}
+                                {isPixDiscountEligible && itemPixDiscount > 0 && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
+                                    <QrCode className="h-3 w-3" />
+                                    -{pixPercentage}% no PIX
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="text-right sm:shrink-0 flex sm:flex-col items-baseline sm:items-end justify-between sm:justify-center">
+                            {isPixDiscountEligible && itemPixDiscount > 0 ? (
+                              <>
+                                {/* Preço Cheio Riscado no PIX */}
+                                <span className="text-xs font-semibold text-neutral-400 line-through block">
+                                  {formatCurrency(itemSubtotalBase)}
+                                </span>
+                                {/* Preço com Desconto no PIX */}
+                                <span className="text-base font-black text-emerald-700">
+                                  {formatCurrency(itemFinalPrice)}
+                                </span>
+                                <span className="text-[10px] font-bold text-emerald-600">
+                                  Economia de {formatCurrency(itemPixDiscount)}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                {/* Se não for PIX com desconto (Cartão, Boleto, ou PIX sem desconto): Exibe o valor cheio */}
+                                {hasDiscount && regularPrice * item.quantidade > itemSubtotalBase && (
+                                  <span className="text-xs font-semibold text-neutral-400 line-through block">
+                                    {formatCurrency(regularPrice * item.quantidade)}
+                                  </span>
+                                )}
+                                <span className="text-base font-black text-neutral-900">
+                                  {formatCurrency(itemSubtotalBase)}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Fechamento de Valores Completo */}
+                  <div className="border-t border-neutral-200/90 pt-6 space-y-3 max-w-md ml-auto text-xs font-medium text-neutral-600">
+                    <div className="flex justify-between">
+                      <span>Subtotal dos itens</span>
+                      <span className="font-bold text-neutral-900">{formatCurrency(subtotalInicial)}</span>
+                    </div>
+
+                    {descontoPromocoes > 0 && (
+                      <div className="flex justify-between text-emerald-600 font-bold">
+                        <span>Descontos promocionais</span>
+                        <span>- {formatCurrency(descontoPromocoes)}</span>
+                      </div>
+                    )}
+
+                    {descontoPontos > 0 && (
+                      <div className="flex justify-between text-amber-700 font-bold">
+                        <span>Resgate de Pontos VIP ({pontosAplicados.toLocaleString()} pts)</span>
+                        <span>- {formatCurrency(descontoPontos)}</span>
+                      </div>
+                    )}
+
+                    {descontoCalculado > 0 && (
+                      <div className="flex justify-between text-blue-600 font-bold">
+                        <span>Cupom de Desconto ({cupomDesconto?.codigo_cupom})</span>
+                        <span>- {formatCurrency(descontoCalculado)}</span>
+                      </div>
+                    )}
+
+                    {descontoCarteira > 0 && (
+                      <div className="flex justify-between text-emerald-700 font-bold">
+                        <span>Saldo da Carteira</span>
+                        <span>- {formatCurrency(descontoCarteira)}</span>
+                      </div>
+                    )}
+
+                    {temProdutos && (
+                      <div className="flex justify-between">
+                        <span>Taxa de Entrega / Frete</span>
+                        <span className={`font-bold ${taxaEntregaFinal === 0 ? 'text-emerald-700 uppercase tracking-wider' : 'text-neutral-900'}`}>
+                          {taxaEntregaFinal === 0 ? 'Frete Grátis' : formatCurrency(taxaEntregaFinal)}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Desconto Total no PIX (Apenas quando a forma de pagamento for PIX com desconto elegível) */}
+                    {isPixDiscountEligible && pixDiscountValue > 0 && (
+                      <div className="flex justify-between items-center text-emerald-700 font-black bg-emerald-50/90 border border-emerald-200/80 px-3.5 py-2.5 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          <QrCode className="h-4 w-4 text-emerald-600" />
+                          <span>Desconto Total no PIX ({pixPercentage}%)</span>
+                        </div>
+                        <span className="text-sm font-black">- {formatCurrency(pixDiscountValue)}</span>
+                      </div>
+                    )}
+
+                    {/* Juros de Parcelamento do Cartão de Crédito */}
+                    {formaPagamento === 'cartao' && valorJurosCartao > 0 && (
+                      <div className="flex justify-between text-blue-700 font-bold">
+                        <span>Juros de Parcelamento Cartão ({infoParcelaCartao.taxa}%)</span>
+                        <span>+ {formatCurrency(valorJurosCartao)}</span>
+                      </div>
+                    )}
+
+                    {/* Juros de Crédito GSA se for Crédito GSA Parcelado */}
+                    {formaPagamento === 'credito_loja' && valorJurosCredito > 0 && (
+                      <div className="flex justify-between text-indigo-700 font-bold">
+                        <span>Juros Crédito GSA ({taxaJurosAplicada}%)</span>
+                        <span>+ {formatCurrency(valorJurosCredito)}</span>
+                      </div>
+                    )}
+
+                    {/* Total Geral Dinâmico */}
+                    <div className="border-t border-neutral-200 pt-4 flex items-baseline justify-between">
+                      <div>
+                        <span className="text-base font-black text-neutral-900 block">Total Final a Pagar</span>
+                        <span className="text-xs text-neutral-500 font-medium">
+                          {isPix 
+                            ? (isPixDiscountEligible ? `No PIX com ${pixPercentage}% de desconto` : 'No PIX (sem desconto por uso de saldo/pontos)') 
+                            : formaPagamento === 'cartao' 
+                            ? `No Cartão de Crédito (${parcelasCartao}x de ${formatCurrency(infoParcelaCartao.parcela)})` 
+                            : 'À vista ou parcelado'}
+                        </span>
+                      </div>
+                      <span className="text-3xl font-black text-[#17345f] tracking-tight">
+                        {formatCurrency(totalHojeFinal)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Rodapé de Ação Final */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-neutral-100">
+                    <button
+                      type="button"
+                      onClick={() => setEtapaCheckout(2)}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl border border-neutral-300 bg-white px-6 py-4 text-xs font-black text-neutral-700 shadow-2xs hover:bg-neutral-50 cursor-pointer"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      <span>Voltar para Benefícios & Pagamento</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleFinalizar}
+                      disabled={isSubmitting}
+                      className="w-full sm:w-auto flex-1 sm:max-w-md inline-flex items-center justify-center gap-2 rounded-2xl bg-[#17345f] px-8 py-4 text-sm font-black text-white shadow-xl shadow-[#17345f]/25 transition-all hover:bg-[#102746] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 cursor-pointer"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          <span>Processando Pedido...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                          <span>Confirmar & Finalizar Pedido</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}

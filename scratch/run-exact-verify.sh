@@ -1,0 +1,1 @@
+python3 -c "import json; p=json.load(open('/opt/gsa-tv/playlists/1/2026-09-15.json')); entries=p.get('program',[]); total=sum(float(e['out'])-float(e.get('in',0)) for e in entries); print('Date:', p.get('date'), 'Entries:', len(entries), 'Total duration:', total)"

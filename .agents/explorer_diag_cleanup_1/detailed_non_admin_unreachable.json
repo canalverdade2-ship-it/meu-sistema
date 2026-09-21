@@ -1,0 +1,402 @@
+[
+  {
+    "file": "src/components/AppClientShell.tsx",
+    "lines": 31,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/auth/RestrictedAccessModal.tsx",
+    "lines": 251,
+    "importedBy": [],
+    "scriptMatches": [
+      "scripts/check-home-public-contracts.ts",
+      "scripts/check-restricted-access-hub.ts",
+      "scripts/check-supplier-procurement-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/business/BusinessDashboard.tsx",
+    "lines": 303,
+    "importedBy": [],
+    "scriptMatches": [
+      "scripts/check-client-audience-portals.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/campaigns/SiteCampaignBootstrap.tsx",
+    "lines": 58,
+    "importedBy": [],
+    "scriptMatches": [
+      "scripts/check-site-campaign-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/campaigns/SiteCampaignLayer.tsx",
+    "lines": 318,
+    "importedBy": [
+      "src/components/campaigns/SiteCampaignBootstrap.tsx"
+    ],
+    "scriptMatches": [
+      "scripts/check-site-campaign-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/client/marketplace/MarketplaceLanding.tsx",
+    "lines": 94,
+    "importedBy": [],
+    "scriptMatches": [
+      "scripts/check-protection-identity-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/client/marketplace/MarketplaceModuleCard.tsx",
+    "lines": 87,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/client/marketplace/TravelPackagesPage.tsx",
+    "lines": 296,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/client/store/HeroBannerCarousel.tsx",
+    "lines": 191,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/client/store/StoreHubCancelOrder.tsx",
+    "lines": 100,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/client/store/StoreHubExchanges.tsx",
+    "lines": 952,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/client/store/StoreHubRefunds.tsx",
+    "lines": 195,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/client/store/StoreHubVipPromos.tsx",
+    "lines": 88,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/common/SupportConversationModal.tsx",
+    "lines": 238,
+    "importedBy": [
+      "src/components/admin/prestadores/PrestadoresDemandas.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/public/BrandPortfolioDialog.tsx",
+    "lines": 570,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/public/FreeToolsCalculatorDialog.tsx",
+    "lines": 643,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/components/ui/CommandSlideOver.tsx",
+    "lines": 2,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": [
+      "src/tests/foundations-shared-components.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ]
+  },
+  {
+    "file": "src/components/ui/TacticalDataGrid.tsx",
+    "lines": 2,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": [
+      "src/tests/foundations-shared-components.test.ts",
+      "src/tests/super-domains-e2e.test.ts"
+    ]
+  },
+  {
+    "file": "src/data/publicProjectTypes.ts",
+    "lines": 20,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/hooks/use-mobile.tsx",
+    "lines": 20,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/hooks/useStoreCart.ts",
+    "lines": 95,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/hooks/useStoreOrders.ts",
+    "lines": 36,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/hooks/useStoreProducts.ts",
+    "lines": 110,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/lib/error-capture.ts",
+    "lines": 82,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/lib/lovable-error-reporting.ts",
+    "lines": 59,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/lib/pdfSharingService.ts",
+    "lines": 106,
+    "importedBy": [
+      "src/components/admin/FinanceiroModule.tsx",
+      "src/components/admin/OrcamentosModule.tsx",
+      "src/components/admin/OrdensServicoModule.tsx"
+    ],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/lib/siteCampaigns.ts",
+    "lines": 101,
+    "importedBy": [
+      "src/components/campaigns/SiteCampaignLayer.tsx"
+    ],
+    "scriptMatches": [
+      "scripts/check-site-campaign-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/routing/adminNavigation.ts",
+    "lines": 294,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/utils/paymentPropagation.ts",
+    "lines": 261,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/utils/promotions.ts",
+    "lines": 112,
+    "importedBy": [],
+    "scriptMatches": [
+      "scripts/check-free-tools-contracts.ts"
+    ],
+    "testMatches": []
+  },
+  {
+    "file": "src/utils/referral.ts",
+    "lines": 172,
+    "importedBy": [
+      "src/validation/step3_finance_gamification.ts"
+    ],
+    "scriptMatches": [
+      "scripts/check-home-public-contracts.ts"
+    ],
+    "testMatches": [
+      "tests/e2e/0-stress-real-data.spec.ts"
+    ]
+  },
+  {
+    "file": "src/utils/vipStyles.ts",
+    "lines": 85,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/validation/base.ts",
+    "lines": 28,
+    "importedBy": [
+      "src/validation/find_prestador.ts",
+      "src/validation/find_records.ts",
+      "src/validation/master_block2.ts",
+      "src/validation/master_block3.ts",
+      "src/validation/master_block4.ts",
+      "src/validation/step1_referral.ts",
+      "src/validation/step2_sales_flow.ts",
+      "src/validation/step3_finance_gamification.ts",
+      "src/validation/step4_integrity_audit.ts",
+      "src/validation/step5_reports_consolidation.ts",
+      "src/validation/step6_subscriptions.ts"
+    ],
+    "scriptMatches": [
+      "scripts/audit-production-real.mjs",
+      "scripts/backup-storage.mjs",
+      "scripts/check-admin-migrations-runtime.cjs",
+      "scripts/check-admin-panel-contracts.ts",
+      "scripts/check-advertising-completion.ts",
+      "scripts/check-advertising-foundation.ts",
+      "scripts/check-affiliate-contracts.ts",
+      "scripts/check-calculator-pro-panel-contracts.ts",
+      "scripts/check-careers-contracts.ts",
+      "scripts/check-classifieds-production-contracts.ts",
+      "scripts/check-client-portal-security-contracts.ts",
+      "scripts/check-client-session-restore-contract.ts",
+      "scripts/check-collaborator-boundaries-runtime.cjs",
+      "scripts/check-collaborator-boundary-contracts.ts",
+      "scripts/check-database-inventory.mjs",
+      "scripts/check-free-tools-contracts.ts",
+      "scripts/check-free-tools-pdf-contracts.ts",
+      "scripts/check-free-tools-pro-security-contracts.ts",
+      "scripts/check-gsa-travel-contracts.ts",
+      "scripts/check-home-public-contracts.ts",
+      "scripts/check-partners-contracts.ts",
+      "scripts/check-products-subscriptions-contracts.ts",
+      "scripts/check-protection-direct-quote-contracts.ts",
+      "scripts/check-protection-identity-contracts.ts",
+      "scripts/check-provider-portal-security-contracts.ts",
+      "scripts/check-realtime-contracts.ts",
+      "scripts/check-restored-admin-foundations.ts",
+      "scripts/check-site-campaign-contracts.ts",
+      "scripts/check-site-campaign-migrations-runtime.cjs",
+      "scripts/check-supplier-procurement-contracts.ts",
+      "scripts/manage-hero-banners.mjs",
+      "scripts/run-admin-migrations-runtime.cjs",
+      "scripts/test-storage-restore.mjs"
+    ],
+    "testMatches": [
+      "src/tests/operacoes-super-domain.test.ts",
+      "src/tests/productVariations.test.ts",
+      "src/tests/super-domains-adversarial-challenger.test.ts",
+      "src/tests/super-domains-e2e.test.ts",
+      "src/tests/wishlist.test.ts",
+      "tests/e2e/1-auth-e-publico.spec.ts",
+      "tests/utils/db-setup.ts"
+    ]
+  },
+  {
+    "file": "src/validation/find_prestador.ts",
+    "lines": 21,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/validation/find_records.ts",
+    "lines": 34,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/validation/master_block2.ts",
+    "lines": 160,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/validation/master_block3.ts",
+    "lines": 130,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/validation/master_block4.ts",
+    "lines": 84,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/validation/step1_referral.ts",
+    "lines": 98,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/validation/step2_sales_flow.ts",
+    "lines": 173,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/validation/step3_finance_gamification.ts",
+    "lines": 120,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/validation/step4_integrity_audit.ts",
+    "lines": 99,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/validation/step5_reports_consolidation.ts",
+    "lines": 81,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  },
+  {
+    "file": "src/validation/step6_subscriptions.ts",
+    "lines": 333,
+    "importedBy": [],
+    "scriptMatches": [],
+    "testMatches": []
+  }
+]

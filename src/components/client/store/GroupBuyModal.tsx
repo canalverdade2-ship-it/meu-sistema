@@ -3,6 +3,7 @@ import { X, Users, Gift, Loader2, Calendar, Phone, User, Share2, Copy, Check, Ex
 import { motion, AnimatePresence } from 'framer-motion';
 import { vaquinhaService, Vaquinha } from '../../../lib/vaquinhaService';
 import { formatCurrency } from '../../../utils/formatters';
+import { maskPhone } from '../../../lib/utils';
 import { getProductEffectivePrice } from '../../../lib/productPricing';
 import { navigate } from '../../../routing/navigationService';
 import { routes } from '../../../routing/routeCatalog';
@@ -200,11 +201,13 @@ export function GroupBuyModal({ isOpen, onClose, product, productUrl }: GroupBuy
                       </label>
                       <div className="relative">
                         <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                        <input 
+                        <input  
                           type="tel" 
                           required
+                          maxLength={15}
                           value={formData.organizadorTelefone}
-                          onChange={e => setFormData({ ...formData, organizadorTelefone: e.target.value })}
+                          inputMode="numeric"
+onChange={(e) => setFormData({ ...formData, organizadorTelefone: maskPhone(e.target.value) })}
                           placeholder="(11) 99999-9999" 
                           className="w-full pl-10 pr-4 py-3 bg-white border border-neutral-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500"
                         />

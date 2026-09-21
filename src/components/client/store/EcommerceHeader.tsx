@@ -12,11 +12,14 @@ import { useAppLocation } from '../../../routing/useAppLocation';
 import { LogoGSA } from '../../ui/LogoGSA';
 import { formatCurrency } from '../../../lib/utils';
 import { supabase } from '../../../lib/supabase';
+import { clientOperationalWrite } from '../../../lib/clientOperationalWrite';
 import { useClientNotifications } from '../../../hooks/useClientNotifications';
 import { VolteEganheModal } from './VolteEganheModal';
 import { consultarCEP, ViaCEPResult } from '../../../utils/viaCep';
 import { toast } from 'react-hot-toast';
 import { fetchWishlistFromDb, getWishlist } from '../../../lib/wishlistStorage';
+import { useRealtimeSubscription } from '../../../hooks/useRealtime';
+import { useStoreConfig } from './useStoreConfig';
 
 interface EcommerceHeaderProps {
   clientId?: string;
@@ -38,6 +41,7 @@ export function EcommerceHeader({
   onSearch,
   initialSearchQuery = '',
 }: EcommerceHeaderProps) {
+  const { freeShippingThreshold } = useStoreConfig();
   const { notifications, unreadNotifications, markAsRead, markAllAsRead } = useClientNotifications();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
@@ -166,25 +170,26 @@ export function EcommerceHeader({
     const cityState = [cepResult.localidade, cepResult.uf].filter(Boolean).join(' - ');
     const label = `${cityState} ${formatted}`;
 
-    localStorage.setItem('gsa_user_location', label);
-    localStorage.setItem('gsa_user_cep', formatted);
-    setUserLocationLabel(label);
-
-    // Se o usuário estiver logado, atualiza o banco de dados do cliente também!
+    // Para cliente autenticado, só atualiza o cache local depois que o servidor confirmar a persistência.
     if (clientId) {
       try {
-        await supabase.from('clientes').update({
+        await clientOperationalWrite(clientId, 'clientes', 'update', {
           cep: formatted,
           cidade: cepResult.localidade,
           estado: cepResult.uf,
           bairro: cepResult.bairro || '',
           endereco: cepResult.logradouro || ''
-        }).eq('id', clientId);
-      } catch (err) {
+        });
+      } catch (err: any) {
         console.error('[EcommerceHeader] Erro ao salvar CEP no cliente:', err);
+        toast.error(err?.message || 'Não foi possível salvar o endereço na sua conta.');
+        return;
       }
     }
 
+    localStorage.setItem('gsa_user_location', label);
+    localStorage.setItem('gsa_user_cep', formatted);
+    setUserLocationLabel(label);
     window.dispatchEvent(new CustomEvent('gsa-cep-updated'));
     toast.success(`Endereço de entrega atualizado para ${cepResult.localidade} - ${cepResult.uf}!`);
     setIsCepModalOpen(false);
@@ -229,6 +234,45 @@ export function EcommerceHeader({
       window.removeEventListener('storage', updateCount);
     };
   }, [cartItemCount, clientId]);
+
+  useRealtimeSubscription(
+    [
+      {
+        table: 'loja_carrinhos',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        debounceMs: 100,
+        onChange: () => {
+          if (clientId) {
+            supabase
+              .from('loja_carrinhos')
+              .select('quantidade')
+              .eq('cliente_id', clientId)
+              .then(({ data }) => {
+                if (data) setLocalCartCount(data.reduce((a, c) => a + (Number(c.quantidade) || 1), 0));
+              });
+          }
+        },
+      },
+      {
+        table: 'clientes',
+        filter: clientId ? `id=eq.${clientId}` : undefined,
+        debounceMs: 100,
+        onChange: () => {
+          if (clientId) {
+            supabase
+              .from('clientes')
+              .select('saldo_pontos')
+              .eq('id', clientId)
+              .maybeSingle()
+              .then(({ data }) => {
+                if (data) setPointsBalance(Number(data.saldo_pontos || 0));
+              });
+          }
+        },
+      },
+    ],
+    [clientId]
+  );
 
   const handleCartClick = () => {
     if (onOpenCart) {
@@ -498,7 +542,7 @@ export function EcommerceHeader({
               </span>
               <span className="text-white/20">·</span>
               <span className="text-emerald-400 font-bold flex items-center gap-1.5">
-                <Zap size={11} /> Frete Grátis acima de R$ 99
+                <Zap size={11} /> Frete Grátis acima de R$ {freeShippingThreshold}
               </span>
             </div>
             
@@ -660,7 +704,7 @@ export function EcommerceHeader({
                           onClick={() => handleSearchSubmit()}
                           className="mt-2 text-xs font-bold text-[#17345f] hover:underline cursor-pointer"
                         >
-                          Buscar no catálogo completo →
+                          Buscar no catálogo completo â— ’
                         </button>
                       </div>
                     )
@@ -733,7 +777,7 @@ export function EcommerceHeader({
                             <div className="flex justify-between items-start mb-1">
                               <p className="text-sm font-bold text-slate-900">{notif.titulo}</p>
                               <span className="text-[10px] text-slate-400 font-semibold">
-                                {notif.data_criacao ? new Date(notif.data_criacao).toLocaleDateString() : 'Agora'}
+                                {notif.created_at ? new Date(notif.created_at).toLocaleDateString() : 'Agora'}
                               </span>
                             </div>
                             <p className="text-xs text-slate-600 leading-relaxed">{notif.mensagem}</p>
@@ -746,10 +790,13 @@ export function EcommerceHeader({
                   )}
                 </div>
 
-                {/* Minha Conta -> Leva para a Central GSA Store Hub */}
-                <div 
+                {/* Minha Conta -> abre o menu da GSA Store */}
+                <button
+                  type="button"
                   className="flex items-center gap-2.5 cursor-pointer text-white hover:text-[#d8bd73] transition-colors p-1.5 rounded-xl hover:bg-white/10"
-                  onClick={() => navigate(routes.marketplace.store.root())}
+                  onClick={() => navigate(routes.marketplace.store.menu())}
+                  aria-label="Abrir menu da minha conta no Marketplace"
+                  title="Minha conta"
                 >
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white">
                     <User className="h-4 w-4" />
@@ -758,7 +805,7 @@ export function EcommerceHeader({
                     <span className="block font-medium text-white/70">Olá, Cliente</span>
                     <span className="block font-bold leading-none text-white">Minha Conta</span>
                   </div>
-                </div>
+                </button>
               </>
             ) : (
               <button
@@ -875,7 +922,7 @@ export function EcommerceHeader({
                         onClick={() => handleSearchSubmit()}
                         className="w-full text-center text-[11px] font-bold text-[#17345f] py-1"
                       >
-                        Ver todos os resultados →
+                        Ver todos os resultados â— ’
                       </button>
                     </div>
                   </>
@@ -888,7 +935,7 @@ export function EcommerceHeader({
                         onClick={() => handleSearchSubmit()}
                         className="mt-1 text-[11px] font-bold text-[#17345f] hover:underline"
                       >
-                        Buscar no catálogo completo →
+                        Buscar no catálogo completo â— ’
                       </button>
                     </div>
                   )
@@ -948,6 +995,19 @@ export function EcommerceHeader({
             <ul className="flex flex-col py-2 divide-y divide-slate-100">
               {clientId && (
                 <>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        navigate(routes.client.dashboard());
+                      }}
+                      className="flex items-center gap-3 w-full px-5 py-3 text-left text-sm font-black text-white bg-[#17345f] hover:bg-[#102746]"
+                    >
+                      <Home size={16} className="text-[#d8bd73]" />
+                      Voltar ao Dashboard do Cliente
+                    </button>
+                  </li>
                   <li>
                     <button
                       onClick={() => {
@@ -1081,7 +1141,7 @@ export function EcommerceHeader({
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 space-y-3 animate-in fade-in duration-200">
                   <div className="flex items-start gap-2.5">
                     <div className="h-7 w-7 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
-                      ✓
+                      âÅ““
                     </div>
                     <div className="text-xs space-y-0.5">
                       <p className="font-extrabold text-emerald-950 text-sm">
@@ -1114,7 +1174,7 @@ export function EcommerceHeader({
                   rel="noopener noreferrer"
                   className="text-[#17345f] font-bold hover:underline"
                 >
-                  Não sei meu CEP →
+                  Não sei meu CEP â— ’
                 </a>
               </div>
             </form>
@@ -1122,7 +1182,7 @@ export function EcommerceHeader({
         </div>
       )}
 
-      {/* ─── MENU LATERAL / DRAWER DE CATEGORIAS ─── */}
+      {/* â”€â”€â”€ MENU LATERAL / DRAWER DE CATEGORIAS â”€â”€â”€ */}
       <AnimatePresence>
         {isCategoriesDrawerOpen && (
           <div className="fixed inset-0 z-50 overflow-hidden">

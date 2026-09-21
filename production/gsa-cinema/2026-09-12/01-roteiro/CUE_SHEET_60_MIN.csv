@@ -1,0 +1,19 @@
+inicio,fim,duracao,tipo,segmento,asset_master,audio_ou_locucao,direitos_status
+00:00,00:45,00:45,editorial,Cold Open,gsa-cinema-abertura-master-10s-1080p30.mp4,"LOC: Existem historias que fazem a gente rir... + APRES: E durante a proxima hora... a tela e nossa.",original GSA/Flow
+00:45,02:15,01:30,identidade,Abertura oficial,gsa-cinema-abertura-master-10s-1080p30.mp4,"trilha GSA Cinema + destaques da edicao",original GSA/Flow
+02:15,05:30,03:15,estudio,Apresentacao,"APRESENTADOR + SET GSA CINEMA","Boa noite! Esta comecando o GSA Cinema...",original GSA
+05:30,12:30,07:00,editorial,Radar GSA,gsa-cinema-radar-master-8s-1080p30.mp4,"apresentador + VTs + GC",trailers/trechos somente autorizados
+12:30,12:35,00:05,identidade,Bumper intervalo 1,gsa-cinema-bumper-master-5s-1080p30.mp4,"SFX/trilha",original GSA/Flow
+12:35,14:30,01:55,intervalo,Janela comercial 1,"MATERIAL COMERCIAL OU CAPSULA GSA","audio conforme material",liberacao obrigatoria
+14:30,22:00,07:30,editorial,Cena em Foco,gsa-cinema-cena-em-foco-master-8s-1080p30.mp4,"apresentador + analise + GC",cena somente autorizada
+22:00,28:30,06:30,editorial,Por Tras da Tela,gsa-cinema-por-tras-da-tela-master-8s-1080p30.mp4,"apresentador + making-of/demonstracao",making-of autorizado ou material proprio
+28:30,28:35,00:05,identidade,Bumper intervalo 2,gsa-cinema-bumper-master-5s-1080p30.mp4,"SFX/trilha",original GSA/Flow
+28:35,30:30,01:55,intervalo,Janela comercial 2,"MATERIAL COMERCIAL OU CAPSULA GSA","audio conforme material",liberacao obrigatoria
+30:30,36:30,06:00,editorial,Arquivo GSA Cinema,gsa-cinema-arquivo-master-8s-1080p30.mp4,"narracao + timeline",arquivo licenciado/domino publico valido
+36:30,43:30,07:00,interacao,Desafio 24 Quadros,gsa-cinema-desafio-24-quadros-master-8s-1080p30.mp4,"apresentador + cronometro + respostas",material proprio ou autorizado
+43:30,43:35,00:05,identidade,Bumper intervalo 3,gsa-cinema-bumper-master-5s-1080p30.mp4,"SFX/trilha",original GSA/Flow
+43:35,45:30,01:55,intervalo,Janela comercial 3,"MATERIAL COMERCIAL OU CAPSULA GSA","audio conforme material",liberacao obrigatoria
+45:30,52:30,07:00,editorial,GSA Recomenda,"CARDS + TRAILERS AUTORIZADOS","apresentador + ranking #5 a #1",trailers/trechos somente autorizados
+52:30,57:30,05:00,editorial,Sessao Especial,"VT/ENTREVISTA/HOMENAGEM","apresentador + convidado/VT",liberacao conforme pauta
+57:30,59:10,01:40,servico,Agenda + Interacao,"CARDS + QR CODE","apresentador + CTA",original GSA
+59:10,60:00,00:50,identidade,Encerramento,gsa-cinema-encerramento-master-10s-1080p30.mp4,"APRES: Eu encontro voce na proxima sessao... bons filmes.",original GSA/Flow

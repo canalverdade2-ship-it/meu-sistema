@@ -1,0 +1,13 @@
+import { runSshScript } from './ssh2-run.mjs';
+
+const cmd = `
+sed -n '50,75p' /opt/gsa-tv/control-plane/src/editorial-production.js
+`;
+
+try {
+  const res = await runSshScript(cmd, 30000);
+  console.log(res.stdout);
+  if (res.stderr) console.error('STDERR:', res.stderr);
+} catch (e) {
+  console.error('ERROR:', e);
+}

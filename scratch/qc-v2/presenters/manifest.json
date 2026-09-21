@@ -1,0 +1,178 @@
+[
+  {
+    "program": "gsa-mercado",
+    "presenter": "Eduardo Salles",
+    "file": "gsa-mercado.png",
+    "source": "casting-board-01-news-business-tech-2026-09-04.png",
+    "row": 1,
+    "column": 1
+  },
+  {
+    "program": "gsa-tempo",
+    "presenter": "Clara Venturi",
+    "file": "gsa-tempo.png",
+    "source": "casting-board-01-news-business-tech-2026-09-04.png",
+    "row": 1,
+    "column": 2
+  },
+  {
+    "program": "gsa-cidadania",
+    "presenter": "Patrícia Silva",
+    "file": "gsa-cidadania.png",
+    "source": "casting-board-01-news-business-tech-2026-09-04.png",
+    "row": 1,
+    "column": 3
+  },
+  {
+    "program": "gsa-business",
+    "presenter": "Ricardo Brandão",
+    "file": "gsa-business.png",
+    "source": "casting-board-01-news-business-tech-2026-09-04.png",
+    "row": 1,
+    "column": 4
+  },
+  {
+    "program": "gsa-tech",
+    "presenter": "Caio Nex",
+    "file": "gsa-tech.png",
+    "source": "casting-board-01-news-business-tech-2026-09-04.png",
+    "row": 2,
+    "column": 1
+  },
+  {
+    "program": "gsa-motor",
+    "presenter": "Bruna Ventura",
+    "file": "gsa-motor.png",
+    "source": "casting-board-01-news-business-tech-2026-09-04.png",
+    "row": 2,
+    "column": 2
+  },
+  {
+    "program": "gsa-agro",
+    "presenter": "Daniel Campos",
+    "file": "gsa-agro.png",
+    "source": "casting-board-01-news-business-tech-2026-09-04.png",
+    "row": 2,
+    "column": 3
+  },
+  {
+    "program": "gsa-mundo",
+    "presenter": "Olívia Valverde",
+    "file": "gsa-mundo.png",
+    "source": "casting-board-01-news-business-tech-2026-09-04.png",
+    "row": 2,
+    "column": 4
+  },
+  {
+    "program": "gsa-destinos",
+    "presenter": "Marina Horizonte",
+    "file": "gsa-destinos.png",
+    "source": "casting-board-02-lifestyle-faith-sports-2026-09-04.png",
+    "row": 1,
+    "column": 1
+  },
+  {
+    "program": "gsa-bem-viver",
+    "presenter": "Lucas Sereno",
+    "file": "gsa-bem-viver.png",
+    "source": "casting-board-02-lifestyle-faith-sports-2026-09-04.png",
+    "row": 1,
+    "column": 2
+  },
+  {
+    "program": "gsa-sabor",
+    "presenter": "Chef Lorena Prado",
+    "file": "gsa-sabor.png",
+    "source": "casting-board-02-lifestyle-faith-sports-2026-09-04.png",
+    "row": 1,
+    "column": 3
+  },
+  {
+    "program": "gsa-em-fe",
+    "presenter": "Pastor Samuel Veredas",
+    "file": "gsa-em-fe.png",
+    "source": "casting-board-02-lifestyle-faith-sports-2026-09-04.png",
+    "row": 1,
+    "column": 4
+  },
+  {
+    "program": "gsa-hora-da-palavra",
+    "presenter": "Elisa Monteiro",
+    "file": "gsa-hora-da-palavra.png",
+    "source": "casting-board-02-lifestyle-faith-sports-2026-09-04.png",
+    "row": 2,
+    "column": 1
+  },
+  {
+    "program": "gsa-ta-na-rede",
+    "presenter": "Nina Conecta",
+    "file": "gsa-ta-na-rede.png",
+    "source": "casting-board-02-lifestyle-faith-sports-2026-09-04.png",
+    "row": 2,
+    "column": 2
+  },
+  {
+    "program": "gsa-esportes",
+    "presenter": "André Linhares",
+    "file": "gsa-esportes.png",
+    "source": "casting-board-02-lifestyle-faith-sports-2026-09-04.png",
+    "row": 2,
+    "column": 3
+  },
+  {
+    "program": "gsa-misterios",
+    "presenter": "Aurora Alencar",
+    "file": "gsa-misterios.png",
+    "source": "casting-board-02-lifestyle-faith-sports-2026-09-04.png",
+    "row": 2,
+    "column": 4
+  },
+  {
+    "program": "gsa-music",
+    "presenter": "Mauro Beat",
+    "file": "gsa-music.png",
+    "source": "casting-board-03-entertainment-narrators-2026-09-04.png",
+    "row": 1,
+    "column": 1
+  },
+  {
+    "program": "gsa-cinema",
+    "presenter": "Thea Lumière",
+    "file": "gsa-cinema.png",
+    "source": "casting-board-03-entertainment-narrators-2026-09-04.png",
+    "row": 1,
+    "column": 2
+  },
+  {
+    "program": "gsa-sessao-pipoca",
+    "presenter": "Beto Pipoca",
+    "file": "gsa-sessao-pipoca.png",
+    "source": "casting-board-03-entertainment-narrators-2026-09-04.png",
+    "row": 1,
+    "column": 3
+  },
+  {
+    "program": "gsa-planeta-terra",
+    "presenter": "Gaia Monteverde",
+    "file": "gsa-planeta-terra.png",
+    "source": "casting-board-03-entertainment-narrators-2026-09-04.png",
+    "row": 2,
+    "column": 1
+  },
+  {
+    "program": "gsa-historias-da-biblia",
+    "presenter": "Salomão Oliveira",
+    "file": "gsa-historias-da-biblia.png",
+    "source": "casting-board-03-entertainment-narrators-2026-09-04.png",
+    "row": 2,
+    "column": 2
+  },
+  {
+    "program": "gsa-desenhos",
+    "presenter": "Luna Alegria",
+    "file": "gsa-desenhos.png",
+    "source": "casting-board-03-entertainment-narrators-2026-09-04.png",
+    "row": 2,
+    "column": 3
+  }
+]

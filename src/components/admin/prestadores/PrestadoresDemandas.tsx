@@ -1986,13 +1986,14 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
             <label className="mb-1 block text-sm font-medium text-neutral-700">
               Valor Proposto (R$) *
             </label>
-            <input
+            <input 
               type="number"
               required
               step="0.01"
               min="0"
               value={counterValue}
-              onChange={(e) => setCounterValue(e.target.value)}
+              inputMode="numeric"
+onChange={(e) => setCounterValue(e.target.value)}
               className="w-full rounded-lg border border-neutral-300 p-2.5 outline-none focus:border-[#1a1a1a] focus:ring-1 focus:ring-[#1a1a1a]"
               placeholder="0.00"
             />
@@ -2139,13 +2140,14 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
                               </label>
                               <div className="relative">
                                 <span className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 font-bold">R$</span>
-                                <input
+                                <input 
                                   type="number"
                                   step="0.01"
                                   min="0"
                                   required
                                   value={valorProposto}
-                                  onChange={(e) => setValorProposto(e.target.value)}
+                                  inputMode="numeric"
+onChange={(e) => setValorProposto(e.target.value)}
                                   className="w-full rounded-2xl bg-neutral-50 border-transparent pl-12 pr-5 py-4 text-sm font-black text-neutral-900 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none ring-1 ring-neutral-200"
                                   placeholder="0,00"
                                 />
@@ -2684,12 +2686,13 @@ export function PrestadoresDemandas({ subTab, initialItemId, colaboradorNome, co
                                 <label className="mb-2 block text-[10px] font-black text-neutral-400 uppercase tracking-widest ml-1">Valor Proposto (R$) *</label>
                                 <div className="relative">
                                   <span className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400 font-bold">R$</span>
-                                  <input
+                                  <input 
                                     type="number"
                                     step="0.01"
                                     required
                                     value={transferValor}
-                                    onChange={(e) => setTransferValor(e.target.value)}
+                                    inputMode="numeric"
+onChange={(e) => setTransferValor(e.target.value)}
                                     className="w-full rounded-2xl bg-neutral-50 border-transparent pl-12 pr-5 py-4 text-sm font-black text-neutral-900 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none ring-1 ring-neutral-200"
                                     placeholder="0,00"
                                   />

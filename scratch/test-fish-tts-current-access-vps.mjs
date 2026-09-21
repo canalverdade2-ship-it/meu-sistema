@@ -1,0 +1,8 @@
+import { runSshScript } from './ssh2-run.mjs';
+const js=String.raw`
+const fs=require('fs'),crypto=require('crypto'),cp=require('child_process');
+function secret(){const v=JSON.parse(fs.readFileSync('/home/opc/gsa-ai/secrets/fish-production.enc.json','utf8'));const k=Buffer.from(cp.execFileSync('sudo',['docker','exec','gsa-tv-control-plane','printenv','GSA_TV_SECRET_KEY'],{encoding:'utf8'}).trim(),'hex');const n=Buffer.from(v.nonce,'base64url'),a=Buffer.from(v.ciphertext,'base64url'),t=a.subarray(-16),b=a.subarray(0,-16),d=crypto.createDecipheriv('aes-256-gcm',k,n);d.setAAD(Buffer.from(v.aad));d.setAuthTag(t);return JSON.parse(Buffer.concat([d.update(b),d.final()]).toString()).api_key}
+(async()=>{const k=secret();for(const model of ['s2-pro','s2.1-pro-free']){const r=await fetch('https://api.fish.audio/v1/tts',{method:'POST',headers:{Authorization:'Bearer '+k,'Content-Type':'application/json',model},body:JSON.stringify({text:'Teste de voz GSA TV.',reference_id:'cc493635c2644078aca95ce388482fb0',format:'mp3'})});const b=Buffer.from(await r.arrayBuffer());console.log(JSON.stringify({model,status:r.status,content_type:r.headers.get('content-type'),bytes:b.length,error:r.ok?null:b.toString().slice(0,300)}));if(r.ok)fs.writeFileSync('/home/opc/gsa-ai/qc/fish-voices/access-test-'+model.replace(/[^a-z0-9]/gi,'-')+'.mp3',b)}})().catch(e=>{console.error(e.message);process.exit(1)});`;
+const e=Buffer.from(js).toString('base64');const r=await runSshScript(`printf '%s' '${e}'|base64 -d >/tmp/fish-access.js
+node /tmp/fish-access.js
+rm -f /tmp/fish-access.js`,60000);process.stdout.write(r.stdout);if(r.stderr)process.stderr.write(r.stderr);

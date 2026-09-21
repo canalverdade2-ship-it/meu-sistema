@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { toast } from 'react-hot-toast';
 import { Search, Filter, DollarSign, CheckCircle, Clock, AlertCircle, XCircle, FileText, User, Phone, Mail, CreditCard, History, Info, Landmark } from 'lucide-react';
@@ -62,20 +62,21 @@ useEffect(() => {
     }
   }, [initialItemId, saques]);
 
-  useEffect(() => {
-    fetchSaques();
+  const fetchSaquesRef = useRef<(() => Promise<void>) | null>(null);
 
+  // WebSocket channels: persist throughout component lifecycle decoupled from search
+  useEffect(() => {
     const saquesChannel = supabase
       .channel('prestador-saques-admin-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestador_saques' }, () => {
-        fetchSaques();
+        fetchSaquesRef.current?.();
       })
       .subscribe();
 
     const prestadoresChannel = supabase
       .channel('prestadores-admin-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prestadores' }, () => {
-        fetchSaques();
+        fetchSaquesRef.current?.();
       })
       .subscribe();
 
@@ -83,9 +84,18 @@ useEffect(() => {
       supabase.removeChannel(saquesChannel);
       supabase.removeChannel(prestadoresChannel);
     };
+  }, []);
+
+  // Fetch saques with debounce on search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchSaques();
+    }, 300);
+    return () => clearTimeout(timer);
   }, [search, filters]);
 
   const fetchSaques = async () => {
+    fetchSaquesRef.current = fetchSaques;
     try {
       let query = supabase
         .from('prestador_saques')

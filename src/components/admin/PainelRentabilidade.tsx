@@ -323,10 +323,11 @@ export function PainelRentabilidade({ tipo, orcamentoId, osId, faturaId, overrid
               {tipo === 'simulado' ? (
                 <div className="flex items-center">
                   <span className="text-neutral-400 mr-2 text-sm">R$</span>
-                  <input
+                  <input 
                     type="text"
                     value={maskCurrency(custoSimulado)}
-                    onChange={(e) => {
+                    inputMode="decimal"
+onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, "");
                       const num = parseInt(val || "0", 10) / 100;
                       setCustoSimulado(num);

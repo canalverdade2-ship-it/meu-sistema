@@ -1,3 +1,4 @@
+import './ProtectionQuote.css';
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -26,6 +27,7 @@ import {
   WalletCards,
   X,
 } from 'lucide-react';
+import { generateUUID } from '../../../../lib/utils';
 import { supabase } from '../../../../lib/supabase';
 import { callClientRpc } from '../../../../lib/clientRpc';
 import { navigate } from '../../../../routing/navigationService';
@@ -171,7 +173,7 @@ function Header({ domain, onBack }: { domain: ProtectionDomain; onBack: () => vo
 }
 
 function PageShell({ domain, onBack, children }: { domain: ProtectionDomain; onBack: () => void; children: React.ReactNode }) {
-  return <div className="min-h-screen bg-[#f8f7f3] text-neutral-900"><Header domain={domain} onBack={onBack} />{children}</div>;
+  return <div className="gsa-protection-shell min-h-screen bg-[#f8f7f3] text-neutral-900"><Header domain={domain} onBack={onBack} />{children}</div>;
 }
 
 function StatePanel({ type, message, onRetry }: { type: 'loading' | 'empty' | 'error'; message: string; onRetry?: () => void }) {
@@ -276,7 +278,7 @@ function FixedCategory({ domain, category }: { domain: ProtectionDomain; categor
   const config = configs[domain];
   const Icon = category.icon;
   return (
-    <div className="rounded-2xl border p-4" style={{ borderColor: `${config.accent}35`, background: `${config.accent}0b` }}>
+    <div className="gsa-quote-category rounded-2xl border p-4" style={{ borderColor: `${config.accent}35`, background: `${config.accent}0b` }}>
       <p className="text-xs font-black uppercase tracking-[.16em]" style={{ color: config.accent }}>{domain === 'saude' ? 'Tipo de plano selecionado' : 'Modalidade selecionada'}</p>
       <div className="mt-2 flex items-center gap-3">
         <span className="flex h-10 w-10 items-center justify-center rounded-xl text-white" style={{ background: config.dark }}><Icon className="h-5 w-5" /></span>
@@ -297,9 +299,9 @@ function QuoteForm({ domain, clientId, initialCategory }: { domain: ProtectionDo
   const [form, setForm] = useState<Record<string, string>>(() => {
     try {
       const saved = JSON.parse(sessionStorage.getItem(draftKey) || '{}') as Record<string, string>;
-      return { ...saved, categoria: selectedCategory?.key || saved.categoria || '', request_id: saved.request_id || crypto.randomUUID() };
+      return { ...saved, categoria: selectedCategory?.key || saved.categoria || '', request_id: saved.request_id || generateUUID() };
     } catch {
-      return { categoria: selectedCategory?.key || '', request_id: crypto.randomUUID() };
+      return { categoria: selectedCategory?.key || '', request_id: generateUUID() };
     }
   });
 
@@ -308,7 +310,7 @@ function QuoteForm({ domain, clientId, initialCategory }: { domain: ProtectionDo
     setForm((current) => {
       if (current.categoria === selectedCategory.key) return current;
       const next = { ...current, categoria: selectedCategory.key };
-      sessionStorage.setItem(draftKey, JSON.stringify(next));
+      try { sessionStorage.setItem(draftKey, JSON.stringify(next)); } catch (e) { console.warn(e); }
       return next;
     });
   }, [draftKey, selectedCategory]);
@@ -317,7 +319,7 @@ function QuoteForm({ domain, clientId, initialCategory }: { domain: ProtectionDo
     setError('');
     setForm((current) => {
       const next = { ...current, [key]: value };
-      sessionStorage.setItem(draftKey, JSON.stringify(next));
+      try { sessionStorage.setItem(draftKey, JSON.stringify(next)); } catch (e) { console.warn(e); }
       return next;
     });
   };
@@ -345,7 +347,7 @@ function QuoteForm({ domain, clientId, initialCategory }: { domain: ProtectionDo
 
   const submit = async () => {
     if (!clientId) {
-      sessionStorage.setItem(draftKey, JSON.stringify(form));
+      try { sessionStorage.setItem(draftKey, JSON.stringify(form)); } catch (e) { console.warn(e); }
       navigate(`${routes.login.personal()}?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`);
       return;
     }
@@ -357,7 +359,7 @@ function QuoteForm({ domain, clientId, initialCategory }: { domain: ProtectionDo
         p_idempotency_key: form.request_id,
       });
       if (!result?.success) throw new Error(result?.error || 'Não foi possível registrar a cotação.');
-      sessionStorage.removeItem(draftKey);
+      try { sessionStorage.removeItem(draftKey); } catch (e) { console.warn(e); }
       setSuccess({ protocolo: result.protocolo, id: result.id });
     } catch (submitError: any) {
       setError(submitError?.message || 'Não foi possível registrar a cotação.');
@@ -368,7 +370,7 @@ function QuoteForm({ domain, clientId, initialCategory }: { domain: ProtectionDo
 
   if (success) {
     return (
-      <main className="mx-auto max-w-2xl px-5 py-16">
+      <main className="gsa-quote gsa-quote-success mx-auto max-w-2xl px-5 py-16">
         <div className="rounded-[2rem] bg-white p-10 text-center shadow-xl">
           <CheckCircle2 className="mx-auto h-14 w-14" style={{ color: config.accent }} />
           <h1 className="mt-5 text-3xl font-black">Solicitação recebida</h1>
@@ -380,13 +382,23 @@ function QuoteForm({ domain, clientId, initialCategory }: { domain: ProtectionDo
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-10 sm:py-14">
+    <main className="gsa-quote mx-auto max-w-3xl px-5 py-8 sm:py-12">
       <button type="button" onClick={() => navigate(domainPath(domain, 'home'))} className="mb-6 flex items-center gap-2 text-sm font-bold text-neutral-500"><ArrowLeft className="h-4 w-4" /> Escolher outra categoria</button>
-      <p className="text-xs font-black uppercase tracking-[.2em]" style={{ color: config.accent }}>Etapa {step} de 3</p>
-      <h1 className="mt-2 text-3xl font-black sm:text-5xl">Solicitar cotação</h1>
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-neutral-200"><div className="h-full transition-all" style={{ width: `${step * 33.33}%`, background: config.accent }} /></div>
-
-      <div className="mt-8 rounded-[2rem] bg-white p-6 shadow-sm sm:p-9">
+      <div className="gsa-quote-heading">
+        <p className="gsa-quote-eyebrow">{config.label} · Cotação personalizada</p>
+        <h1>Vamos cuidar do que importa.</h1>
+        <p className="gsa-quote-intro">{domain === 'saude' ? 'Conte o que você precisa para encontrar um plano adequado.' : 'Informe o que deseja proteger para solicitar uma análise.'}</p>
+        <ol className="gsa-quote-steps" aria-label="Etapas da cotação">
+          {['Sua necessidade', 'Dados para análise', 'Autorização'].map((label, index) => (
+            <li key={label} aria-current={step === index + 1 ? 'step' : undefined} data-complete={step > index + 1}>
+              <span aria-hidden="true">{step > index + 1 ? <CheckCircle2 className="h-4 w-4" /> : index + 1}</span>
+              <span>{label}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <div className="gsa-quote-panel">
+        <div className="gsa-quote-panel-caption"><span>Solicitar cotação</span><span aria-live="polite">Etapa {step} de 3</span></div>
         {step === 1 && (
           <div className="space-y-5">
             <h2 className="text-xl font-black">O que você procura?</h2>
@@ -429,7 +441,7 @@ function QuoteForm({ domain, clientId, initialCategory }: { domain: ProtectionDo
         )}
 
         {error && <p className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">⚠️ {error}</p>}
-        <div className="mt-8 flex justify-between gap-3">
+        <div className="gsa-quote-actions mt-8 flex justify-between gap-3">
           <button type="button" disabled={step === 1 || sending} onClick={() => { setError(''); setStep((current) => current - 1); }} className="rounded-full border border-black/10 px-6 py-3 font-bold disabled:opacity-30">Voltar</button>
           {step < 3 ? (
             <button type="button" disabled={(step === 1 && !isStep1Valid) || (step === 2 && !isStep2Valid)} onClick={handleNextStep} className="rounded-full px-7 py-3 font-black text-white transition disabled:cursor-not-allowed disabled:opacity-40" style={{ background: config.dark }}>Continuar</button>
@@ -518,7 +530,7 @@ function ClientRecords({ domain, resource, itemId, clientId }: { domain: Protect
     setError('');
     try {
       const safeName = file.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9._-]/g, '-');
-      const path = `${clientId}/${crypto.randomUUID()}/${safeName}`;
+      const path = `${clientId}/${generateUUID()}/${safeName}`;
       const bucket = domain === 'saude' ? 'gsa-saude-documentos' : 'gsa-seguros-documentos';
       const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, { upsert: false });
       if (uploadError) throw uploadError;

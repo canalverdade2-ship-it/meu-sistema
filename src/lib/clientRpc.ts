@@ -25,10 +25,16 @@ export async function callClientRpc<T = unknown>(
   });
 
   if (error) {
-    const msg = String(error.message || '').toLowerCase();
-    if (msg.includes('invalida ou expirada') || msg.includes('inválida ou expirada')) {
-      void sessionService.endSession();
-      if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('gsa-session-revoked'));
+    const errorMsg = String(error.message || '').toLowerCase();
+    if (
+      errorMsg.includes('sessao de cliente invalida') ||
+      errorMsg.includes('sessao invalida') ||
+      errorMsg.includes('expirada') ||
+      errorMsg.includes('encerrada')
+    ) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('gsa-session-revoked', { detail: { reason: 'superseded' } }));
+      }
     }
     throw error;
   }

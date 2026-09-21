@@ -10,6 +10,7 @@ import { toast } from 'react-hot-toast';
 import { canDeleteRecord } from '../../lib/deleteRequest';
 import { logService } from '../../lib/logService';
 import { notificationService } from '../../lib/notificationService';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 // Helper functions for gallery mapping
 const mapGalleryToColumns = (images: string[]) => {
@@ -24,21 +25,17 @@ const mapGalleryToColumns = (images: string[]) => {
 
 const mapColumnsToGallery = (item: any) => {
   const images = [];
-  if (item.imagem_url) images.push(item.imagem_url);
-  if (item.imagem_url_2) images.push(item.imagem_url_2);
-  if (item.imagem_url_3) images.push(item.imagem_url_3);
-  if (item.imagem_url_4) images.push(item.imagem_url_4);
-  if (item.imagem_url_5) images.push(item.imagem_url_5);
+  if (item?.imagem_url) images.push(item.imagem_url);
+  if (item?.imagem_url_2) images.push(item.imagem_url_2);
+  if (item?.imagem_url_3) images.push(item.imagem_url_3);
+  if (item?.imagem_url_4) images.push(item.imagem_url_4);
+  if (item?.imagem_url_5) images.push(item.imagem_url_5);
   return images;
 };
 
 export function AssinaturasModule({ activeSubTab, initialItemId, colaboradorId, colaboradorNome }: { activeSubTab?: 'ativos' | 'inativos', initialItemId?: string, colaboradorId?: string, colaboradorNome?: string }) {
   const [activeTab, setActiveTab] = useState<'ativos' | 'inativos'>('ativos');
   const [tipoClienteFilter, setTipoClienteFilter] = useState<'todos' | 'pf' | 'pj' | 'ambos'>('todos');
-
-  useEffect(() => {
-    if (activeSubTab) setActiveTab(activeSubTab);
-  }, [activeSubTab]);
   const [assinaturas, setAssinaturas] = useState<Assinatura[]>([]);
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,20 +45,24 @@ export function AssinaturasModule({ activeSubTab, initialItemId, colaboradorId, 
   const [isDeleting, setIsDeleting] = useState(false);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [categorias, setCategorias] = useState<any[]>([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
-    const fetchCats = async () => {
-      try {
-        const { data, error } = await supabase.from('loja_categorias').select('*').eq('status', 'ativo').in('tipo_item', ['assinatura', 'todos']).order('ordem');
-        if (error) throw error;
-        if (isMounted && data) setCategorias(data);
-      } catch (err: any) {
-        toast.error('Erro ao carregar categorias.');
-      }
-    };
-    fetchCats();
-    return () => { isMounted = false; };
+    if (activeSubTab) setActiveTab(activeSubTab);
+  }, [activeSubTab]);
+
+  const fetchCats = async () => {
+    try {
+      const { data, error } = await supabase.from('loja_categorias').select('*').eq('status', 'ativo').in('tipo_item', ['assinatura', 'todos']).order('ordem');
+      if (error) throw error;
+      if (data) setCategorias(data);
+    } catch (err: any) {
+      toast.error('Erro ao carregar categorias.');
+    }
+  };
+
+  useEffect(() => {
+    void fetchCats();
   }, []);
 
   useEffect(() => {
@@ -78,54 +79,7 @@ export function AssinaturasModule({ activeSubTab, initialItemId, colaboradorId, 
     }
   }, [initialItemId, assinaturas]);
 
-  useEffect(() => {
-    fetchAssinaturas();
-
-    const channel = supabase
-      .channel('admin-assinaturas-updates')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'assinaturas'
-      }, (payload) => {
-        fetchAssinaturas();
-        if (payload.new && selectedAssinatura && (payload.new as any).id === selectedAssinatura.id) {
-          setSelectedAssinatura(prev => prev ? { ...prev, ...payload.new } as Assinatura : null);
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeTab, search, tipoClienteFilter, selectedAssinatura?.id]);
-
-  const [uploadingImage, setUploadingImage] = useState(false);
-
-const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  if (!e.target.files || e.target.files.length === 0 || !selectedAssinatura) return;
-  const file = e.target.files[0];
-  setUploadingImage(true);
-  try {
-    const publicUrl = await uploadPublicStoreImage(file, `assinaturas/${selectedAssinatura.id}`);
-    await saveAdminSubscriptionCatalog({
-      assinaturaId: selectedAssinatura.id,
-      payload: { imagem_url: publicUrl },
-    });
-    const oldUrl = selectedAssinatura.imagem_url;
-    setSelectedAssinatura({ ...selectedAssinatura, imagem_url: publicUrl });
-    await removePublicStoreImage(oldUrl).catch(() => undefined);
-    toast.success('Imagem atualizada com sucesso!');
-    fetchAssinaturas();
-  } catch (error: any) {
-    toast.error(error?.message || 'Erro ao fazer upload da imagem.');
-  } finally {
-    setUploadingImage(false);
-    e.target.value = '';
-  }
-};
-
-const fetchAssinaturas = async (isMounted = { current: true }) => {
+  const fetchAssinaturas = async (isMounted = { current: true }) => {
     let query = supabase
       .from('assinaturas')
       .select('*')
@@ -146,30 +100,63 @@ const fetchAssinaturas = async (isMounted = { current: true }) => {
     if (isMounted.current && data) setAssinaturas(data);
   };
 
-const handleCreate = async (formData: any) => {
-  const { imagens_adicionais, ...otherData } = formData;
-  const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
-  try {
-    const result = await saveAdminSubscriptionCatalog({
-      payload: {
-        ...otherData,
-        ...galleryCols,
-        descricao: otherData.descricao || '',
-        status: 'ativo',
-      },
-    });
-    const data = result?.assinatura || result?.data || result;
-    toast.success('Assinatura cadastrada com sucesso.');
-    await logService.logAction({
-      acao: 'CRIAR_ASSINATURA',
-      ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
-      ator_id: colaboradorId || undefined,
+  useEffect(() => {
+    void fetchAssinaturas();
+  }, [activeTab, search, tipoClienteFilter]);
+
+  useRealtimeSubscription([
+    { table: 'assinaturas', onChange: () => void fetchAssinaturas(), debounceMs: 300 },
+    { table: 'ordens_assinatura', onChange: () => void fetchAssinaturas(), debounceMs: 300 },
+    { table: 'loja_categorias', onChange: () => void fetchCats(), debounceMs: 300 },
+  ]);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0 || !selectedAssinatura) return;
+    const file = e.target.files[0];
+    setUploadingImage(true);
+    try {
+      const publicUrl = await uploadPublicStoreImage(file, `assinaturas/${selectedAssinatura.id}`);
+      await saveAdminSubscriptionCatalog({
+        assinaturaId: selectedAssinatura.id,
+        payload: { imagem_url: publicUrl },
+      });
+      const oldUrl = selectedAssinatura.imagem_url;
+      setSelectedAssinatura({ ...selectedAssinatura, imagem_url: publicUrl });
+      await removePublicStoreImage(oldUrl).catch(() => undefined);
+      toast.success('Imagem atualizada com sucesso!');
+      void fetchAssinaturas();
+    } catch (error: any) {
+      toast.error(error?.message || 'Erro ao fazer upload da imagem.');
+    } finally {
+      setUploadingImage(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleCreate = async (formData: any) => {
+    const { imagens_adicionais, ...otherData } = formData;
+    const galleryCols = mapGalleryToColumns(imagens_adicionais || []);
+    try {
+      const result = await saveAdminSubscriptionCatalog({
+        payload: {
+          ...otherData,
+          ...galleryCols,
+          descricao: otherData.descricao || '',
+          status: 'ativo',
+        },
+      });
+      const data = result?.assinatura || result?.data || result;
+      toast.success('Assinatura cadastrada com sucesso.');
+      await logService.logAction({
+        acao: 'CRIAR_ASSINATURA',
+        ator_tipo: colaboradorNome ? 'colaborador' : 'admin',
+        ator_id: colaboradorId || undefined,
       ator_nome: colaboradorNome || 'Administrador',
       detalhes: `Cadastrou a assinatura: ${formData.nome} (${formatCurrency(formData.valor)})`,
     });
     if (formData.visivel_na_loja) {
       await notificationService.broadcastClients(
-        '✨ Nova Assinatura Disponível',
+        'âœ¨ Nova Assinatura Disponível',
         `Conheça nosso novo plano: ${formData.nome}. Confira na área de assinaturas!`,
         'assinaturas',
         'broadcast_assinatura',
@@ -801,13 +788,14 @@ const removeGalleryImage = (index: number) => {
       </div>
       <div>
         <label className="mb-1 block text-sm font-bold text-neutral-700">Valor (R$) *</label>
-        <input 
+        <input  
           type="number" 
           step="0.01"
           min="0.01"
           required
           value={formData.valor}
-          onChange={e => setFormData({...formData, valor: e.target.value})}
+          inputMode="numeric"
+onChange={(e) => setFormData({...formData, valor: e.target.value})}
           className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 focus:border-indigo-500 focus:outline-none"
         />
       </div>

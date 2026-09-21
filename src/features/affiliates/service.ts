@@ -9,6 +9,9 @@ import type {
   AffiliateProfile,
   AffiliateProgram,
   AffiliateSnapshot,
+  AffiliateTransfer,
+  AffiliateTransferTarget,
+  ProfileAccessState,
   CreateAffiliateLinkInput,
   JoinAffiliateInput,
   AffiliateProfileInput,
@@ -117,6 +120,40 @@ const normalizePayout = (value: unknown): AffiliatePayout => {
   };
 };
 
+const normalizeTransfer = (value: unknown): AffiliateTransfer => {
+  const item = record(value);
+  return {
+    id: text(item.id),
+    codigo: text(item.codigo),
+    valor: number(item.valor),
+    status: text(item.status, 'concluida') as AffiliateTransfer['status'],
+    direcao: text(item.direcao, 'enviada') as AffiliateTransfer['direcao'],
+    contraparteNome: text(item.contraparte_nome, item.contraparteNome, 'Afiliado GSA'),
+    contraparteCodigo: text(item.contraparte_codigo, item.contraparteCodigo),
+    observacao: text(item.observacao) || undefined,
+    concluidaEm: text(item.concluida_em, item.concluidaEm, item.created_at) || undefined,
+    estornadaEm: text(item.estornada_em, item.estornadaEm) || undefined,
+  };
+};
+
+const normalizeTransferTarget = (value: unknown): AffiliateTransferTarget | null => {
+  const item = record(value);
+  if (!text(item.id)) return null;
+  return {
+    id: text(item.id),
+    codigoPublico: text(item.codigo_publico, item.codigoPublico),
+    nomeDivulgacao: text(item.nome_divulgacao, item.nomeDivulgacao),
+    nomeCompleto: text(item.nome_completo, item.nomeCompleto, item.nome) || undefined,
+    email: text(item.email) || undefined,
+    telefone: text(item.telefone) || undefined,
+    cnpj: text(item.cnpj) || undefined,
+    tipoPessoa: text(item.tipo_pessoa, item.tipoPessoa) || undefined,
+    nomeMascarado: text(item.nome_mascarado, item.nomeMascarado) || undefined,
+    emailMascarado: text(item.email_mascarado, item.emailMascarado) || undefined,
+    telefoneMascarado: text(item.telefone_mascarado, item.telefoneMascarado) || undefined,
+  };
+};
+
 const normalizePointsEvent = (value: unknown): AffiliatePointsEvent => {
   const item = record(value);
   return {
@@ -152,13 +189,38 @@ export function normalizeAffiliateSnapshot(value: unknown): AffiliateSnapshot {
     },
     commissions: list(root.commissions || root.comissoes).map(normalizeCommission).filter(item => item.id),
     payouts: list(root.payouts || root.saques).map(normalizePayout).filter(item => item.id),
+    transfers: list(root.transfers || root.transferencias).map(normalizeTransfer).filter(item => item.id),
     pointsEvents: list(root.points_events || root.pointsEvents).map(normalizePointsEvent).filter(item => item.id),
   };
 }
 
 export async function fetchAffiliateSnapshot(): Promise<AffiliateSnapshot> {
-  const data = await callClientRpc('gsa_client_affiliate_snapshot');
-  return normalizeAffiliateSnapshot(data);
+  const [snapshotData, transfersData] = await Promise.all([
+    callClientRpc('gsa_client_affiliate_snapshot'),
+    callClientRpc('gsa_client_affiliate_transfers').catch(() => null),
+  ]);
+  const snapshot = normalizeAffiliateSnapshot(snapshotData);
+  const transfersRoot = record(transfersData);
+  snapshot.transfers = list(transfersRoot.transfers || transfersRoot.transferencias)
+    .map(normalizeTransfer)
+    .filter(item => item.id);
+  return snapshot;
+}
+
+export async function fetchProfileAccessState(): Promise<ProfileAccessState> {
+  const root = record(await callClientRpc('gsa_client_profile_access_state'));
+  return {
+    clientId: text(root.client_id, root.clientId),
+    clientProfileActive: bool(root.perfil_cliente_ativo, true),
+    affiliateProfileActive: bool(root.perfil_afiliado_ativo, false),
+    clientProfileActivatedAt: text(root.perfil_cliente_ativado_em, root.clientProfileActivatedAt) || undefined,
+    registrationOrigin: text(root.cadastro_origem, root.registrationOrigin) || undefined,
+  };
+}
+
+export async function activateClientProfileFromAffiliate(): Promise<ProfileAccessState> {
+  await callClientRpc('gsa_affiliate_activate_client_profile');
+  return fetchProfileAccessState();
 }
 
 export async function joinAffiliate(input: JoinAffiliateInput): Promise<AffiliateSnapshot> {
@@ -199,6 +261,43 @@ export async function requestAffiliatePayout(value: number, requestId: string): 
 
 export async function cancelAffiliatePayout(payoutId: string): Promise<AffiliateSnapshot> {
   await callClientRpc('gsa_client_cancel_affiliate_payout', { p_saque_id: payoutId });
+  return fetchAffiliateSnapshot();
+}
+
+export async function lookupAffiliateTransferTarget(identifier: string): Promise<AffiliateTransferTarget> {
+  const data = await callClientRpc('gsa_client_lookup_affiliate_transfer_target', {
+    p_identificador: identifier,
+  });
+  const root = record(data);
+  if (root.success === false) {
+    throw new Error(text(root.error, 'Afiliado destinatario nao encontrado.'));
+  }
+  const target = normalizeTransferTarget(root.target);
+  if (!target) {
+    throw new Error('Afiliado destinatario nao encontrado.');
+  }
+  return target;
+}
+
+export async function transferAffiliateBalance(
+  targetId: string,
+  value: number,
+  requestId: string,
+  note?: string,
+): Promise<AffiliateSnapshot> {
+  await callClientRpc('gsa_client_transfer_affiliate_balance', {
+    p_request_id: requestId,
+    p_destinatario_id: targetId,
+    p_valor: value,
+    p_observacao: note || null,
+  });
+  return fetchAffiliateSnapshot();
+}
+
+export async function reverseReceivedAffiliateTransfer(transferId: string): Promise<AffiliateSnapshot> {
+  await callClientRpc('gsa_client_reverse_received_affiliate_transfer', {
+    p_transferencia_id: transferId,
+  });
   return fetchAffiliateSnapshot();
 }
 

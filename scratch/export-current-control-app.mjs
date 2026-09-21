@@ -1,0 +1,1 @@
+import {runSshScript} from './ssh2-run.mjs';const remote=String.raw`sudo docker exec gsa-tv-control-plane sh -lc "grep -nE 'spawn\(.ffmpeg|function start|async function start|streamProcess|directProcess|kill\(' /app/src/app.js | head -240"`;const r=await runSshScript(remote,30000);process.stdout.write(r.stdout);if(r.stderr)process.stderr.write(r.stderr);

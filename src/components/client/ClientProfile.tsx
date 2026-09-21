@@ -15,8 +15,10 @@ import { notificationService } from '../../lib/notificationService';
 import { PinInput } from '../ui/PinInput';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
 import { sessionService } from '../../lib/sessionService';
+import { navigate } from '../../routing/navigationService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Documento {
@@ -144,21 +146,15 @@ export function ClientProfile({
 
   useEffect(() => {
     fetchDocumentos();
-
-    const channel = supabase
-      .channel(`cliente-documentos-${cliente.id}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'cliente_documentos',
-        filter: `cliente_id=eq.${cliente.id}`
-      }, () => {
-        fetchDocumentos();
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
   }, [cliente.id, monthFilter]);
+
+  useRealtimeSubscription({
+    table: 'cliente_documentos',
+    filter: `cliente_id=eq.${cliente.id}`,
+    onChange: () => {
+      fetchDocumentos();
+    },
+  });
 
   // Scroll to specific document if initialItemId is a doc
   useEffect(() => {
@@ -313,7 +309,9 @@ export function ClientProfile({
 
       toast.success('Senha alterada com sucesso!');
       if (isRecoveryMode) {
-        window.location.href = '/cliente/dashboard';
+        setIsRecoveryMode(false);
+        resetPinModal();
+        navigate('/cliente/dashboard');
       } else {
         resetPinModal();
       }

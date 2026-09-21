@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { createNotification } from '../../lib/notifications';
 import { formatCurrency, formatDate, formatDateTime, generateCode, handleError } from '../../lib/utils';
@@ -22,6 +22,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { Modal } from '../ui/Modal';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import { clientOperationalWrite } from '../../lib/clientOperationalWrite';
 
 export function ClientProdutos({ 
@@ -82,25 +83,29 @@ export function ClientProdutos({
 
   useEffect(() => {
     fetchMeusProdutos();
-
-    const channel = supabase
-      .channel('client-produtos-updates')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'ordens_compra',
-        filter: `cliente_id=eq.${clientId}`
-      }, () => {
-        fetchMeusProdutos();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [clientId, meusTab]);
 
-  const fetchMeusProdutos = async () => {
+  useRealtimeSubscription(
+    [
+      {
+        table: 'ordens_compra',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: fetchMeusProdutos,
+      },
+      {
+        table: 'produtos',
+        onChange: fetchMeusProdutos,
+      },
+      {
+        table: 'faturas',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        onChange: fetchMeusProdutos,
+      },
+    ],
+    [clientId]
+  );
+
+  async function fetchMeusProdutos() {
     const { data } = await supabase
       .from('ordens_compra')
       .select('*, produtos(nome, valor, imagem_url), faturas(*), orcamentos(*)')

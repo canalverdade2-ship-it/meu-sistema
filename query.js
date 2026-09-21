@@ -1,0 +1,1 @@
+const {Pool}=require('pg'); const p=new Pool({connectionString:process.env.DATABASE_URL}); p.query('SELECT provider, default_model FROM gsa_tv_ai_provider_secrets').then(r=>{console.log(r.rows);p.end()});

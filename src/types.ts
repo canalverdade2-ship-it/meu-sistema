@@ -1,3 +1,5 @@
+import type { ProductVariationsPayload } from './types/productVariations';
+
 export type Module = 'dashboard' | 'perfil' | 'orcamentos' | 'servicos' | 'produtos' | 'assinaturas' | 'servicos_assinaturas' | 'transferencias' | 'financeiro' | 'fidelidade' | 'cobranca' | 'vouchers' | 'suporte' | 'indique-ganhe' | 'pontos' | 'promocoes' | 'premios' | 'historico_niveis' | 'area_vip' | 'emprestimos' | 'loja' | 'credito_loja';
 
 export interface ProdutoFornecedorConfig {
@@ -81,6 +83,7 @@ export type Cliente = {
   client_levels?: Record<string, unknown>;
   limite_credito_total?: number;
   limite_credito_disponivel?: number;
+  limite_credito_bloqueado?: number;
   opcao_pagamento_parcelado?: boolean;
   max_parcelas?: number;
 };
@@ -140,6 +143,8 @@ export type Produto = {
   porcentagem_lucro?: number;
   imagens_adicionais?: string[];
   link_afiliado?: string;
+  possui_variacoes?: boolean;
+  variacoes?: ProductVariationsPayload;
   
   // Desconto individual de produtos
   desconto_ativo?: boolean;
@@ -386,7 +391,7 @@ export type Ticket = {
   prestador_id?: string;
   assunto: string;
   descricao: string;
-  status: 'aberto' | 'em andamento' | 'concluido';
+  status: 'aberto' | 'em andamento' | 'concluido' | 'cancelado';
   data_abertura: string;
   data_fechamento?: string;
   modulo?: 'cliente' | 'afiliado';
@@ -849,7 +854,7 @@ export type LojaCreditoSolicitacao = {
   id: string;
   cliente_id: string;
   tipo_solicitacao: 'adesao' | 'alteracao';
-  status: 'analise' | 'documentos_pendentes' | 'pre_aprovado' | 'contrato_pendente_assinatura' | 'contrato_assinado' | 'liberado' | 'negado';
+  status: 'analise' | 'documentos_pendentes' | 'pre_aprovado' | 'contrato_pendente_assinatura' | 'contrato_assinado' | 'liberado' | 'negado' | 'cancelado';
   limite_solicitado?: number;
   limite_aprovado?: number;
   opcao_pagamento_parcelado: boolean;
@@ -880,7 +885,7 @@ export type LojaCreditoMovimentacao = {
   cliente_id: string;
   solicitacao_id?: string;
   fatura_id?: string;
-  tipo: 'concessao_inicial' | 'compra' | 'amortizacao' | 'ajuste_adm_aumento' | 'ajuste_adm_reducao' | 'solicitacao_aumento_aprovada' | 'estorno_compra';
+  tipo: 'concessao_inicial' | 'compra' | 'amortizacao' | 'ajuste_adm_aumento' | 'ajuste_adm_reducao' | 'solicitacao_aumento_aprovada' | 'estorno_compra' | 'cancelamento_limite';
   valor: number;
   limite_total_anterior: number;
   limite_total_novo: number;

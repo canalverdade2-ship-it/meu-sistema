@@ -52,22 +52,37 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
   }
 
   // 2. ÁREA PÚBLICA
+  if (normalizedPath === '/privacidade') {
+    return { pathname, search, hash, area: 'public', module: 'privacy', query };
+  }
   if (normalizedPath === '/servicos-e-assinaturas' || normalizedPath.startsWith('/servicos-e-assinaturas/')) {
     area = 'public';
     module = 'services';
     if (segments[1]) itemId = segments[1];
     return { pathname, search, hash, area, module, itemId, query };
   }
-  if (normalizedPath === '/criacao-de-site-e-sistemas' || normalizedPath === '/empresa-do-zero-ao-digital') {
+  if (
+    normalizedPath === '/criacao-de-site-e-sistemas' ||
+    normalizedPath === '/empresa-do-zero-ao-digital' ||
+    normalizedPath === '/identidade-e-web-design'
+  ) {
     area = 'public';
     module = 'systems';
     return { pathname, search, hash, area, module, query };
   }
-  if (normalizedPath === '/parceiros' || normalizedPath.startsWith('/parceiros/')) {
+  if (
+    normalizedPath === '/nossos-parceiros' ||
+    normalizedPath.startsWith('/nossos-parceiros/') ||
+    normalizedPath === '/parceiros' ||
+    normalizedPath.startsWith('/parceiros/')
+  ) {
     area = 'public';
     module = 'partners';
     if (segments[1]) itemId = segments[1];
     return { pathname, search, hash, area, module, itemId, query };
+  }
+  if (normalizedPath === '/consulta-protocolo') {
+    return { pathname, search, hash, area: 'public', module: 'protocolConsult', query };
   }
   if (normalizedPath === '/anuncios') {
     return { pathname, search, hash, area: 'public', module: 'ads', query };
@@ -100,17 +115,29 @@ export function matchRoute(pathname: string, search: string, hash: string): Rout
     module = 'root';
 
     if (segments[1]) {
-      submodule = segments[1]; // ex: 'loja', 'pacotes-viagem', 'classificados', 'menu'
+      submodule = segments[1]; // ex: 'loja', 'pacotes-viagem', 'classificados', 'menu', 'menu-loja'
 
-      if (submodule === 'loja') {
-        // Ex: /marketplace/loja/produtos ou /marketplace/loja/produtos/:id
+      if (submodule === 'menu-loja' || submodule === 'loja-menu') {
         const view = segments[2];
         if (view) {
+          submodule = `loja-${view}`;
+          if (segments[3]) itemId = segments[3];
+        } else {
+          submodule = 'menu-loja';
+        }
+      } else if (submodule === 'loja') {
+        // Ex: /marketplace/loja/produtos ou /marketplace/loja/produtos/:id
+        const view = segments[2];
+        if (view === 'menu') {
+          submodule = 'menu-loja';
+        } else if (view) {
           submodule = `loja-${view}`; // ex: 'loja-produtos', 'loja-assinaturas'
           if (segments[3]) {
             itemId = segments[3];
           }
         }
+      } else if (submodule === 'menu' && segments[2] === 'loja') {
+        submodule = 'menu-loja';
       } else if (submodule === 'menu' && segments[2] === 'classificados') {
         module = 'classificados';
         submodule = segments[3] || 'home'; // ex: 'imoveis', 'veiculos', 'geral', 'anunciar', 'meus-anuncios'

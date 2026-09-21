@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import { runSshScript } from './ssh2-run.mjs';
+const credentials=fs.readFileSync(new URL('../CREDENCIAIS_SISTEMA_GSA.md',import.meta.url),'utf8');
+const password=credentials.match(/Senha Master:\*\*\s*([^\r\n]+)/i)?.[1]?.trim();
+const encoded=Buffer.from(password).toString('base64');
+const aliases=['GSA Manhã News','GSA Meio Dia News','GSA News Noite','GSA News Especial','GSA News Noturno','GSA Tá na Rede Web','GSA Em Fé Reflexão','GSA Destinos do Mundo','GSA Documentário Especial','GSA Mistérios da Noite','GSA Mistérios Noturno'];
+const list=aliases.map(x=>`'${x.replaceAll("'","''")}'`).join(',');
+const sql=`select p.name,(select count(*) from public.gsa_tv_weekly_grid_slots x where x.program_id=p.id),(select count(*) from public.gsa_tv_editorial_items x where x.program_id=p.id),(select count(*) from public.gsa_tv_program_blocks x where x.program_id=p.id),(select count(*) from public.gsa_tv_program_source_links x where x.program_id=p.id),(select count(*) from public.gsa_tv_series x where x.program_id=p.id) from public.gsa_tv_programs p where p.name in (${list}) order by p.name;`;
+const remote=`export PGPASSWORD=$(printf '%s' '${encoded}' | base64 -d)\npsql -h 127.0.0.1 -p 5433 -U supabase_admin -d gsahub -X -At -F '|' -c "${sql}"`;
+const result=await runSshScript(remote,60000);process.stdout.write(result.stdout);if(result.stderr)process.stderr.write(result.stderr);

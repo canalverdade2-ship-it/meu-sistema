@@ -11,8 +11,8 @@ function ssh(cmd) {
 console.log('🚀 Iniciando deploy do Chatbot atualizado na VPS (147.15.43.141)...');
 
 // 1. Upload file via SCP
-console.log('📦 1. Enviando server_webhook_final.cjs via SCP...');
-execSync(`scp -o StrictHostKeyChecking=no -i "${SSH_KEY}" scratch/server_webhook_final.cjs ${SERVER}:/home/opc/server_webhook.cjs`, { stdio: 'inherit' });
+console.log('📦 1. Enviando server_webhook_vps_live.cjs via SCP...');
+execSync(`scp -o StrictHostKeyChecking=no -i "${SSH_KEY}" server_webhook_vps_live.cjs ${SERVER}:/home/opc/server_webhook.cjs`, { stdio: 'inherit' });
 
 // 2. Adjust permissions and kill old process
 console.log('🛑 2. Ajustando permissões e encerrando instâncias antigas...');

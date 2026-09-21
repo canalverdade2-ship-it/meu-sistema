@@ -1,0 +1,21 @@
+{
+  "program": "GSA Manhã News",
+  "requested_duration_seconds": 3600,
+  "minimum_video_fraction": 0.9,
+  "minimum_video_seconds": 3240,
+  "requirements": {
+    "all_news_video_must_be_new": true,
+    "exclude_video_existing_on_vps_before_this_requirement": true,
+    "no_repeated_clips_or_source_passages": true,
+    "cropping_or_reencoding_does_not_make_existing_video_new": true,
+    "still_images_and_graphics_do_not_count_toward_video_minimum": true,
+    "mute_external_audio": true,
+    "credit_author_and_source_bottom_left": true,
+    "master_resolution": "1920x1080",
+    "frame_rate": 30
+  },
+  "previous_ten_brolls": "excluded_by_user_requirement",
+  "approved_new_video_seconds": 0,
+  "status": "acquisition_and_editorial_review_required",
+  "acceptance": "Measure the final timeline, inventory distinct source files and used intervals, and compare candidates with pre-existing VPS media using hashes plus provenance/visual review. No looping or reuse to reach duration."
+}

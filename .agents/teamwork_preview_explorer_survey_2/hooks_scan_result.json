@@ -1,0 +1,464 @@
+{
+  "totalFiles": 445,
+  "conditionalHooks": [],
+  "hookAfterReturn": [],
+  "realtimeWithoutFilter": [],
+  "realtimeWithDeps": [
+    {
+      "file": "components/admin/ProtectionAdminModule.tsx",
+      "line": 222,
+      "text": "useRealtimeSubscription({ table: resource, onChange: load, debounceMs: 300 }, [resource, load]);"
+    },
+    {
+      "file": "components/admin/super-domains/financeiro/FiscalView.tsx",
+      "line": 87,
+      "text": "useRealtimeSubscription({ table: 'ordens_fiscais', onChange: loadData }, [loadData]);"
+    },
+    {
+      "file": "hooks/useRealtime.ts",
+      "line": 262,
+      "text": "*   useRealtime('parceiros', () => fetchPartners(), [deps])"
+    },
+    {
+      "file": "hooks/useRealtime.ts",
+      "line": 264,
+      "text": "*   useRealtime({ table: 'parceiros', onChange: fetchPartners }, [deps])"
+    },
+    {
+      "file": "hooks/useRealtime.ts",
+      "line": 265,
+      "text": "*   useRealtime([{ table: 'faturas' }, { table: 'saques' }], [deps])"
+    }
+  ],
+  "missingKeyInMap": [],
+  "largeComponents": [
+    {
+      "file": "App.tsx",
+      "lines": 787
+    },
+    {
+      "file": "components/admin/AffiliateAdminModule.tsx",
+      "lines": 1656
+    },
+    {
+      "file": "components/admin/AssinaturasModule.tsx",
+      "lines": 890
+    },
+    {
+      "file": "components/admin/CalculatorProAdminPanel.tsx",
+      "lines": 689
+    },
+    {
+      "file": "components/admin/demandas/DemandasDetalhesModal.tsx",
+      "lines": 1657
+    },
+    {
+      "file": "components/admin/FornecedoresModule.tsx",
+      "lines": 804
+    },
+    {
+      "file": "components/admin/GsaTvModule.tsx",
+      "lines": 1990
+    },
+    {
+      "file": "components/admin/infra/CloudflareManager.tsx",
+      "lines": 691
+    },
+    {
+      "file": "components/admin/infra/WhatsAppQRCodeManager.tsx",
+      "lines": 1193
+    },
+    {
+      "file": "components/admin/OrdensAssinaturaModule.tsx",
+      "lines": 674
+    },
+    {
+      "file": "components/admin/OrdensCompraModule.tsx",
+      "lines": 1144
+    },
+    {
+      "file": "components/admin/products/BarcodeScannerModal.tsx",
+      "lines": 561
+    },
+    {
+      "file": "components/admin/products/BulkProductImportModal.tsx",
+      "lines": 589
+    },
+    {
+      "file": "components/admin/ProdutosModule.tsx",
+      "lines": 2944
+    },
+    {
+      "file": "components/admin/ScrapingAdminModule.tsx",
+      "lines": 963
+    },
+    {
+      "file": "components/admin/ServicosModule.tsx",
+      "lines": 889
+    },
+    {
+      "file": "components/admin/super-domains/contratos/AtendimentoTicketsView.tsx",
+      "lines": 516
+    },
+    {
+      "file": "components/admin/super-domains/contratos/ContratosDocumentosView.tsx",
+      "lines": 859
+    },
+    {
+      "file": "components/admin/super-domains/contratos/CrmClientesView.tsx",
+      "lines": 1187
+    },
+    {
+      "file": "components/admin/super-domains/contratos/HubEmpresasView.tsx",
+      "lines": 648
+    },
+    {
+      "file": "components/admin/super-domains/financeiro/CalculadorasGatewayView.tsx",
+      "lines": 561
+    },
+    {
+      "file": "components/admin/super-domains/financeiro/CobrancaView.tsx",
+      "lines": 1097
+    },
+    {
+      "file": "components/admin/super-domains/financeiro/EmprestimosCreditoView.tsx",
+      "lines": 814
+    },
+    {
+      "file": "components/admin/super-domains/financeiro/FaturamentoView.tsx",
+      "lines": 1351
+    },
+    {
+      "file": "components/admin/super-domains/financeiro/FiscalView.tsx",
+      "lines": 538
+    },
+    {
+      "file": "components/admin/super-domains/financeiro/FluxoCaixaView.tsx",
+      "lines": 877
+    },
+    {
+      "file": "components/admin/super-domains/governanca/GovernancaAcessosView.tsx",
+      "lines": 961
+    },
+    {
+      "file": "components/admin/super-domains/governanca/GovernancaConfiguracoesView.tsx",
+      "lines": 1218
+    },
+    {
+      "file": "components/admin/super-domains/governanca/GovernancaExecutiveDashboard.tsx",
+      "lines": 519
+    },
+    {
+      "file": "components/admin/super-domains/governanca/GovernancaInfraView.tsx",
+      "lines": 556
+    },
+    {
+      "file": "components/admin/super-domains/operacoes/OrcamentosWorkstation.tsx",
+      "lines": 843
+    },
+    {
+      "file": "components/admin/super-domains/operacoes/OrdensServicoWorkstation.tsx",
+      "lines": 627
+    },
+    {
+      "file": "components/admin/super-domains/pessoas/AfiliadosSection.tsx",
+      "lines": 673
+    },
+    {
+      "file": "components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx",
+      "lines": 1571
+    },
+    {
+      "file": "components/admin/super-domains/pessoas/FornecedoresSection.tsx",
+      "lines": 2050
+    },
+    {
+      "file": "components/admin/super-domains/pessoas/PartnerRedemptionDetailModal.tsx",
+      "lines": 1329
+    },
+    {
+      "file": "components/admin/super-domains/pessoas/PayoutClearanceDrawer.tsx",
+      "lines": 597
+    },
+    {
+      "file": "components/admin/super-domains/pessoas/PrestadorDetailDrawer.tsx",
+      "lines": 701
+    },
+    {
+      "file": "components/admin/super-domains/pessoas/SaquesRepassesSection.tsx",
+      "lines": 510
+    },
+    {
+      "file": "components/admin/super-domains/pessoas/TrabalheConoscoSection.tsx",
+      "lines": 556
+    },
+    {
+      "file": "components/admin/super-domains/shared/TacticalDataGrid.tsx",
+      "lines": 575
+    },
+    {
+      "file": "components/admin/SystemMonitorModule.tsx",
+      "lines": 664
+    },
+    {
+      "file": "components/admin/TravelAdminModule.tsx",
+      "lines": 2405
+    },
+    {
+      "file": "components/admin/WhatsAppHealthMonitor.tsx",
+      "lines": 528
+    },
+    {
+      "file": "components/client/ClientAffiliatePanel.tsx",
+      "lines": 615
+    },
+    {
+      "file": "components/client/ClientAreaVIP.tsx",
+      "lines": 915
+    },
+    {
+      "file": "components/client/ClientAssinaturas.tsx",
+      "lines": 618
+    },
+    {
+      "file": "components/client/ClientDashboard.tsx",
+      "lines": 546
+    },
+    {
+      "file": "components/client/ClientEmprestimos.tsx",
+      "lines": 1281
+    },
+    {
+      "file": "components/client/ClientFinanceiro.tsx",
+      "lines": 773
+    },
+    {
+      "file": "components/client/ClientGSAStore.tsx",
+      "lines": 1631
+    },
+    {
+      "file": "components/client/ClientIndiqueGanhe.tsx",
+      "lines": 682
+    },
+    {
+      "file": "components/client/ClientMeuCredito.tsx",
+      "lines": 2317
+    },
+    {
+      "file": "components/client/ClientOrcamentos.tsx",
+      "lines": 2107
+    },
+    {
+      "file": "components/client/ClientPontos.tsx",
+      "lines": 636
+    },
+    {
+      "file": "components/client/ClientPremios.tsx",
+      "lines": 566
+    },
+    {
+      "file": "components/client/ClientProdutos.tsx",
+      "lines": 632
+    },
+    {
+      "file": "components/client/ClientProfile.tsx",
+      "lines": 991
+    },
+    {
+      "file": "components/client/ClientServicos.tsx",
+      "lines": 872
+    },
+    {
+      "file": "components/client/ClientSuporte.tsx",
+      "lines": 593
+    },
+    {
+      "file": "components/client/financeiro/FaturasList.tsx",
+      "lines": 1729
+    },
+    {
+      "file": "components/client/financeiro/PaymentModal.tsx",
+      "lines": 514
+    },
+    {
+      "file": "components/client/marketplace/protection/ProtectionMarketplace.tsx",
+      "lines": 700
+    },
+    {
+      "file": "components/client/marketplace/travel/TravelReservationPage.tsx",
+      "lines": 638
+    },
+    {
+      "file": "components/client/store/CartDrawer.tsx",
+      "lines": 514
+    },
+    {
+      "file": "components/client/store/CheckoutModal.tsx",
+      "lines": 1993
+    },
+    {
+      "file": "components/client/store/CheckoutPage.tsx",
+      "lines": 2720
+    },
+    {
+      "file": "components/client/store/CouponsPage.tsx",
+      "lines": 1032
+    },
+    {
+      "file": "components/client/store/EcommerceHeader.tsx",
+      "lines": 1339
+    },
+    {
+      "file": "components/client/store/EcommerceHome.tsx",
+      "lines": 842
+    },
+    {
+      "file": "components/client/store/ProductPage.tsx",
+      "lines": 1114
+    },
+    {
+      "file": "components/client/store/ProductReviews.tsx",
+      "lines": 608
+    },
+    {
+      "file": "components/client/store/PromotionsPage.tsx",
+      "lines": 824
+    },
+    {
+      "file": "components/client/store/PurchasesPage.tsx",
+      "lines": 1133
+    },
+    {
+      "file": "components/client/store/VaquinhaPublicPage.tsx",
+      "lines": 654
+    },
+    {
+      "file": "components/client/StoreHub.tsx",
+      "lines": 3351
+    },
+    {
+      "file": "components/public/AdvertisingPage.tsx",
+      "lines": 1344
+    },
+    {
+      "file": "components/public/AffiliatePublicPage.tsx",
+      "lines": 590
+    },
+    {
+      "file": "components/public/BrandJourneyPage.tsx",
+      "lines": 594
+    },
+    {
+      "file": "components/public/BrandPortfolioInteractiveDialog.tsx",
+      "lines": 529
+    },
+    {
+      "file": "components/public/FreeToolsAdditionalCalculators.tsx",
+      "lines": 913
+    },
+    {
+      "file": "components/public/FreeToolsAdvancedCalculators.tsx",
+      "lines": 1529
+    },
+    {
+      "file": "components/public/FreeToolsPage.tsx",
+      "lines": 528
+    },
+    {
+      "file": "components/public/FreeToolsProUnlockDialog.tsx",
+      "lines": 548
+    },
+    {
+      "file": "components/public/FreeToolsTieredCalculatorDialog.tsx",
+      "lines": 511
+    },
+    {
+      "file": "components/public/PartnerBenefitRedeemModal.tsx",
+      "lines": 776
+    },
+    {
+      "file": "components/public/PartnersPage.tsx",
+      "lines": 700
+    },
+    {
+      "file": "components/public/ProtocolConsultPage.tsx",
+      "lines": 1482
+    },
+    {
+      "file": "components/public/PublicVIPPresentationPage.tsx",
+      "lines": 1581
+    },
+    {
+      "file": "components/public/SystemsInsightDialog.tsx",
+      "lines": 795
+    },
+    {
+      "file": "components/public/SystemsPageFinal.tsx",
+      "lines": 540
+    },
+    {
+      "file": "features/partners/service.ts",
+      "lines": 775
+    },
+    {
+      "file": "lib/freeToolsCalculations.ts",
+      "lines": 1017
+    },
+    {
+      "file": "lib/pdf.ts",
+      "lines": 655
+    },
+    {
+      "file": "lib/whatsappNotificationService.ts",
+      "lines": 1360
+    },
+    {
+      "file": "pages/AdminPanel.tsx",
+      "lines": 638
+    },
+    {
+      "file": "pages/AdvertiserPortal.tsx",
+      "lines": 2500
+    },
+    {
+      "file": "pages/Afiliado/AfiliadoDashboard.tsx",
+      "lines": 1935
+    },
+    {
+      "file": "pages/BusinessRegistrationPage.tsx",
+      "lines": 921
+    },
+    {
+      "file": "pages/Careers/CareersLandingPage.tsx",
+      "lines": 916
+    },
+    {
+      "file": "pages/ClientLoginPage.tsx",
+      "lines": 958
+    },
+    {
+      "file": "pages/ClientPortal.tsx",
+      "lines": 1596
+    },
+    {
+      "file": "pages/Fornecedor/FornecedorAccessPage.tsx",
+      "lines": 535
+    },
+    {
+      "file": "pages/Fornecedor/FornecedorDashboard.tsx",
+      "lines": 866
+    },
+    {
+      "file": "pages/Prestador/ProviderLandingPage.tsx",
+      "lines": 556
+    },
+    {
+      "file": "pages/ProviderAccessPage.tsx",
+      "lines": 806
+    },
+    {
+      "file": "types.ts",
+      "lines": 975
+    }
+  ]
+}

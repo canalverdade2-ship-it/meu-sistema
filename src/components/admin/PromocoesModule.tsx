@@ -487,13 +487,14 @@ export function PromocoesModule({ activeSubTab, initialItemId, colaboradorId, co
                 <label className="block text-sm font-bold text-neutral-700 mb-1">
                   Valor do Desconto ({formData.tipo_desconto === 'valor' ? 'R$' : '%'})
                 </label>
-                <input
+                <input 
                   type="number"
                   step="0.01"
                   min="0"
                   required
                   value={formData.valor_desconto || ''}
-                  onChange={e => setFormData({...formData, valor_desconto: parseFloat(e.target.value) || 0})}
+                  inputMode="numeric"
+onChange={(e) => setFormData({...formData, valor_desconto: parseFloat(e.target.value) || 0})}
                   className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 focus:border-indigo-500 focus:outline-none"
                 />
               </div>
@@ -524,12 +525,13 @@ export function PromocoesModule({ activeSubTab, initialItemId, colaboradorId, co
           <div>
             <label className="block text-sm font-bold text-neutral-700 mb-1">Prazo de Validade</label>
             <div className="flex gap-4">
-              <input 
+              <input  
                 type="number" 
                 required
                 min="1"
                 value={formData.prazo_valor}
-                onChange={e => setFormData({...formData, prazo_valor: parseInt(e.target.value)})}
+                inputMode="numeric"
+onChange={(e) => setFormData({...formData, prazo_valor: parseInt(e.target.value)})}
                 className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2 focus:border-indigo-500 focus:outline-none"
               />
               <select

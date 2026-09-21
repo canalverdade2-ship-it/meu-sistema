@@ -1,0 +1,135 @@
+{
+  "missingTablesReferencedInFrontend": [
+    {
+      "table": "loja_vaquinha_contribuicoes",
+      "migrationFile": "20260814103000_setup_group_gift_vaquinhas.sql",
+      "frontendFiles": [
+        "src\\lib\\vaquinhaService.ts"
+      ]
+    }
+  ],
+  "missingFuncsReferencedInFrontend": [
+    {
+      "function": "gsa_criar_vaquinha",
+      "migrationFile": "20260814103000_setup_group_gift_vaquinhas.sql",
+      "frontendSupabaseFiles": [
+        "src\\lib\\vaquinhaService.ts"
+      ],
+      "frontendAdminFiles": []
+    },
+    {
+      "function": "gsa_obter_vaquinha",
+      "migrationFile": "20260814103000_setup_group_gift_vaquinhas.sql",
+      "frontendSupabaseFiles": [
+        "src\\lib\\vaquinhaService.ts"
+      ],
+      "frontendAdminFiles": []
+    },
+    {
+      "function": "gsa_confirmar_contribuicao_vaquinha",
+      "migrationFile": "20260814103000_setup_group_gift_vaquinhas.sql",
+      "frontendSupabaseFiles": [
+        "src\\lib\\vaquinhaService.ts"
+      ],
+      "frontendAdminFiles": []
+    }
+  ],
+  "missingColsReferencedInFrontend": [
+    {
+      "table": "cliente_promocoes",
+      "column": "visualizado",
+      "migrationFile": "20260609000001_add_visualizado_promocoes.sql",
+      "frontendFiles": [
+        "src\\components\\admin\\relatorios\\RelatorioMarketing.tsx",
+        "src\\components\\client\\ClientOrcamentos.tsx",
+        "src\\components\\client\\ClientPromocoes.tsx",
+        "src\\components\\client\\store\\PromotionsPage.tsx",
+        "src\\components\\client\\StoreHub.tsx",
+        "src\\hooks\\useClientNotifications.tsx",
+        "src\\utils\\promotions.ts"
+      ]
+    },
+    {
+      "table": "viagens_transacoes",
+      "column": "resposta_admin",
+      "migrationFile": "20260721210000_add_refund_response_columns.sql",
+      "frontendFiles": [
+        "src\\components\\client\\marketplace\\travel\\MyTripsPage.tsx",
+        "src\\components\\client\\marketplace\\travel\\TravelCancellationsPage.tsx",
+        "src\\components\\client\\marketplace\\travel\\TravelReservationPage.tsx"
+      ]
+    },
+    {
+      "table": "produtos",
+      "column": "avaliacao_media",
+      "migrationFile": "20260812140000_product_reviews_and_ratings_system.sql",
+      "frontendFiles": [
+        "src\\App.tsx",
+        "src\\components\\admin\\OrdensCompraModule.tsx",
+        "src\\components\\admin\\ProdutosModule.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioLoja.tsx",
+        "src\\components\\client\\ClientGSAStore.tsx",
+        "src\\components\\client\\ClientProdutos.tsx",
+        "src\\components\\client\\store\\CheckoutModal.tsx",
+        "src\\components\\client\\store\\CheckoutPage.tsx",
+        "src\\components\\client\\store\\EcommerceHeader.tsx",
+        "src\\components\\client\\store\\EcommerceHome.tsx",
+        "src\\components\\client\\store\\ProductPage.tsx",
+        "src\\components\\client\\store\\WishlistPage.tsx",
+        "src\\components\\client\\StoreHub.tsx",
+        "src\\components\\public\\PublicVIPPresentationPage.tsx",
+        "src\\lib\\adminStoreOperations.ts",
+        "src\\pages\\Afiliado\\AfiliadoDashboard.tsx",
+        "src\\validation\\master_block2.ts"
+      ]
+    },
+    {
+      "table": "produtos",
+      "column": "total_avaliacoes",
+      "migrationFile": "20260812140000_product_reviews_and_ratings_system.sql",
+      "frontendFiles": [
+        "src\\App.tsx",
+        "src\\components\\admin\\OrdensCompraModule.tsx",
+        "src\\components\\admin\\ProdutosModule.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioLoja.tsx",
+        "src\\components\\client\\ClientGSAStore.tsx",
+        "src\\components\\client\\ClientProdutos.tsx",
+        "src\\components\\client\\store\\CheckoutModal.tsx",
+        "src\\components\\client\\store\\CheckoutPage.tsx",
+        "src\\components\\client\\store\\EcommerceHeader.tsx",
+        "src\\components\\client\\store\\EcommerceHome.tsx",
+        "src\\components\\client\\store\\ProductPage.tsx",
+        "src\\components\\client\\store\\WishlistPage.tsx",
+        "src\\components\\client\\StoreHub.tsx",
+        "src\\components\\public\\PublicVIPPresentationPage.tsx",
+        "src\\lib\\adminStoreOperations.ts",
+        "src\\pages\\Afiliado\\AfiliadoDashboard.tsx",
+        "src\\validation\\master_block2.ts"
+      ]
+    },
+    {
+      "table": "produtos",
+      "column": "comentarios_importados",
+      "migrationFile": "20260812140000_product_reviews_and_ratings_system.sql",
+      "frontendFiles": [
+        "src\\App.tsx",
+        "src\\components\\admin\\OrdensCompraModule.tsx",
+        "src\\components\\admin\\ProdutosModule.tsx",
+        "src\\components\\admin\\relatorios\\RelatorioLoja.tsx",
+        "src\\components\\client\\ClientGSAStore.tsx",
+        "src\\components\\client\\ClientProdutos.tsx",
+        "src\\components\\client\\store\\CheckoutModal.tsx",
+        "src\\components\\client\\store\\CheckoutPage.tsx",
+        "src\\components\\client\\store\\EcommerceHeader.tsx",
+        "src\\components\\client\\store\\EcommerceHome.tsx",
+        "src\\components\\client\\store\\ProductPage.tsx",
+        "src\\components\\client\\store\\WishlistPage.tsx",
+        "src\\components\\client\\StoreHub.tsx",
+        "src\\components\\public\\PublicVIPPresentationPage.tsx",
+        "src\\lib\\adminStoreOperations.ts",
+        "src\\pages\\Afiliado\\AfiliadoDashboard.tsx",
+        "src\\validation\\master_block2.ts"
+      ]
+    }
+  ]
+}

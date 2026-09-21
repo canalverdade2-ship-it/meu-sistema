@@ -5,7 +5,7 @@ import { supabase } from '../../../lib/supabase';
 import { formatCurrency, formatDate } from '../../../lib/utils';
 import { toast } from 'react-hot-toast';
 import { Modal } from '../../ui/Modal';
-import { clientOperationalWrite } from '../../../lib/clientOperationalWrite';
+import { callClientRpc } from '../../../lib/clientRpc';
 
 const GUEST_ACTIVATED_STORE_COUPONS_KEY = 'gsa_guest_activated_store_coupons';
 
@@ -118,7 +118,7 @@ export default function StoreHubCoupons({ isOpen, onClose, clientId }: StoreHubC
     setAtivandoCupom(cupomId);
     try {
       if (clientId) {
-        await clientOperationalWrite(clientId, 'cupons_ativados', 'insert', { cupom_id: cupomId });
+        await callClientRpc('gsa_client_activate_store_coupon', { p_cupom_id: cupomId });
       } else {
         const activated = new Set(cuponsAtivados);
         activated.add(cupomId);

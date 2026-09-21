@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../../../lib/supabase';
-import { formatCurrency, formatDate, generateUUID } from '../../../lib/utils';
+import { formatCurrency, formatDate, formatDateTime, generateUUID } from '../../../lib/utils';
 import { getProductDisplayCode } from '../../../lib/productIdentification';
 import { callClientRpc } from '../../../lib/clientRpc';
 import { clientOperationalWrite } from '../../../lib/clientOperationalWrite';
@@ -45,6 +45,7 @@ import { createInfinitePayOrderCheckout } from '../../../lib/pixService';
 import { routes } from '../../../routing/routeCatalog';
 import { navigate } from '../../../routing/navigationService';
 import { useSEO } from '../../../hooks/useSEO';
+import { useRealtimeSubscription } from '../../../hooks/useRealtime';
 
 import { OrderReviewModal } from './OrderReviewModal';
 import { CheckoutPixModal } from './CheckoutPixModal';
@@ -104,6 +105,9 @@ function getPresentation(order: any): OrderPresentation {
   const isExpired = isCancelled || expiredPending;
   const isPaid = ['pago', 'aprovado', 'em_expedicao', 'em_transporte', 'concluido'].includes(status) || isCredit;
   const isAwaiting = ['aberto', 'em_analise'].includes(status) && !isCredit && !isExpired;
+  const canCancelBeforeDelivery = !isSubscription
+    && !isCancelled
+    && !['em_transporte', 'concluido'].includes(status);
 
   let label = 'Em análise';
   let tone = 'border-amber-200 bg-amber-50 text-amber-800';
@@ -146,7 +150,7 @@ function getPresentation(order: any): OrderPresentation {
     isAwaiting,
     isExpired,
     canPay: isAwaiting && Number(order.total || 0) > 0,
-    canCancelPending: isAwaiting && Number(order.total || 0) > 0,
+    canCancelPending: canCancelBeforeDelivery,
     canRequestCancellation: isPaid && ['aprovado', 'pago'].includes(status),
     hoursLeft,
     minutesLeft,
@@ -187,6 +191,7 @@ export function PurchasesPage({ clientId, onRequireAuth, initialOrderId }: Purch
 
   // Cliente info
   const [clienteInfo, setClienteInfo] = useState<{ nome: string; email: string; telefone: string } | null>(null);
+  const [taxaEntregaPadrao, setTaxaEntregaPadrao] = useState(0);
 
   // Copiado
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -205,15 +210,18 @@ export function PurchasesPage({ clientId, onRequireAuth, initialOrderId }: Purch
       return;
     }
 
-    const fetchClient = async () => {
+    const fetchClientAndSettings = async () => {
       const { data } = await supabase
         .from('clientes')
         .select('nome, email, telefone')
         .eq('id', clientId)
         .single();
       if (data) setClienteInfo(data);
+
+      const { data: setts } = await supabase.from('system_settings').select('value').eq('key', 'loja_taxa_entrega_padrao').maybeSingle();
+      if (setts) setTaxaEntregaPadrao(parseFloat(setts.value) || 0);
     };
-    fetchClient();
+    fetchClientAndSettings();
   }, [clientId, onRequireAuth]);
 
   // Carregar compras
@@ -223,7 +231,7 @@ export function PurchasesPage({ clientId, onRequireAuth, initialOrderId }: Purch
     try {
       const { data: orcamentos, error } = await supabase
         .from('orcamentos')
-        .select('*')
+        .select('*, faturas(id), cupom_desconto:cupons_loja!fk_orcamentos_cupom_desconto(codigo_cupom), cupom_entrega:cupons_loja!fk_orcamentos_cupom_entrega(codigo_cupom)')
         .eq('cliente_id', clientId)
         .eq('origem_gsa_store', true)
         .order('data_criacao', { ascending: false });
@@ -304,25 +312,46 @@ export function PurchasesPage({ clientId, onRequireAuth, initialOrderId }: Purch
     fetchPurchases();
   }, [clientId]);
 
-  // Inscrição em tempo real para atualizações nos pedidos do cliente
-  useEffect(() => {
-    if (!clientId) return;
-    const channel = supabase
-      .channel(`loja-compras-client-${clientId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
+  useRealtimeSubscription(
+    [
+      {
         table: 'orcamentos',
-        filter: `cliente_id=eq.${clientId}`
-      }, () => {
-        fetchPurchases();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [clientId]);
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        enabled: Boolean(clientId),
+        debounceMs: 300,
+        onChange: fetchPurchases,
+      },
+      {
+        table: 'ordens_compra',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        enabled: Boolean(clientId),
+        debounceMs: 300,
+        onChange: fetchPurchases,
+      },
+      {
+        table: 'ordens_assinatura',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        enabled: Boolean(clientId),
+        debounceMs: 300,
+        onChange: fetchPurchases,
+      },
+      {
+        table: 'loja_pedido_itens',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        enabled: Boolean(clientId),
+        debounceMs: 300,
+        onChange: fetchPurchases,
+      },
+      {
+        table: 'loja_pedidos',
+        filter: clientId ? `cliente_id=eq.${clientId}` : undefined,
+        enabled: Boolean(clientId),
+        debounceMs: 300,
+        onChange: fetchPurchases,
+      },
+    ],
+    [clientId]
+  );
 
   // Contadores por Aba
   const tabCounts = useMemo(() => {
@@ -432,7 +461,6 @@ export function PurchasesPage({ clientId, onRequireAuth, initialOrderId }: Purch
           orcamentoId: order.id,
           codigoOrcamento: codigoOrcamento,
           clienteId: clientId,
-          valorLiquido: Number(order.total || 0),
           clienteNome: clienteInfo?.nome || '',
           clienteEmail: clienteInfo?.email || '',
           clienteTelefone: clienteInfo?.telefone || '',
@@ -712,7 +740,7 @@ export function PurchasesPage({ clientId, onRequireAuth, initialOrderId }: Purch
                     <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                       <div className="flex items-center gap-1.5 text-neutral-500 font-medium">
                         <Calendar className="h-3.5 w-3.5 text-neutral-400" />
-                        <span>{formatDate(order.data_criacao)}</span>
+                        <span>{formatDateTime(order.data_criacao)}</span>
                       </div>
 
                       <div>
@@ -854,12 +882,6 @@ export function PurchasesPage({ clientId, onRequireAuth, initialOrderId }: Purch
                         <RotateCcw className={`h-3.5 w-3.5 text-neutral-400 ${isReordering === order.id ? 'animate-spin' : ''}`} />
                         {isReordering === order.id ? 'Adicionando...' : 'Comprar Novamente'}
                       </button>
-                      {presentation.canCancelPending && (
-                        <button type="button" onClick={() => setCancelModalOrder(order)}
-                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-200 bg-white hover:bg-rose-50 text-xs font-bold text-rose-600 transition-all cursor-pointer">
-                          <Trash2 className="h-3.5 w-3.5" />Cancelar
-                        </button>
-                      )}
                       {presentation.canPay && (
                         <button type="button" onClick={() => handlePayOrder(order)}
                           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#17345f] hover:bg-[#102746] text-xs font-black text-white shadow-md shadow-[#17345f]/20 transition-all cursor-pointer">
@@ -888,7 +910,7 @@ export function PurchasesPage({ clientId, onRequireAuth, initialOrderId }: Purch
                   <div className="h-9 w-9 rounded-xl bg-white/15 flex items-center justify-center"><FileText className="h-4 w-4 text-white" /></div>
                   <div>
                     <h3 className="text-sm font-black text-white">Detalhes do Pedido</h3>
-                    <p className="text-[11px] text-white/50 font-medium">#{selectedOrderDetail.codigo_orcamento || selectedOrderDetail.id?.slice(0, 8)} · {formatDate(selectedOrderDetail.data_criacao)}</p>
+                    <p className="text-[11px] text-white/50 font-medium">#{selectedOrderDetail.codigo_orcamento || selectedOrderDetail.id?.slice(0, 8)} • {formatDateTime(selectedOrderDetail.data_criacao)}</p>
                   </div>
                 </div>
                 <button type="button" onClick={() => setSelectedOrderDetail(null)}
@@ -953,17 +975,44 @@ export function PurchasesPage({ clientId, onRequireAuth, initialOrderId }: Purch
                     </span>
                   </div>
 
-                  {Number(selectedOrderDetail.taxa_entrega || 0) > 0 && (
-                    <div className="flex justify-between text-neutral-600 font-medium">
-                      <span>Frete / Entrega</span>
-                      <span className="font-bold text-neutral-900">{formatCurrency(selectedOrderDetail.taxa_entrega)}</span>
-                    </div>
+                  {selectedOrderDetail.taxa_entrega !== null && selectedOrderDetail.taxa_entrega !== undefined && (
+                    <>
+                      <div className="flex justify-between text-neutral-600 font-medium">
+                        <span>Frete / Entrega</span>
+                        {Number(selectedOrderDetail.taxa_entrega) > 0 ? (
+                          <span className="font-bold text-neutral-900">{formatCurrency(selectedOrderDetail.taxa_entrega)}</span>
+                        ) : selectedOrderDetail.cupom_entrega_id ? (
+                          <span className="font-bold text-neutral-900">{formatCurrency(taxaEntregaPadrao)}</span>
+                        ) : (
+                          <span className="font-bold text-emerald-700">Grátis</span>
+                        )}
+                      </div>
+                      
+                      {Number(selectedOrderDetail.taxa_entrega) === 0 && selectedOrderDetail.cupom_entrega_id && (
+                        <div className="flex justify-between text-emerald-700 font-bold">
+                          <span>Cupom de Frete {selectedOrderDetail.cupom_entrega?.codigo_cupom ? `(${selectedOrderDetail.cupom_entrega.codigo_cupom})` : ''}</span>
+                          <span>- {formatCurrency(taxaEntregaPadrao)}</span>
+                        </div>
+                      )}
+                    </>
                   )}
 
-                  {Number(selectedOrderDetail.desconto || 0) > 0 && (
+                  {Number(selectedOrderDetail.desconto_cupom || 0) > 0 && (
                     <div className="flex justify-between text-emerald-700 font-bold">
-                      <span>Descontos / Cupons / PIX</span>
-                      <span>- {formatCurrency(selectedOrderDetail.desconto)}</span>
+                      <span>Cupom de Desconto {selectedOrderDetail.cupom_desconto?.codigo_cupom ? `(${selectedOrderDetail.cupom_desconto.codigo_cupom})` : ''}</span>
+                      <span>- {formatCurrency(selectedOrderDetail.desconto_cupom)}</span>
+                    </div>
+                  )}
+                  {Number(selectedOrderDetail.desconto_promocional || 0) > 0 && (
+                    <div className="flex justify-between text-emerald-700 font-bold">
+                      <span>Desconto Promocional</span>
+                      <span>- {formatCurrency(selectedOrderDetail.desconto_promocional)}</span>
+                    </div>
+                  )}
+                  {Number(selectedOrderDetail.desconto || 0) > (Number(selectedOrderDetail.desconto_cupom || 0) + Number(selectedOrderDetail.desconto_promocional || 0)) && (
+                    <div className="flex justify-between text-emerald-700 font-bold">
+                      <span>Desconto PIX / Outros</span>
+                      <span>- {formatCurrency(Number(selectedOrderDetail.desconto || 0) - (Number(selectedOrderDetail.desconto_cupom || 0) + Number(selectedOrderDetail.desconto_promocional || 0)))}</span>
                     </div>
                   )}
 
@@ -1012,13 +1061,25 @@ export function PurchasesPage({ clientId, onRequireAuth, initialOrderId }: Purch
 
             {/* Rodapé do Modal */}
             <div className="px-6 py-4 bg-neutral-50 border-t border-neutral-200 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setSelectedOrderDetail(null)}
-                className="px-4 py-2 rounded-xl bg-white border border-neutral-300 font-bold text-xs text-neutral-700 hover:bg-neutral-100 cursor-pointer"
-              >
-                Fechar
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedOrderDetail(null)}
+                  className="px-4 py-2 rounded-xl bg-white border border-neutral-300 font-bold text-xs text-neutral-700 hover:bg-neutral-100 cursor-pointer"
+                >
+                  Fechar
+                </button>
+                {selectedOrderDetail.faturas && selectedOrderDetail.faturas.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => navigate(routes.client.finance.invoice(selectedOrderDetail.faturas[0].id))}
+                    className="px-4 py-2 rounded-xl bg-indigo-50 border border-indigo-200 font-bold text-xs text-indigo-700 hover:bg-indigo-100 cursor-pointer flex items-center gap-1.5"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Ver Fatura
+                  </button>
+                )}
+              </div>
 
               {getPresentation(selectedOrderDetail).canPay && (
                 <button
@@ -1032,6 +1093,20 @@ export function PurchasesPage({ clientId, onRequireAuth, initialOrderId }: Purch
                 >
                   <CreditCard className="h-3.5 w-3.5" />
                   <span>Pagar este Pedido</span>
+                </button>
+              )}
+              {getPresentation(selectedOrderDetail).canCancelPending && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const orderToCancel = selectedOrderDetail;
+                    setSelectedOrderDetail(null);
+                    setCancelModalOrder(orderToCancel);
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-rose-600 text-white font-black text-xs hover:bg-rose-700 shadow-md shadow-rose-600/20 cursor-pointer flex items-center gap-1.5"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Cancelar Pedido</span>
                 </button>
               )}
               </div>

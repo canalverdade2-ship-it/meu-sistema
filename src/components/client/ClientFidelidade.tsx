@@ -9,6 +9,9 @@ import { ClientIndiqueGanhe } from './ClientIndiqueGanhe';
 import { ClientAreaVIP } from './ClientAreaVIP';
 import { ClientAffiliatePanel } from './ClientAffiliatePanel';
 import { useClientNotifications } from '../../hooks/useClientNotifications';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
+import { navigate } from '../../routing/navigationService';
+import { fetchAffiliateSnapshot } from '../../features/affiliates/service';
 
 type FidelidadeTab = 'pontos' | 'vouchers' | 'promocoes' | 'premios' | 'indique-ganhe' | 'afiliados' | 'area-vip';
 
@@ -47,6 +50,17 @@ export function ClientFidelidade({
     setActiveTab(normalizeTab(initialTab));
   }, [initialTab]);
 
+  useRealtimeSubscription(
+    [
+      { table: 'clientes', filter: clientId ? `id=eq.${clientId}` : undefined },
+      { table: 'vouchers', filter: clientId ? `cliente_id=eq.${clientId}` : undefined },
+      { table: 'indicacoes', filter: clientId ? `indicador_id=eq.${clientId}` : undefined },
+      { table: 'pontos_movimentacoes', filter: clientId ? `cliente_id=eq.${clientId}` : undefined },
+      { table: 'system_settings' },
+    ],
+    [clientId]
+  );
+
   const fidelidadeTabsBase: Array<{ id: FidelidadeTab; label: string; icon: any; badge?: number; locked?: boolean }> = [
     { id: 'pontos', label: 'Pontos', icon: Star },
     { id: 'vouchers', label: 'Vouchers', icon: Ticket, badge: pendencies.moduleVouchers },
@@ -61,7 +75,18 @@ export function ClientFidelidade({
   const activeSubmodule = tabs.find(tab => tab.id === activeTab);
   const ActiveIcon = activeSubmodule?.icon;
 
-  const openSubmodule = (tab: FidelidadeTab) => {
+  const openSubmodule = async (tab: FidelidadeTab) => {
+    if (tab === 'afiliados') {
+      try {
+        const snap = await fetchAffiliateSnapshot();
+        if (snap.affiliate && snap.affiliate.nomeDivulgacao && snap.affiliate.nomeDivulgacao.trim().length >= 2) {
+          navigate('/afiliados/dashboard');
+          return;
+        }
+      } catch (err) {
+        console.warn('[ClientFidelidade] Erro ao verificar snapshot de afiliado:', err);
+      }
+    }
     setActiveTab(tab);
     onNavigate?.('fidelidade', tab);
   };
@@ -70,6 +95,7 @@ export function ClientFidelidade({
     setActiveTab(undefined);
     onNavigate?.('fidelidade');
   };
+
 
   return (
     <div className="space-y-8">

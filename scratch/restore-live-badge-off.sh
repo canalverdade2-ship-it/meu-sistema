@@ -1,0 +1,3 @@
+set -eu
+dburl=$(sudo docker inspect gsa-tv-control-plane --format '{{range .Config.Env}}{{println .}}{{end}}' | awk -F= '$1=="DATABASE_URL"{sub(/^DATABASE_URL=/,"");print;exit}')
+sudo docker run --pull=never --rm --network host postgres:15-alpine psql "$dburl" -X -qAt -v ON_ERROR_STOP=1 -c "INSERT INTO public.gsa_tv_jobs(id,channel_id,job_type,status,payload) VALUES ('a4d78a4d-6f8b-4b0e-b144-371d11d07a30','ch-main','live_badge_toggle','pending','{\"enabled\":false}'::jsonb) ON CONFLICT(id) DO NOTHING; UPDATE public.gsa_tv_jobs SET status='pending',updated_at=now() WHERE id='a4d78a4d-6f8b-4b0e-b144-371d11d07a30' AND status='queued'; SELECT id,status FROM public.gsa_tv_jobs WHERE id='a4d78a4d-6f8b-4b0e-b144-371d11d07a30';"

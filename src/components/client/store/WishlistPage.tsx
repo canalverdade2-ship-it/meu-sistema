@@ -5,7 +5,7 @@ import { EcommerceHeader } from './EcommerceHeader';
 import { navigate } from '../../../routing/navigationService';
 import { routes } from '../../../routing/routeCatalog';
 import StoreItemCard from './StoreItemCard';
-import { fetchWishlistFromDb, removeFromWishlist } from '../../../lib/wishlistStorage';
+import { fetchWishlistFromDb, getWishlist, removeFromWishlist, isUuid, pruneWishlist } from '../../../lib/wishlistStorage';
 import { toast } from 'react-hot-toast';
 
 export function WishlistPage({ clientId, onRequireAuth }: { clientId?: string, onRequireAuth?: () => void }) {
@@ -16,42 +16,172 @@ export function WishlistPage({ clientId, onRequireAuth }: { clientId?: string, o
   useEffect(() => {
     let active = true;
 
+    const loadProductsForIds = async (ids: string[]) => {
+      if (ids.length === 0) {
+        if (active) setWishlistItems([]);
+        return;
+      }
+
+      const uuidIds = ids.filter((id) => isUuid(id));
+      const codeIds = ids.filter((id) => !isUuid(id));
+
+      try {
+        const queries: Promise<any>[] = [];
+
+        // 1. Produtos por ID UUID
+        if (uuidIds.length > 0) {
+          queries.push(
+            Promise.resolve(supabase
+              .from('produtos')
+              .select('*')
+              .in('id', uuidIds)
+              .then((res) => (res.data || []).map((p: any) => ({ ...p, tipo: 'produto' }))))
+          );
+        }
+
+        // 2. Produtos por Código de Produto (ex: SHP-..., PRD-...)
+        if (codeIds.length > 0) {
+          queries.push(
+            Promise.resolve(supabase
+              .from('produtos')
+              .select('*')
+              .in('codigo_produto', codeIds)
+              .then((res) => (res.data || []).map((p: any) => ({ ...p, tipo: 'produto' }))))
+          );
+        }
+
+        // 3. Serviços por ID UUID
+        if (uuidIds.length > 0) {
+          queries.push(
+            Promise.resolve(supabase
+              .from('servicos')
+              .select('*')
+              .in('id', uuidIds)
+              .then((res) => (res.data || []).map((s: any) => ({ ...s, tipo: 'servico' }))))
+          );
+        }
+
+        // 4. Serviços por Código de Serviço
+        if (codeIds.length > 0) {
+          queries.push(
+            Promise.resolve(supabase
+              .from('servicos')
+              .select('*')
+              .in('codigo_servico', codeIds)
+              .then((res) => (res.data || []).map((s: any) => ({ ...s, tipo: 'servico' }))))
+          );
+        }
+
+        // 5. Assinaturas / Planos por ID UUID
+        if (uuidIds.length > 0) {
+          queries.push(
+            Promise.resolve(supabase
+              .from('assinaturas')
+              .select('*')
+              .in('id', uuidIds)
+              .then((res) => (res.data || []).map((a: any) => ({ ...a, tipo: 'assinatura' }))))
+          );
+        }
+
+        // 6. Assinaturas / Planos por Código de Assinatura
+        if (codeIds.length > 0) {
+          queries.push(
+            Promise.resolve(supabase
+              .from('assinaturas')
+              .select('*')
+              .in('codigo_assinatura', codeIds)
+              .then((res) => (res.data || []).map((a: any) => ({ ...a, tipo: 'assinatura' }))))
+          );
+        }
+
+        const results = await Promise.all(queries);
+        if (!active) return;
+
+        const allFound: any[] = results.flat();
+        const foundMap = new Map<string, any>();
+        for (const item of allFound) {
+          if (item.id) foundMap.set(item.id, item);
+          if (item.codigo_produto) foundMap.set(item.codigo_produto, item);
+          if (item.codigo_servico) foundMap.set(item.codigo_servico, item);
+          if (item.codigo_assinatura) foundMap.set(item.codigo_assinatura, item);
+        }
+
+        const validIdsFound: string[] = [];
+        const ordered: any[] = [];
+        const seenIds = new Set<string>();
+
+        for (const rawId of ids) {
+          const item = foundMap.get(rawId);
+          if (item && !seenIds.has(item.id)) {
+            seenIds.add(item.id);
+            ordered.push(item);
+            validIdsFound.push(rawId);
+            if (item.id && item.id !== rawId) validIdsFound.push(item.id);
+            if (item.codigo_produto && item.codigo_produto !== rawId) validIdsFound.push(item.codigo_produto);
+          }
+        }
+
+        // Se houver IDs órfãos/inexistentes no catálogo, sincroniza com o cache local
+        if (ordered.length < ids.length) {
+          pruneWishlist(validIdsFound, clientId);
+        }
+
+        setWishlistItems(ordered);
+      } catch (err) {
+        console.error('Erro ao carregar produtos favoritos:', err);
+      }
+    };
+
     const fetchWishlist = async () => {
-      setLoading(true);
+      // 1. Carregamento instantâneo via cache local (zero delay perceptível)
+      const initialIds = getWishlist(clientId);
+      if (initialIds.length > 0) {
+        await loadProductsForIds(initialIds);
+        if (active) setLoading(false);
+      }
+
+      // 2. Sincronização e mesclagem com o banco de dados
       try {
         const ids = await fetchWishlistFromDb(clientId);
-        if (ids.length === 0) {
-          if (active) setWishlistItems([]);
-          return;
-        }
-        const { data, error } = await supabase
-          .from('produtos')
-          .select('*')
-          .in('id', ids);
-
-        if (!active) return;
-        if (data && !error) {
-          // Preserva a ordem em que os produtos foram favoritados
-          const ordered = ids
-            .map((id) => data.find((p: any) => p.id === id))
-            .filter(Boolean);
-          setWishlistItems(ordered);
+        if (active) {
+          await loadProductsForIds(ids);
         }
       } catch (err) {
-        console.error('Erro ao buscar wishlist:', err);
+        console.error('Erro ao buscar wishlist do banco:', err);
       } finally {
         if (active) setLoading(false);
       }
     };
 
     fetchWishlist();
-    const onUpdate = () => fetchWishlist();
+    const onUpdate = () => {
+      const currentIds = getWishlist(clientId);
+      loadProductsForIds(currentIds);
+    };
     window.addEventListener('gsa-wishlist-updated', onUpdate);
     return () => {
       active = false;
       window.removeEventListener('gsa-wishlist-updated', onUpdate);
     };
   }, [clientId]);
+
+  const handleRemove = async (e: React.MouseEvent, item: any) => {
+    e.stopPropagation();
+    if (item.id) await removeFromWishlist(item.id, clientId);
+    if (item.codigo_produto) await removeFromWishlist(item.codigo_produto, clientId);
+    if (item.codigo_servico) await removeFromWishlist(item.codigo_servico, clientId);
+    if (item.codigo_assinatura) await removeFromWishlist(item.codigo_assinatura, clientId);
+    setWishlistItems((prev) => prev.filter((p) => p.id !== item.id));
+    toast.success('Item removido dos favoritos.');
+  };
+
+  const getItemTargetUrl = (item: any) => {
+    const itemId = item.id || item.codigo_produto;
+    if (item.tipo === 'assinatura') {
+      return routes.marketplace.store.subscription(itemId);
+    }
+    return routes.marketplace.store.product(itemId);
+  };
 
   return (
     <div className="min-h-screen bg-[#f8f9fa]">
@@ -100,19 +230,20 @@ export function WishlistPage({ clientId, onRequireAuth }: { clientId?: string, o
               <div key={item.id} className="relative group">
                 <StoreItemCard
                   item={item}
-                  tipo="produto"
+                  tipo={item.tipo || 'produto'}
                   clientId={clientId}
-                  onAdd={() => navigate(routes.marketplace.store.product(item.id) + '?modal=quantidade')}
-                  onClick={() => navigate(routes.marketplace.store.product(item.id))}
+                  onAdd={() => {
+                    const url = getItemTargetUrl(item);
+                    navigate(url + '?modal=quantidade');
+                  }}
+                  onClick={() => {
+                    const url = getItemTargetUrl(item);
+                    navigate(url);
+                  }}
                 />
                 <button 
                   type="button"
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    await removeFromWishlist(item.id, clientId);
-                    setWishlistItems((prev) => prev.filter((p) => p.id !== item.id));
-                    toast.success('Produto removido dos favoritos.');
-                  }}
+                  onClick={(e) => handleRemove(e, item)}
                   className="absolute left-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white text-neutral-400 shadow-md transition-all hover:text-red-500 hover:bg-rose-50 opacity-0 group-hover:opacity-100 cursor-pointer"
                   title="Remover da lista"
                 >
@@ -128,3 +259,4 @@ export function WishlistPage({ clientId, onRequireAuth }: { clientId?: string, o
 }
 
 export default WishlistPage;
+

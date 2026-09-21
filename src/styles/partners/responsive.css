@@ -125,17 +125,41 @@
   }
 
   .partners-detail-hero__layout {
-    gap: 3rem;
-    padding-block: 2rem 4rem;
-  }
-
-  .partner-visual--detail,
-  .partner-visual--detail .partner-visual__fallback {
-    min-height: 300px;
+    gap: 2rem;
+    padding-block: 2rem 3.5rem;
   }
 
   .partner-visual--detail {
-    box-shadow: 10px 10px 0 rgba(196, 154, 74, 0.14);
+    min-height: auto !important;
+    height: auto !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    border: none !important;
+    overflow: visible;
+    padding: 0 !important;
+  }
+
+  .partner-visual--detail img,
+  .partner-visual--detail .partner-visual__cover,
+  .partner-visual--detail .partner-visual__logo-only,
+  .partner-visual--detail .partner-visual__detail-image {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 480px;
+    object-fit: cover;
+    border-radius: 1rem;
+    border: 1px solid rgba(226, 201, 142, 0.4);
+    box-shadow: 6px 6px 0 rgba(226, 201, 142, 0.35), 0 8px 20px rgba(8, 23, 38, 0.08);
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0;
+  }
+
+  .partner-visual--detail .partner-visual__fallback {
+    min-height: 200px;
   }
 
   .partner-detail-service-list {

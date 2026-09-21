@@ -1,0 +1,679 @@
+{
+  "columns": [
+    {
+      "column_name": "key",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "column_name": "value",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "column_name": "must_change_code",
+      "data_type": "boolean",
+      "is_nullable": "YES",
+      "column_default": "true"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES",
+      "column_default": "now()"
+    },
+    {
+      "column_name": "value_hash",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "column_name": "chave",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "column_name": "valor",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "column_name": "status",
+      "data_type": "text",
+      "is_nullable": "NO",
+      "column_default": "'ativo'::text"
+    }
+  ],
+  "rows": [
+    {
+      "key": "bonus_cadastro_tipo",
+      "value": "pontos",
+      "must_change_code": false,
+      "created_at": "2026-03-19T22:51:54.584951+00:00",
+      "updated_at": "2026-03-19T22:51:54.584951+00:00",
+      "value_hash": null,
+      "chave": "bonus_cadastro_tipo",
+      "valor": "pontos",
+      "status": "ativo"
+    },
+    {
+      "key": "bonus_cadastro_valor",
+      "value": "100",
+      "must_change_code": false,
+      "created_at": "2026-03-19T22:51:54.584951+00:00",
+      "updated_at": "2026-03-19T22:51:54.584951+00:00",
+      "value_hash": null,
+      "chave": "bonus_cadastro_valor",
+      "valor": "100",
+      "status": "ativo"
+    },
+    {
+      "key": "indicador_recompensa_tipo",
+      "value": "ambos",
+      "must_change_code": false,
+      "created_at": "2026-05-13T16:42:13.727144+00:00",
+      "updated_at": "2026-05-13T16:42:13.727144+00:00",
+      "value_hash": null,
+      "chave": "indicador_recompensa_tipo",
+      "valor": "ambos",
+      "status": "ativo"
+    },
+    {
+      "key": "indicador_limite_carteira",
+      "value": "20",
+      "must_change_code": false,
+      "created_at": "2026-05-13T16:42:13.727144+00:00",
+      "updated_at": "2026-05-13T16:42:13.727144+00:00",
+      "value_hash": null,
+      "chave": "indicador_limite_carteira",
+      "valor": "20",
+      "status": "ativo"
+    },
+    {
+      "key": "indicador_valor_pontos",
+      "value": "100",
+      "must_change_code": false,
+      "created_at": "2026-05-13T16:42:13.727144+00:00",
+      "updated_at": "2026-05-13T16:42:13.727144+00:00",
+      "value_hash": null,
+      "chave": "indicador_valor_pontos",
+      "valor": "100",
+      "status": "ativo"
+    },
+    {
+      "key": "indicado_recompensa_tipo",
+      "value": "ambos",
+      "must_change_code": false,
+      "created_at": "2026-05-13T16:42:13.727144+00:00",
+      "updated_at": "2026-05-13T16:42:13.727144+00:00",
+      "value_hash": null,
+      "chave": "indicado_recompensa_tipo",
+      "valor": "ambos",
+      "status": "ativo"
+    },
+    {
+      "key": "test_key",
+      "value": "test_value",
+      "must_change_code": false,
+      "created_at": "2026-05-13T15:02:45.937752+00:00",
+      "updated_at": "2026-05-13T15:02:45.937752+00:00",
+      "value_hash": null,
+      "chave": "test_key",
+      "valor": "test_value",
+      "status": "ativo"
+    },
+    {
+      "key": "bonus_indicador",
+      "value": "20",
+      "must_change_code": false,
+      "created_at": "2026-05-13T16:42:13.727144+00:00",
+      "updated_at": "2026-05-13T16:42:13.727144+00:00",
+      "value_hash": null,
+      "chave": "bonus_indicador",
+      "valor": "20",
+      "status": "ativo"
+    },
+    {
+      "key": "whatsapp_float_ativo",
+      "value": "true",
+      "must_change_code": false,
+      "created_at": "2026-05-13T14:46:41.684212+00:00",
+      "updated_at": "2026-05-13T14:46:41.684212+00:00",
+      "value_hash": null,
+      "chave": "whatsapp_float_ativo",
+      "valor": "true",
+      "status": "ativo"
+    },
+    {
+      "key": "whatsapp_float_telefone",
+      "value": "11920857756",
+      "must_change_code": false,
+      "created_at": "2026-05-13T14:46:41.684212+00:00",
+      "updated_at": "2026-05-13T14:46:41.684212+00:00",
+      "value_hash": null,
+      "chave": "whatsapp_float_telefone",
+      "valor": "11920857756",
+      "status": "ativo"
+    },
+    {
+      "key": "whatsapp_float_mensagem",
+      "value": "Olá, preciso de ajuda com a plataforma!",
+      "must_change_code": false,
+      "created_at": "2026-05-13T14:46:41.684212+00:00",
+      "updated_at": "2026-05-13T14:46:41.684212+00:00",
+      "value_hash": null,
+      "chave": "whatsapp_float_mensagem",
+      "valor": "Olá, preciso de ajuda com a plataforma!",
+      "status": "ativo"
+    },
+    {
+      "key": "whatsapp_float_tamanho",
+      "value": "M",
+      "must_change_code": false,
+      "created_at": "2026-05-13T14:46:41.684212+00:00",
+      "updated_at": "2026-05-13T14:46:41.684212+00:00",
+      "value_hash": null,
+      "chave": "whatsapp_float_tamanho",
+      "valor": "M",
+      "status": "ativo"
+    },
+    {
+      "key": "whatsapp_float_posicao",
+      "value": "direita",
+      "must_change_code": false,
+      "created_at": "2026-05-13T14:46:41.684212+00:00",
+      "updated_at": "2026-05-13T14:46:41.684212+00:00",
+      "value_hash": null,
+      "chave": "whatsapp_float_posicao",
+      "valor": "direita",
+      "status": "ativo"
+    },
+    {
+      "key": "whatsapp_float_tooltip",
+      "value": "Falar no WhatsApp",
+      "must_change_code": false,
+      "created_at": "2026-05-13T14:46:41.684212+00:00",
+      "updated_at": "2026-05-13T14:46:41.684212+00:00",
+      "value_hash": null,
+      "chave": "whatsapp_float_tooltip",
+      "valor": "Falar no WhatsApp",
+      "status": "ativo"
+    },
+    {
+      "key": "indicado_desconto_porcentagem",
+      "value": "10",
+      "must_change_code": false,
+      "created_at": "2026-05-13T16:42:13.727144+00:00",
+      "updated_at": "2026-05-13T16:42:13.727144+00:00",
+      "value_hash": null,
+      "chave": "indicado_desconto_porcentagem",
+      "valor": "10",
+      "status": "ativo"
+    },
+    {
+      "key": "indicado_valor_pontos",
+      "value": "100",
+      "must_change_code": false,
+      "created_at": "2026-05-13T16:42:13.727144+00:00",
+      "updated_at": "2026-05-13T16:42:13.727144+00:00",
+      "value_hash": null,
+      "chave": "indicado_valor_pontos",
+      "valor": "100",
+      "status": "ativo"
+    },
+    {
+      "key": "template_mensagem_indicacao",
+      "value": "🎉 Parabéns, {nome_indicado}!\n\nVocê acaba de ganhar:\n\n💰 10% DE DESCONTO \n⭐ +100 PONTOS DE BOAS-VINDAS\n\nTudo isso através da indicação de:\n👤 {nome_indicador}\n\n🚀 Para liberar seus benefícios, finalize seu cadastro no Portal GSA:\n\n1️⃣ Acesse:\n🔗 {link_portal}\n\n2️⃣ Clique em:\n👉 “Meu Primeiro Acesso”\n\n3️⃣ No campo:\n📱 “Seu Celular (WhatsApp)”\n\nDigite exatamente este número:\n📲 {whatsapp_cliente_indicado}\n\n4️⃣ Clique em:\n✅ “Liberar Cadastro”\n\n5️⃣ Confirme os dados do indicador e finalize seu cadastro.\n\n6️⃣ Crie sua senha de acesso e pronto!\n\n✅ Seu painel será liberado automaticamente.\n\n📞 Suporte:\n{telefone_suporte}\n\nSeja bem-vindo ao Grupo GSA 💙\n",
+      "must_change_code": false,
+      "created_at": "2026-05-13T13:44:37.938597+00:00",
+      "updated_at": "2026-05-13T13:44:37.938597+00:00",
+      "value_hash": null,
+      "chave": "template_mensagem_indicacao",
+      "valor": "🎉 Parabéns, {nome_indicado}!\n\nVocê acaba de ganhar:\n\n💰 10% DE DESCONTO \n⭐ +100 PONTOS DE BOAS-VINDAS\n\nTudo isso através da indicação de:\n👤 {nome_indicador}\n\n🚀 Para liberar seus benefícios, finalize seu cadastro no Portal GSA:\n\n1️⃣ Acesse:\n🔗 {link_portal}\n\n2️⃣ Clique em:\n👉 “Meu Primeiro Acesso”\n\n3️⃣ No campo:\n📱 “Seu Celular (WhatsApp)”\n\nDigite exatamente este número:\n📲 {whatsapp_cliente_indicado}\n\n4️⃣ Clique em:\n✅ “Liberar Cadastro”\n\n5️⃣ Confirme os dados do indicador e finalize seu cadastro.\n\n6️⃣ Crie sua senha de acesso e pronto!\n\n✅ Seu painel será liberado automaticamente.\n\n📞 Suporte:\n{telefone_suporte}\n\nSeja bem-vindo ao Grupo GSA 💙\n",
+      "status": "ativo"
+    },
+    {
+      "key": "desconto_indicado_porcentagem",
+      "value": "10",
+      "must_change_code": false,
+      "created_at": "2026-05-13T16:42:13.727144+00:00",
+      "updated_at": "2026-05-13T16:42:13.727144+00:00",
+      "value_hash": null,
+      "chave": "desconto_indicado_porcentagem",
+      "valor": "10",
+      "status": "ativo"
+    },
+    {
+      "key": "valor_minimo_saque",
+      "value": "15",
+      "must_change_code": false,
+      "created_at": "2026-03-20T00:55:22.10705+00:00",
+      "updated_at": "2026-03-20T00:55:22.10705+00:00",
+      "value_hash": null,
+      "chave": "valor_minimo_saque",
+      "valor": "15",
+      "status": "ativo"
+    },
+    {
+      "key": "vencimento_padrao_servicos",
+      "value": "5",
+      "must_change_code": true,
+      "created_at": "2026-03-30T14:59:47.248877+00:00",
+      "updated_at": "2026-03-30T14:59:47.248877+00:00",
+      "value_hash": null,
+      "chave": "vencimento_padrao_servicos",
+      "valor": "5",
+      "status": "ativo"
+    },
+    {
+      "key": "vencimento_padrao_produtos",
+      "value": "5",
+      "must_change_code": true,
+      "created_at": "2026-03-30T14:59:47.248877+00:00",
+      "updated_at": "2026-03-30T14:59:47.248877+00:00",
+      "value_hash": null,
+      "chave": "vencimento_padrao_produtos",
+      "valor": "5",
+      "status": "ativo"
+    },
+    {
+      "key": "loja_taxa_entrega_padrao",
+      "value": "30",
+      "must_change_code": false,
+      "created_at": "2026-05-16T04:13:26.42884+00:00",
+      "updated_at": "2026-05-16T04:13:26.42884+00:00",
+      "value_hash": null,
+      "chave": "loja_taxa_entrega_padrao",
+      "valor": "30",
+      "status": "ativo"
+    },
+    {
+      "key": "cobranca_multa_porcentagem",
+      "value": "2",
+      "must_change_code": true,
+      "created_at": "2026-04-17T01:50:03.195787+00:00",
+      "updated_at": "2026-04-17T01:50:03.195787+00:00",
+      "value_hash": null,
+      "chave": "cobranca_multa_porcentagem",
+      "valor": "2",
+      "status": "ativo"
+    },
+    {
+      "key": "cobranca_juros_mensal",
+      "value": "1",
+      "must_change_code": true,
+      "created_at": "2026-04-17T01:50:03.195787+00:00",
+      "updated_at": "2026-04-17T01:50:03.195787+00:00",
+      "value_hash": null,
+      "chave": "cobranca_juros_mensal",
+      "valor": "1",
+      "status": "ativo"
+    },
+    {
+      "key": "cobranca_juros_tipo",
+      "value": "diario",
+      "must_change_code": true,
+      "created_at": "2026-04-17T01:50:03.195787+00:00",
+      "updated_at": "2026-04-17T01:50:03.195787+00:00",
+      "value_hash": null,
+      "chave": "cobranca_juros_tipo",
+      "valor": "diario",
+      "status": "ativo"
+    },
+    {
+      "key": "cobranca_wp_template",
+      "value": "Olá {nome_cliente}, notamos que a sua fatura {numero_fatura} no valor atualizado de R$ {valor_atualizado} consta em aberto há {dias_atraso} dias. Como podemos auxiliar com a quitação desta pendência?",
+      "must_change_code": true,
+      "created_at": "2026-04-17T01:50:03.195787+00:00",
+      "updated_at": "2026-04-17T01:50:03.195787+00:00",
+      "value_hash": null,
+      "chave": "cobranca_wp_template",
+      "valor": "Olá {nome_cliente}, notamos que a sua fatura {numero_fatura} no valor atualizado de R$ {valor_atualizado} consta em aberto há {dias_atraso} dias. Como podemos auxiliar com a quitação desta pendência?",
+      "status": "ativo"
+    },
+    {
+      "key": "emprestimo_limite_simultaneos",
+      "value": "1",
+      "must_change_code": true,
+      "created_at": "2026-04-25T12:53:17.224333+00:00",
+      "updated_at": "2026-04-25T12:53:17.224333+00:00",
+      "value_hash": null,
+      "chave": "emprestimo_limite_simultaneos",
+      "valor": "1",
+      "status": "ativo"
+    },
+    {
+      "key": "emprestimo_pontos_quitacao",
+      "value": "500",
+      "must_change_code": true,
+      "created_at": "2026-04-25T12:53:17.224333+00:00",
+      "updated_at": "2026-04-25T12:53:17.224333+00:00",
+      "value_hash": null,
+      "chave": "emprestimo_pontos_quitacao",
+      "valor": "500",
+      "status": "ativo"
+    },
+    {
+      "key": "emprestimo_desconto_vip_percentual",
+      "value": "10",
+      "must_change_code": true,
+      "created_at": "2026-04-25T12:53:17.224333+00:00",
+      "updated_at": "2026-04-25T12:53:17.224333+00:00",
+      "value_hash": null,
+      "chave": "emprestimo_desconto_vip_percentual",
+      "valor": "10",
+      "status": "ativo"
+    },
+    {
+      "key": "emprestimo_proposta_validade_dias",
+      "value": "7",
+      "must_change_code": true,
+      "created_at": "2026-04-25T12:53:17.224333+00:00",
+      "updated_at": "2026-04-25T12:53:17.224333+00:00",
+      "value_hash": null,
+      "chave": "emprestimo_proposta_validade_dias",
+      "valor": "7",
+      "status": "ativo"
+    },
+    {
+      "key": "emprestimo_antecipacao_desconto_percentual",
+      "value": "0",
+      "must_change_code": true,
+      "created_at": "2026-04-25T12:53:17.224333+00:00",
+      "updated_at": "2026-04-25T12:53:17.224333+00:00",
+      "value_hash": null,
+      "chave": "emprestimo_antecipacao_desconto_percentual",
+      "valor": "0",
+      "status": "ativo"
+    },
+    {
+      "key": "loja_credito_juros_avista",
+      "value": "20",
+      "must_change_code": false,
+      "created_at": "2026-05-19T18:03:03.753097+00:00",
+      "updated_at": "2026-05-19T18:03:03.753097+00:00",
+      "value_hash": null,
+      "chave": "loja_credito_juros_avista",
+      "valor": "20",
+      "status": "ativo"
+    },
+    {
+      "key": "loja_credito_juros_parcelado",
+      "value": "20",
+      "must_change_code": false,
+      "created_at": "2026-05-19T18:03:03.753097+00:00",
+      "updated_at": "2026-05-19T18:03:03.753097+00:00",
+      "value_hash": null,
+      "chave": "loja_credito_juros_parcelado",
+      "valor": "20",
+      "status": "ativo"
+    },
+    {
+      "key": "modal_indicacao_ativo",
+      "value": "true",
+      "must_change_code": false,
+      "created_at": "2026-06-01T15:59:13.536559+00:00",
+      "updated_at": "2026-06-01T15:59:13.536559+00:00",
+      "value_hash": null,
+      "chave": "modal_indicacao_ativo",
+      "valor": "true",
+      "status": "ativo"
+    },
+    {
+      "key": "modal_indicacao_titulo",
+      "value": "Você foi indicado!",
+      "must_change_code": false,
+      "created_at": "2026-06-01T15:59:13.536559+00:00",
+      "updated_at": "2026-06-01T15:59:13.536559+00:00",
+      "value_hash": null,
+      "chave": "modal_indicacao_titulo",
+      "valor": "Você foi indicado!",
+      "status": "ativo"
+    },
+    {
+      "key": "modal_indicacao_descricao",
+      "value": "Para validar a segunda etapa da sua indicação e garantir seu bônus, solicite um serviço e aplique seu voucher.",
+      "must_change_code": false,
+      "created_at": "2026-06-01T15:59:13.536559+00:00",
+      "updated_at": "2026-06-01T15:59:13.536559+00:00",
+      "value_hash": null,
+      "chave": "modal_indicacao_descricao",
+      "valor": "Para validar a segunda etapa da sua indicação e garantir seu bônus, solicite um serviço e aplique seu voucher.",
+      "status": "ativo"
+    },
+    {
+      "key": "modulo_area_vip_ativo",
+      "value": "true",
+      "must_change_code": false,
+      "created_at": "2026-05-13T13:03:01.152989+00:00",
+      "updated_at": "2026-05-13T13:03:01.152989+00:00",
+      "value_hash": null,
+      "chave": "modulo_area_vip_ativo",
+      "valor": "true",
+      "status": "ativo"
+    },
+    {
+      "key": "modulo_area_vip_oculto",
+      "value": "false",
+      "must_change_code": false,
+      "created_at": "2026-05-13T13:03:01.152989+00:00",
+      "updated_at": "2026-05-13T13:03:01.152989+00:00",
+      "value_hash": null,
+      "chave": "modulo_area_vip_oculto",
+      "valor": "false",
+      "status": "ativo"
+    },
+    {
+      "key": "modal_indicacao_url_botao",
+      "value": "https://getsemani-gsa.netlify.app/",
+      "must_change_code": false,
+      "created_at": "2026-06-01T15:59:13.536559+00:00",
+      "updated_at": "2026-06-01T15:59:13.536559+00:00",
+      "value_hash": null,
+      "chave": "modal_indicacao_url_botao",
+      "valor": "https://getsemani-gsa.netlify.app/",
+      "status": "ativo"
+    },
+    {
+      "key": "modal_indicacao_acao_botao",
+      "value": "modulo",
+      "must_change_code": false,
+      "created_at": "2026-06-01T15:59:13.536559+00:00",
+      "updated_at": "2026-06-01T15:59:13.536559+00:00",
+      "value_hash": null,
+      "chave": "modal_indicacao_acao_botao",
+      "valor": "modulo",
+      "status": "ativo"
+    },
+    {
+      "key": "modal_indicacao_modulo_destino",
+      "value": "orcamentos",
+      "must_change_code": false,
+      "created_at": "2026-06-01T15:59:13.536559+00:00",
+      "updated_at": "2026-06-01T15:59:13.536559+00:00",
+      "value_hash": null,
+      "chave": "modal_indicacao_modulo_destino",
+      "valor": "orcamentos",
+      "status": "ativo"
+    },
+    {
+      "key": "modal_indicacao_texto_botao",
+      "value": "Solicitar Serviços",
+      "must_change_code": false,
+      "created_at": "2026-06-01T15:59:13.536559+00:00",
+      "updated_at": "2026-06-01T15:59:13.536559+00:00",
+      "value_hash": null,
+      "chave": "modal_indicacao_texto_botao",
+      "valor": "Solicitar Serviços",
+      "status": "ativo"
+    },
+    {
+      "key": "modal_indicacao_tamanho",
+      "value": "md",
+      "must_change_code": false,
+      "created_at": "2026-06-01T15:59:13.536559+00:00",
+      "updated_at": "2026-06-01T15:59:13.536559+00:00",
+      "value_hash": null,
+      "chave": "modal_indicacao_tamanho",
+      "valor": "md",
+      "status": "ativo"
+    },
+    {
+      "key": "afiliado_saque_minimo",
+      "value": "1.00",
+      "must_change_code": true,
+      "created_at": "2026-07-28T21:55:56.20311+00:00",
+      "updated_at": "2026-07-28T21:55:56.20311+00:00",
+      "value_hash": null,
+      "chave": "afiliado_saque_minimo",
+      "valor": "1.00",
+      "status": "ativo"
+    },
+    {
+      "key": "afiliado_pontos_resgate_taxa",
+      "value": "0.01",
+      "must_change_code": true,
+      "created_at": "2026-07-22T18:31:17.124598+00:00",
+      "updated_at": "2026-07-22T18:31:17.124598+00:00",
+      "value_hash": null,
+      "chave": "afiliado_pontos_resgate_taxa",
+      "valor": "0.01",
+      "status": "ativo"
+    },
+    {
+      "key": "afiliado_pontos_minimo_resgate",
+      "value": "1",
+      "must_change_code": true,
+      "created_at": "2026-07-22T18:31:17.124598+00:00",
+      "updated_at": "2026-07-22T18:31:17.124598+00:00",
+      "value_hash": null,
+      "chave": "afiliado_pontos_minimo_resgate",
+      "valor": "1",
+      "status": "ativo"
+    },
+    {
+      "key": "afiliado_pontos_ativo",
+      "value": "true",
+      "must_change_code": true,
+      "created_at": "2026-07-22T18:31:17.124598+00:00",
+      "updated_at": "2026-07-22T18:31:17.124598+00:00",
+      "value_hash": null,
+      "chave": "afiliado_pontos_ativo",
+      "valor": "true",
+      "status": "ativo"
+    },
+    {
+      "key": "afiliado_bonus_boas_vindas_ativo",
+      "value": "true",
+      "must_change_code": true,
+      "created_at": "2026-07-28T19:56:24.534785+00:00",
+      "updated_at": "2026-07-28T19:56:24.534785+00:00",
+      "value_hash": null,
+      "chave": "afiliado_bonus_boas_vindas_ativo",
+      "valor": "true",
+      "status": "ativo"
+    },
+    {
+      "key": "afiliado_bonus_boas_vindas_valor",
+      "value": "100",
+      "must_change_code": true,
+      "created_at": "2026-07-28T19:56:24.534785+00:00",
+      "updated_at": "2026-07-28T19:56:24.534785+00:00",
+      "value_hash": null,
+      "chave": "afiliado_bonus_boas_vindas_valor",
+      "valor": "100",
+      "status": "ativo"
+    },
+    {
+      "key": "codigo_cadastro_padrao_ativo",
+      "value": "true",
+      "must_change_code": false,
+      "created_at": "2026-03-19T22:51:54.584951+00:00",
+      "updated_at": "2026-03-19T22:51:54.584951+00:00",
+      "value_hash": null,
+      "chave": "codigo_cadastro_padrao_ativo",
+      "valor": "true",
+      "status": "ativo"
+    },
+    {
+      "key": "codigo_cadastro_padrao",
+      "value": "BEMVINDO",
+      "must_change_code": false,
+      "created_at": "2026-03-19T22:51:54.584951+00:00",
+      "updated_at": "2026-03-19T22:51:54.584951+00:00",
+      "value_hash": null,
+      "chave": "codigo_cadastro_padrao",
+      "valor": "BEMVINDO",
+      "status": "ativo"
+    },
+    {
+      "key": "n8n_base_url",
+      "value": "\"http://127.0.0.1:5678\"",
+      "must_change_code": true,
+      "created_at": "2026-08-05T20:50:51.988241+00:00",
+      "updated_at": "2026-08-26T21:34:36.983621+00:00",
+      "value_hash": null,
+      "chave": "n8n_base_url",
+      "valor": "\"http://127.0.0.1:5678\"",
+      "status": "ativo"
+    },
+    {
+      "key": "admin_access_code",
+      "value": "",
+      "must_change_code": false,
+      "created_at": "2026-03-19T22:51:54.584951+00:00",
+      "updated_at": "2026-03-19T22:51:54.584951+00:00",
+      "value_hash": "$2a$12$jav9ixRnamBikZquFQ7SU.yr.6eWuUKk3EQPAKILRkVcmKv3j3hkO",
+      "chave": "admin_access_code",
+      "valor": "",
+      "status": "ativo"
+    },
+    {
+      "key": "whatsapp_admin_notificacoes",
+      "value": "5511971858372",
+      "must_change_code": true,
+      "created_at": "2026-08-07T13:44:25.576328+00:00",
+      "updated_at": "2026-08-07T13:44:25.576328+00:00",
+      "value_hash": null,
+      "chave": "whatsapp_admin_notificacoes",
+      "valor": "5511971858372",
+      "status": "ativo"
+    },
+    {
+      "key": "whatsapp_n8n_webhook_url",
+      "value": "http://147.15.43.141:5678/webhook/send-whatsapp",
+      "must_change_code": true,
+      "created_at": "2026-08-07T13:44:25.576328+00:00",
+      "updated_at": "2026-08-26T21:34:35.593845+00:00",
+      "value_hash": null,
+      "chave": "whatsapp_n8n_webhook_url",
+      "valor": "http://147.15.43.141:5678/webhook/send-whatsapp",
+      "status": "ativo"
+    }
+  ],
+  "keysInCode": [
+    "cobranca_multa_porcentagem",
+    "cobranca_juros_mensal",
+    "cobranca_juros_tipo",
+    "valor_minimo_saque",
+    "ativo",
+    "porcentagem",
+    "loja_taxa_entrega_padrao",
+    "telefone",
+    "mensagem",
+    "tamanho",
+    "posicao",
+    "tooltip"
+  ]
+}

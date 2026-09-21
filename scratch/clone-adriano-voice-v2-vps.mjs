@@ -1,0 +1,21 @@
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { Client } from 'ssh2';
+import { readInfraKey } from './ssh2-run.mjs';
+
+const base=new URL('../assets/gsa-tv/avatars/adriano-farias/voice/training-v2/',import.meta.url);
+const locals=[1,2,3].map(n=>new URL(`adriano-natural-${n}.wav`,base));
+const remotes=[1,2,3].map(n=>`/home/opc/gsa-ai/qc/adriano-avatar/training-v2/adriano-natural-${n}.wav`);
+const localOut=new URL('../assets/gsa-tv/avatars/adriano-farias/voice/adriano-farias-voice-qc-v2-natural.mp3',import.meta.url);
+const remoteOut='/home/opc/gsa-ai/qc/adriano-avatar/adriano-farias-voice-qc-v2-natural.mp3';
+const remoteJs=String.raw`
+const fs=require('fs'),crypto=require('crypto'),cp=require('child_process');
+function key(){const v=JSON.parse(fs.readFileSync('/home/opc/gsa-ai/secrets/fish-production.enc.json'));const k=Buffer.from(cp.execFileSync('sudo',['docker','exec','gsa-tv-control-plane','printenv','GSA_TV_SECRET_KEY'],{encoding:'utf8'}).trim(),'hex'),n=Buffer.from(v.nonce,'base64url'),a=Buffer.from(v.ciphertext,'base64url'),t=a.subarray(-16),b=a.subarray(0,-16),d=crypto.createDecipheriv('aes-256-gcm',k,n);d.setAAD(Buffer.from(v.aad));d.setAuthTag(t);return JSON.parse(Buffer.concat([d.update(b),d.final()])).api_key}
+(async()=>{const k=key(),f=new FormData();f.append('type','tts');f.append('title','Adriano Farias — Voz Institucional Natural v2');f.append('train_mode','fast');f.append('visibility','private');f.append('description','Modelo privado autorizado pelo titular para a GSA TV. Versão natural com três amostras e processamento mínimo.');f.append('tags','GSA TV');f.append('tags','Português Brasil');f.append('enhance_audio_quality','false');f.append('generate_sample','false');for(const p of ${JSON.stringify(remotes)})f.append('voices',new Blob([fs.readFileSync(p)],{type:'audio/wav'}),p.split('/').pop());const r=await fetch('https://api.fish.audio/model',{method:'POST',headers:{Authorization:'Bearer '+k},body:f}),x=await r.text();if(!r.ok)throw Error('create '+r.status+' '+x.slice(0,400));const m=JSON.parse(x),id=m._id||m.id;const text='Olá! Eu sou Adriano Farias. Quero apresentar a você as novidades da GSA TV. Informação, inspiração e conteúdo de qualidade, cada vez mais perto de você.';const q=await fetch('https://api.fish.audio/v1/tts',{method:'POST',headers:{Authorization:'Bearer '+k,'Content-Type':'application/json',model:'s2.1-pro-free'},body:JSON.stringify({text,reference_id:id,format:'mp3',normalize:false,latency:'normal'})});const audio=Buffer.from(await q.arrayBuffer());if(!q.ok)throw Error('tts '+q.status+' '+audio.toString().slice(0,400));fs.writeFileSync('${remoteOut}',audio,{mode:0o640});fs.writeFileSync('/home/opc/gsa-ai/qc/adriano-avatar/voice-manifest-v2.json',JSON.stringify({created_at:new Date().toISOString(),voice_id:id,state:m.state,visibility:m.visibility,enhance_audio_quality:false,training_files:${JSON.stringify(remotes)},qc_file:'${remoteOut}'},null,2),{mode:0o640});console.log(JSON.stringify({ok:true,voice_id:id,state:m.state,visibility:m.visibility,bytes:audio.length}))})().catch(e=>{console.error(e.message);process.exit(1)});
+`;
+function connect(){return new Promise((res,rej)=>{const c=new Client();c.on('ready',()=>res(c)).on('error',rej).connect({host:'147.15.43.141',port:22,username:'opc',privateKey:readInfraKey(),readyTimeout:15000})})}
+function exec(c,cmd){return new Promise((res,rej)=>c.exec(cmd,(e,s)=>{if(e)return rej(e);let o='',r='';s.on('data',d=>o+=d);s.stderr.on('data',d=>r+=d);s.on('close',n=>n?rej(new Error(r||o)):res(o))}))}
+function sftp(c){return new Promise((res,rej)=>c.sftp((e,s)=>e?rej(e):res(s)))}
+function put(s,l,r){return new Promise((res,rej)=>s.fastPut(l,r,e=>e?rej(e):res()))}
+function get(s,r,l){return new Promise((res,rej)=>s.fastGet(r,l,e=>e?rej(e):res()))}
+const c=await connect();try{await exec(c,'mkdir -p /home/opc/gsa-ai/qc/adriano-avatar/training-v2 && chmod 750 /home/opc/gsa-ai/qc/adriano-avatar/training-v2');const s=await sftp(c);for(let i=0;i<locals.length;i++)await put(s,fileURLToPath(locals[i]),remotes[i]);const p=Buffer.from(remoteJs).toString('base64');process.stdout.write(await exec(c,`printf '%s' '${p}' | base64 -d | node`));await get(s,remoteOut,fileURLToPath(localOut));}finally{c.end()}

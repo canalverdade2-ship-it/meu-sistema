@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Cliente, PontoMovimentacao } from '../../types';
-import { formatCurrency, formatDate, formatDateTime, generateUUID } from '../../lib/utils';
+import { formatCurrency, formatDate, formatDateTime, formatLancamentoDescricao, generateUUID } from '../../lib/utils';
 import { Star, ArrowDownRight, ArrowUpRight, History, CheckCircle, CreditCard } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,6 +9,7 @@ import { Modal } from '../ui/Modal';
 import confetti from 'canvas-confetti';
 import { useAutoFitTabs } from '../../hooks/useAutoFitTabs';
 import { callClientRpc } from '../../lib/clientRpc';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 
 interface ClientPontosProps {
   clienteId: string;
@@ -81,31 +82,25 @@ export function ClientPontos({
       setCliente(initialCliente);
     }
     fetchData();
-
-    const channel = supabase
-      .channel('pontos-updates')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'clientes',
-        filter: `id=eq.${clienteId}`
-      }, () => {
-        fetchData();
-      })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'pontos_movimentacoes',
-        filter: `cliente_id=eq.${clienteId}`
-      }, () => {
-        fetchData();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [clienteId, initialCliente, monthFilter]);
+
+  useRealtimeSubscription(
+    [
+      {
+        table: 'clientes',
+        filter: clienteId ? `id=eq.${clienteId}` : undefined,
+        debounceMs: 150,
+        onChange: fetchData,
+      },
+      {
+        table: 'pontos_movimentacoes',
+        filter: clienteId ? `cliente_id=eq.${clienteId}` : undefined,
+        debounceMs: 150,
+        onChange: fetchData,
+      },
+    ],
+    [clienteId, monthFilter]
+  );
 
   useEffect(() => {
     if (!cliente) return;
@@ -153,7 +148,7 @@ export function ClientPontos({
     }
   }, [cliente, animateOnMount]);
 
-  const fetchData = async () => {
+  async function fetchData() {
     try {
       // Fetch Cliente
       const { data: clientData, error: clientError } = await supabase
@@ -308,9 +303,16 @@ export function ClientPontos({
       return;
     }
 
+    const pontosDebitar = cliente.saldo_pontos || 0;
+    const valorEstimadoAtual = Math.round(pontosDebitar * taxaConversao * 100) / 100;
+    if (valorEstimadoAtual < 0.01) {
+      const minPontos = taxaConversao > 0 ? Math.ceil(0.01 / taxaConversao) : 1000;
+      toast.error(`Saldo insuficiente para resgate. Você precisa de pelo menos ${minPontos} pontos para converter em valor.`);
+      return;
+    }
+
     setIsWithdrawing(true);
     try {
-      const pontosDebitar = cliente.saldo_pontos || 0;
       const data = await callClientRpc<any>('gsa_client_convert_points', {
         p_request_id: pointsConversionRequestId.current,
         p_pontos: pontosDebitar,
@@ -323,11 +325,12 @@ export function ClientPontos({
       setShowSuccessModal(true);
     } catch (error: any) {
       console.error('Error withdrawing points:', error);
-      toast.error(error.message || 'Erro ao realizar o saque dos pontos.');
+      toast.error(error.message || 'Erro ao realizar o resgate dos pontos.');
     } finally {
       setIsWithdrawing(false);
     }
   };
+
 
   if (!cliente) return <div>Carregando...</div>;
 
@@ -423,35 +426,45 @@ export function ClientPontos({
             {movimentacoes.length === 0 ? (
               <p className="text-center text-neutral-500 py-8">Nenhuma movimentação encontrada.</p>
             ) : (
-              movimentacoes.map((mov) => (
-                <div id={`point-${mov.id}`} key={mov.id} className={`flex items-center justify-between border-b border-neutral-100 pb-4 last:border-0 last:pb-0 px-2 transition-all duration-500 rounded-xl ${highlightedItemId === mov.id ? 'bg-indigo-50 ring-2 ring-indigo-500 shadow-lg scale-[1.01] z-10' : ''}`}>
-                  <div className="flex items-center gap-4">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-full ${mov.pontos > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
-                      {mov.pontos > 0 ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />}
+              movimentacoes.map((mov) => {
+                const info = formatLancamentoDescricao(mov.descricao);
+                return (
+                  <div id={`point-${mov.id}`} key={mov.id} className={`flex items-center justify-between border-b border-neutral-100 pb-4 last:border-0 last:pb-0 px-2 transition-all duration-500 rounded-xl ${highlightedItemId === mov.id ? 'bg-indigo-50 ring-2 ring-indigo-500 shadow-lg scale-[1.01] z-10' : ''}`}>
+                    <div className="flex items-center gap-4">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-full ${mov.pontos > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
+                        {mov.pontos > 0 ? <ArrowUpRight className="h-5 w-5" /> : <ArrowDownRight className="h-5 w-5" />}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold text-neutral-900 text-sm sm:text-base">{info.titulo}</p>
+                          {info.autor && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-neutral-100 text-neutral-600">
+                              {info.autor}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-neutral-400 mt-0.5">{formatDateTime(mov.data_movimentacao)} {mov.fatura_id ? `• Ref: Fatura` : ''}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-neutral-900">{mov.descricao}</p>
-                      <p className="text-xs text-neutral-500">{formatDateTime(mov.data_movimentacao)} {mov.fatura_id ? `• Ref: Fatura` : ''}</p>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className={`font-black text-sm sm:text-base ${mov.pontos > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                          {mov.pontos > 0 ? '+' : ''}{mov.pontos.toLocaleString('pt-BR')} pts
+                        </p>
+                        <p className="text-xs text-neutral-400">Saldo: {Number(mov.saldo_apos || 0).toLocaleString('pt-BR')}</p>
+                      </div>
+                      {mov.descricao?.includes('Transferência') && (
+                        <button
+                          onClick={() => fetchTransferDetails(mov)}
+                          className="rounded-lg bg-neutral-100 px-3 py-1.5 text-xs font-bold text-neutral-600 hover:bg-neutral-200"
+                        >
+                          Detalhes
+                        </button>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className={`font-bold ${mov.pontos > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                        {mov.pontos > 0 ? '+' : ''}{mov.pontos} pts
-                      </p>
-                      <p className="text-xs text-neutral-500">Saldo: {mov.saldo_apos}</p>
-                    </div>
-                    {mov.descricao?.includes('Transferência') && (
-                      <button
-                        onClick={() => fetchTransferDetails(mov)}
-                        className="rounded-lg bg-neutral-100 px-3 py-1.5 text-xs font-bold text-neutral-600 hover:bg-neutral-200"
-                      >
-                        Detalhes
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
@@ -541,7 +554,7 @@ export function ClientPontos({
                 <p className="text-sm font-black text-neutral-900">
                   {selectedTransferencia.status === 'aprovado' || selectedTransferencia.status === 'concluido' ? 'Transferência Processada com Sucesso' :
                    selectedTransferencia.status === 'recusado' || selectedTransferencia.status === 'cancelado' ? 'Transferência Rejeitada ou Estornada' :
-                   'Aguardando Aprovação Administrativa'}
+                   'Aguardando Aprovação do Sistema'}
                 </p>
               </div>
             </div>

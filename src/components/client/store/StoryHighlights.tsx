@@ -56,7 +56,7 @@ export function StoryHighlights() {
 
   return (
     <>
-      <div className="flex gap-4 overflow-x-auto pb-4 pt-2 px-2 scrollbar-hide snap-x">
+      <div className="flex gap-4 overflow-x-auto pb-4 pt-2 px-2 scrollbar-hide snap-x overscroll-x-contain touch-pan-y touch-pan-x">
         {MOCK_STORIES.map((s) => (
           <button
             key={s.id}

@@ -1,0 +1,1 @@
+sudo bash -c 'nohup /usr/local/bin/postgrest /etc/postgrest.conf > /var/log/postgrest.log 2>&1 &'

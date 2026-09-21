@@ -1,0 +1,2484 @@
+{
+  "timestamp": "2026-08-26T23:14:26.789Z",
+  "liveDb": {
+    "tablesCount": 239,
+    "columnsCount": 3105,
+    "functionsCount": 624,
+    "systemSettingsCount": 0,
+    "policiesCount": 423,
+    "tables": [
+      "admin_notificacoes",
+      "assinaturas",
+      "automacao_scraping_configs",
+      "automacao_scraping_logs",
+      "blog_posts",
+      "carteira_lancamentos",
+      "classificados_ajustes",
+      "classificados_anuncios",
+      "classificados_comissoes",
+      "classificados_comissoes_config",
+      "classificados_mensagens",
+      "classificados_midias",
+      "classificados_propostas",
+      "classificados_transacoes",
+      "client_levels",
+      "cliente_documentos",
+      "cliente_notas_admin",
+      "cliente_premios",
+      "cliente_promocoes",
+      "clientes",
+      "cobranca_acordo_parcelas",
+      "cobranca_historico",
+      "cobrancas",
+      "colaborador_modulos",
+      "colaboradores",
+      "contas_pagar",
+      "contratos",
+      "cupons_ativados",
+      "cupons_loja",
+      "debug_admin_rpc",
+      "demanda_comentarios",
+      "empresa",
+      "emprestimo_comentarios",
+      "emprestimo_documentos",
+      "emprestimo_historico",
+      "emprestimo_parcelas",
+      "emprestimo_templates_contrato",
+      "emprestimos",
+      "extensions",
+      "extrato_financeiro",
+      "fatura_contestacoes",
+      "faturas",
+      "formas_pagamento",
+      "fornecedor_auditoria",
+      "fornecedor_entrega_itens",
+      "fornecedor_entregas",
+      "fornecedor_notificacoes",
+      "fornecedor_produto_solicitacoes",
+      "fornecedor_produtos",
+      "fornecedores",
+      "funcoes",
+      "gsa_ad_audit_logs",
+      "gsa_ad_campaign_placements",
+      "gsa_ad_campaigns",
+      "gsa_ad_creatives",
+      "gsa_ad_daily_metrics",
+      "gsa_ad_delivery_events",
+      "gsa_ad_maintenance_state",
+      "gsa_ad_negotiations",
+      "gsa_ad_payment_events",
+      "gsa_ad_payments",
+      "gsa_ad_placements",
+      "gsa_ad_proposal_versions",
+      "gsa_ad_proposals",
+      "gsa_ad_rate_limit_buckets",
+      "gsa_ad_request_placements",
+      "gsa_ad_requests",
+      "gsa_admin_audit_events",
+      "gsa_admin_notification_state",
+      "gsa_admin_operation_requests",
+      "gsa_advertisers",
+      "gsa_afiliado_atribuicoes",
+      "gsa_afiliado_cliques",
+      "gsa_afiliado_comissao_eventos",
+      "gsa_afiliado_comissoes",
+      "gsa_afiliado_conversoes",
+      "gsa_afiliado_links",
+      "gsa_afiliado_pontos_eventos",
+      "gsa_afiliado_programas",
+      "gsa_afiliado_saques",
+      "gsa_afiliados",
+      "gsa_auth_attempts",
+      "gsa_auth_identities",
+      "gsa_auth_rate_limits",
+      "gsa_calculator_pro_events",
+      "gsa_calculator_pro_grants",
+      "gsa_calculator_pro_payments",
+      "gsa_calculator_pro_products",
+      "gsa_calculator_pro_runtime_config",
+      "gsa_calculator_pro_sessions",
+      "gsa_calculator_pro_vouchers",
+      "gsa_calculator_pro_whatsapp_requests",
+      "gsa_careers_application_history",
+      "gsa_careers_applications",
+      "gsa_client_operation_requests",
+      "gsa_client_recovery_challenges",
+      "gsa_hero_banners",
+      "gsa_provider_audit_events",
+      "gsa_public_budget_rate_limits",
+      "gsa_public_rate_limits",
+      "gsa_service_package_items",
+      "gsa_service_packages",
+      "gsa_site_campaign_events",
+      "gsa_site_campaign_history",
+      "gsa_site_campaign_permissions",
+      "gsa_site_campaigns",
+      "gsa_travel_operation_requests",
+      "gsa_voucher_resgates",
+      "gsa_whatsapp_ramais",
+      "gsa_whatsapp_verifications",
+      "indicacoes",
+      "level_history",
+      "loja_avaliacoes",
+      "loja_avisos_estoque",
+      "loja_carrinhos",
+      "loja_categorias",
+      "loja_credito_documentos",
+      "loja_credito_movimentacoes",
+      "loja_credito_solicitacoes",
+      "loja_estoque_historico",
+      "loja_favoritos",
+      "loja_pedido_itens",
+      "loja_reembolsos",
+      "loja_solicitacoes",
+      "loja_vaquinha_contribuicoes",
+      "loja_vaquinhas",
+      "notificacao_leituras",
+      "notificacoes",
+      "orcamento_timeline",
+      "orcamentos",
+      "ordens_assinatura",
+      "ordens_compra",
+      "ordens_fiscais",
+      "ordens_servico",
+      "os_notas",
+      "os_suporte_mensagens",
+      "pagamentos",
+      "parceiros",
+      "parceiros_resgates",
+      "pedido_compra_fornecedor_itens",
+      "pedidos_compra_fornecedor",
+      "points_transactions",
+      "pontos_movimentacoes",
+      "prestador_agendamentos",
+      "prestador_demandas",
+      "prestador_demandas_historico",
+      "prestador_documentos",
+      "prestador_faturas",
+      "prestador_historico",
+      "prestador_premios",
+      "prestador_promocoes",
+      "prestador_promocoes_ativacoes",
+      "prestador_saques",
+      "prestador_suporte_demandas",
+      "prestador_transacoes",
+      "prestador_vouchers",
+      "prestadores",
+      "produto_desconto_cota_movimentos",
+      "produto_fornecedor_config",
+      "produto_importacao_origem",
+      "produto_variacao_grupos",
+      "produto_variacao_opcoes",
+      "produto_variante_opcoes",
+      "produto_variantes",
+      "produtos",
+      "produtos_fornecedores_config",
+      "promocoes",
+      "promocoes_quantidade",
+      "promocoes_quantidade_ativadas",
+      "promocoes_quantidade_uso",
+      "saques",
+      "saude_aceites",
+      "saude_assessorias",
+      "saude_atendimento_mensagens",
+      "saude_atendimentos",
+      "saude_auditoria",
+      "saude_comissao_eventos",
+      "saude_comissoes",
+      "saude_configuracoes",
+      "saude_contratos",
+      "saude_cotacao_beneficiarios",
+      "saude_cotacoes",
+      "saude_dependentes",
+      "saude_documentos",
+      "saude_parceiros",
+      "saude_produto_redes",
+      "saude_produtos",
+      "saude_propostas",
+      "schema_migrations",
+      "seguros_aceites",
+      "seguros_apolices",
+      "seguros_assessorias",
+      "seguros_assistencias",
+      "seguros_atendimento_mensagens",
+      "seguros_atendimentos",
+      "seguros_auditoria",
+      "seguros_comissoes",
+      "seguros_configuracoes",
+      "seguros_cotacao_dados",
+      "seguros_cotacoes",
+      "seguros_documentos",
+      "seguros_ofertas",
+      "seguros_ofertas_publicas",
+      "seguros_parceiros",
+      "seguros_produtos",
+      "seguros_propostas",
+      "seguros_sinistro_mensagens",
+      "seguros_sinistros",
+      "servicos",
+      "servicos_pacotes",
+      "shopee_automation_workers",
+      "shopee_fulfillment_events",
+      "shopee_fulfillment_job_items",
+      "shopee_fulfillment_jobs",
+      "sistema_logs",
+      "sistema_sessoes",
+      "solicitacoes_exclusao",
+      "suporte_mensagens",
+      "system_settings",
+      "tenants",
+      "ticket_mensagens",
+      "tickets",
+      "transferencias",
+      "viagens_cancelamentos",
+      "viagens_categorias",
+      "viagens_configuracoes",
+      "viagens_fornecedores",
+      "viagens_orcamentos",
+      "viagens_pacote_imagens",
+      "viagens_pacotes",
+      "viagens_passageiro_documentos",
+      "viagens_passageiros",
+      "viagens_propostas",
+      "viagens_solicitacoes_reserva",
+      "viagens_transacao_parcelas",
+      "viagens_transacoes",
+      "viagens_vouchers",
+      "vouchers",
+      "whatsapp_pendencias_ativas"
+    ],
+    "systemSettings": []
+  },
+  "codebase": {
+    "sourceFilesCount": 458,
+    "referencedTables": [
+      "produtos",
+      "servicos",
+      "assinaturas",
+      "loja_categorias",
+      "demanda_comentarios",
+      "prestador_demandas",
+      "colaboradores",
+      "os_notas",
+      "ordens_servico",
+      "prestadores",
+      "gsa_tv_media_items",
+      "gsa_tv_schedule_slots",
+      "gsa_whatsapp_ramais",
+      "ordens_compra",
+      "cupons_loja",
+      "prestador_documentos",
+      "prestador_premios",
+      "prestador_promocoes",
+      "prestador_vouchers",
+      "clientes",
+      "client_levels",
+      "faturas",
+      "loja_credito_solicitacoes",
+      "emprestimos",
+      "emprestimo_parcelas",
+      "saques",
+      "pagamentos",
+      "transferencias",
+      "ordens_assinatura",
+      "pontos_movimentacoes",
+      "cliente_premios",
+      "loja_solicitacoes",
+      "vouchers",
+      "indicacoes",
+      "promocoes",
+      "cliente_promocoes",
+      "solicitacoes_exclusao",
+      "orcamentos",
+      "prestador_faturas",
+      "prestador_saques",
+      "automacao_scraping_configs",
+      "viagens_categorias",
+      "ticket_mensagens",
+      "tickets",
+      "contratos",
+      "system_settings",
+      "ordens_fiscais",
+      "cobrancas",
+      "carteira_lancamentos",
+      "sistema_logs",
+      "prestador_historico",
+      "fornecedores",
+      "gsa_afiliados",
+      "viagens_pacote_imagens",
+      "emprestimo_historico",
+      "emprestimo_comentarios",
+      "emprestimo_documentos",
+      "promocoes_quantidade_ativadas",
+      "promocoes_quantidade",
+      "loja_carrinhos",
+      "loja_avaliacoes",
+      "extrato_financeiro",
+      "empresa",
+      "classificados_comissoes_config",
+      "viagens_orcamentos",
+      "viagens_passageiros",
+      "loja_pedido_itens",
+      "suporte_mensagens",
+      "prestador_promocoes_ativacoes",
+      "parceiros",
+      "parceiros_resgates",
+      "produto_fornecedor_config",
+      "produto_variantes",
+      "produto_variacao_grupos",
+      "notificacoes",
+      "produto_variacao_opcoes",
+      "produto_variante_opcoes",
+      "loja_favoritos",
+      "prestador_transacoes"
+    ],
+    "referencedRpcs": [
+      "gsa_supplier_session_access_state",
+      "gsa_admin_save_function",
+      "gsa_admin_set_collaborator_status",
+      "gsa_admin_review_deletion_request",
+      "gsa_admin_advertising_overview",
+      "gsa_admin_update_affiliate_details",
+      "gsa_admin_set_affiliate_status",
+      "gsa_admin_decide_affiliate_payout",
+      "gsa_admin_release_affiliate_commissions",
+      "gsa_admin_update_global_saque_minimo",
+      "gsa_admin_update_affiliate_program",
+      "gsa_admin_update_affiliate_points_settings",
+      "gsa_admin_adjust_affiliate_balance",
+      "gsa_admin_ensure_calculator_pro_products",
+      "gsa_admin_save_calculator_pro_product",
+      "gsa_admin_set_calculator_pro_voucher_status",
+      "gsa_admin_classified_action",
+      "gsa_admin_update_settings_secure",
+      "gsa_admin_save_company",
+      "gsa_admin_save_payment_method",
+      "increment_comentarios",
+      "gsa_admin_fiscal_update",
+      "gsa_admin_cancel_subscription",
+      "gsa_admin_extend_subscription",
+      "gsa_admin_import_products_batch_v2",
+      "gsa_admin_check_product_barcode",
+      "gsa_admin_update_resource_status",
+      "gsa_admin_save_protection_entity",
+      "gsa_admin_create_protection_proposal",
+      "gsa_admin_upsert_site_campaign",
+      "gsa_admin_set_site_campaign_status",
+      "gsa_admin_duplicate_site_campaign",
+      "gsa_admin_delete_site_campaign",
+      "gsa_admin_set_site_campaign_permissions",
+      "gsa_admin_alterar_status_cliente",
+      "gsa_admin_ajustar_saldo_cliente",
+      "gsa_admin_desbloquear_pin_cliente",
+      "fn_marcar_faturas_vencidas",
+      "gsa_admin_adjust_points",
+      "gsa_admin_processar_saque_prestador",
+      "gsa_admin_processar_saque",
+      "gsa_admin_travel_link_lead",
+      "gsa_admin_travel_update_status",
+      "gsa_admin_travel_create_proposal",
+      "gsa_admin_save_travel_category",
+      "gsa_public_lookup_referral",
+      "gsa_public_register_client",
+      "gsa_public_register_provider",
+      "gsa_solicitar_pin_whatsapp",
+      "gsa_validar_pin_whatsapp",
+      "gsa_verify_own_pin",
+      "rpc_criar_anuncio_classificado",
+      "rpc_reenviar_anuncio_classificado",
+      "gsa_public_affiliate_programs",
+      "gsa_public_track_affiliate_click",
+      "gsa_public_resgatar_beneficio_parceiro",
+      "gsa_admin_set_partner_status",
+      "gsa_admin_set_notification_state",
+      "gsa_admin_mark_all_notifications",
+      "gsa_ping_session",
+      "get_client_pendency_counts",
+      "gsa_public_registration_settings",
+      "gsa_advertiser_portal_snapshot",
+      "gsa_client_operational_write",
+      "gsa_log_action",
+      "gsa_admin_sync_product_variations",
+      "gsa_provider_financial_snapshot",
+      "gsa_provider_dashboard_snapshot",
+      "gsa_provider_pendency_snapshot",
+      "gsa_provider_request_withdrawal",
+      "gsa_provider_cancel_withdrawal",
+      "gsa_provider_redeem_voucher",
+      "gsa_provider_redeem_prize",
+      "gsa_provider_activate_promotion",
+      "gsa_provider_update_profile",
+      "gsa_provider_create_schedule",
+      "gsa_provider_complete_schedule",
+      "gsa_provider_delete_schedule",
+      "gsa_provider_submit_document",
+      "gsa_provider_transition_demand",
+      "gsa_provider_create_ticket",
+      "gsa_provider_send_ticket_message",
+      "gsa_provider_request_profile_change",
+      "gsa_provider_request_demand_support",
+      "gsa_provider_mark_notification_read",
+      "gsa_provider_mark_all_notifications_read",
+      "gsa_provider_session_access_state",
+      "gsa_public_service_catalog",
+      "gsa_admin_service_catalog_snapshot",
+      "gsa_end_session",
+      "gsa_validate_session",
+      "gsa_get_client_session_access_state",
+      "gsa_get_collaborator_session_access_state",
+      "gsa_update_client_pin",
+      "gsa_public_site_campaigns",
+      "gsa_public_site_campaign_event",
+      "gsa_supplier_dashboard_snapshot",
+      "gsa_supplier_request_product",
+      "gsa_supplier_update_profile",
+      "gsa_supplier_mark_order_seen",
+      "gsa_supplier_mark_notification_read",
+      "gsa_supplier_mark_notifications_read",
+      "gsa_supplier_submit_delivery",
+      "gsa_admin_supplier_set_status",
+      "gsa_admin_review_supplier_product",
+      "gsa_admin_create_supplier_order",
+      "gsa_admin_review_supplier_delivery",
+      "gsa_admin_update_supplier_payable",
+      "gsa_criar_vaquinha",
+      "gsa_obter_vaquinha",
+      "gsa_confirmar_contribuicao_vaquinha",
+      "gsa_advertiser_save_creative",
+      "gsa_advertiser_submit_creative",
+      "gsa_advertiser_update_profile",
+      "gsa_public_get_career_application",
+      "gsa_public_submit_career_application",
+      "processar_bonus_boas_vindas_seguro",
+      "gsa_public_register_supplier",
+      "gsa_admin_baixar_fatura",
+      "gsa_admin_approve_budget",
+      "gsa_admin_save_collaborator",
+      "check_file_references",
+      "get_database_details"
+    ]
+  },
+  "discrepancies": {
+    "missingTables": [
+      {
+        "table": "gsa_tv_media_items",
+        "count": 1,
+        "usages": [
+          {
+            "file": "src\\components\\admin\\GsaTvModule.tsx",
+            "line": 502,
+            "code": "void Promise.resolve(supabase.from('gsa_tv_media_items').insert(newMedia)).catch(() => {});"
+          }
+        ]
+      },
+      {
+        "table": "gsa_tv_schedule_slots",
+        "count": 2,
+        "usages": [
+          {
+            "file": "src\\components\\admin\\GsaTvModule.tsx",
+            "line": 547,
+            "code": "void Promise.resolve(supabase.from('gsa_tv_schedule_slots').insert(newSlot)).catch(() => {});"
+          },
+          {
+            "file": "src\\components\\admin\\GsaTvModule.tsx",
+            "line": 565,
+            "code": "void Promise.resolve(supabase.from('gsa_tv_schedule_slots').delete().eq('id', slotId)).catch(() => {});"
+          }
+        ]
+      }
+    ],
+    "missingRpcs": []
+  },
+  "rpcDetails": [
+    {
+      "rpc": "gsa_supplier_session_access_state",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "",
+          "arguments": "",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_save_function",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_id uuid, p_nome text, p_descricao text",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_id uuid DEFAULT NULL::uuid, p_nome text DEFAULT NULL::text, p_descricao text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_set_collaborator_status",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_colaborador_id uuid, p_status text",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_colaborador_id uuid DEFAULT NULL::uuid, p_status text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_review_deletion_request",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_decision text",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_request_id uuid DEFAULT NULL::uuid, p_decision text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_advertising_overview",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "",
+          "arguments": "",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_update_affiliate_details",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_affiliate_id uuid, p_nome_divulgacao text, p_codigo_publico text, p_pix_tipo text, p_pix_chave text",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_affiliate_id uuid, p_nome_divulgacao text, p_codigo_publico text DEFAULT NULL::text, p_pix_tipo text DEFAULT NULL::text, p_pix_chave text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_set_affiliate_status",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_affiliate_id uuid, p_status text, p_reason text",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_affiliate_id uuid, p_status text, p_reason text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_decide_affiliate_payout",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_payout_id uuid, p_action text, p_notes text, p_paid_at timestamp with time zone",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_payout_id uuid, p_action text, p_notes text DEFAULT NULL::text, p_paid_at timestamp with time zone DEFAULT NULL::timestamp with time zone",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_release_affiliate_commissions",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_afiliado_id uuid",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_afiliado_id uuid DEFAULT NULL::uuid",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_update_global_saque_minimo",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_valor numeric",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_valor numeric",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_update_affiliate_program",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_program_id uuid, p_patch jsonb",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_program_id uuid, p_patch jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_update_affiliate_points_settings",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_rate numeric, p_minimum integer, p_active boolean, p_welcome_active boolean, p_welcome_value numeric",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_rate numeric, p_minimum integer, p_active boolean, p_welcome_active boolean DEFAULT true, p_welcome_value numeric DEFAULT 100",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        },
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_rate numeric, p_minimum integer, p_active boolean",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_rate numeric, p_minimum integer, p_active boolean",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_adjust_affiliate_balance",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_afiliado_id uuid, p_tipo text, p_valor numeric, p_motivo text",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_afiliado_id uuid, p_tipo text, p_valor numeric, p_motivo text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_ensure_calculator_pro_products",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text",
+          "arguments": "p_sessao_id uuid, p_session_token text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_save_calculator_pro_product",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_tool_id text, p_payload jsonb",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_tool_id text, p_payload jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_set_calculator_pro_voucher_status",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_voucher_id uuid, p_status text",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_voucher_id uuid, p_status text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_classified_action",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_entity text, p_id uuid, p_related_id uuid, p_action text, p_reason text",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_entity text DEFAULT NULL::text, p_id uuid DEFAULT NULL::uuid, p_related_id uuid DEFAULT NULL::uuid, p_action text DEFAULT NULL::text, p_reason text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_update_settings_secure",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_settings jsonb",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_settings jsonb DEFAULT '[]'::jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_save_company",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_payload jsonb",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_payload jsonb DEFAULT '{}'::jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_save_payment_method",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 4,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_id uuid, p_payload jsonb",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_id uuid DEFAULT NULL::uuid, p_payload jsonb DEFAULT '{}'::jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "increment_comentarios",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "demanda_id_param uuid",
+          "arguments": "demanda_id_param uuid",
+          "result_type": "void",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_fiscal_update",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 5,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_ordem_id uuid, p_action text, p_payload jsonb",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_ordem_id uuid DEFAULT NULL::uuid, p_action text DEFAULT NULL::text, p_payload jsonb DEFAULT '{}'::jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_cancel_subscription",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_ordem_assinatura_id uuid, p_data_cancelamento date, p_motivo text",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_ordem_assinatura_id uuid, p_data_cancelamento date, p_motivo text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_extend_subscription",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_ordem_assinatura_id uuid, p_meses integer",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_ordem_assinatura_id uuid, p_meses integer",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_import_products_batch_v2",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_items jsonb",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_items jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_check_product_barcode",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_codigo_barras text, p_produto_id uuid",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_codigo_barras text, p_produto_id uuid DEFAULT NULL::uuid",
+          "result_type": "TABLE(is_duplicate boolean, produto_id uuid, codigo_produto text, nome text, status text)",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_update_resource_status",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_resource text, p_id uuid, p_status text, p_reason text",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_resource text DEFAULT NULL::text, p_id uuid DEFAULT NULL::uuid, p_status text DEFAULT NULL::text, p_reason text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_save_protection_entity",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_domain text, p_kind text, p_id uuid, p_payload jsonb",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_domain text DEFAULT NULL::text, p_kind text DEFAULT NULL::text, p_id uuid DEFAULT NULL::uuid, p_payload jsonb DEFAULT '{}'::jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_create_protection_proposal",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_domain text, p_payload jsonb",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_domain text DEFAULT NULL::text, p_payload jsonb DEFAULT '{}'::jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_upsert_site_campaign",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_campaign_id uuid, p_payload jsonb, p_sessao_id uuid, p_session_token text",
+          "arguments": "p_campaign_id uuid DEFAULT NULL::uuid, p_payload jsonb DEFAULT '{}'::jsonb, p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_set_site_campaign_status",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_campaign_id uuid, p_action text, p_sessao_id uuid, p_session_token text",
+          "arguments": "p_campaign_id uuid, p_action text, p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_duplicate_site_campaign",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_campaign_id uuid, p_sessao_id uuid, p_session_token text",
+          "arguments": "p_campaign_id uuid, p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_delete_site_campaign",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_campaign_id uuid, p_sessao_id uuid, p_session_token text",
+          "arguments": "p_campaign_id uuid, p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_set_site_campaign_permissions",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_collaborator_id uuid, p_enabled boolean, p_allowed_actions text[], p_sessao_id uuid, p_session_token text",
+          "arguments": "p_collaborator_id uuid, p_enabled boolean, p_allowed_actions text[] DEFAULT ARRAY[]::text[], p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_alterar_status_cliente",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_cliente_id uuid, p_status text",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_cliente_id uuid, p_status text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_ajustar_saldo_cliente",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_cliente_id uuid, p_tipo text, p_valor numeric, p_descricao text",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_cliente_id uuid, p_tipo text, p_valor numeric, p_descricao text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_desbloquear_pin_cliente",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_cliente_id uuid",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_cliente_id uuid",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "fn_marcar_faturas_vencidas",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "",
+          "arguments": "",
+          "result_type": "void",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_adjust_points",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_cliente_id uuid, p_pontos integer, p_descricao text",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_cliente_id uuid, p_pontos integer, p_descricao text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_processar_saque_prestador",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_saque_id uuid, p_acao text, p_motivo text, p_data_pagamento date",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_saque_id uuid, p_acao text, p_motivo text DEFAULT NULL::text, p_data_pagamento date DEFAULT NULL::date",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_processar_saque",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 4,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_saque_id uuid, p_acao text, p_motivo text, p_data_pagamento date",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_saque_id uuid, p_acao text, p_motivo text DEFAULT NULL::text, p_data_pagamento date DEFAULT CURRENT_DATE",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_travel_link_lead",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_quote_id uuid, p_client_id uuid",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_quote_id uuid DEFAULT NULL::uuid, p_client_id uuid DEFAULT NULL::uuid",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_travel_update_status",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_entity text, p_id uuid, p_status text",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_entity text DEFAULT NULL::text, p_id uuid DEFAULT NULL::uuid, p_status text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_travel_create_proposal",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_quote_id uuid, p_title text, p_total numeric, p_max_installments integer, p_acceptance_hours integer, p_payment_days integer, p_conditions text",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_quote_id uuid DEFAULT NULL::uuid, p_title text DEFAULT NULL::text, p_total numeric DEFAULT NULL::numeric, p_max_installments integer DEFAULT 1, p_acceptance_hours integer DEFAULT 48, p_payment_days integer DEFAULT 2, p_conditions text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_save_travel_category",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_payload jsonb",
+          "arguments": "p_payload jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        },
+        {
+          "identity_arguments": "p_sessao_id text, p_session_token text, p_payload jsonb",
+          "arguments": "p_sessao_id text, p_session_token text, p_payload jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_public_lookup_referral",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_token text",
+          "arguments": "p_token text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_public_register_client",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_referral_token text, p_payload jsonb",
+          "arguments": "p_referral_token text, p_payload jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        },
+        {
+          "identity_arguments": "p_payload jsonb, p_referral_token text",
+          "arguments": "p_payload jsonb, p_referral_token text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_public_register_provider",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_payload jsonb",
+          "arguments": "p_payload jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_solicitar_pin_whatsapp",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_telefone text",
+          "arguments": "p_telefone text",
+          "result_type": "text",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_validar_pin_whatsapp",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_telefone text, p_pin text",
+          "arguments": "p_telefone text, p_pin text",
+          "result_type": "boolean",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_verify_own_pin",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_pin text",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_pin text",
+          "result_type": "boolean",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "rpc_criar_anuncio_classificado",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_bairro text, p_categoria text, p_cidade text, p_cliente_id uuid, p_comissao_aceita numeric, p_descricao text, p_detalhes jsonb, p_estado text, p_midias jsonb, p_preco numeric, p_titulo text",
+          "arguments": "p_bairro text, p_categoria text, p_cidade text, p_cliente_id uuid, p_comissao_aceita numeric, p_descricao text, p_detalhes jsonb, p_estado text, p_midias jsonb, p_preco numeric, p_titulo text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "rpc_reenviar_anuncio_classificado",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_anuncio_id uuid, p_titulo text, p_descricao text, p_preco numeric, p_cidade text, p_estado text, p_bairro text, p_detalhes jsonb, p_midias jsonb",
+          "arguments": "p_anuncio_id uuid, p_titulo text, p_descricao text, p_preco numeric, p_cidade text, p_estado text, p_bairro text, p_detalhes jsonb, p_midias jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_public_affiliate_programs",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "",
+          "arguments": "",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_public_track_affiliate_click",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_codigo text, p_visitante_token text, p_landing_path text, p_referrer_host text",
+          "arguments": "p_codigo text, p_visitante_token text, p_landing_path text, p_referrer_host text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_public_resgatar_beneficio_parceiro",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_parceiro_id uuid, p_parceiro_slug text, p_nome_completo text, p_telefone text, p_cliente_id uuid, p_email text",
+          "arguments": "p_parceiro_id uuid DEFAULT NULL::uuid, p_parceiro_slug text DEFAULT NULL::text, p_nome_completo text DEFAULT NULL::text, p_telefone text DEFAULT NULL::text, p_cliente_id uuid DEFAULT NULL::uuid, p_email text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_set_partner_status",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_partner_id uuid, p_status text",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_partner_id uuid DEFAULT NULL::uuid, p_status text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_set_notification_state",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_notification_id text, p_read boolean, p_dismiss boolean",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_notification_id text DEFAULT NULL::text, p_read boolean DEFAULT true, p_dismiss boolean DEFAULT false",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_mark_all_notifications",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_dismiss boolean",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_dismiss boolean DEFAULT false",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_ping_session",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text",
+          "arguments": "p_sessao_id uuid, p_session_token text",
+          "result_type": "boolean",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "get_client_pendency_counts",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_cliente_id uuid",
+          "arguments": "p_cliente_id uuid",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_public_registration_settings",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "",
+          "arguments": "",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_advertiser_portal_snapshot",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "",
+          "arguments": "",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_client_operational_write",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_table text, p_action text, p_data jsonb, p_filter jsonb",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_table text, p_action text, p_data jsonb DEFAULT '{}'::jsonb, p_filter jsonb DEFAULT '{}'::jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_log_action",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_ator_tipo text, p_ator_id text, p_ator_nome text, p_acao text, p_detalhes text",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_ator_tipo text, p_ator_id text, p_ator_nome text, p_acao text, p_detalhes text DEFAULT NULL::text",
+          "result_type": "uuid",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_sync_product_variations",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_produto_id uuid, p_variacoes jsonb",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_produto_id uuid, p_variacoes jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_financial_snapshot",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "",
+          "arguments": "",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_dashboard_snapshot",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "",
+          "arguments": "",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_pendency_snapshot",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "",
+          "arguments": "",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_request_withdrawal",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_valor numeric, p_tipo_chave_pix text, p_chave_pix text",
+          "arguments": "p_valor numeric, p_tipo_chave_pix text, p_chave_pix text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_cancel_withdrawal",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_saque_id uuid, p_motivo text",
+          "arguments": "p_saque_id uuid, p_motivo text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_redeem_voucher",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_voucher_id uuid",
+          "arguments": "p_voucher_id uuid",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_redeem_prize",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_premio_id uuid",
+          "arguments": "p_premio_id uuid",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_activate_promotion",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_promocao_id uuid",
+          "arguments": "p_promocao_id uuid",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_update_profile",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_telefone text, p_cep text, p_numero text, p_area_servico text",
+          "arguments": "p_telefone text, p_cep text, p_numero text, p_area_servico text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_create_schedule",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_demanda_id uuid, p_data_inicio timestamp with time zone, p_data_fim timestamp with time zone, p_observacoes text",
+          "arguments": "p_demanda_id uuid, p_data_inicio timestamp with time zone, p_data_fim timestamp with time zone, p_observacoes text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_complete_schedule",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_agendamento_id uuid",
+          "arguments": "p_agendamento_id uuid",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_delete_schedule",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_agendamento_id uuid",
+          "arguments": "p_agendamento_id uuid",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_submit_document",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_documento_id uuid, p_urls text[]",
+          "arguments": "p_documento_id uuid, p_urls text[]",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_transition_demand",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_demanda_id uuid, p_action text, p_payload jsonb",
+          "arguments": "p_demanda_id uuid, p_action text, p_payload jsonb DEFAULT '{}'::jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_create_ticket",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_subject text, p_description text, p_deduplicate boolean",
+          "arguments": "p_subject text, p_description text, p_deduplicate boolean DEFAULT false",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_send_ticket_message",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_ticket_id uuid, p_message text, p_attachment_reference text, p_attachment_type text",
+          "arguments": "p_ticket_id uuid, p_message text DEFAULT NULL::text, p_attachment_reference text DEFAULT NULL::text, p_attachment_type text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_request_profile_change",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_field text, p_new_value text, p_reason text",
+          "arguments": "p_field text, p_new_value text, p_reason text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_request_demand_support",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_demand_id uuid, p_message text",
+          "arguments": "p_demand_id uuid, p_message text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_mark_notification_read",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_notificacao_id uuid",
+          "arguments": "p_notificacao_id uuid",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_mark_all_notifications_read",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "",
+          "arguments": "",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_provider_session_access_state",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "",
+          "arguments": "",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_public_service_catalog",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_audience text",
+          "arguments": "p_audience text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_service_catalog_snapshot",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_end_session",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 4,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text",
+          "arguments": "p_sessao_id uuid, p_session_token text",
+          "result_type": "boolean",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_validate_session",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text",
+          "arguments": "p_sessao_id uuid, p_session_token text",
+          "result_type": "TABLE(is_valid boolean, ator_tipo text, ator_id uuid, ator_nome text, status text)",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_get_client_session_access_state",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 2,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text",
+          "arguments": "p_sessao_id uuid, p_session_token text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_get_collaborator_session_access_state",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text",
+          "arguments": "p_sessao_id uuid, p_session_token text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_update_client_pin",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_new_pin text",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_new_pin text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_public_site_campaigns",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_page text, p_device text, p_audience text, p_viewer_hash text, p_session_hash text, p_actor_id text",
+          "arguments": "p_page text DEFAULT '/'::text, p_device text DEFAULT 'desktop'::text, p_audience text DEFAULT 'guests'::text, p_viewer_hash text DEFAULT NULL::text, p_session_hash text DEFAULT NULL::text, p_actor_id text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_public_site_campaign_event",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_campaign_id uuid, p_event_type text, p_page text, p_device text, p_audience text, p_viewer_hash text, p_session_hash text, p_actor_id text, p_metadata jsonb",
+          "arguments": "p_campaign_id uuid, p_event_type text, p_page text DEFAULT '/'::text, p_device text DEFAULT 'desktop'::text, p_audience text DEFAULT 'guests'::text, p_viewer_hash text DEFAULT NULL::text, p_session_hash text DEFAULT NULL::text, p_actor_id text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_supplier_dashboard_snapshot",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "",
+          "arguments": "",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_supplier_request_product",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_payload jsonb",
+          "arguments": "p_payload jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_supplier_update_profile",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_payload jsonb",
+          "arguments": "p_payload jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_supplier_mark_order_seen",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_order_id uuid",
+          "arguments": "p_order_id uuid",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_supplier_mark_notification_read",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_notification_id uuid",
+          "arguments": "p_notification_id uuid",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_supplier_mark_notifications_read",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "",
+          "arguments": "",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_supplier_submit_delivery",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_request_id uuid, p_order_id uuid, p_payload jsonb",
+          "arguments": "p_request_id uuid, p_order_id uuid, p_payload jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_supplier_set_status",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_supplier_id uuid, p_status text, p_reason text, p_pin text",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_supplier_id uuid, p_status text, p_reason text DEFAULT NULL::text, p_pin text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_review_supplier_product",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_action text, p_reason text, p_product_payload jsonb",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_action text, p_reason text DEFAULT NULL::text, p_product_payload jsonb DEFAULT '{}'::jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_create_supplier_order",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_supplier_id uuid, p_payload jsonb",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_supplier_id uuid, p_payload jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_review_supplier_delivery",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_delivery_id uuid, p_action text, p_reason text",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_delivery_id uuid, p_action text, p_reason text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_update_supplier_payable",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_payable_id uuid, p_action text, p_payload jsonb",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_payable_id uuid, p_action text, p_payload jsonb DEFAULT '{}'::jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_criar_vaquinha",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_dados jsonb",
+          "arguments": "p_dados jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_obter_vaquinha",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_codigo_ou_id text",
+          "arguments": "p_codigo_ou_id text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_confirmar_contribuicao_vaquinha",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_contribuicao_id uuid, p_transacao_id text",
+          "arguments": "p_contribuicao_id uuid, p_transacao_id text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_advertiser_save_creative",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_creative_id uuid, p_campaign_id uuid, p_kind text, p_storage_path text, p_target_url text, p_headline text, p_body text, p_alt_text text, p_width integer, p_height integer, p_duration_seconds numeric",
+          "arguments": "p_creative_id uuid, p_campaign_id uuid, p_kind text, p_storage_path text, p_target_url text, p_headline text, p_body text, p_alt_text text, p_width integer, p_height integer, p_duration_seconds numeric",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_advertiser_submit_creative",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_creative_id uuid",
+          "arguments": "p_creative_id uuid",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_advertiser_update_profile",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_payload jsonb",
+          "arguments": "p_payload jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_public_get_career_application",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_protocol text, p_document text",
+          "arguments": "p_protocol text, p_document text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_public_submit_career_application",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_payload jsonb",
+          "arguments": "p_payload jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "processar_bonus_boas_vindas_seguro",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_cliente_id uuid",
+          "arguments": "p_cliente_id uuid",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_public_register_supplier",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_payload jsonb",
+          "arguments": "p_payload jsonb",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_baixar_fatura",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_fatura_id uuid, p_metodo text, p_data_pagamento timestamp with time zone, p_observacoes text",
+          "arguments": "p_sessao_id uuid, p_session_token text, p_fatura_id uuid, p_metodo text DEFAULT 'manual'::text, p_data_pagamento timestamp with time zone DEFAULT now(), p_observacoes text DEFAULT NULL::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_approve_budget",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_orcamento_id uuid, p_approval_kind text",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_request_id uuid DEFAULT NULL::uuid, p_orcamento_id uuid DEFAULT NULL::uuid, p_approval_kind text DEFAULT 'standard'::text",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{supabase_admin=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "gsa_admin_save_collaborator",
+      "callers": [
+        "callAdminRpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_sessao_id uuid, p_session_token text, p_id uuid, p_payload jsonb, p_modules text[]",
+          "arguments": "p_sessao_id uuid DEFAULT NULL::uuid, p_session_token text DEFAULT NULL::text, p_id uuid DEFAULT NULL::uuid, p_payload jsonb DEFAULT '{}'::jsonb, p_modules text[] DEFAULT ARRAY[]::text[]",
+          "result_type": "jsonb",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "check_file_references",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "p_file_url text",
+          "arguments": "p_file_url text",
+          "result_type": "json",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    },
+    {
+      "rpc": "get_database_details",
+      "callers": [
+        "supabase.rpc"
+      ],
+      "usagesCount": 1,
+      "overloads": [
+        {
+          "identity_arguments": "",
+          "arguments": "",
+          "result_type": "json",
+          "is_security_definer": true,
+          "acl": "{=X/supabase_admin,supabase_admin=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}"
+        }
+      ]
+    }
+  ]
+}

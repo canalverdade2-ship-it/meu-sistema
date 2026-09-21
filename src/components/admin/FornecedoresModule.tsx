@@ -31,9 +31,11 @@ import {
 import {
   createAdminSupplierOrder,
   getAdminSupplierSnapshot,
+  getAdminSupplierFinancialAnomalies,
   notifySupplierPortal,
   resolveSupplierDocument,
   reviewAdminSupplierDelivery,
+  reviewAdminSupplierBankChange,
   reviewAdminSupplierProduct,
   setAdminSupplierStatus,
   updateAdminSupplierPayable,
@@ -41,6 +43,7 @@ import {
 } from '../../lib/supplierOperations';
 import { navigate } from '../../routing/navigationService';
 import { useAppLocation } from '../../routing/useAppLocation';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import type { AdminSupplierSnapshot } from '../../types/supplier';
 
 type Tab = 'cadastros' | 'produtos' | 'pedidos' | 'entregas' | 'contas';
@@ -74,6 +77,8 @@ export function FornecedoresModule({ initialTab }: { initialTab?: string }) {
   const [approval, setApproval] = useState<any | null>(null);
   const [pin, setPin] = useState('');
   const [reason, setReason] = useState('');
+  const [bankReason, setBankReason] = useState('');
+  const [financialAnomalies, setFinancialAnomalies] = useState<Array<Record<string, any>>>([]);
   const [orderOpen, setOrderOpen] = useState(false);
   const [supplierId, setSupplierId] = useState('');
   const [orderItems, setOrderItems] = useState<Array<{ fornecedor_produto_id: string; quantidade: string; custo_unitario: string }>>([]);
@@ -96,7 +101,12 @@ export function FornecedoresModule({ initialTab }: { initialTab?: string }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setSnapshot(await getAdminSupplierSnapshot());
+      const [nextSnapshot, anomalies] = await Promise.all([
+        getAdminSupplierSnapshot(),
+        getAdminSupplierFinancialAnomalies(),
+      ]);
+      setSnapshot(nextSnapshot);
+      setFinancialAnomalies(anomalies || []);
     } catch (error: any) {
       toast.error(error?.message || 'Não foi possível carregar fornecedores.');
     } finally {
@@ -107,6 +117,17 @@ export function FornecedoresModule({ initialTab }: { initialTab?: string }) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useRealtimeSubscription([
+    { table: 'fornecedores', onChange: load, debounceMs: 300 },
+    { table: 'ordens_compra', onChange: load, debounceMs: 300 },
+    { table: 'produto_fornecedor_config', onChange: load, debounceMs: 300 },
+    { table: 'produtos', onChange: load, debounceMs: 300 },
+    { table: 'fornecedor_produtos', onChange: load, debounceMs: 300 },
+    { table: 'fornecedor_pedidos', onChange: load, debounceMs: 300 },
+    { table: 'fornecedor_entregas', onChange: load, debounceMs: 300 },
+    { table: 'fornecedor_documentos', onChange: load, debounceMs: 300 },
+  ]);
 
   useEffect(() => {
     if (route.module !== 'fornecedores' || route.submodule !== 'cadastros' || !route.itemId || loading) return;
@@ -146,6 +167,20 @@ export function FornecedoresModule({ initialTab }: { initialTab?: string }) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const reviewBankChange = async (approve: boolean) => {
+    if (!approval) return;
+    if (!approve && bankReason.trim().length < 3) return toast.error('Informe o motivo da recusa.');
+    setSaving(true);
+    try {
+      await reviewAdminSupplierBankChange(approval.id, approve, bankReason);
+      toast.success(approve ? 'Dados bancários aprovados.' : 'Alteração bancária recusada.');
+      setBankReason('');
+      setApproval(null);
+      await load();
+    } catch (error: any) { toast.error(error?.message || 'Não foi possível revisar os dados bancários.'); }
+    finally { setSaving(false); }
   };
 
   const openProductReview = (request: any, action: ProductAction) => {
@@ -320,6 +355,13 @@ export function FornecedoresModule({ initialTab }: { initialTab?: string }) {
         <Metric label="Contas pendentes" value={formatCurrency(pendingPayables)} />
       </div>
 
+      {financialAnomalies.length > 0 && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+          <p className="font-black">Conciliação financeira pendente</p>
+          <p className="mt-1">${financialAnomalies.length} registro(s) histórico(s) possuem divergência entre pedido, itens, NF ou conta a pagar. Nenhum valor histórico foi alterado automaticamente.</p>
+        </div>
+      )}
+
       <div className="flex gap-1 overflow-x-auto rounded-2xl bg-neutral-100 p-1">
         {TABS.map((item) => {
           const Icon = item.icon;
@@ -349,6 +391,7 @@ export function FornecedoresModule({ initialTab }: { initialTab?: string }) {
                     <p className="mt-1 text-sm text-neutral-500">{supplier.razao_social} · {supplier.documento}</p>
                     <p className="mt-1 text-xs text-neutral-400">{supplier.responsavel_nome} · {supplier.email}</p>
                     {supplier.motivo_status && <p className="mt-2 rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-800">{supplier.motivo_status}</p>}
+                    {supplier.dados_bancarios_pendentes && <p className="mt-2 rounded-xl border border-purple-200 bg-purple-50 p-3 text-xs font-black text-purple-800">Dados bancários aguardando análise.</p>}
                   </div>
                   <Building2 className="h-8 w-8 text-neutral-200" />
                 </div>
@@ -462,6 +505,7 @@ export function FornecedoresModule({ initialTab }: { initialTab?: string }) {
           const isPj = approval.tipo_pessoa === 'pj';
           const formattedDoc = isPj ? maskCNPJ(approval.documento) : maskCPF(approval.documento);
           const bank = approval.dados_bancarios || {};
+          const pendingBank = approval.dados_bancarios_pendentes || null;
 
           const statusBadge = {
             pendente: { bg: 'bg-amber-100 text-amber-900 border-amber-300', label: 'Pendente de Análise' },
@@ -648,6 +692,23 @@ export function FornecedoresModule({ initialTab }: { initialTab?: string }) {
                     O fornecedor ainda não cadastrou dados bancários no perfil.
                   </p>
                 )}
+
+                {pendingBank && (
+                  <div className="rounded-xl border-2 border-purple-200 bg-purple-50 p-4 space-y-3">
+                    <div><p className="text-xs font-black uppercase text-purple-900">Alteração bancária pendente</p><p className="mt-1 text-[11px] text-purple-700">Os dados atuais continuam válidos até esta análise ser concluída.</p></div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div><span className="block text-purple-500">Banco</span><b>{pendingBank.banco || '—'}</b></div>
+                      <div><span className="block text-purple-500">Agência / Conta</span><b>{pendingBank.agencia || '—'} / {pendingBank.conta || '—'}</b></div>
+                      <div><span className="block text-purple-500">PIX</span><b className="break-all">{pendingBank.chave_pix || '—'}</b></div>
+                      <div><span className="block text-purple-500">Titular</span><b>{pendingBank.titular || '—'}</b></div>
+                    </div>
+                    <textarea rows={2} value={bankReason} onChange={(e) => setBankReason(e.target.value)} placeholder="Motivo obrigatório para recusa" className="w-full rounded-xl border border-purple-200 bg-white p-3 text-xs" />
+                    <div className="grid grid-cols-2 gap-2">
+                      <button type="button" disabled={saving} onClick={() => void reviewBankChange(false)} className="rounded-xl border border-red-200 bg-red-50 py-2.5 text-xs font-black text-red-700 disabled:opacity-50">Recusar alteração</button>
+                      <button type="button" disabled={saving} onClick={() => void reviewBankChange(true)} className="rounded-xl bg-purple-700 py-2.5 text-xs font-black text-white disabled:opacity-50">Aprovar dados bancários</button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 5. Painel de Parecer Administrativo & Ações */}
@@ -728,8 +789,8 @@ export function FornecedoresModule({ initialTab }: { initialTab?: string }) {
               {orderItems.map((item, index) => (
                 <div key={`${item.fornecedor_produto_id}-${index}`} className="grid gap-2 rounded-xl bg-neutral-50 p-3 sm:grid-cols-[1fr_110px_130px_40px]">
                   <select value={item.fornecedor_produto_id} onChange={(event) => { const link = availableLinks.find((entry) => entry.id === event.target.value); setOrderItems((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, fornecedor_produto_id: event.target.value, custo_unitario: String(link?.custo_unitario || 0) } : entry)); }} className="rounded-lg border border-neutral-200 p-2">{availableLinks.map((link) => <option key={link.id} value={link.id}>{link.produto_nome}</option>)}</select>
-                  <input type="number" min="1" value={item.quantidade} onChange={(event) => setOrderItems((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, quantidade: event.target.value } : entry))} className="rounded-lg border border-neutral-200 p-2" placeholder="Quantidade" />
-                  <input type="number" min="0" step="0.01" value={item.custo_unitario} onChange={(event) => setOrderItems((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, custo_unitario: event.target.value } : entry))} className="rounded-lg border border-neutral-200 p-2" placeholder="Custo" />
+                  <input  type="number" min="1" value={item.quantidade} inputMode="numeric" onChange={(event) => setOrderItems((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, quantidade: event.target.value } : entry))} className="rounded-lg border border-neutral-200 p-2" placeholder="Quantidade" />
+                  <input  type="number" min="0" step="0.01" value={item.custo_unitario} inputMode="numeric" onChange={(event) => setOrderItems((current) => current.map((entry, itemIndex) => itemIndex === index ? { ...entry, custo_unitario: event.target.value } : entry))} className="rounded-lg border border-neutral-200 p-2" placeholder="Custo" />
                   <button type="button" onClick={() => setOrderItems((current) => current.filter((_, itemIndex) => itemIndex !== index))} className="text-red-600"><XCircle className="h-5 w-5" /></button>
                 </div>
               ))}

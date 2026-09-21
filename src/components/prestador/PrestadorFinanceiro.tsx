@@ -195,7 +195,7 @@ export function PrestadorFinanceiro({ prestadorId, initialItemId }: { prestadorI
             onClick={async () => {
               setIsGenerating(true);
               try {
-                const { data: pData } = await supabase.from('prestadores').select('nome_completo, telefone').eq('id', prestadorId).single();
+                const { data: pData } = await supabase.from('prestadores').select('nome_razao, telefone').eq('id', prestadorId).single();
                 if (!pData?.telefone) { toast.error("Telefone não encontrado."); setIsGenerating(false); return; }
                 
                 const formattedTransactions = transactions.map(t => ({
@@ -205,12 +205,13 @@ export function PrestadorFinanceiro({ prestadorId, initialItemId }: { prestadorI
                   valor: Math.abs(t.valor)
                 }));
                 
-                const doc = await generateExtratoPDF(formattedTransactions as any, pData.nome_completo, { returnDoc: true }) as any;
+                const prestadorNome = pData.nome_razao || 'Prestador';
+                const doc = await generateExtratoPDF(formattedTransactions as any, prestadorNome, { returnDoc: true }) as any;
                 const pdfBase64 = doc.output('datauristring');
                 
                 const msg = whatsappNotificationService.gerarMensagemWhatsApp({
                   tipo: 'extrato' as any,
-                  clienteNome: pData.nome_completo,
+                  clienteNome: prestadorNome,
                 });
                 
                 await sendToWhatsApp(pData.telefone, msg, pdfBase64, `extrato_prestador_${new Date().getTime()}.pdf`);

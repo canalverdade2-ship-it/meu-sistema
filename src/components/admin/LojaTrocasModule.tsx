@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, MoreHorizontal, FileText, CheckCircle, XCircle, AlertCircle, RefreshCcw, User, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { LojaSolicitacao } from '../../types';
@@ -21,6 +21,7 @@ export function LojaTrocasModule({ colaboradorId, colaboradorNome }: { colaborad
   const [activeTab, setActiveTab] = useState<'pendentes' | 'historico'>('pendentes');
   const [solicitacoes, setSolicitacoes] = useState<LojaSolicitacao[]>([]);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedSolicitacao, setSelectedSolicitacao] = useState<LojaSolicitacao | null>(null);
   
@@ -35,20 +36,35 @@ export function LojaTrocasModule({ colaboradorId, colaboradorNome }: { colaborad
   const [dataAgendamentoInput, setDataAgendamentoInput] = useState('');
   const [rastreioAdminInput, setRastreioAdminInput] = useState('');
 
-useEffect(() => {
-    fetchSolicitacoes();
+  const fetchSolicitacoesRef = useRef<() => void>(() => {});
 
+  // Debounce da busca para não recriar canal nem sobrecarregar o banco
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(0);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Recarrega os dados ao trocar de aba, página ou termo de busca
+  useEffect(() => {
+    fetchSolicitacoes();
+  }, [activeTab, page, debouncedSearch]);
+
+  // Inscrição Realtime estável: canal mantido aberto sem recriação a cada digitação
+  useEffect(() => {
     const channel = supabase
       .channel('admin-loja-solicitacoes-updates')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'loja_solicitacoes' }, () => {
-        fetchSolicitacoes();
+        fetchSolicitacoesRef.current();
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeTab, search]);
+  }, []);
 
   const fetchSolicitacoes = async () => {
     let query = supabase.from('loja_solicitacoes').select('id, cliente_id, tipo, status, motivo, metodo_entrega, endereco_devolucao, data_agendamento, rastreio_cliente, rastreio_admin, valor_diferenca, resposta_admin, historico_status, created_at, updated_at, descricao_detalhada, imagens_anexo, clientes(nome, email), orcamentos!orcamento_origem_id(codigo_orcamento, protocolo)');
@@ -59,10 +75,9 @@ useEffect(() => {
       query = query.in('status', ['rejeitado', 'concluido']);
     }
 
-    if (search) {
-      // We can search by reason, type, or client name if we use a join/rpc, but we'll do simple client ID or something similar for now, or fetch all and filter in memory if small
-      // Since it's a simple search, we'll fetch then filter or just search 'motivo'
-      query = query.ilike('motivo', `%${search}%`);
+    const searchTerm = debouncedSearch.trim();
+    if (searchTerm) {
+      query = query.ilike('motivo', `%${searchTerm}%`);
     }
 
     let data;
@@ -83,6 +98,8 @@ useEffect(() => {
     }
     if (data) setSolicitacoes(data as unknown as LojaSolicitacao[]);
   };
+
+  fetchSolicitacoesRef.current = fetchSolicitacoes;
 
   const handleUpdateStatus = async (newStatus: 'em_analise' | 'aprovado' | 'rejeitado' | 'concluido') => {
     if (!selectedSolicitacao) return;
@@ -160,20 +177,21 @@ useEffect(() => {
     if (!selectedSolicitacao) return;
     setUpdatingStatus(true);
     try {
-      const novoHistorico = { 
-        ...(selectedSolicitacao.historico_status || {}),
-        [targetStatus]: new Date().toISOString()
-      };
+      const session = getAdminSessionForRpc();
 
-      const { error } = await supabase
-        .from('loja_solicitacoes')
-        .update({
-          status: targetStatus,
-          historico_status: novoHistorico,
-          ...payload,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', selectedSolicitacao.id);
+      // Previously performed direct client table mutation:
+      // await supabase.from('loja_solicitacoes').update({ status: targetStatus, ... })
+      // Now routed through canonical atomic security definer RPC gsa_admin_atualizar_solicitacao_loja
+      const { data, error } = await supabase.rpc('gsa_admin_atualizar_solicitacao_loja', {
+        p_sessao_id: session.sessaoId,
+        p_session_token: session.sessionToken,
+        p_solicitacao_id: selectedSolicitacao.id,
+        p_novo_status: targetStatus,
+        p_resposta_admin: payload.resposta_admin || resolucaoInput || selectedSolicitacao.resposta_admin || null,
+        p_endereco_devolucao: payload.endereco_devolucao || null,
+        p_data_agendamento: payload.data_agendamento || null,
+        p_rastreio_admin: payload.rastreio_admin || null,
+      });
 
       if (error) throw error;
 

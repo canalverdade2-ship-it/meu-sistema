@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 const PUBLIC_ROUTES = [
   '/',
   '/anuncios',
+  '/identidade-e-web-design',
   '/empresa-do-zero-ao-digital',
   '/anunciante',
   '/fornecedor',

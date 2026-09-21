@@ -1,7 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const INFINITEPAY_HANDLE = 'getsemani-gsa';
-const INFINITEPAY_API_URL = 'https://api.infinitepay.io/invoices/public/checkout/links';
+const INFINITEPAY_HANDLE = Deno.env.get('INFINITEPAY_HANDLE') || 'getsemani-gsa';
+const INFINITEPAY_API_URL = 'https://api.checkout.infinitepay.io/links';
+const INFINITEPAY_CHECK_URL = 'https://api.checkout.infinitepay.io/payment_check';
 
 export async function handleRequest(req: Request) {
   if (req.method === 'OPTIONS') {
@@ -29,8 +30,25 @@ export async function handleRequest(req: Request) {
   // Route 1: InfinitePay Webhook (detected by order_nsu without action)
   if (payload.order_nsu && !payload.action) {
     console.log("InfinitePay Webhook recebido:", JSON.stringify(payload));
-    const { invoice_slug, amount, paid_amount, capture_method, transaction_nsu, order_nsu, receipt_url } = payload;
+    const { transaction_nsu, order_nsu } = payload;
     if (!order_nsu) return new Response(JSON.stringify({ error: "order_nsu ausente" }), { status: 400 });
+    if (!transaction_nsu) return new Response(JSON.stringify({ error: "transaction_nsu ausente" }), { status: 400 });
+
+    const verificationResponse = await fetch(INFINITEPAY_CHECK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ handle: INFINITEPAY_HANDLE, order_nsu, transaction_nsu }),
+    });
+    if (!verificationResponse.ok) {
+      console.error('Falha ao validar pagamento na InfinitePay:', verificationResponse.status);
+      return new Response(JSON.stringify({ error: 'Pagamento nao confirmado pelo provedor' }), { status: 401 });
+    }
+    const verified = await verificationResponse.json();
+    const isPaid = verified?.paid === true || verified?.status === 'paid' || verified?.status === 'approved';
+    const verifiedPaidAmount = Number(verified?.paid_amount ?? verified?.amount ?? 0);
+    if (!isPaid || !Number.isFinite(verifiedPaidAmount) || verifiedPaidAmount <= 0) {
+      return new Response(JSON.stringify({ error: 'Pagamento ainda nao confirmado' }), { status: 409 });
+    }
 
     const supabase = createClient(PROJECT_URL, SERVICE_ROLE_KEY);
     const { data: fatura, error: findError } = await supabase.from("faturas").select("*").eq("infinitepay_order_nsu", order_nsu).single();
@@ -41,35 +59,44 @@ export async function handleRequest(req: Request) {
         console.error("Fatura não encontrada para order_nsu:", order_nsu);
         return new Response(JSON.stringify({ error: "Fatura não encontrada" }), { status: 400 });
       }
-      await procesarPagamento(supabase, faturaByCode, { paid_amount, capture_method, transaction_nsu, invoice_slug, receipt_url });
+      const { error: processError } = await supabase.rpc('gsa_finalize_external_invoice_payment', {
+        p_fatura_id: faturaByCode.id, p_order_nsu: order_nsu, p_transaction_nsu: transaction_nsu,
+        p_paid_amount: verifiedPaidAmount / 100, p_capture_method: verified?.capture_method || payload.capture_method || 'infinitepay',
+        p_payload: { webhook: payload, verification: verified },
+      });
+      if (processError) throw processError;
     } else {
-      await procesarPagamento(supabase, fatura, { paid_amount, capture_method, transaction_nsu, invoice_slug, receipt_url });
+      const { error: processError } = await supabase.rpc('gsa_finalize_external_invoice_payment', {
+        p_fatura_id: fatura.id, p_order_nsu: order_nsu, p_transaction_nsu: transaction_nsu,
+        p_paid_amount: verifiedPaidAmount / 100, p_capture_method: verified?.capture_method || payload.capture_method || 'infinitepay',
+        p_payload: { webhook: payload, verification: verified },
+      });
+      if (processError) throw processError;
     }
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: { "Content-Type": "application/json" } });
   }
 
   // Route 2: Create Payment Link (Requires Auth)
   if (payload.action === 'create_link') {
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) return new Response(JSON.stringify({ error: 'Missing authorization header' }), { status: 401 });
-    
-    const supabaseUserClient = createClient(PROJECT_URL, Deno.env.get('SUPABASE_ANON_KEY') ?? '', {
-      global: { headers: { Authorization: authHeader } },
-      auth: { persistSession: false }
-    });
-    const { data: userData, error: userError } = await supabaseUserClient.auth.getUser();
-    if (userError || !userData?.user) return new Response(JSON.stringify({ error: 'Invalid JWT token' }), { status: 401 });
-
     const supabase = createClient(PROJECT_URL, SERVICE_ROLE_KEY);
-    const { fatura_id, cliente_id, valor_liquido } = payload;
-    if (!fatura_id || !cliente_id) return new Response(JSON.stringify({ error: "fatura_id e cliente_id são obrigatórios" }), { status: 400 });
+    const { fatura_id, sessao_id, session_token } = payload;
+    if (!fatura_id || !sessao_id || !session_token) return new Response(JSON.stringify({ error: "Sessao e fatura sao obrigatorias" }), { status: 400 });
 
-    const { data: fatura, error: faturaError } = await supabase.from("faturas").select("*").eq("id", fatura_id).single();
+    const { data: actors, error: actorError } = await supabase.rpc('gsa_client_session_actor', {
+      p_sessao_id: sessao_id, p_session_token: session_token,
+    });
+    const actor = Array.isArray(actors) ? actors[0] : actors;
+    if (actorError || !actor?.cliente_id) return new Response(JSON.stringify({ error: 'Sessao de cliente invalida' }), { status: 401 });
+
+    const { data: fatura, error: faturaError } = await supabase.from("faturas").select("*").eq("id", fatura_id).eq('cliente_id', actor.cliente_id).single();
     if (faturaError || !fatura) return new Response(JSON.stringify({ error: "Fatura não encontrada" }), { status: 404 });
+    if (!['pendente', 'vencida', 'revisada', 'pendente_pagamento'].includes(fatura.status)) {
+      return new Response(JSON.stringify({ error: 'Fatura nao esta disponivel para pagamento' }), { status: 409 });
+    }
 
-    const { data: cliente } = await supabase.from("clientes").select("nome, email, telefone").eq("id", cliente_id).single();
+    const { data: cliente } = await supabase.from("clientes").select("nome, email, telefone").eq("id", actor.cliente_id).single();
 
-    const valorFinal = typeof valor_liquido === "number" && valor_liquido > 0 ? valor_liquido : fatura.valor_final_pendente ?? fatura.valor_total;
+    const valorFinal = Number(fatura.valor_final_pendente ?? fatura.valor_total);
     const valorEmCentavos = Math.round(valorFinal * 100);
     if (valorEmCentavos <= 0) return new Response(JSON.stringify({ error: "Valor da fatura inválido para pagamento" }), { status: 400 });
 
@@ -202,56 +229,5 @@ export async function handleRequest(req: Request) {
   return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400 });
 }
 
-// Helper para webhooks (InfinitePay)
-async function procesarPagamento(supabase: any, fatura: any, meta: any) {
-  const { paid_amount, capture_method, transaction_nsu, invoice_slug, receipt_url } = meta;
-
-  if (fatura.status === "pago") {
-    console.log("Fatura já paga, ignorando webhook duplicado:", fatura.id);
-    return;
-  }
-
-  const valorPago = paid_amount ? paid_amount / 100 : fatura.valor_final_pendente ?? fatura.valor_total;
-  const metodo = capture_method === "pix" ? "pix" : capture_method === "credit_card" ? "cartao" : capture_method || "infinitepay";
-
-  await supabase.from("pagamentos").insert({
-    fatura_id: fatura.id,
-    cliente_id: fatura.cliente_id,
-    metodo: metodo,
-    valor: valorPago,
-    status: "pago",
-    descricao: `Pagamento via InfinitePay (${metodo})`,
-  }).select().maybeSingle();
-
-  await supabase.from("faturas").update({
-      status: "pago",
-      valor_pago: (fatura.valor_pago || 0) + valorPago,
-      valor_final_pendente: 0,
-      infinitepay_slug: invoice_slug ?? fatura.infinitepay_slug,
-      data_pagamento: new Date().toISOString(),
-  }).eq("id", fatura.id);
-
-  await supabase.from("notificacoes").insert({
-    destinatario_id: null,
-    titulo: "Pagamento Confirmado (✔ InfinitePay)",
-    mensagem: `Pagamento da fatura ${fatura.codigo_fatura} confirmado via ${metodo.toUpperCase()} — R$ ${valorPago.toFixed(2).replace('.', ',')}`,
-    tipo: "financeiro",
-    tabela_referencia: "faturas",
-    id_referencia: fatura.id,
-    lida: false,
-  });
-
-  try {
-    await supabase.from("extrato_financeiro").insert({
-      tipo: "entrada",
-      valor: valorPago,
-      descricao: `Fatura ${fatura.codigo_fatura} paga via InfinitePay (${metodo})`,
-      referencia_id: fatura.id,
-      referencia_tipo: "fatura",
-    });
-  } catch (_) {}
-
-  console.log(`Fatura ${fatura.codigo_fatura} baixada com sucesso. Valor: R$${valorPago}`);
-}
-
 if (import.meta.main) Deno.serve(handleRequest);
+

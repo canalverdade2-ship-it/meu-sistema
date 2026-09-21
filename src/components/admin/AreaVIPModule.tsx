@@ -1087,20 +1087,22 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
                     <label className="block text-[11px] font-black text-neutral-500 uppercase tracking-widest mb-2">
                       Pontos Necessários para Alcance
                     </label>
-                    <input 
+                    <input  
                       type="number"
                       value={editingLevel.minPoints}
-                      onChange={(e) => setEditingLevel({...editingLevel, minPoints: parseInt(e.target.value)})}
+                      inputMode="numeric"
+onChange={(e) => setEditingLevel({...editingLevel, minPoints: parseInt(e.target.value)})}
                       className="w-full px-4 py-3 rounded-xl bg-neutral-50 border-none ring-1 ring-neutral-200 focus:ring-2 focus:ring-indigo-500 font-bold text-lg"
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Mult. Pontos</label>
-                    <input 
+                    <input  
                       type="number"
                       step="0.1"
                       value={editingLevel.multiplier}
-                      onChange={(e) => setEditingLevel({...editingLevel, multiplier: parseFloat(e.target.value)})}
+                      inputMode="numeric"
+onChange={(e) => setEditingLevel({...editingLevel, multiplier: parseFloat(e.target.value)})}
                       className="w-full px-4 py-3 rounded-xl bg-neutral-50 border-none ring-1 ring-neutral-200 focus:ring-2 focus:ring-indigo-500 font-bold"
                     />
                   </div>
@@ -1111,10 +1113,11 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
                     <label className="block text-[11px] font-black text-neutral-500 uppercase tracking-widest mb-2">
                       Taxa Fin. (Saque/Transf %)
                     </label>
-                    <input 
+                    <input  
                       type="number"
                       value={editingLevel.feePercentage}
-                      onChange={(e) => setEditingLevel({...editingLevel, feePercentage: parseFloat(e.target.value) || 0})}
+                      inputMode="numeric"
+onChange={(e) => setEditingLevel({...editingLevel, feePercentage: parseFloat(e.target.value) || 0})}
                       className="w-full px-4 py-3 rounded-xl bg-neutral-50 border-none ring-1 ring-neutral-200 focus:ring-2 focus:ring-indigo-500 font-bold"
                     />
                   </div>
@@ -1122,10 +1125,11 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
                     <label className="block text-[11px] font-black text-neutral-500 uppercase tracking-widest mb-2">
                       Desconto VIP Loja/Serviços (%)
                     </label>
-                    <input 
+                    <input  
                       type="number"
                       value={editingLevel.discountPercentage || 0}
-                      onChange={(e) => setEditingLevel({...editingLevel, discountPercentage: parseFloat(e.target.value) || 0})}
+                      inputMode="numeric"
+onChange={(e) => setEditingLevel({...editingLevel, discountPercentage: parseFloat(e.target.value) || 0})}
                       className="w-full px-4 py-3 rounded-xl bg-neutral-50 border-none ring-1 ring-neutral-200 focus:ring-2 focus:ring-indigo-500 font-bold"
                     />
                   </div>
@@ -1136,10 +1140,11 @@ export function AreaVIPModule({ initialItemId, colaboradorId, colaboradorNome }:
                     <label className="block text-[11px] font-black text-neutral-500 uppercase tracking-widest mb-2">
                       Valor da Compra do Nível (R$)
                     </label>
-                    <input 
+                    <input  
                       type="number"
                       value={editingLevel.price}
-                      onChange={(e) => setEditingLevel({...editingLevel, price: parseFloat(e.target.value)})}
+                      inputMode="numeric"
+onChange={(e) => setEditingLevel({...editingLevel, price: parseFloat(e.target.value)})}
                       className="w-full px-4 py-3 rounded-xl bg-neutral-50 border-none ring-1 ring-neutral-200 focus:ring-2 focus:ring-indigo-500 font-bold text-lg"
                     />
                   </div>

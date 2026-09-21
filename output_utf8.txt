@@ -1,0 +1,95 @@
+﻿Pager usage is off.
+                                                            pg_get_functiondef                                                             
+-------------------------------------------------------------------------------------------------------------------------------------------
+ CREATE OR REPLACE FUNCTION public.gsa_client_convert_points(p_sessao_id uuid, p_session_token text, p_request_id uuid, p_pontos integer) +
+  RETURNS jsonb                                                                                                                           +
+  LANGUAGE plpgsql                                                                                                                        +
+  SECURITY DEFINER                                                                                                                        +
+  SET search_path TO 'public'                                                                                                             +
+ AS $function$                                                                                                                            +
+ DECLARE                                                                                                                                  +
+   v_actor record;                                                                                                                        +
+   v_client public.clientes%rowtype;                                                                                                      +
+   v_rate numeric;                                                                                                                        +
+   v_money numeric;                                                                                                                       +
+   v_new_points integer;                                                                                                                  +
+   v_new_wallet numeric;                                                                                                                  +
+   v_result jsonb;                                                                                                                        +
+   v_inserted uuid;                                                                                                                       +
+ BEGIN                                                                                                                                    +
+   PERFORM set_config('gsa.credit_release', 'on', true);                                                                                  +
+   IF p_request_id IS NULL THEN RAISE EXCEPTION 'Identificador da operação obrigatório.'; END IF;                                         +
+   IF p_pontos IS NULL OR p_pontos <= 0 THEN RAISE EXCEPTION 'Quantidade de pontos inválida.'; END IF;                                    +
+                                                                                                                                          +
+   SELECT * INTO v_actor FROM public.gsa_client_session_actor(p_sessao_id, p_session_token) LIMIT 1;                                      +
+   INSERT INTO public.gsa_client_operation_requests(request_id, cliente_id, operacao)                                                     +
+   VALUES (p_request_id, v_actor.cliente_id, 'converter_pontos')                                                                          +
+   ON CONFLICT (request_id) DO NOTHING RETURNING request_id INTO v_inserted;                                                              +
+                                                                                                                                          +
+   IF v_inserted IS NULL THEN                                                                                                             +
+     SELECT resultado INTO v_result FROM public.gsa_client_operation_requests                                                             +
+     WHERE request_id = p_request_id AND cliente_id = v_actor.cliente_id AND operacao = 'converter_pontos';                               +
+     IF NOT FOUND THEN RAISE EXCEPTION 'Identificador da operação já utilizado.'; END IF;                                                 +
+     IF v_result IS NULL THEN RAISE EXCEPTION 'Operação ainda em processamento.'; END IF;                                                 +
+     RETURN v_result || jsonb_build_object('already_exists', true);                                                                       +
+   END IF;                                                                                                                                +
+                                                                                                                                          +
+   SELECT * INTO v_client FROM public.clientes WHERE id = v_actor.cliente_id FOR UPDATE;                                                  +
+   IF coalesce(v_client.pontos_bloqueados, false) THEN RAISE EXCEPTION 'A carteira de pontos está bloqueada.'; END IF;                    +
+   IF coalesce(v_client.carteira_bloqueada, false) THEN RAISE EXCEPTION 'A carteira financeira está bloqueada.'; END IF;                  +
+   IF coalesce(v_client.saldo_pontos, 0) < p_pontos THEN RAISE EXCEPTION 'Saldo de pontos insuficiente.'; END IF;                         +
+                                                                                                                                          +
+   SELECT coalesce(taxa_conversao_pontos, 0.01) INTO v_rate                                                                               +
+   FROM public.client_levels                                                                                                              +
+   WHERE id = coalesce(v_client.nivel_manual_id, v_client.nivel_id) LIMIT 1;                                                              +
+   v_rate := coalesce(v_rate, 0.01);                                                                                                      +
+   v_money := round(p_pontos * v_rate, 2);                                                                                                +
+   IF v_money <= 0 THEN RAISE EXCEPTION 'O valor gerado na conversão deve ser positivo.'; END IF;                                         +
+                                                                                                                                          +
+   v_new_points := coalesce(v_client.saldo_pontos, 0) - p_pontos;                                                                         +
+   v_new_wallet := round(coalesce(v_client.saldo_carteira, 0) + v_money, 2);                                                              +
+                                                                                                                                          +
+   UPDATE public.clientes                                                                                                                 +
+   SET saldo_pontos = v_new_points, saldo_carteira = v_new_wallet                                                                         +
+   WHERE id = v_actor.cliente_id;                                                                                                         +
+                                                                                                                                          +
+   INSERT INTO public.pontos_movimentacoes(cliente_id, tipo, pontos, saldo_apos, descricao)                                               +
+   VALUES (v_actor.cliente_id, 'resgate', -p_pontos, v_new_points, format('Conversão de %s pontos em R$ %s de saldo', p_pontos, v_money));+
+                                                                                                                                          +
+   INSERT INTO public.points_transactions(cliente_id, tipo, pontos, descricao)                                                            +
+   VALUES (v_actor.cliente_id, 'conversao_saldo', -p_pontos, format('Conversão de %s pontos em R$ %s', p_pontos, v_money));               +
+                                                                                                                                          +
+   INSERT INTO public.carteira_lancamentos(cliente_id, valor, tipo, descricao)                                                            +
+   VALUES (v_actor.cliente_id, v_money, 'credito', format('Conversão de %s pontos em saldo carteira', p_pontos));                         +
+                                                                                                                                          +
+   INSERT INTO public.extrato_financeiro(                                                                                                 +
+     cliente_id, tipo, valor, descricao, referencia_id, modulo_referencia, saldo_resultante                                               +
+   ) VALUES (                                                                                                                             +
+     v_actor.cliente_id, 'entrada', v_money,                                                                                              +
+     format('Conversão de %s pontos em saldo carteira', p_pontos),                                                                        +
+     p_request_id, 'pontos', v_new_wallet                                                                                                 +
+   );                                                                                                                                     +
+                                                                                                                                          +
+   v_result := jsonb_build_object(                                                                                                        +
+     'success', true, 'already_exists', false,                                                                                            +
+     'pontos_convertidos', p_pontos, 'valor_convertido', v_money,                                                                         +
+     'saldo_pontos', v_new_points, 'saldo_carteira', v_new_wallet                                                                         +
+   );                                                                                                                                     +
+                                                                                                                                          +
+   UPDATE public.gsa_client_operation_requests SET resultado = v_result, completed_at = now()                                             +
+   WHERE request_id = p_request_id;                                                                                                       +
+                                                                                                                                          +
+   INSERT INTO public.notificacoes(                                                                                                       +
+     cliente_id, titulo, mensagem, modulo, tab, destinatario_tipo, acao_origem                                                            +
+   ) VALUES (                                                                                                                             +
+     v_actor.cliente_id, 'Pontos convertidos em saldo',                                                                                   +
+     format('Você converteu %s pontos em R$ %s de saldo.', p_pontos, v_money),                                                            +
+     'fidelidade', 'pontos', 'cliente', 'converter_pontos'                                                                                +
+   );                                                                                                                                     +
+                                                                                                                                          +
+   RETURN v_result;                                                                                                                       +
+ END;                                                                                                                                     +
+ $function$                                                                                                                               +
+ 
+(1 row)
+

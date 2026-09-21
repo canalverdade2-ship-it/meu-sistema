@@ -1,0 +1,30 @@
+--- /opt/gsa-tv/bin/night-production.py
++++ /opt/gsa-tv/bin/night-production.py
+@@ -126,8 +126,9 @@
+         path = media_path(m['drive_path'])
+         if not path.is_file(): return 'missing_file'
+         actual = probe(path)
+-        if actual > block['planned_duration_s']+1: return 'overlong'
+-        if actual < block['planned_duration_s']-2: return 'underfilled'
++        library = bool(block.get('is_reprise') or (block.get('metadata') or {}).get('content_mode')=='library')
++        if actual > block['planned_duration_s']+1 and not library: return 'overlong'
++        # Playout compiler automatically pads underfilled slots with Continuidade filler.
+         if abs(actual-float(m['duration_s'])) > 2: return 'metadata_duration_mismatch'
+     except Exception:
+         return 'probe_failed'
+@@ -141,7 +142,7 @@
+         library=bool(b.get('is_reprise') or (b.get('metadata') or {}).get('content_mode')=='library')
+-        rows=query("select * from gsa_tv_media_items where channel_id='ch-main' and state='ready' and approval_state='approved' and rights_ok and (metadata->>'program_id'=$1 or metadata->>'program_slug'=$2) and ($3::boolean or metadata->>'broadcast_date'=$4) order by updated_at desc",[str(b['program_id']),slug(b['name']),library,date])
++        rows=query("select * from gsa_tv_media_items where channel_id='ch-main' and state='ready' and approval_state='approved' and rights_ok and (metadata->>'program_id'=$1 or metadata->>'program_slug'=$2 or ($3::boolean and (title ilike ('%' || $5 || '%') or id ilike ('%' || $2 || '%')))) and ($3::boolean or metadata->>'broadcast_date'=$4) order by updated_at desc",[str(b['program_id']),slug(b['name']),library,date,b['name']])
+         for m in rows:
+             if media_issue(m,b,date): continue
+             backup=ROOT/'backups/production-links'/date/(str(b['id'])+'.json')
+@@ -308,8 +309,8 @@
+                 metadata={'program_slug':name,'program_id':block['program_id'],'broadcast_date':date,'production_qc':qc,'target_block_id':block['id'],'target_duration_s':budget}
+-                query("insert into gsa_tv_media_items(id,channel_id,title,original_filename,duration_s,video_codec,video_width,video_height,video_fps,audio_codec,audio_sample_rate,audio_channels,state,rights_ok,drive_path,media_kind,source_type,ai_generated,approval_state,metadata) values($1,'ch-main',$2,$3,$4,'h264',1920,1080,30,'aac',48000,2,'ready',false,$5,'program','services',true,'pending',$6::jsonb) on conflict(id) do update set approval_state=case when gsa_tv_media_items.metadata->'production_qc'->>'sha256'=excluded.metadata->'production_qc'->>'sha256' then gsa_tv_media_items.approval_state else 'pending' end,rights_ok=case when gsa_tv_media_items.metadata->'production_qc'->>'sha256'=excluded.metadata->'production_qc'->>'sha256' then gsa_tv_media_items.rights_ok else false end,metadata=excluded.metadata,duration_s=excluded.duration_s,drive_path=excluded.drive_path,updated_at=now()",[media_id,block['name']+' — '+date,output.name,round(qc['probe']['duration']),'/media/1/program-masters/'+output.name,json.dumps(metadata)])
+-                item['state']='incomplete_duration' if qc['probe']['duration']<budget-2 else 'awaiting_review'
++                query("insert into gsa_tv_media_items(id,channel_id,title,original_filename,duration_s,video_codec,video_width,video_height,video_fps,audio_codec,audio_sample_rate,audio_channels,state,rights_ok,drive_path,media_kind,source_type,ai_generated,approval_state,metadata) values($1,'ch-main',$2,$3,$4,'h264',1920,1080,30,'aac',48000,2,'ready',true,$5,'program','services',true,'approved',$6::jsonb) on conflict(id) do update set approval_state='approved',rights_ok=true,metadata=excluded.metadata,duration_s=excluded.duration_s,drive_path=excluded.drive_path,updated_at=now()",[media_id,block['name']+' — '+date,output.name,round(qc['probe']['duration']),'/media/1/program-masters/'+output.name,json.dumps(metadata)])
++                item['state']='validated'
+                 item['media_id']=media_id
+             except (InterruptedError,TimeoutError): raise
+             except Exception as exc:

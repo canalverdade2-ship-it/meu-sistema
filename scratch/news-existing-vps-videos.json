@@ -1,0 +1,5171 @@
+{
+  "captured_at": "2026-09-09T09:17:38.981Z",
+  "purpose": "exclusion inventory for newly acquired News footage",
+  "note": "Metadata baseline only; renamed/recoded duplicates also require source and visual checks.",
+  "files": [
+    {
+      "size": 10079954,
+      "path": "/opt/gsa-tv/cache/media/1/incoming/gsa-tv-e2e-test.mp4"
+    },
+    {
+      "size": 6364319,
+      "path": "/opt/gsa-tv/cache/media/1/incoming/media-58eba934-bf86-45bb-a6ab-16f83aa4ab63.mp4"
+    },
+    {
+      "size": 62619154,
+      "path": "/opt/gsa-tv/cache/media/1/incoming/media-836c5fe7-e994-455c-bfa4-76b5a803d94c.mp4"
+    },
+    {
+      "size": 50297723,
+      "path": "/opt/gsa-tv/cache/media/1/incoming/media-836c5fe7-backup-original-35s.mp4"
+    },
+    {
+      "size": 997434,
+      "path": "/opt/gsa-tv/cache/media/1/filler/filler.mp4"
+    },
+    {
+      "size": 13898434,
+      "path": "/opt/gsa-tv/cache/media/1/filler/gsa-tv-filler-600.mp4"
+    },
+    {
+      "size": 269509,
+      "path": "/opt/gsa-tv/cache/media/1/identity/gsa-tv-fallback-720p30.mp4"
+    },
+    {
+      "size": 250023,
+      "path": "/opt/gsa-tv/cache/media/1/identity/gsa-tv-continuity-720p30.mp4"
+    },
+    {
+      "size": 4515109,
+      "path": "/opt/gsa-tv/cache/media/1/identity/vinhetas/vinheta-gsa-ta-na-rede.mp4"
+    },
+    {
+      "size": 12883939,
+      "path": "/opt/gsa-tv/cache/media/1/identity/vinhetas/vinheta-gsa-news.mp4"
+    },
+    {
+      "size": 4550941,
+      "path": "/opt/gsa-tv/cache/media/1/identity/vinhetas/vinheta-gsa-boletim-financeiro.mp4"
+    },
+    {
+      "size": 5729236,
+      "path": "/opt/gsa-tv/cache/media/1/identity/vinhetas/vinheta-gsa-manha-news.mp4"
+    },
+    {
+      "size": 6869756,
+      "path": "/opt/gsa-tv/cache/media/1/identity/vinhetas/vinheta-gsa-ta-na-rede-tv.mp4"
+    },
+    {
+      "size": 4179616,
+      "path": "/opt/gsa-tv/cache/media/1/identity/vinhetas/vinheta-ta-na-rede-opcao1-premium.mp4"
+    },
+    {
+      "size": 6392504,
+      "path": "/opt/gsa-tv/cache/media/1/identity/vinhetas/vinheta-ta-na-rede-opcao2-kinetic.mp4"
+    },
+    {
+      "size": 1451974668,
+      "path": "/opt/gsa-tv/cache/media/1/identity/vinhetas/vinheta-gsa-manha-news-clean-demo.mp4"
+    },
+    {
+      "size": 7134739,
+      "path": "/opt/gsa-tv/cache/media/1/identity/vinhetas/vinheta-gsa-manha-news-clean-master.mp4"
+    },
+    {
+      "size": 1575749,
+      "path": "/opt/gsa-tv/cache/media/1/identity/motion_bg/neon_tunnel.mp4"
+    },
+    {
+      "size": 3017055,
+      "path": "/opt/gsa-tv/cache/media/1/identity/motion_bg/digital_wave.mp4"
+    },
+    {
+      "size": 5394599,
+      "path": "/opt/gsa-tv/cache/media/1/identity/motion_bg/abstract_gold.mp4"
+    },
+    {
+      "size": 3730215,
+      "path": "/opt/gsa-tv/cache/media/1/identity/motion_bg/cyber_network.mp4"
+    },
+    {
+      "size": 387215,
+      "path": "/opt/gsa-tv/cache/media/1/normalized/media-live-1533698a-befd-49a7-96c2-b546a4f4247f-720p30.mp4"
+    },
+    {
+      "size": 5282272,
+      "path": "/opt/gsa-tv/cache/media/1/normalized/media-58eba934-bf86-45bb-a6ab-16f83aa4ab63-720p30.mp4"
+    },
+    {
+      "size": 17938586,
+      "path": "/opt/gsa-tv/cache/media/1/normalized/media-836c5fe7-e994-455c-bfa4-76b5a803d94c-720p30.mp4"
+    },
+    {
+      "size": 18217540,
+      "path": "/opt/gsa-tv/cache/media/1/normalized/media-836c5fe7-e994-455c-bfa4-76b5a803d94c-720p30-audio-restored.mp4"
+    },
+    {
+      "size": 139879,
+      "path": "/opt/gsa-tv/cache/media/1/live-recordings/live-ce112aff-e41b-48fe-b00d-7c8c5a6bad59.mp4"
+    },
+    {
+      "size": 3468933,
+      "path": "/opt/gsa-tv/cache/media/1/live-recordings/live-318ee4a0-2256-4454-8df2-9b3d3b7eed78.mp4"
+    },
+    {
+      "size": 68850880,
+      "path": "/opt/gsa-tv/cache/media/1/editorial/gsa-hub-editorial-ep01.mp4"
+    },
+    {
+      "size": 6438327,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01/video/opening-veo31-lite.mp4"
+    },
+    {
+      "size": 39933048,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01/video/gsa-news-2026-09-01-final.mp4"
+    },
+    {
+      "size": 39933048,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01/video/gsa-news-2026-09-01-onair.mp4"
+    },
+    {
+      "size": 26086187,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01/video/gsa-news-2026-09-01-vids-source.mp4"
+    },
+    {
+      "size": 6438327,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-v2/video/vinheta-veo.mp4"
+    },
+    {
+      "size": 4416633,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-v2/rendered/vinheta.mp4"
+    },
+    {
+      "size": 63981229,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-v2/rendered/escalada.mp4"
+    },
+    {
+      "size": 907473,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-v2/motion/female-opening.mp4"
+    },
+    {
+      "size": 1851204,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-v2/motion/clima.webm"
+    },
+    {
+      "size": 13801164,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-v2/motion/comercio.webm"
+    },
+    {
+      "size": 593942,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-v2/motion/saude.webm"
+    },
+    {
+      "size": 145079130,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-v2/motion/tecnologia.webm"
+    },
+    {
+      "size": 13971774,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/source/part1-vids.mp4"
+    },
+    {
+      "size": 6438327,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/source/opening.mp4"
+    },
+    {
+      "size": 16858390,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/source/part2-vids.mp4"
+    },
+    {
+      "size": 1363930,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene01.mp4"
+    },
+    {
+      "size": 1714949,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene02.mp4"
+    },
+    {
+      "size": 10711907,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene03.mp4"
+    },
+    {
+      "size": 1027785,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene04.mp4"
+    },
+    {
+      "size": 1809815,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene05.mp4"
+    },
+    {
+      "size": 1041765,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene06.mp4"
+    },
+    {
+      "size": 872545,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene07.mp4"
+    },
+    {
+      "size": 1216584,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene08.mp4"
+    },
+    {
+      "size": 2932927,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene09.mp4"
+    },
+    {
+      "size": 1114413,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene10.mp4"
+    },
+    {
+      "size": 427430,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene11.mp4"
+    },
+    {
+      "size": 2993295,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene12.mp4"
+    },
+    {
+      "size": 995285,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene13.mp4"
+    },
+    {
+      "size": 470635,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene14.mp4"
+    },
+    {
+      "size": 1202685,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene15.mp4"
+    },
+    {
+      "size": 926145,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene16.mp4"
+    },
+    {
+      "size": 1874062,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene17.mp4"
+    },
+    {
+      "size": 1276667,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene18.mp4"
+    },
+    {
+      "size": 1307668,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene19.mp4"
+    },
+    {
+      "size": 1554804,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene20.mp4"
+    },
+    {
+      "size": 1287254,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene21.mp4"
+    },
+    {
+      "size": 1082118,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1_scenes/scene22.mp4"
+    },
+    {
+      "size": 51647986,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1-video.mp4"
+    },
+    {
+      "size": 57878819,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part1-final.mp4"
+    },
+    {
+      "size": 482919,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene01.mp4"
+    },
+    {
+      "size": 1368809,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene02.mp4"
+    },
+    {
+      "size": 569263,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene03.mp4"
+    },
+    {
+      "size": 1040402,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene04.mp4"
+    },
+    {
+      "size": 544159,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene05.mp4"
+    },
+    {
+      "size": 1141754,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene06.mp4"
+    },
+    {
+      "size": 212781,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene07.mp4"
+    },
+    {
+      "size": 561570,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene08.mp4"
+    },
+    {
+      "size": 370946,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene09.mp4"
+    },
+    {
+      "size": 552310,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene10.mp4"
+    },
+    {
+      "size": 1036597,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene11.mp4"
+    },
+    {
+      "size": 406198,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene12.mp4"
+    },
+    {
+      "size": 596889,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene13.mp4"
+    },
+    {
+      "size": 530737,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene14.mp4"
+    },
+    {
+      "size": 378577,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene15.mp4"
+    },
+    {
+      "size": 494058,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene16.mp4"
+    },
+    {
+      "size": 558614,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene17.mp4"
+    },
+    {
+      "size": 217418,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene18.mp4"
+    },
+    {
+      "size": 526584,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene19.mp4"
+    },
+    {
+      "size": 441752,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene20.mp4"
+    },
+    {
+      "size": 442377,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene21.mp4"
+    },
+    {
+      "size": 342046,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene22.mp4"
+    },
+    {
+      "size": 444450,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene23.mp4"
+    },
+    {
+      "size": 339861,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene24.mp4"
+    },
+    {
+      "size": 436754,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene25.mp4"
+    },
+    {
+      "size": 401349,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene26.mp4"
+    },
+    {
+      "size": 719920,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene27.mp4"
+    },
+    {
+      "size": 411922,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene28.mp4"
+    },
+    {
+      "size": 1004350,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2_scenes/scene29.mp4"
+    },
+    {
+      "size": 16556662,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2-video.mp4"
+    },
+    {
+      "size": 38766434,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/part2-final.mp4"
+    },
+    {
+      "size": 415861488,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-extended/video/gsa-news-2026-09-01-extended-final.mp4"
+    },
+    {
+      "size": 13971774,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/source/part1-vids.mp4"
+    },
+    {
+      "size": 6438327,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/source/opening.mp4"
+    },
+    {
+      "size": 16858390,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/source/part2-vids.mp4"
+    },
+    {
+      "size": 1851204,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/assets/broll/clima.webm"
+    },
+    {
+      "size": 13801164,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/assets/broll/comercio.webm"
+    },
+    {
+      "size": 6488017,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/assets/broll/futebol.webm"
+    },
+    {
+      "size": 10112146,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/assets/broll/kyiv.webm"
+    },
+    {
+      "size": 1613734,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/assets/broll/nepal.webm"
+    },
+    {
+      "size": 10726897,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/assets/broll/petroleo.webm"
+    },
+    {
+      "size": 593942,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/assets/broll/saude.webm"
+    },
+    {
+      "size": 145079130,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/assets/broll/tecnologia.webm"
+    },
+    {
+      "size": 2468445,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/assets/broll/tenis.webm"
+    },
+    {
+      "size": 2205514,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/assets/avatars/female_opening.mp4"
+    },
+    {
+      "size": 2078191,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/assets/avatars/female_elections.mp4"
+    },
+    {
+      "size": 1808026,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/assets/avatars/female_tech_sports.mp4"
+    },
+    {
+      "size": 1747787,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/assets/avatars/male_brazil.mp4"
+    },
+    {
+      "size": 1685148,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/assets/avatars/male_world.mp4"
+    },
+    {
+      "size": 1858138,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/assets/avatars/male_close.mp4"
+    },
+    {
+      "size": 4910514,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/00_opening.mp4"
+    },
+    {
+      "size": 2751885,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/01_anchor_open.mp4"
+    },
+    {
+      "size": 2001136,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/02_anchor_brasil.mp4"
+    },
+    {
+      "size": 2595255,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/03_anchor_elections.mp4"
+    },
+    {
+      "size": 1934528,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/04_anchor_world.mp4"
+    },
+    {
+      "size": 2302344,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/05_anchor_tech.mp4"
+    },
+    {
+      "size": 2143187,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/06_anchor_close.mp4"
+    },
+    {
+      "size": 4268755,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/05b_sports_result.mp4"
+    },
+    {
+      "size": 4268831,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_04.mp4"
+    },
+    {
+      "size": 10919575,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_05.mp4"
+    },
+    {
+      "size": 5630625,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_06.mp4"
+    },
+    {
+      "size": 7382300,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_07.mp4"
+    },
+    {
+      "size": 6953727,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_08.mp4"
+    },
+    {
+      "size": 9971766,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_09.mp4"
+    },
+    {
+      "size": 5052172,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_10.mp4"
+    },
+    {
+      "size": 2027028,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_11.mp4"
+    },
+    {
+      "size": 16192627,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_12.mp4"
+    },
+    {
+      "size": 9445840,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_13.mp4"
+    },
+    {
+      "size": 2912983,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_14.mp4"
+    },
+    {
+      "size": 8961650,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_15.mp4"
+    },
+    {
+      "size": 4515659,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_16.mp4"
+    },
+    {
+      "size": 8667730,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_17.mp4"
+    },
+    {
+      "size": 8231233,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_18.mp4"
+    },
+    {
+      "size": 5610977,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_19.mp4"
+    },
+    {
+      "size": 7806587,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_20.mp4"
+    },
+    {
+      "size": 5924330,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_21.mp4"
+    },
+    {
+      "size": 4228312,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p1_22.mp4"
+    },
+    {
+      "size": 9762554,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_01.mp4"
+    },
+    {
+      "size": 13424846,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_02.mp4"
+    },
+    {
+      "size": 11249443,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_03.mp4"
+    },
+    {
+      "size": 10494301,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_04.mp4"
+    },
+    {
+      "size": 4858269,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_05.mp4"
+    },
+    {
+      "size": 6022244,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_06.mp4"
+    },
+    {
+      "size": 2924824,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_07.mp4"
+    },
+    {
+      "size": 13826113,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_08.mp4"
+    },
+    {
+      "size": 2516948,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_09.mp4"
+    },
+    {
+      "size": 8288166,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_10.mp4"
+    },
+    {
+      "size": 13580744,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_11.mp4"
+    },
+    {
+      "size": 8107608,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_12.mp4"
+    },
+    {
+      "size": 18805208,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_13.mp4"
+    },
+    {
+      "size": 16405238,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_14.mp4"
+    },
+    {
+      "size": 2568246,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_15.mp4"
+    },
+    {
+      "size": 9626103,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_16.mp4"
+    },
+    {
+      "size": 19996903,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_17.mp4"
+    },
+    {
+      "size": 3277308,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_18.mp4"
+    },
+    {
+      "size": 10082391,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_20.mp4"
+    },
+    {
+      "size": 11096788,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_21.mp4"
+    },
+    {
+      "size": 7147645,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_22.mp4"
+    },
+    {
+      "size": 10172578,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_23.mp4"
+    },
+    {
+      "size": 6075349,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_24.mp4"
+    },
+    {
+      "size": 5137469,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_25.mp4"
+    },
+    {
+      "size": 5564633,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_26.mp4"
+    },
+    {
+      "size": 19709560,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_27.mp4"
+    },
+    {
+      "size": 7601222,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/scenes/p2_28.mp4"
+    },
+    {
+      "size": 1419134,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_04_1.mp4"
+    },
+    {
+      "size": 1109909,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_04_2.mp4"
+    },
+    {
+      "size": 1096166,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_04_3.mp4"
+    },
+    {
+      "size": 3624125,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_04_video.mp4"
+    },
+    {
+      "size": 2989447,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_05_1.mp4"
+    },
+    {
+      "size": 3884415,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_05_2.mp4"
+    },
+    {
+      "size": 2989447,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_05_3.mp4"
+    },
+    {
+      "size": 9861705,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_05_video.mp4"
+    },
+    {
+      "size": 835200,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_06_1.mp4"
+    },
+    {
+      "size": 3200280,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_06_2.mp4"
+    },
+    {
+      "size": 835200,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_06_3.mp4"
+    },
+    {
+      "size": 4868935,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_06_video.mp4"
+    },
+    {
+      "size": 2388564,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_07_1.mp4"
+    },
+    {
+      "size": 2052894,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_07_2.mp4"
+    },
+    {
+      "size": 2247754,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_07_3.mp4"
+    },
+    {
+      "size": 6686852,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_07_video.mp4"
+    },
+    {
+      "size": 2938803,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_08_1.mp4"
+    },
+    {
+      "size": 1318280,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_08_2.mp4"
+    },
+    {
+      "size": 1599584,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_08_3.mp4"
+    },
+    {
+      "size": 5855975,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_08_video.mp4"
+    },
+    {
+      "size": 1814591,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_09_1.mp4"
+    },
+    {
+      "size": 5728240,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_09_2.mp4"
+    },
+    {
+      "size": 1323024,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_09_3.mp4"
+    },
+    {
+      "size": 8865153,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_09_video.mp4"
+    },
+    {
+      "size": 445665,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_10_1.mp4"
+    },
+    {
+      "size": 1612445,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_10_2.mp4"
+    },
+    {
+      "size": 2076336,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_10_3.mp4"
+    },
+    {
+      "size": 4133642,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_10_video.mp4"
+    },
+    {
+      "size": 832260,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_11_1.mp4"
+    },
+    {
+      "size": 191428,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_11_2.mp4"
+    },
+    {
+      "size": 647894,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_11_3.mp4"
+    },
+    {
+      "size": 1670262,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_11_video.mp4"
+    },
+    {
+      "size": 4491332,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_12_1.mp4"
+    },
+    {
+      "size": 8690617,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_12_2.mp4"
+    },
+    {
+      "size": 1918297,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_12_3.mp4"
+    },
+    {
+      "size": 15099562,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_12_video.mp4"
+    },
+    {
+      "size": 4854598,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_13_1.mp4"
+    },
+    {
+      "size": 3371302,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_13_2.mp4"
+    },
+    {
+      "size": 387558,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_13_3.mp4"
+    },
+    {
+      "size": 8612517,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_13_video.mp4"
+    },
+    {
+      "size": 189137,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_14_1.mp4"
+    },
+    {
+      "size": 835549,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_14_2.mp4"
+    },
+    {
+      "size": 1530751,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_14_3.mp4"
+    },
+    {
+      "size": 2554103,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_14_video.mp4"
+    },
+    {
+      "size": 3891986,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_15_1.mp4"
+    },
+    {
+      "size": 3678396,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_15_2.mp4"
+    },
+    {
+      "size": 451389,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_15_3.mp4"
+    },
+    {
+      "size": 8020153,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_15_video.mp4"
+    },
+    {
+      "size": 2337043,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_16_1.mp4"
+    },
+    {
+      "size": 321548,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_16_2.mp4"
+    },
+    {
+      "size": 1184750,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_16_3.mp4"
+    },
+    {
+      "size": 3841470,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_16_video.mp4"
+    },
+    {
+      "size": 1274073,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_17_1.mp4"
+    },
+    {
+      "size": 5371034,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_17_2.mp4"
+    },
+    {
+      "size": 1274073,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_17_3.mp4"
+    },
+    {
+      "size": 7918076,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_17_video.mp4"
+    },
+    {
+      "size": 1413702,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_18_1.mp4"
+    },
+    {
+      "size": 5672495,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_18_2.mp4"
+    },
+    {
+      "size": 379106,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_18_3.mp4"
+    },
+    {
+      "size": 7464355,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_18_video.mp4"
+    },
+    {
+      "size": 1469694,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_19_1.mp4"
+    },
+    {
+      "size": 1838770,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_19_2.mp4"
+    },
+    {
+      "size": 1469694,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_19_3.mp4"
+    },
+    {
+      "size": 4777216,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_19_video.mp4"
+    },
+    {
+      "size": 1513683,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_20_1.mp4"
+    },
+    {
+      "size": 3486721,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_20_2.mp4"
+    },
+    {
+      "size": 1910208,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_20_3.mp4"
+    },
+    {
+      "size": 6909659,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_20_video.mp4"
+    },
+    {
+      "size": 3299479,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_21_1.mp4"
+    },
+    {
+      "size": 1439576,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_21_2.mp4"
+    },
+    {
+      "size": 380633,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_21_3.mp4"
+    },
+    {
+      "size": 5118752,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_21_video.mp4"
+    },
+    {
+      "size": 1501352,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_22_1.mp4"
+    },
+    {
+      "size": 1464406,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_22_2.mp4"
+    },
+    {
+      "size": 383768,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_22_3.mp4"
+    },
+    {
+      "size": 3348572,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p1_22_video.mp4"
+    },
+    {
+      "size": 4450084,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_01_1.mp4"
+    },
+    {
+      "size": 4030850,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_01_2.mp4"
+    },
+    {
+      "size": 389940,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_01_3.mp4"
+    },
+    {
+      "size": 8869938,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_01_video.mp4"
+    },
+    {
+      "size": 5521589,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_02_1.mp4"
+    },
+    {
+      "size": 1926326,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_02_2.mp4"
+    },
+    {
+      "size": 4859520,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_02_3.mp4"
+    },
+    {
+      "size": 12306759,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_02_video.mp4"
+    },
+    {
+      "size": 3372457,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_03_1.mp4"
+    },
+    {
+      "size": 3823991,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_03_2.mp4"
+    },
+    {
+      "size": 3076020,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_03_3.mp4"
+    },
+    {
+      "size": 10270400,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_03_video.mp4"
+    },
+    {
+      "size": 3201368,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_04_1.mp4"
+    },
+    {
+      "size": 3666748,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_04_2.mp4"
+    },
+    {
+      "size": 2690166,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_04_3.mp4"
+    },
+    {
+      "size": 9556222,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_04_video.mp4"
+    },
+    {
+      "size": 1720979,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_05_1.mp4"
+    },
+    {
+      "size": 1667509,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_05_2.mp4"
+    },
+    {
+      "size": 445973,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_05_3.mp4"
+    },
+    {
+      "size": 3833694,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_05_video.mp4"
+    },
+    {
+      "size": 1718082,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_06_1.mp4"
+    },
+    {
+      "size": 1643564,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_06_2.mp4"
+    },
+    {
+      "size": 1718082,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_06_3.mp4"
+    },
+    {
+      "size": 5078961,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_06_video.mp4"
+    },
+    {
+      "size": 185903,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_07_1.mp4"
+    },
+    {
+      "size": 1527661,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_07_2.mp4"
+    },
+    {
+      "size": 842537,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_07_3.mp4"
+    },
+    {
+      "size": 2553972,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_07_video.mp4"
+    },
+    {
+      "size": 3818395,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_08_1.mp4"
+    },
+    {
+      "size": 457294,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_08_2.mp4"
+    },
+    {
+      "size": 8590231,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_08_3.mp4"
+    },
+    {
+      "size": 12864317,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_08_video.mp4"
+    },
+    {
+      "size": 783534,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_09_1.mp4"
+    },
+    {
+      "size": 1342165,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_09_2.mp4"
+    },
+    {
+      "size": 126449,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_09_3.mp4"
+    },
+    {
+      "size": 2249887,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_09_video.mp4"
+    },
+    {
+      "size": 3292566,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_10_1.mp4"
+    },
+    {
+      "size": 3701125,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_10_2.mp4"
+    },
+    {
+      "size": 393579,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_10_3.mp4"
+    },
+    {
+      "size": 7385084,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_10_video.mp4"
+    },
+    {
+      "size": 2923484,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_11_1.mp4"
+    },
+    {
+      "size": 6939102,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_11_2.mp4"
+    },
+    {
+      "size": 2823042,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_11_3.mp4"
+    },
+    {
+      "size": 12683897,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_11_video.mp4"
+    },
+    {
+      "size": 4028452,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_12_1.mp4"
+    },
+    {
+      "size": 3038005,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_12_2.mp4"
+    },
+    {
+      "size": 325768,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_12_3.mp4"
+    },
+    {
+      "size": 7390370,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_12_video.mp4"
+    },
+    {
+      "size": 7388765,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_13_1.mp4"
+    },
+    {
+      "size": 516944,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_13_2.mp4"
+    },
+    {
+      "size": 9778005,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_13_3.mp4"
+    },
+    {
+      "size": 17683030,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_13_video.mp4"
+    },
+    {
+      "size": 5472321,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_14_1.mp4"
+    },
+    {
+      "size": 2039224,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_14_2.mp4"
+    },
+    {
+      "size": 7983243,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_14_3.mp4"
+    },
+    {
+      "size": 15493986,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_14_video.mp4"
+    },
+    {
+      "size": 1690460,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_15_1.mp4"
+    },
+    {
+      "size": 469927,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_15_2.mp4"
+    },
+    {
+      "size": 125825,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_15_3.mp4"
+    },
+    {
+      "size": 2284770,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_15_video.mp4"
+    },
+    {
+      "size": 4995054,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_16_1.mp4"
+    },
+    {
+      "size": 3394743,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_16_2.mp4"
+    },
+    {
+      "size": 387391,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_16_3.mp4"
+    },
+    {
+      "size": 8775447,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_16_video.mp4"
+    },
+    {
+      "size": 6324366,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_17_1.mp4"
+    },
+    {
+      "size": 3849352,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_17_2.mp4"
+    },
+    {
+      "size": 8807747,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_17_3.mp4"
+    },
+    {
+      "size": 18979858,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_17_video.mp4"
+    },
+    {
+      "size": 2114059,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_18_1.mp4"
+    },
+    {
+      "size": 187613,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_18_2.mp4"
+    },
+    {
+      "size": 640280,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_18_3.mp4"
+    },
+    {
+      "size": 2940622,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_18_video.mp4"
+    },
+    {
+      "size": 5007079,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_20_1.mp4"
+    },
+    {
+      "size": 344244,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_20_2.mp4"
+    },
+    {
+      "size": 4064469,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_20_3.mp4"
+    },
+    {
+      "size": 9414637,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_20_video.mp4"
+    },
+    {
+      "size": 4966925,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_21_1.mp4"
+    },
+    {
+      "size": 1493349,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_21_2.mp4"
+    },
+    {
+      "size": 3987650,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_21_3.mp4"
+    },
+    {
+      "size": 10446769,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_21_video.mp4"
+    },
+    {
+      "size": 4783758,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_22_1.mp4"
+    },
+    {
+      "size": 328289,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_22_2.mp4"
+    },
+    {
+      "size": 1425649,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_22_3.mp4"
+    },
+    {
+      "size": 6536575,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_22_video.mp4"
+    },
+    {
+      "size": 4508085,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_23_1.mp4"
+    },
+    {
+      "size": 4638878,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_23_2.mp4"
+    },
+    {
+      "size": 344924,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_23_3.mp4"
+    },
+    {
+      "size": 9490821,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_23_video.mp4"
+    },
+    {
+      "size": 4129349,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_24_1.mp4"
+    },
+    {
+      "size": 273278,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_24_2.mp4"
+    },
+    {
+      "size": 1168291,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_24_3.mp4"
+    },
+    {
+      "size": 5569665,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_24_video.mp4"
+    },
+    {
+      "size": 346036,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_25_1.mp4"
+    },
+    {
+      "size": 1572988,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_25_2.mp4"
+    },
+    {
+      "size": 2525750,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_25_3.mp4"
+    },
+    {
+      "size": 4443706,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_25_video.mp4"
+    },
+    {
+      "size": 2639499,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_26_1.mp4"
+    },
+    {
+      "size": 2416884,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_26_2.mp4"
+    },
+    {
+      "size": 192151,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_26_3.mp4"
+    },
+    {
+      "size": 5247145,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_26_video.mp4"
+    },
+    {
+      "size": 4426283,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_27_1.mp4"
+    },
+    {
+      "size": 4219017,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_27_2.mp4"
+    },
+    {
+      "size": 9909874,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_27_3.mp4"
+    },
+    {
+      "size": 18553667,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_27_video.mp4"
+    },
+    {
+      "size": 2855963,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_28_1.mp4"
+    },
+    {
+      "size": 3559446,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_28_2.mp4"
+    },
+    {
+      "size": 395507,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_28_3.mp4"
+    },
+    {
+      "size": 6808722,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/tmp/p2_28_video.mp4"
+    },
+    {
+      "size": 415861488,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v2/video/gsa-news-2026-09-01-broadcast-v2-final.mp4"
+    },
+    {
+      "size": 11847081,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/00_opening.mp4"
+    },
+    {
+      "size": 9589265,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/01_anchor_open.mp4"
+    },
+    {
+      "size": 7349031,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/02_anchor_brasil.mp4"
+    },
+    {
+      "size": 9210172,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/03_anchor_elections.mp4"
+    },
+    {
+      "size": 7186593,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/04_anchor_world.mp4"
+    },
+    {
+      "size": 8231007,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/05_anchor_tech.mp4"
+    },
+    {
+      "size": 7975709,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/06_anchor_close.mp4"
+    },
+    {
+      "size": 10926252,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/05b_sports_result.mp4"
+    },
+    {
+      "size": 70483774,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_05.mp4"
+    },
+    {
+      "size": 26387951,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_06.mp4"
+    },
+    {
+      "size": 35137950,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_07.mp4"
+    },
+    {
+      "size": 21322248,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_08.mp4"
+    },
+    {
+      "size": 70232153,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_09.mp4"
+    },
+    {
+      "size": 65252691,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_10.mp4"
+    },
+    {
+      "size": 26261375,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_11.mp4"
+    },
+    {
+      "size": 96120796,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_12.mp4"
+    },
+    {
+      "size": 69264226,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_13.mp4"
+    },
+    {
+      "size": 29753825,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_14.mp4"
+    },
+    {
+      "size": 79020693,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_15.mp4"
+    },
+    {
+      "size": 53599158,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_16.mp4"
+    },
+    {
+      "size": 34732926,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_17.mp4"
+    },
+    {
+      "size": 47847430,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_18.mp4"
+    },
+    {
+      "size": 44979772,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_19.mp4"
+    },
+    {
+      "size": 68212251,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_20.mp4"
+    },
+    {
+      "size": 61584601,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_21.mp4"
+    },
+    {
+      "size": 67074780,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_22.mp4"
+    },
+    {
+      "size": 47463806,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_01.mp4"
+    },
+    {
+      "size": 61970153,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_02.mp4"
+    },
+    {
+      "size": 36827864,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_03.mp4"
+    },
+    {
+      "size": 34256394,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_04.mp4"
+    },
+    {
+      "size": 42569310,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_05.mp4"
+    },
+    {
+      "size": 40630925,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_06.mp4"
+    },
+    {
+      "size": 20724219,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_07.mp4"
+    },
+    {
+      "size": 70278557,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_08.mp4"
+    },
+    {
+      "size": 15894010,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_09.mp4"
+    },
+    {
+      "size": 53902911,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_10.mp4"
+    },
+    {
+      "size": 41548558,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_11.mp4"
+    },
+    {
+      "size": 47239712,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_12.mp4"
+    },
+    {
+      "size": 81518661,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_13.mp4"
+    },
+    {
+      "size": 65549389,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_14.mp4"
+    },
+    {
+      "size": 18702035,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_15.mp4"
+    },
+    {
+      "size": 56218048,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_16.mp4"
+    },
+    {
+      "size": 57525278,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_17.mp4"
+    },
+    {
+      "size": 22956176,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_18.mp4"
+    },
+    {
+      "size": 44268981,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_20.mp4"
+    },
+    {
+      "size": 43664193,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_21.mp4"
+    },
+    {
+      "size": 44246845,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_22.mp4"
+    },
+    {
+      "size": 50351574,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_23.mp4"
+    },
+    {
+      "size": 37397947,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_24.mp4"
+    },
+    {
+      "size": 55108979,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_25.mp4"
+    },
+    {
+      "size": 23505260,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_26.mp4"
+    },
+    {
+      "size": 57179192,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_27.mp4"
+    },
+    {
+      "size": 47630548,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p2_28.mp4"
+    },
+    {
+      "size": 31301806,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_06.pretrim-20260902-082810.mp4"
+    },
+    {
+      "size": 44551092,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/scenes/p1_17.pretrim-20260902-082810.mp4"
+    },
+    {
+      "size": 26070839,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_05_1.mp4"
+    },
+    {
+      "size": 17296445,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_05_2.mp4"
+    },
+    {
+      "size": 26070839,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_05_3.mp4"
+    },
+    {
+      "size": 69436429,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_05_video.mp4"
+    },
+    {
+      "size": 6928589,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_06_1.mp4"
+    },
+    {
+      "size": 16676139,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_06_2.mp4"
+    },
+    {
+      "size": 6928589,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_06_3.mp4"
+    },
+    {
+      "size": 30531674,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_06_video.mp4"
+    },
+    {
+      "size": 10502059,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_07_1.mp4"
+    },
+    {
+      "size": 17473608,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_07_2.mp4"
+    },
+    {
+      "size": 6470196,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_07_3.mp4"
+    },
+    {
+      "size": 34443526,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_07_video.mp4"
+    },
+    {
+      "size": 7142997,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_08_1.mp4"
+    },
+    {
+      "size": 7179202,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_08_2.mp4"
+    },
+    {
+      "size": 5903516,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_08_3.mp4"
+    },
+    {
+      "size": 20224994,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_08_video.mp4"
+    },
+    {
+      "size": 6695937,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_09_1.mp4"
+    },
+    {
+      "size": 55201089,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_09_2.mp4"
+    },
+    {
+      "size": 7231128,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_09_3.mp4"
+    },
+    {
+      "size": 69127490,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_09_video.mp4"
+    },
+    {
+      "size": 28753620,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_10_1.mp4"
+    },
+    {
+      "size": 15568929,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_10_2.mp4"
+    },
+    {
+      "size": 20020625,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_10_3.mp4"
+    },
+    {
+      "size": 64341557,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_10_video.mp4"
+    },
+    {
+      "size": 5137164,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_11_1.mp4"
+    },
+    {
+      "size": 12033470,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_11_2.mp4"
+    },
+    {
+      "size": 8733815,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_11_3.mp4"
+    },
+    {
+      "size": 25902385,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_11_video.mp4"
+    },
+    {
+      "size": 37743422,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_12_1.mp4"
+    },
+    {
+      "size": 22316745,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_12_2.mp4"
+    },
+    {
+      "size": 34966718,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_12_3.mp4"
+    },
+    {
+      "size": 95026172,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_12_video.mp4"
+    },
+    {
+      "size": 13788559,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_13_1.mp4"
+    },
+    {
+      "size": 28613791,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_13_2.mp4"
+    },
+    {
+      "size": 26031962,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_13_3.mp4"
+    },
+    {
+      "size": 68433335,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_13_video.mp4"
+    },
+    {
+      "size": 11179203,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_14_1.mp4"
+    },
+    {
+      "size": 5768079,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_14_2.mp4"
+    },
+    {
+      "size": 12449388,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_14_3.mp4"
+    },
+    {
+      "size": 29395326,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_14_video.mp4"
+    },
+    {
+      "size": 32332277,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_15_1.mp4"
+    },
+    {
+      "size": 15927005,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_15_2.mp4"
+    },
+    {
+      "size": 29827050,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_15_3.mp4"
+    },
+    {
+      "size": 78084724,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_15_video.mp4"
+    },
+    {
+      "size": 10235015,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_16_1.mp4"
+    },
+    {
+      "size": 21514538,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_16_2.mp4"
+    },
+    {
+      "size": 21177238,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_16_3.mp4"
+    },
+    {
+      "size": 52924959,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_16_video.mp4"
+    },
+    {
+      "size": 11129323,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_17_1.mp4"
+    },
+    {
+      "size": 21529520,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_17_2.mp4"
+    },
+    {
+      "size": 11129323,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_17_3.mp4"
+    },
+    {
+      "size": 43787433,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_17_video.mp4"
+    },
+    {
+      "size": 8074912,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_18_1.mp4"
+    },
+    {
+      "size": 15060735,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_18_2.mp4"
+    },
+    {
+      "size": 23942402,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_18_3.mp4"
+    },
+    {
+      "size": 47077106,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_18_video.mp4"
+    },
+    {
+      "size": 8653121,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_19_1.mp4"
+    },
+    {
+      "size": 26844511,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_19_2.mp4"
+    },
+    {
+      "size": 8653121,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_19_3.mp4"
+    },
+    {
+      "size": 44149809,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_19_video.mp4"
+    },
+    {
+      "size": 9157478,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_20_1.mp4"
+    },
+    {
+      "size": 30316283,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_20_2.mp4"
+    },
+    {
+      "size": 27850137,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_20_3.mp4"
+    },
+    {
+      "size": 67322899,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_20_video.mp4"
+    },
+    {
+      "size": 27508173,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_21_1.mp4"
+    },
+    {
+      "size": 8348780,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_21_2.mp4"
+    },
+    {
+      "size": 24925543,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_21_3.mp4"
+    },
+    {
+      "size": 60781554,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_21_video.mp4"
+    },
+    {
+      "size": 9013317,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_22_1.mp4"
+    },
+    {
+      "size": 29865033,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_22_2.mp4"
+    },
+    {
+      "size": 27321729,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_22_3.mp4"
+    },
+    {
+      "size": 66199080,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p1_22_video.mp4"
+    },
+    {
+      "size": 9762400,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_01_1.mp4"
+    },
+    {
+      "size": 8848759,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_01_2.mp4"
+    },
+    {
+      "size": 27960083,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_01_3.mp4"
+    },
+    {
+      "size": 46570325,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_01_video.mp4"
+    },
+    {
+      "size": 12112677,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_02_1.mp4"
+    },
+    {
+      "size": 35231492,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_02_2.mp4"
+    },
+    {
+      "size": 13511625,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_02_3.mp4"
+    },
+    {
+      "size": 60855101,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_02_video.mp4"
+    },
+    {
+      "size": 9938246,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_03_1.mp4"
+    },
+    {
+      "size": 10835321,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_03_2.mp4"
+    },
+    {
+      "size": 15081788,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_03_3.mp4"
+    },
+    {
+      "size": 35853296,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_03_video.mp4"
+    },
+    {
+      "size": 9469473,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_04_1.mp4"
+    },
+    {
+      "size": 15906660,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_04_2.mp4"
+    },
+    {
+      "size": 7939084,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_04_3.mp4"
+    },
+    {
+      "size": 33313138,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_04_video.mp4"
+    },
+    {
+      "size": 4741508,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_05_1.mp4"
+    },
+    {
+      "size": 4543689,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_05_2.mp4"
+    },
+    {
+      "size": 32270718,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_05_3.mp4"
+    },
+    {
+      "size": 41555123,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_05_video.mp4"
+    },
+    {
+      "size": 4736951,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_06_1.mp4"
+    },
+    {
+      "size": 30222462,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_06_2.mp4"
+    },
+    {
+      "size": 4736951,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_06_3.mp4"
+    },
+    {
+      "size": 39695608,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_06_video.mp4"
+    },
+    {
+      "size": 2115045,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_07_1.mp4"
+    },
+    {
+      "size": 6304359,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_07_2.mp4"
+    },
+    {
+      "size": 11936891,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_07_3.mp4"
+    },
+    {
+      "size": 20354224,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_07_video.mp4"
+    },
+    {
+      "size": 16146552,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_08_1.mp4"
+    },
+    {
+      "size": 31805591,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_08_2.mp4"
+    },
+    {
+      "size": 21336987,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_08_3.mp4"
+    },
+    {
+      "size": 69287482,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_08_video.mp4"
+    },
+    {
+      "size": 3646564,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_09_1.mp4"
+    },
+    {
+      "size": 3860415,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_09_2.mp4"
+    },
+    {
+      "size": 8126510,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_09_3.mp4"
+    },
+    {
+      "size": 15631291,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_09_video.mp4"
+    },
+    {
+      "size": 14270451,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_10_1.mp4"
+    },
+    {
+      "size": 10428742,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_10_2.mp4"
+    },
+    {
+      "size": 28302038,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_10_3.mp4"
+    },
+    {
+      "size": 52999064,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_10_video.mp4"
+    },
+    {
+      "size": 8739581,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_11_1.mp4"
+    },
+    {
+      "size": 18044514,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_11_2.mp4"
+    },
+    {
+      "size": 13871227,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_11_3.mp4"
+    },
+    {
+      "size": 40653589,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_11_video.mp4"
+    },
+    {
+      "size": 11617662,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_12_1.mp4"
+    },
+    {
+      "size": 12652684,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_12_2.mp4"
+    },
+    {
+      "size": 22253409,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_12_3.mp4"
+    },
+    {
+      "size": 46521899,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_12_video.mp4"
+    },
+    {
+      "size": 20410880,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_13_1.mp4"
+    },
+    {
+      "size": 35882708,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_13_2.mp4"
+    },
+    {
+      "size": 24090259,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_13_3.mp4"
+    },
+    {
+      "size": 80383190,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_13_video.mp4"
+    },
+    {
+      "size": 15330916,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_14_1.mp4"
+    },
+    {
+      "size": 29403021,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_14_2.mp4"
+    },
+    {
+      "size": 19910214,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_14_3.mp4"
+    },
+    {
+      "size": 64643288,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_14_video.mp4"
+    },
+    {
+      "size": 4934517,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_15_1.mp4"
+    },
+    {
+      "size": 4623573,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_15_2.mp4"
+    },
+    {
+      "size": 8865576,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_15_3.mp4"
+    },
+    {
+      "size": 18421484,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_15_video.mp4"
+    },
+    {
+      "size": 14142167,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_16_1.mp4"
+    },
+    {
+      "size": 14614710,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_16_2.mp4"
+    },
+    {
+      "size": 26613453,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_16_3.mp4"
+    },
+    {
+      "size": 55368652,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_16_video.mp4"
+    },
+    {
+      "size": 17649475,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_17_1.mp4"
+    },
+    {
+      "size": 17006149,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_17_2.mp4"
+    },
+    {
+      "size": 21850045,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_17_3.mp4"
+    },
+    {
+      "size": 56504075,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_17_video.mp4"
+    },
+    {
+      "size": 6024996,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_18_1.mp4"
+    },
+    {
+      "size": 5746358,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_18_2.mp4"
+    },
+    {
+      "size": 10848294,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_18_3.mp4"
+    },
+    {
+      "size": 22617552,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_18_video.mp4"
+    },
+    {
+      "size": 11792598,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_20_1.mp4"
+    },
+    {
+      "size": 21050154,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_20_2.mp4"
+    },
+    {
+      "size": 10762637,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_20_3.mp4"
+    },
+    {
+      "size": 43604241,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_20_video.mp4"
+    },
+    {
+      "size": 11693643,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_21_1.mp4"
+    },
+    {
+      "size": 20732945,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_21_2.mp4"
+    },
+    {
+      "size": 10587795,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_21_3.mp4"
+    },
+    {
+      "size": 43013223,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_21_video.mp4"
+    },
+    {
+      "size": 11264454,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_22_1.mp4"
+    },
+    {
+      "size": 13030746,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_22_2.mp4"
+    },
+    {
+      "size": 19343002,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_22_3.mp4"
+    },
+    {
+      "size": 43637136,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_22_video.mp4"
+    },
+    {
+      "size": 14109819,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_23_1.mp4"
+    },
+    {
+      "size": 14332671,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_23_2.mp4"
+    },
+    {
+      "size": 21227440,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_23_3.mp4"
+    },
+    {
+      "size": 49668899,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_23_video.mp4"
+    },
+    {
+      "size": 9700877,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_24_1.mp4"
+    },
+    {
+      "size": 10815142,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_24_2.mp4"
+    },
+    {
+      "size": 16374855,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_24_3.mp4"
+    },
+    {
+      "size": 36889658,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_24_video.mp4"
+    },
+    {
+      "size": 12204989,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_25_1.mp4"
+    },
+    {
+      "size": 22420676,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_25_2.mp4"
+    },
+    {
+      "size": 19784964,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_25_3.mp4"
+    },
+    {
+      "size": 54409543,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_25_video.mp4"
+    },
+    {
+      "size": 6052956,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_26_1.mp4"
+    },
+    {
+      "size": 6984605,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_26_2.mp4"
+    },
+    {
+      "size": 10152716,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_26_3.mp4"
+    },
+    {
+      "size": 23188931,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_26_video.mp4"
+    },
+    {
+      "size": 12727448,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_27_1.mp4"
+    },
+    {
+      "size": 18924406,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_27_2.mp4"
+    },
+    {
+      "size": 24384760,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_27_3.mp4"
+    },
+    {
+      "size": 56035143,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_27_video.mp4"
+    },
+    {
+      "size": 12300828,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_28_1.mp4"
+    },
+    {
+      "size": 9894961,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_28_2.mp4"
+    },
+    {
+      "size": 24646689,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_28_3.mp4"
+    },
+    {
+      "size": 46840339,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/tmp/p2_28_video.mp4"
+    },
+    {
+      "size": 2258642045,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/gsa-news-2026-09-01-broadcast-v3-final.mp4"
+    },
+    {
+      "size": 2273374517,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v3/video/gsa-news-2026-09-01-broadcast-v3-final.pretrim-20260902-082810.mp4"
+    },
+    {
+      "size": 11847081,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/00_opening.mp4"
+    },
+    {
+      "size": 9589265,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/01_anchor_open.mp4"
+    },
+    {
+      "size": 7349031,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/02_anchor_brasil.mp4"
+    },
+    {
+      "size": 9210172,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/03_anchor_elections.mp4"
+    },
+    {
+      "size": 7186593,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/04_anchor_world.mp4"
+    },
+    {
+      "size": 8231007,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/05_anchor_tech.mp4"
+    },
+    {
+      "size": 10926252,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/05b_sports_result.mp4"
+    },
+    {
+      "size": 7975709,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/06_anchor_close.mp4"
+    },
+    {
+      "size": 51987133,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_05.mp4"
+    },
+    {
+      "size": 43059963,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_06.mp4"
+    },
+    {
+      "size": 33575035,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_07.mp4"
+    },
+    {
+      "size": 46326714,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_08.mp4"
+    },
+    {
+      "size": 30950535,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_09.mp4"
+    },
+    {
+      "size": 57924460,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_10.mp4"
+    },
+    {
+      "size": 18420867,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_11.mp4"
+    },
+    {
+      "size": 55295067,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_12.mp4"
+    },
+    {
+      "size": 36163798,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_13.mp4"
+    },
+    {
+      "size": 22802358,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_14.mp4"
+    },
+    {
+      "size": 39712396,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_15.mp4"
+    },
+    {
+      "size": 32310690,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_16.mp4"
+    },
+    {
+      "size": 33801143,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_17.mp4"
+    },
+    {
+      "size": 36248293,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_18.mp4"
+    },
+    {
+      "size": 41683021,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_19.mp4"
+    },
+    {
+      "size": 38412745,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_20.mp4"
+    },
+    {
+      "size": 34063553,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_21.mp4"
+    },
+    {
+      "size": 40874088,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p1_22.mp4"
+    },
+    {
+      "size": 51834687,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_01.mp4"
+    },
+    {
+      "size": 54846213,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_02.mp4"
+    },
+    {
+      "size": 48579572,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_03.mp4"
+    },
+    {
+      "size": 44084390,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_04.mp4"
+    },
+    {
+      "size": 35991423,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_05.mp4"
+    },
+    {
+      "size": 42847535,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_06.mp4"
+    },
+    {
+      "size": 10742861,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_07.mp4"
+    },
+    {
+      "size": 46294066,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_08.mp4"
+    },
+    {
+      "size": 12993001,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_09.mp4"
+    },
+    {
+      "size": 43975995,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_10.mp4"
+    },
+    {
+      "size": 50600431,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_11.mp4"
+    },
+    {
+      "size": 45610623,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_12.mp4"
+    },
+    {
+      "size": 77552495,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_13.mp4"
+    },
+    {
+      "size": 54521845,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_14.mp4"
+    },
+    {
+      "size": 12903565,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_15.mp4"
+    },
+    {
+      "size": 57923560,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_16.mp4"
+    },
+    {
+      "size": 60969752,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_17.mp4"
+    },
+    {
+      "size": 17568377,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_18.mp4"
+    },
+    {
+      "size": 43284735,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_20.mp4"
+    },
+    {
+      "size": 43729224,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_21.mp4"
+    },
+    {
+      "size": 39904509,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_22.mp4"
+    },
+    {
+      "size": 44760603,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_23.mp4"
+    },
+    {
+      "size": 35189312,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_24.mp4"
+    },
+    {
+      "size": 39086547,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_25.mp4"
+    },
+    {
+      "size": 18504315,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_26.mp4"
+    },
+    {
+      "size": 52085612,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_27.mp4"
+    },
+    {
+      "size": 43276820,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/scenes/p2_28.mp4"
+    },
+    {
+      "size": 6465410,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_05_00.mp4"
+    },
+    {
+      "size": 14151328,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_05_01.mp4"
+    },
+    {
+      "size": 5291045,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_05_02.mp4"
+    },
+    {
+      "size": 1801680,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_05_03.mp4"
+    },
+    {
+      "size": 10753752,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_05_04.mp4"
+    },
+    {
+      "size": 6463308,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_05_05.mp4"
+    },
+    {
+      "size": 6020670,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_05_06.mp4"
+    },
+    {
+      "size": 50940156,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_05_video.mp4"
+    },
+    {
+      "size": 7608123,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_06_00.mp4"
+    },
+    {
+      "size": 14165845,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_06_01.mp4"
+    },
+    {
+      "size": 7813144,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_06_02.mp4"
+    },
+    {
+      "size": 817562,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_06_03.mp4"
+    },
+    {
+      "size": 10774039,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_06_04.mp4"
+    },
+    {
+      "size": 1125222,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_06_05.mp4"
+    },
+    {
+      "size": 42299575,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_06_video.mp4"
+    },
+    {
+      "size": 6465410,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_07_00.mp4"
+    },
+    {
+      "size": 3538412,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_07_01.mp4"
+    },
+    {
+      "size": 14511280,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_07_02.mp4"
+    },
+    {
+      "size": 1801680,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_07_03.mp4"
+    },
+    {
+      "size": 6568314,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_07_04.mp4"
+    },
+    {
+      "size": 32881108,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_07_video.mp4"
+    },
+    {
+      "size": 3198843,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_08_00.mp4"
+    },
+    {
+      "size": 14181075,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_08_01.mp4"
+    },
+    {
+      "size": 2642026,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_08_02.mp4"
+    },
+    {
+      "size": 1019674,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_08_03.mp4"
+    },
+    {
+      "size": 2870554,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_08_04.mp4"
+    },
+    {
+      "size": 14250954,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_08_05.mp4"
+    },
+    {
+      "size": 3198843,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_08_06.mp4"
+    },
+    {
+      "size": 3872256,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_08_07.mp4"
+    },
+    {
+      "size": 45229316,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_08_video.mp4"
+    },
+    {
+      "size": 3046718,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_09_00.mp4"
+    },
+    {
+      "size": 1019674,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_09_01.mp4"
+    },
+    {
+      "size": 14533329,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_09_02.mp4"
+    },
+    {
+      "size": 2468480,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_09_03.mp4"
+    },
+    {
+      "size": 2197876,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_09_04.mp4"
+    },
+    {
+      "size": 2835122,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_09_05.mp4"
+    },
+    {
+      "size": 3046718,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_09_06.mp4"
+    },
+    {
+      "size": 702575,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_09_07.mp4"
+    },
+    {
+      "size": 29845624,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_09_video.mp4"
+    },
+    {
+      "size": 13775199,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_10_00.mp4"
+    },
+    {
+      "size": 6999810,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_10_01.mp4"
+    },
+    {
+      "size": 1357367,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_10_02.mp4"
+    },
+    {
+      "size": 8410559,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_10_03.mp4"
+    },
+    {
+      "size": 14617993,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_10_04.mp4"
+    },
+    {
+      "size": 10482557,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_10_05.mp4"
+    },
+    {
+      "size": 1374782,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_10_06.mp4"
+    },
+    {
+      "size": 57013214,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_10_video.mp4"
+    },
+    {
+      "size": 1357367,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_11_00.mp4"
+    },
+    {
+      "size": 14176175,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_11_01.mp4"
+    },
+    {
+      "size": 2530159,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_11_02.mp4"
+    },
+    {
+      "size": 18062317,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_11_video.mp4"
+    },
+    {
+      "size": 7616458,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_12_00.mp4"
+    },
+    {
+      "size": 2490218,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_12_01.mp4"
+    },
+    {
+      "size": 14527962,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_12_02.mp4"
+    },
+    {
+      "size": 8406544,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_12_03.mp4"
+    },
+    {
+      "size": 2191195,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_12_04.mp4"
+    },
+    {
+      "size": 10473350,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_12_05.mp4"
+    },
+    {
+      "size": 7616458,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_12_06.mp4"
+    },
+    {
+      "size": 884006,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_12_07.mp4"
+    },
+    {
+      "size": 54200397,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_12_video.mp4"
+    },
+    {
+      "size": 6484022,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_13_00.mp4"
+    },
+    {
+      "size": 6985782,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_13_01.mp4"
+    },
+    {
+      "size": 2490218,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_13_02.mp4"
+    },
+    {
+      "size": 13645574,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_13_03.mp4"
+    },
+    {
+      "size": 2191195,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_13_04.mp4"
+    },
+    {
+      "size": 3540921,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_13_05.mp4"
+    },
+    {
+      "size": 35332630,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_13_video.mp4"
+    },
+    {
+      "size": 13771184,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_14_00.mp4"
+    },
+    {
+      "size": 6985782,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_14_01.mp4"
+    },
+    {
+      "size": 1687123,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_14_02.mp4"
+    },
+    {
+      "size": 22442729,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_14_video.mp4"
+    },
+    {
+      "size": 2490218,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_15_00.mp4"
+    },
+    {
+      "size": 6967284,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_15_01.mp4"
+    },
+    {
+      "size": 14527962,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_15_02.mp4"
+    },
+    {
+      "size": 9251459,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_15_03.mp4"
+    },
+    {
+      "size": 2191195,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_15_04.mp4"
+    },
+    {
+      "size": 2490218,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_15_05.mp4"
+    },
+    {
+      "size": 861634,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_15_06.mp4"
+    },
+    {
+      "size": 38774933,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_15_video.mp4"
+    },
+    {
+      "size": 6484022,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_16_00.mp4"
+    },
+    {
+      "size": 14173501,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_16_01.mp4"
+    },
+    {
+      "size": 7440511,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_16_02.mp4"
+    },
+    {
+      "size": 2490218,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_16_03.mp4"
+    },
+    {
+      "size": 1051634,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_16_04.mp4"
+    },
+    {
+      "size": 31636263,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_16_video.mp4"
+    },
+    {
+      "size": 1343363,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_17_00.mp4"
+    },
+    {
+      "size": 14163016,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_17_01.mp4"
+    },
+    {
+      "size": 7426056,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_17_02.mp4"
+    },
+    {
+      "size": 2483355,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_17_03.mp4"
+    },
+    {
+      "size": 7462510,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_17_04.mp4"
+    },
+    {
+      "size": 176698,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_17_05.mp4"
+    },
+    {
+      "size": 33050660,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_17_video.mp4"
+    },
+    {
+      "size": 1352637,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_18_00.mp4"
+    },
+    {
+      "size": 2489894,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_18_01.mp4"
+    },
+    {
+      "size": 14527180,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_18_02.mp4"
+    },
+    {
+      "size": 9254781,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_18_03.mp4"
+    },
+    {
+      "size": 7472562,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_18_04.mp4"
+    },
+    {
+      "size": 385662,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_18_05.mp4"
+    },
+    {
+      "size": 35478358,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_18_video.mp4"
+    },
+    {
+      "size": 13770051,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_19_00.mp4"
+    },
+    {
+      "size": 1352637,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_19_01.mp4"
+    },
+    {
+      "size": 7447503,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_19_02.mp4"
+    },
+    {
+      "size": 2489894,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_19_03.mp4"
+    },
+    {
+      "size": 7472562,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_19_04.mp4"
+    },
+    {
+      "size": 8324718,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_19_05.mp4"
+    },
+    {
+      "size": 40853070,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_19_video.mp4"
+    },
+    {
+      "size": 2483544,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_20_00.mp4"
+    },
+    {
+      "size": 1342570,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_20_01.mp4"
+    },
+    {
+      "size": 14520242,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_20_02.mp4"
+    },
+    {
+      "size": 9236609,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_20_03.mp4"
+    },
+    {
+      "size": 7464013,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_20_04.mp4"
+    },
+    {
+      "size": 2480915,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_20_05.mp4"
+    },
+    {
+      "size": 37523668,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_20_video.mp4"
+    },
+    {
+      "size": 1342570,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_21_00.mp4"
+    },
+    {
+      "size": 2483544,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_21_01.mp4"
+    },
+    {
+      "size": 7430034,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_21_02.mp4"
+    },
+    {
+      "size": 13634305,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_21_03.mp4"
+    },
+    {
+      "size": 7464013,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_21_04.mp4"
+    },
+    {
+      "size": 909504,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_21_05.mp4"
+    },
+    {
+      "size": 33259693,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_21_video.mp4"
+    },
+    {
+      "size": 2483544,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_22_00.mp4"
+    },
+    {
+      "size": 1342570,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_22_01.mp4"
+    },
+    {
+      "size": 14520242,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_22_02.mp4"
+    },
+    {
+      "size": 8401498,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_22_03.mp4"
+    },
+    {
+      "size": 10775963,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_22_04.mp4"
+    },
+    {
+      "size": 2478552,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_22_05.mp4"
+    },
+    {
+      "size": 39998132,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p1_22_video.mp4"
+    },
+    {
+      "size": 5438327,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_01_00.mp4"
+    },
+    {
+      "size": 14165856,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_01_01.mp4"
+    },
+    {
+      "size": 5312909,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_01_02.mp4"
+    },
+    {
+      "size": 8406424,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_01_03.mp4"
+    },
+    {
+      "size": 4519373,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_01_04.mp4"
+    },
+    {
+      "size": 13103641,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_01_05.mp4"
+    },
+    {
+      "size": 50941785,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_01_video.mp4"
+    },
+    {
+      "size": 5438327,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_02_00.mp4"
+    },
+    {
+      "size": 3561850,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_02_01.mp4"
+    },
+    {
+      "size": 14523312,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_02_02.mp4"
+    },
+    {
+      "size": 8406424,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_02_03.mp4"
+    },
+    {
+      "size": 10784888,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_02_04.mp4"
+    },
+    {
+      "size": 4150479,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_02_05.mp4"
+    },
+    {
+      "size": 5438327,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_02_06.mp4"
+    },
+    {
+      "size": 1432928,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_02_07.mp4"
+    },
+    {
+      "size": 53729834,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_02_video.mp4"
+    },
+    {
+      "size": 3499949,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_03_00.mp4"
+    },
+    {
+      "size": 6969102,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_03_01.mp4"
+    },
+    {
+      "size": 14525979,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_03_02.mp4"
+    },
+    {
+      "size": 9246297,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_03_03.mp4"
+    },
+    {
+      "size": 5106908,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_03_04.mp4"
+    },
+    {
+      "size": 6463669,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_03_05.mp4"
+    },
+    {
+      "size": 1799976,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_03_06.mp4"
+    },
+    {
+      "size": 47605184,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_03_video.mp4"
+    },
+    {
+      "size": 6483057,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_04_00.mp4"
+    },
+    {
+      "size": 3562883,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_04_01.mp4"
+    },
+    {
+      "size": 7437229,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_04_02.mp4"
+    },
+    {
+      "size": 13644427,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_04_03.mp4"
+    },
+    {
+      "size": 7474723,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_04_04.mp4"
+    },
+    {
+      "size": 2935936,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_04_05.mp4"
+    },
+    {
+      "size": 1610597,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_04_06.mp4"
+    },
+    {
+      "size": 43141258,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_04_video.mp4"
+    },
+    {
+      "size": 2119737,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_05_00.mp4"
+    },
+    {
+      "size": 2892770,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_05_01.mp4"
+    },
+    {
+      "size": 14519940,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_05_02.mp4"
+    },
+    {
+      "size": 8399687,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_05_03.mp4"
+    },
+    {
+      "size": 2119737,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_05_04.mp4"
+    },
+    {
+      "size": 2816881,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_05_05.mp4"
+    },
+    {
+      "size": 2113281,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_05_06.mp4"
+    },
+    {
+      "size": 34977150,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_05_video.mp4"
+    },
+    {
+      "size": 3179346,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_06_00.mp4"
+    },
+    {
+      "size": 2115351,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_06_01.mp4"
+    },
+    {
+      "size": 14519940,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_06_02.mp4"
+    },
+    {
+      "size": 8399687,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_06_03.mp4"
+    },
+    {
+      "size": 10781561,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_06_04.mp4"
+    },
+    {
+      "size": 2115351,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_06_05.mp4"
+    },
+    {
+      "size": 807276,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_06_06.mp4"
+    },
+    {
+      "size": 41913462,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_06_video.mp4"
+    },
+    {
+      "size": 2119737,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_07_00.mp4"
+    },
+    {
+      "size": 6962436,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_07_01.mp4"
+    },
+    {
+      "size": 1291683,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_07_02.mp4"
+    },
+    {
+      "size": 10371718,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_07_video.mp4"
+    },
+    {
+      "size": 6486310,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_08_00.mp4"
+    },
+    {
+      "size": 3566445,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_08_01.mp4"
+    },
+    {
+      "size": 7444442,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_08_02.mp4"
+    },
+    {
+      "size": 13648418,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_08_03.mp4"
+    },
+    {
+      "size": 7479316,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_08_04.mp4"
+    },
+    {
+      "size": 2938269,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_08_05.mp4"
+    },
+    {
+      "size": 3747595,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_08_06.mp4"
+    },
+    {
+      "size": 45303230,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_08_video.mp4"
+    },
+    {
+      "size": 7618644,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_09_00.mp4"
+    },
+    {
+      "size": 5112391,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_09_01.mp4"
+    },
+    {
+      "size": 12729647,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_09_video.mp4"
+    },
+    {
+      "size": 3504746,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_10_00.mp4"
+    },
+    {
+      "size": 6969360,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_10_01.mp4"
+    },
+    {
+      "size": 7444442,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_10_02.mp4"
+    },
+    {
+      "size": 13648418,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_10_03.mp4"
+    },
+    {
+      "size": 5120212,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_10_04.mp4"
+    },
+    {
+      "size": 6389448,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_10_05.mp4"
+    },
+    {
+      "size": 43071106,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_10_video.mp4"
+    },
+    {
+      "size": 6486310,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_11_00.mp4"
+    },
+    {
+      "size": 6990014,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_11_01.mp4"
+    },
+    {
+      "size": 5320591,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_11_02.mp4"
+    },
+    {
+      "size": 13648418,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_11_03.mp4"
+    },
+    {
+      "size": 7479316,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_11_04.mp4"
+    },
+    {
+      "size": 9786919,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_11_05.mp4"
+    },
+    {
+      "size": 49706008,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_11_video.mp4"
+    },
+    {
+      "size": 7618644,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_12_00.mp4"
+    },
+    {
+      "size": 14176384,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_12_01.mp4"
+    },
+    {
+      "size": 7811436,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_12_02.mp4"
+    },
+    {
+      "size": 6823667,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_12_03.mp4"
+    },
+    {
+      "size": 8466716,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_12_04.mp4"
+    },
+    {
+      "size": 44892814,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_12_video.mp4"
+    },
+    {
+      "size": 7609801,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_13_00.mp4"
+    },
+    {
+      "size": 14171026,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_13_01.mp4"
+    },
+    {
+      "size": 7806839,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_13_02.mp4"
+    },
+    {
+      "size": 6821318,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_13_03.mp4"
+    },
+    {
+      "size": 10804872,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_13_04.mp4"
+    },
+    {
+      "size": 14243192,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_13_05.mp4"
+    },
+    {
+      "size": 7609801,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_13_06.mp4"
+    },
+    {
+      "size": 7356869,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_13_07.mp4"
+    },
+    {
+      "size": 76417499,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_13_video.mp4"
+    },
+    {
+      "size": 7609801,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_14_00.mp4"
+    },
+    {
+      "size": 6965219,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_14_01.mp4"
+    },
+    {
+      "size": 14526471,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_14_02.mp4"
+    },
+    {
+      "size": 6821318,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_14_03.mp4"
+    },
+    {
+      "size": 10804872,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_14_04.mp4"
+    },
+    {
+      "size": 6465099,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_14_05.mp4"
+    },
+    {
+      "size": 428710,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_14_06.mp4"
+    },
+    {
+      "size": 53615186,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_14_video.mp4"
+    },
+    {
+      "size": 6481736,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_15_00.mp4"
+    },
+    {
+      "size": 6143118,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_15_01.mp4"
+    },
+    {
+      "size": 12623454,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_15_video.mp4"
+    },
+    {
+      "size": 7618600,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_16_00.mp4"
+    },
+    {
+      "size": 6966015,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_16_01.mp4"
+    },
+    {
+      "size": 14528541,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_16_02.mp4"
+    },
+    {
+      "size": 6829553,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_16_03.mp4"
+    },
+    {
+      "size": 10813196,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_16_04.mp4"
+    },
+    {
+      "size": 10322972,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_16_05.mp4"
+    },
+    {
+      "size": 57074148,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_16_video.mp4"
+    },
+    {
+      "size": 7618600,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_17_00.mp4"
+    },
+    {
+      "size": 14175411,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_17_01.mp4"
+    },
+    {
+      "size": 7807679,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_17_02.mp4"
+    },
+    {
+      "size": 6829553,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_17_03.mp4"
+    },
+    {
+      "size": 10813196,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_17_04.mp4"
+    },
+    {
+      "size": 6466066,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_17_05.mp4"
+    },
+    {
+      "size": 6244334,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_17_06.mp4"
+    },
+    {
+      "size": 59948565,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_17_video.mp4"
+    },
+    {
+      "size": 6482697,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_18_00.mp4"
+    },
+    {
+      "size": 6988027,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_18_01.mp4"
+    },
+    {
+      "size": 3761245,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_18_02.mp4"
+    },
+    {
+      "size": 17229749,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_18_video.mp4"
+    },
+    {
+      "size": 8578324,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_20_00.mp4"
+    },
+    {
+      "size": 9575274,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_20_01.mp4"
+    },
+    {
+      "size": 14556168,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_20_02.mp4"
+    },
+    {
+      "size": 5850723,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_20_03.mp4"
+    },
+    {
+      "size": 4062357,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_20_04.mp4"
+    },
+    {
+      "size": 42619937,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_20_video.mp4"
+    },
+    {
+      "size": 9052393,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_21_00.mp4"
+    },
+    {
+      "size": 7580742,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_21_01.mp4"
+    },
+    {
+      "size": 14556168,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_21_02.mp4"
+    },
+    {
+      "size": 9552554,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_21_03.mp4"
+    },
+    {
+      "size": 2338720,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_21_04.mp4"
+    },
+    {
+      "size": 43077733,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_21_video.mp4"
+    },
+    {
+      "size": 8578324,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_22_00.mp4"
+    },
+    {
+      "size": 9575274,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_22_01.mp4"
+    },
+    {
+      "size": 14556168,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_22_02.mp4"
+    },
+    {
+      "size": 5850723,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_22_03.mp4"
+    },
+    {
+      "size": 736995,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_22_04.mp4"
+    },
+    {
+      "size": 39294518,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_22_video.mp4"
+    },
+    {
+      "size": 9052393,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_23_00.mp4"
+    },
+    {
+      "size": 7580742,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_23_01.mp4"
+    },
+    {
+      "size": 14556168,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_23_02.mp4"
+    },
+    {
+      "size": 9552554,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_23_03.mp4"
+    },
+    {
+      "size": 3338871,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_23_04.mp4"
+    },
+    {
+      "size": 44077884,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_23_video.mp4"
+    },
+    {
+      "size": 8578324,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_24_00.mp4"
+    },
+    {
+      "size": 9575274,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_24_01.mp4"
+    },
+    {
+      "size": 14556168,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_24_02.mp4"
+    },
+    {
+      "size": 1973754,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_24_03.mp4"
+    },
+    {
+      "size": 34681329,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_24_video.mp4"
+    },
+    {
+      "size": 8578324,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_25_00.mp4"
+    },
+    {
+      "size": 2057816,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_25_01.mp4"
+    },
+    {
+      "size": 9662691,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_25_02.mp4"
+    },
+    {
+      "size": 13681398,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_25_03.mp4"
+    },
+    {
+      "size": 4409676,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_25_04.mp4"
+    },
+    {
+      "size": 38387097,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_25_video.mp4"
+    },
+    {
+      "size": 9052393,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_26_00.mp4"
+    },
+    {
+      "size": 7580742,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_26_01.mp4"
+    },
+    {
+      "size": 1556208,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_26_02.mp4"
+    },
+    {
+      "size": 18187930,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_26_video.mp4"
+    },
+    {
+      "size": 3512917,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_27_00.mp4"
+    },
+    {
+      "size": 6974691,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_27_01.mp4"
+    },
+    {
+      "size": 7457328,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_27_02.mp4"
+    },
+    {
+      "size": 13656951,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_27_03.mp4"
+    },
+    {
+      "size": 5122261,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_27_04.mp4"
+    },
+    {
+      "size": 6477094,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_27_05.mp4"
+    },
+    {
+      "size": 3512917,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_27_06.mp4"
+    },
+    {
+      "size": 4235616,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_27_07.mp4"
+    },
+    {
+      "size": 50941516,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_27_video.mp4"
+    },
+    {
+      "size": 6492547,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_28_00.mp4"
+    },
+    {
+      "size": 3577847,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_28_01.mp4"
+    },
+    {
+      "size": 14540422,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_28_02.mp4"
+    },
+    {
+      "size": 9271021,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_28_03.mp4"
+    },
+    {
+      "size": 7488017,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_28_04.mp4"
+    },
+    {
+      "size": 1123157,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_28_05.mp4"
+    },
+    {
+      "size": 42486900,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/tmp/p2_28_video.mp4"
+    },
+    {
+      "size": 1895518452,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-01-broadcast-v4/video/gsa-news-2026-09-01-broadcast-v4-final.mp4"
+    },
+    {
+      "size": 34336278,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_01.mp4"
+    },
+    {
+      "size": 30175089,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_02.mp4"
+    },
+    {
+      "size": 31829029,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_03.mp4"
+    },
+    {
+      "size": 30153325,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_04.mp4"
+    },
+    {
+      "size": 29904653,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_05.mp4"
+    },
+    {
+      "size": 37973368,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_06.mp4"
+    },
+    {
+      "size": 33294798,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_07.mp4"
+    },
+    {
+      "size": 29763960,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_08.mp4"
+    },
+    {
+      "size": 29811284,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_09.mp4"
+    },
+    {
+      "size": 40072099,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_10.mp4"
+    },
+    {
+      "size": 30346441,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_11.mp4"
+    },
+    {
+      "size": 32747750,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_12.mp4"
+    },
+    {
+      "size": 29914083,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_13.mp4"
+    },
+    {
+      "size": 26695512,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_14.mp4"
+    },
+    {
+      "size": 38204673,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_15.mp4"
+    },
+    {
+      "size": 43916077,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_16.mp4"
+    },
+    {
+      "size": 36843368,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_17.mp4"
+    },
+    {
+      "size": 35233914,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_18.mp4"
+    },
+    {
+      "size": 31714595,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_19.mp4"
+    },
+    {
+      "size": 27073489,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/scene_20.mp4"
+    },
+    {
+      "size": 11847081,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/00_opening.mp4"
+    },
+    {
+      "size": 9589265,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/avatar_open.mp4"
+    },
+    {
+      "size": 7349031,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/avatar_politica.mp4"
+    },
+    {
+      "size": 9210172,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/avatar_eleicoes.mp4"
+    },
+    {
+      "size": 7186593,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/avatar_world.mp4"
+    },
+    {
+      "size": 8231007,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/avatar_tech_sports.mp4"
+    },
+    {
+      "size": 7975709,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/scenes/avatar_close.mp4"
+    },
+    {
+      "size": 1984462,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_01_00.mp4"
+    },
+    {
+      "size": 6984909,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_01_01.mp4"
+    },
+    {
+      "size": 5335509,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_01_02.mp4"
+    },
+    {
+      "size": 9283102,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_01_03.mp4"
+    },
+    {
+      "size": 1984462,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_01_04.mp4"
+    },
+    {
+      "size": 6536584,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_01_05.mp4"
+    },
+    {
+      "size": 1346055,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_01_06.mp4"
+    },
+    {
+      "size": 33442530,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_01_video.mp4"
+    },
+    {
+      "size": 1921467,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_02_00.mp4"
+    },
+    {
+      "size": 6946022,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_02_01.mp4"
+    },
+    {
+      "size": 1921467,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_02_02.mp4"
+    },
+    {
+      "size": 9178247,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_02_03.mp4"
+    },
+    {
+      "size": 7453442,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_02_04.mp4"
+    },
+    {
+      "size": 1916583,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_02_05.mp4"
+    },
+    {
+      "size": 29325891,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_02_video.mp4"
+    },
+    {
+      "size": 6458981,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_03_00.mp4"
+    },
+    {
+      "size": 1926102,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_03_01.mp4"
+    },
+    {
+      "size": 7380196,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_03_02.mp4"
+    },
+    {
+      "size": 8386492,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_03_03.mp4"
+    },
+    {
+      "size": 1926102,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_03_04.mp4"
+    },
+    {
+      "size": 4922314,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_03_05.mp4"
+    },
+    {
+      "size": 30988034,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_03_video.mp4"
+    },
+    {
+      "size": 3484707,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_04_00.mp4"
+    },
+    {
+      "size": 6955604,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_04_01.mp4"
+    },
+    {
+      "size": 1945460,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_04_02.mp4"
+    },
+    {
+      "size": 9199237,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_04_03.mp4"
+    },
+    {
+      "size": 5090050,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_04_04.mp4"
+    },
+    {
+      "size": 2709654,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_04_05.mp4"
+    },
+    {
+      "size": 29376060,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_04_video.mp4"
+    },
+    {
+      "size": 6457883,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_05_00.mp4"
+    },
+    {
+      "size": 3532630,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_05_01.mp4"
+    },
+    {
+      "size": 7377973,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_05_02.mp4"
+    },
+    {
+      "size": 1923545,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_05_03.mp4"
+    },
+    {
+      "size": 7457643,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_05_04.mp4"
+    },
+    {
+      "size": 2321849,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_05_05.mp4"
+    },
+    {
+      "size": 29062379,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_05_video.mp4"
+    },
+    {
+      "size": 3490323,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_06_00.mp4"
+    },
+    {
+      "size": 6960345,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_06_01.mp4"
+    },
+    {
+      "size": 7403691,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_06_02.mp4"
+    },
+    {
+      "size": 6804999,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_06_03.mp4"
+    },
+    {
+      "size": 7474754,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_06_04.mp4"
+    },
+    {
+      "size": 5080814,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_06_05.mp4"
+    },
+    {
+      "size": 37209364,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_06_video.mp4"
+    },
+    {
+      "size": 7605473,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_07_00.mp4"
+    },
+    {
+      "size": 3547342,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_07_01.mp4"
+    },
+    {
+      "size": 7803000,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_07_02.mp4"
+    },
+    {
+      "size": 1930762,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_07_03.mp4"
+    },
+    {
+      "size": 10749220,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_07_04.mp4"
+    },
+    {
+      "size": 927974,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_07_05.mp4"
+    },
+    {
+      "size": 32555374,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_07_video.mp4"
+    },
+    {
+      "size": 796462,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_08_00.mp4"
+    },
+    {
+      "size": 6948209,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_08_01.mp4"
+    },
+    {
+      "size": 7372140,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_08_02.mp4"
+    },
+    {
+      "size": 796462,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_08_03.mp4"
+    },
+    {
+      "size": 7456656,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_08_04.mp4"
+    },
+    {
+      "size": 5627262,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_08_05.mp4"
+    },
+    {
+      "size": 28991516,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_08_video.mp4"
+    },
+    {
+      "size": 7583123,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_09_00.mp4"
+    },
+    {
+      "size": 804587,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_09_01.mp4"
+    },
+    {
+      "size": 7797619,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_09_02.mp4"
+    },
+    {
+      "size": 9196950,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_09_03.mp4"
+    },
+    {
+      "size": 804587,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_09_04.mp4"
+    },
+    {
+      "size": 2838425,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_09_05.mp4"
+    },
+    {
+      "size": 29019090,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_09_video.mp4"
+    },
+    {
+      "size": 6470285,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_10_00.mp4"
+    },
+    {
+      "size": 6959580,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_10_01.mp4"
+    },
+    {
+      "size": 5295758,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_10_02.mp4"
+    },
+    {
+      "size": 8399685,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_10_03.mp4"
+    },
+    {
+      "size": 10757328,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_10_04.mp4"
+    },
+    {
+      "size": 1450673,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_10_05.mp4"
+    },
+    {
+      "size": 39327242,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_10_video.mp4"
+    },
+    {
+      "size": 1417295,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_11_00.mp4"
+    },
+    {
+      "size": 6941432,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_11_01.mp4"
+    },
+    {
+      "size": 7797112,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_11_02.mp4"
+    },
+    {
+      "size": 1417295,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_11_03.mp4"
+    },
+    {
+      "size": 10724809,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_11_04.mp4"
+    },
+    {
+      "size": 1298879,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_11_05.mp4"
+    },
+    {
+      "size": 29591116,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_11_video.mp4"
+    },
+    {
+      "size": 1431858,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_12_00.mp4"
+    },
+    {
+      "size": 6956028,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_12_01.mp4"
+    },
+    {
+      "size": 7801004,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_12_02.mp4"
+    },
+    {
+      "size": 1431858,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_12_03.mp4"
+    },
+    {
+      "size": 10750295,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_12_04.mp4"
+    },
+    {
+      "size": 3635771,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_12_05.mp4"
+    },
+    {
+      "size": 32001161,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_12_video.mp4"
+    },
+    {
+      "size": 3464678,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_13_00.mp4"
+    },
+    {
+      "size": 6942613,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_13_01.mp4"
+    },
+    {
+      "size": 4399652,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_13_02.mp4"
+    },
+    {
+      "size": 9170229,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_13_03.mp4"
+    },
+    {
+      "size": 5072601,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_13_04.mp4"
+    },
+    {
+      "size": 154802,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_13_05.mp4"
+    },
+    {
+      "size": 29198972,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_13_video.mp4"
+    },
+    {
+      "size": 3178932,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_14_00.mp4"
+    },
+    {
+      "size": 2116687,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_14_01.mp4"
+    },
+    {
+      "size": 7799237,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_14_02.mp4"
+    },
+    {
+      "size": 9193120,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_14_03.mp4"
+    },
+    {
+      "size": 2851372,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_14_04.mp4"
+    },
+    {
+      "size": 797812,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_14_05.mp4"
+    },
+    {
+      "size": 25932801,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_14_video.mp4"
+    },
+    {
+      "size": 7570704,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_15_00.mp4"
+    },
+    {
+      "size": 6945533,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_15_01.mp4"
+    },
+    {
+      "size": 5286680,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_15_02.mp4"
+    },
+    {
+      "size": 9175307,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_15_03.mp4"
+    },
+    {
+      "size": 7452944,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_15_04.mp4"
+    },
+    {
+      "size": 1032676,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_15_05.mp4"
+    },
+    {
+      "size": 37457752,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_15_video.mp4"
+    },
+    {
+      "size": 7577757,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_16_00.mp4"
+    },
+    {
+      "size": 6952042,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_16_01.mp4"
+    },
+    {
+      "size": 7387503,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_16_02.mp4"
+    },
+    {
+      "size": 8389555,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_16_03.mp4"
+    },
+    {
+      "size": 10740677,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_16_04.mp4"
+    },
+    {
+      "size": 2114766,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_16_05.mp4"
+    },
+    {
+      "size": 43156349,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_16_video.mp4"
+    },
+    {
+      "size": 8463709,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_17_00.mp4"
+    },
+    {
+      "size": 9524971,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_17_01.mp4"
+    },
+    {
+      "size": 2118285,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_17_02.mp4"
+    },
+    {
+      "size": 5812989,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_17_03.mp4"
+    },
+    {
+      "size": 9544127,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_17_04.mp4"
+    },
+    {
+      "size": 663257,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_17_05.mp4"
+    },
+    {
+      "size": 36122625,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_17_video.mp4"
+    },
+    {
+      "size": 8494621,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_18_00.mp4"
+    },
+    {
+      "size": 6957228,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_18_01.mp4"
+    },
+    {
+      "size": 2136726,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_18_02.mp4"
+    },
+    {
+      "size": 5825413,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_18_03.mp4"
+    },
+    {
+      "size": 9560904,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_18_04.mp4"
+    },
+    {
+      "size": 1463230,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_18_05.mp4"
+    },
+    {
+      "size": 34432669,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_18_video.mp4"
+    },
+    {
+      "size": 6463847,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_19_00.mp4"
+    },
+    {
+      "size": 3539084,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_19_01.mp4"
+    },
+    {
+      "size": 7387146,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_19_02.mp4"
+    },
+    {
+      "size": 2130074,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_19_03.mp4"
+    },
+    {
+      "size": 7464456,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_19_04.mp4"
+    },
+    {
+      "size": 2911147,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_19_05.mp4"
+    },
+    {
+      "size": 965280,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_19_06.mp4"
+    },
+    {
+      "size": 30852920,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_19_video.mp4"
+    },
+    {
+      "size": 2169432,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_20_00.mp4"
+    },
+    {
+      "size": 6985376,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_20_01.mp4"
+    },
+    {
+      "size": 7464729,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_20_02.mp4"
+    },
+    {
+      "size": 6833218,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_20_03.mp4"
+    },
+    {
+      "size": 2169432,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_20_04.mp4"
+    },
+    {
+      "size": 714607,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_20_05.mp4"
+    },
+    {
+      "size": 26330711,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/tmp/scene_20_video.mp4"
+    },
+    {
+      "size": 721348507,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/video/gsa-news-2026-09-02-broadcast-v4-final.mp4"
+    },
+    {
+      "size": 1851204,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/assets/broll/clima.webm"
+    },
+    {
+      "size": 13801164,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/assets/broll/comercio.webm"
+    },
+    {
+      "size": 6488017,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/assets/broll/futebol.webm"
+    },
+    {
+      "size": 10112146,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/assets/broll/kyiv.webm"
+    },
+    {
+      "size": 1613734,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/assets/broll/nepal.webm"
+    },
+    {
+      "size": 10726897,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/assets/broll/petroleo.webm"
+    },
+    {
+      "size": 593942,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/assets/broll/saude.webm"
+    },
+    {
+      "size": 145079130,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/assets/broll/tecnologia.webm"
+    },
+    {
+      "size": 2468445,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02/assets/broll/tenis.webm"
+    },
+    {
+      "size": 603256,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/broll/saneamento.mp4"
+    },
+    {
+      "size": 18577,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/broll/stf.mp4"
+    },
+    {
+      "size": 18577,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/broll/amazonia.mp4"
+    },
+    {
+      "size": 111,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/broll/nasa.mp4"
+    },
+    {
+      "size": 18577,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/broll/futebol_novo.mp4"
+    },
+    {
+      "size": 18577,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/broll/europa.mp4"
+    },
+    {
+      "size": 18577,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/broll/ia.mp4"
+    },
+    {
+      "size": 19380567,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/broll/eleicoes.mp4"
+    },
+    {
+      "size": 1965,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/broll/rocket_launch.webm"
+    },
+    {
+      "size": 1965,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/broll/amazonia_real.webm"
+    },
+    {
+      "size": 1966,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/broll/stf_tribunal.webm"
+    },
+    {
+      "size": 35145800,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/broll/rocket_launch_real.webm"
+    },
+    {
+      "size": 178965617,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/broll/rocket_launch_1080p.mp4"
+    },
+    {
+      "size": 48220427,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/broll/nasa_rocket_1080p.mp4"
+    },
+    {
+      "size": 2154952,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/avatars/male_holt.mp4"
+    },
+    {
+      "size": 2154952,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/avatars/female_nyla.mp4"
+    },
+    {
+      "size": 1807658,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/avatars/male_close.mp4"
+    },
+    {
+      "size": 2078191,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/assets/avatars/female_close.mp4"
+    },
+    {
+      "size": 9543600,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_00.mp4"
+    },
+    {
+      "size": 14978004,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_01.mp4"
+    },
+    {
+      "size": 26307494,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_02.mp4"
+    },
+    {
+      "size": 20541752,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_03.mp4"
+    },
+    {
+      "size": 9704946,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_04.mp4"
+    },
+    {
+      "size": 24852256,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_05.mp4"
+    },
+    {
+      "size": 23226756,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_06.mp4"
+    },
+    {
+      "size": 19825551,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_07.mp4"
+    },
+    {
+      "size": 24610886,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_08.mp4"
+    },
+    {
+      "size": 12605093,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_09.mp4"
+    },
+    {
+      "size": 6036316,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_10.mp4"
+    },
+    {
+      "size": 5323922,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_11.mp4"
+    },
+    {
+      "size": 14048967,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_00_vinheta.mp4"
+    },
+    {
+      "size": 12259231,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_01_abertura.mp4"
+    },
+    {
+      "size": 24943473,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_02_escalada.mp4"
+    },
+    {
+      "size": 27461402,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_03_saneamento.mp4"
+    },
+    {
+      "size": 24895513,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_04_stf.mp4"
+    },
+    {
+      "size": 10229268,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_05_amazonia.mp4"
+    },
+    {
+      "size": 14995497,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_06_nasa.mp4"
+    },
+    {
+      "size": 21808207,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_07_esportes.mp4"
+    },
+    {
+      "size": 18442562,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_08_europa.mp4"
+    },
+    {
+      "size": 24265828,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_09_ia.mp4"
+    },
+    {
+      "size": 11765480,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_10_eleicoes.mp4"
+    },
+    {
+      "size": 9734449,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_11_encerramento.mp4"
+    },
+    {
+      "size": 4934370,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/tmp/scene_12_despedida.mp4"
+    },
+    {
+      "size": 98991998,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/gsa-news-2026-09-02-v2-final.mp4"
+    },
+    {
+      "size": 99024039,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-news-2026-09-02-v2/video/gsa-news-2026-09-02-v13-final.mp4"
+    },
+    {
+      "size": 502744,
+      "path": "/opt/gsa-tv/cache/media/1/news/ai-studio-production/gsa-gsa_interprogramas-1788387939693-master.mp4"
+    },
+    {
+      "size": 508843,
+      "path": "/opt/gsa-tv/cache/media/1/news/ai-studio-production/gsa-gsa_interprogramas-1788388042906-master.mp4"
+    },
+    {
+      "size": 508130,
+      "path": "/opt/gsa-tv/cache/media/1/news/ai-studio-production/gsa-gsa_interprogramas-1788388499562-master.mp4"
+    },
+    {
+      "size": 316146,
+      "path": "/opt/gsa-tv/cache/media/1/news/ai-studio-production/gsa-gsa_ta_na_rede-1788391252418-master.mp4"
+    },
+    {
+      "size": 9012613,
+      "path": "/opt/gsa-tv/cache/media/1/news/ai-studio-production/gsa-gsa_financeiro-1788452986611-master.mp4"
+    },
+    {
+      "size": 759798,
+      "path": "/opt/gsa-tv/cache/media/1/news/ai-studio-production/gsa-gsa_interprogramas-1788453138312-master.mp4"
+    },
+    {
+      "size": 25101649,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/video/cena01_abertura.mp4"
+    },
+    {
+      "size": 12523568,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/video/cena02_seguranca_ia.mp4"
+    },
+    {
+      "size": 16075805,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/video/cena03_agentes_redes.mp4"
+    },
+    {
+      "size": 18887367,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/video/cena04_meta_oculos.mp4"
+    },
+    {
+      "size": 18618611,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/video/cena05_encerramento.mp4"
+    },
+    {
+      "size": 59675438,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/video/gsa-ta-na-rede-final.mp4"
+    },
+    {
+      "size": 17042650,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/video/seg01_abertura.mp4"
+    },
+    {
+      "size": 7860767,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/video/seg02_pet_flagrante.mp4"
+    },
+    {
+      "size": 3151052,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/video/seg03_preguica_master.mp4"
+    },
+    {
+      "size": 6666326,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/video/seg04_desafio_fail.mp4"
+    },
+    {
+      "size": 24970585,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/video/seg05_encerramento.mp4"
+    },
+    {
+      "size": 397,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/broll/cyber_network.mp4"
+    },
+    {
+      "size": 6417429,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/viral_raw/viral01_cat.mp4"
+    },
+    {
+      "size": 3168072,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/viral_raw/viral02_dog.mp4"
+    },
+    {
+      "size": 5972390,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/viral_raw/viral03_pet.mp4"
+    },
+    {
+      "size": 9558228,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/viral_raw/viral_vertical_01.mp4"
+    },
+    {
+      "size": 6706258,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/viral_raw/viral_vertical_02.mp4"
+    },
+    {
+      "size": 7285313,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/viral_raw/viral_vertical_03.mp4"
+    },
+    {
+      "size": 3565725,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/viral_raw/funny_pet1.mp4"
+    },
+    {
+      "size": 5989850,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/viral_raw/funny_pet2.mp4"
+    },
+    {
+      "size": 7347381,
+      "path": "/opt/gsa-tv/cache/media/1/news/gsa-ta-na-rede-2026-09-02/viral_raw/funny_people.mp4"
+    },
+    {
+      "size": 59933126,
+      "path": "/opt/gsa-tv/cache/media/1/enhanced/media-f5a6e79b-d245-4d10-b955-fde6dc228d9e-1080p_pro.mp4"
+    },
+    {
+      "size": 17438152,
+      "path": "/opt/gsa-tv/cache/media/1/enhanced/media-1bdb0ff1-76f6-48ea-88d0-c38e35d27016-1080p_pro.mp4"
+    },
+    {
+      "size": 4525374,
+      "path": "/opt/gsa-tv/cache/media/1/enhanced/media-58eba934-bf86-45bb-a6ab-16f83aa4ab63-standard.mp4"
+    },
+    {
+      "size": 116397707,
+      "path": "/opt/gsa-tv/cache/media/1/nature/licensed-sources-2026-09-03/forest.webm"
+    },
+    {
+      "size": 327505939,
+      "path": "/opt/gsa-tv/cache/media/1/nature/licensed-sources-2026-09-03/plateau.webm"
+    },
+    {
+      "size": 35954756,
+      "path": "/opt/gsa-tv/cache/media/1/gsa-agora-nature/pexels-waterfall-5673653.mp4"
+    },
+    {
+      "size": 77824133,
+      "path": "/opt/gsa-tv/cache/media/1/gsa-agora-nature/cc0-okanagan-sunset.webm"
+    },
+    {
+      "size": 17221474,
+      "path": "/opt/gsa-tv/cache/media/1/gsa-agora-nature/cc0-murrays-beach.webm"
+    },
+    {
+      "size": 83091201,
+      "path": "/opt/gsa-tv/cache/media/1/gsa-agora-nature/render/gsa-agora-nature-narrated-preloud.mp4"
+    },
+    {
+      "size": 83115973,
+      "path": "/opt/gsa-tv/cache/media/1/gsa-agora-nature/render/gsa-agora-nature-narrated-v1.mp4"
+    },
+    {
+      "size": 315278448,
+      "path": "/opt/gsa-tv/cache/media/1/gsa-em-fe-10min/gsa-em-fe-15h-10min-master.mp4"
+    },
+    {
+      "size": 119968994,
+      "path": "/opt/gsa-tv/cache/media/1/media-7d79a725-8a7e-4605-9ec1-84e446c0c579.mp4"
+    },
+    {
+      "size": 119974007,
+      "path": "/opt/gsa-tv/cache/media/1/GSA-TV-CHAMADA-OFICIAL-GRADE-AUDIO-CLEAN.mp4"
+    },
+    {
+      "size": 113216421,
+      "path": "/opt/gsa-tv/cache/media/1/media-gsa-chamada-grade-v2-85s-final-20260907.mp4"
+    },
+    {
+      "size": 135588499,
+      "path": "/opt/gsa-tv/cache/media/1/media-gsa-chamada-grade-v2-85s-broadcast-safe-20260907.mov"
+    },
+    {
+      "size": 135588499,
+      "path": "/opt/gsa-tv/cache/media/1/media-gsa-chamada-grade-v2-85s-broadcast-safe-v2-20260907.mov"
+    },
+    {
+      "size": 113195708,
+      "path": "/opt/gsa-tv/cache/media/1/media-gsa-chamada-grade-v2-85s-broadcast-safe-v3-aac-20260907.mp4"
+    },
+    {
+      "size": 5792060,
+      "path": "/opt/gsa-tv/cache/media/1/program-masters/gsa-agro-teste-completo-agora.mp4"
+    },
+    {
+      "size": 9435761,
+      "path": "/opt/gsa-tv/cache/media/1/program-masters/gsa-agro-master.mp4"
+    },
+    {
+      "size": 372168875,
+      "path": "/opt/gsa-tv/cache/media/1/program-masters/gsa-historias-da-biblia-o-filho-prodigo-20260908.mp4"
+    },
+    {
+      "size": 104189024,
+      "path": "/opt/gsa-tv/cache/media/1/program-masters/gsa-historias-biblia-tag-20260909.mp4"
+    },
+    {
+      "size": 5126528,
+      "path": "/opt/gsa-tv/cache/media/1/productions/gsa-historias-da-biblia-2026-09-08/assets/stock/wikimedia-negev-old-well-9429.webm"
+    },
+    {
+      "size": 4931410,
+      "path": "/opt/gsa-tv/cache/media/1/productions/gsa-historias-da-biblia-2026-09-08/assets/stock/wikimedia-jerusalem-video.webm"
+    },
+    {
+      "size": 2199888,
+      "path": "/opt/gsa-tv/cache/media/1/productions/gsa-historias-da-biblia-2026-09-08/assets/opening-official.mp4"
+    },
+    {
+      "size": 2093334,
+      "path": "/opt/gsa-tv/cache/media/1/productions/gsa-historias-da-biblia-2026-09-08/assets/closing-official.mp4"
+    },
+    {
+      "size": 113195708,
+      "path": "/opt/gsa-tv/cache/media/1/productions/gsa-historias-da-biblia-2026-09-08/assets/chamada-grade.mp4"
+    },
+    {
+      "size": 63395068,
+      "path": "/opt/gsa-tv/cache/media/1/productions/gsa-historias-da-biblia-2026-09-08/assets/vinheta-oficial-gsa-tv.mp4"
+    },
+    {
+      "size": 3590005,
+      "path": "/opt/gsa-tv/cache/media/1/productions/gsa-historias-da-biblia-2026-09-08/output/02-estamos-apresentando.mp4"
+    },
+    {
+      "size": 127829674,
+      "path": "/opt/gsa-tv/cache/media/1/productions/gsa-historias-da-biblia-2026-09-08/output/03-episode-part-1.mp4"
+    },
+    {
+      "size": 165636440,
+      "path": "/opt/gsa-tv/cache/media/1/productions/gsa-historias-da-biblia-2026-09-08/output/07-episode-part-2.mp4"
+    },
+    {
+      "size": 3565710,
+      "path": "/opt/gsa-tv/cache/media/1/productions/gsa-historias-da-biblia-2026-09-08/output/01-abertura.mp4"
+    },
+    {
+      "size": 3286041,
+      "path": "/opt/gsa-tv/cache/media/1/productions/gsa-historias-da-biblia-2026-09-08/output/08-encerramento.mp4"
+    },
+    {
+      "size": 44778366,
+      "path": "/opt/gsa-tv/cache/media/1/productions/gsa-historias-da-biblia-2026-09-08/output/04-chamada-grade.mp4"
+    },
+    {
+      "size": 20120812,
+      "path": "/opt/gsa-tv/cache/media/1/productions/gsa-historias-da-biblia-2026-09-08/output/05-vinheta-oficial-gsa-tv.mp4"
+    },
+    {
+      "size": 3356182,
+      "path": "/opt/gsa-tv/cache/media/1/productions/gsa-historias-da-biblia-2026-09-08/output/06-voltamos-a-apresentar.mp4"
+    },
+    {
+      "size": 372168875,
+      "path": "/opt/gsa-tv/cache/media/1/productions/gsa-historias-da-biblia-2026-09-08/output/gsa-historias-da-biblia-o-filho-prodigo-master.mp4"
+    },
+    {
+      "size": 107727218,
+      "path": "/opt/gsa-tv/cache/media/1/productions/gsa-historias-da-biblia-2026-09-08/output/gsa-historias-da-biblia-o-filho-prodigo-tag-v2.mp4"
+    },
+    {
+      "size": 119968994,
+      "path": "/opt/gsa-tv/cache/media/media-7d79a725-8a7e-4605-9ec1-84e446c0c579.mp4"
+    },
+    {
+      "size": 1851204,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/broll/clima.webm"
+    },
+    {
+      "size": 593942,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/broll/saude.webm"
+    },
+    {
+      "size": 145079130,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/broll/tecnologia.webm"
+    },
+    {
+      "size": 13801164,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/broll/comercio.webm"
+    },
+    {
+      "size": 200472485,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/broll/futebol.webm"
+    },
+    {
+      "size": 10726897,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/broll/petroleo.webm"
+    },
+    {
+      "size": 1613734,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/broll/nepal.webm"
+    },
+    {
+      "size": 10112146,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/broll/kyiv.webm"
+    },
+    {
+      "size": 2468445,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/broll/tenis.webm"
+    },
+    {
+      "size": 408679,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/broll/futebol_neutral.webm"
+    },
+    {
+      "size": 6488017,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/broll/futebol_match_2026.webm"
+    },
+    {
+      "size": 2154952,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/avatar_clips/female_opening.mp4"
+    },
+    {
+      "size": 2154952,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/avatar_clips/male_brazil.mp4"
+    },
+    {
+      "size": 2078191,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/avatar_clips/female_elections.mp4"
+    },
+    {
+      "size": 1539723,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/avatar_clips/male_world.mp4"
+    },
+    {
+      "size": 1808026,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/avatar_clips/female_tech_sports.mp4"
+    },
+    {
+      "size": 1807658,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/avatar_clips/male_close.mp4"
+    },
+    {
+      "size": 2205514,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/avatar_clips/female_opening_v2.mp4"
+    },
+    {
+      "size": 1747787,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/avatar_clips/male_brazil_v2.mp4"
+    },
+    {
+      "size": 1685148,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/avatar_clips/male_world_v2.mp4"
+    },
+    {
+      "size": 1858138,
+      "path": "/home/opc/gsa-ai/editions/gsa-news-2026-09-01-30min/avatar_clips/male_close_v2.mp4"
+    },
+    {
+      "size": 19600867,
+      "path": "/home/opc/gsa-ai/editions/momento-de-fe-2026-09-02/video/seg01.mp4"
+    },
+    {
+      "size": 174061736,
+      "path": "/home/opc/gsa-ai/editions/momento-de-fe-2026-09-02/video/seg02.mp4"
+    },
+    {
+      "size": 85865581,
+      "path": "/home/opc/gsa-ai/editions/momento-de-fe-2026-09-02/video/seg03.mp4"
+    },
+    {
+      "size": 41445382,
+      "path": "/home/opc/gsa-ai/editions/momento-de-fe-2026-09-02/video/seg04.mp4"
+    },
+    {
+      "size": 185873927,
+      "path": "/home/opc/gsa-ai/editions/momento-de-fe-2026-09-02/video/seg05.mp4"
+    },
+    {
+      "size": 81403198,
+      "path": "/home/opc/gsa-ai/editions/momento-de-fe-2026-09-02/video/seg06.mp4"
+    },
+    {
+      "size": 18795468,
+      "path": "/home/opc/gsa-ai/editions/momento-de-fe-2026-09-02/video/seg07.mp4"
+    },
+    {
+      "size": 12590206,
+      "path": "/home/opc/gsa-ai/editions/momento-de-fe-2026-09-02/video/seg08.mp4"
+    },
+    {
+      "size": 619634760,
+      "path": "/home/opc/gsa-ai/editions/momento-de-fe-2026-09-02/video/visual-full.mp4"
+    },
+    {
+      "size": 633911031,
+      "path": "/home/opc/gsa-ai/editions/momento-de-fe-2026-09-02/video/momento-de-fe-piloto-2026-09-02.mp4"
+    },
+    {
+      "size": 14387053,
+      "path": "/home/opc/gsa-ai/editions/momento-de-fe-2026-09-02/assets/sunrise.webm"
+    },
+    {
+      "size": 6538084,
+      "path": "/home/opc/gsa-ai/editions/momento-de-fe-2026-09-02/assets/ocean.webm"
+    },
+    {
+      "size": 643782092,
+      "path": "/home/opc/gsa-ai/editions/momento-de-fe-2026-09-02/assets/nature.webm"
+    },
+    {
+      "size": 121801835,
+      "path": "/home/opc/gsa-ai/editions/momento-de-fe-2026-09-02/assets/river.webm"
+    },
+    {
+      "size": 393144,
+      "path": "/home/opc/gsa-ai/editions/momento-de-fe-2026-09-02/assets/candle.webm"
+    },
+    {
+      "size": 75484023,
+      "path": "/home/opc/gsa-ai/editions/momento-de-fe-2026-09-02/assets/mountain.webm"
+    },
+    {
+      "size": 5126528,
+      "path": "/home/opc/gsa-ai/editions/gsa-historias-da-biblia-2026-09-08/assets/stock/wikimedia-negev-old-well-9429.webm"
+    },
+    {
+      "size": 4931410,
+      "path": "/home/opc/gsa-ai/editions/gsa-historias-da-biblia-2026-09-08/assets/stock/wikimedia-jerusalem-video.webm"
+    },
+    {
+      "size": 2199888,
+      "path": "/home/opc/gsa-ai/editions/gsa-historias-da-biblia-2026-09-08/assets/opening-official.mp4"
+    },
+    {
+      "size": 2093334,
+      "path": "/home/opc/gsa-ai/editions/gsa-historias-da-biblia-2026-09-08/assets/closing-official.mp4"
+    },
+    {
+      "size": 1851204,
+      "path": "/home/opc/gsa-ai/editions/gsa-manha-news-2026-09-08-1h/broll/clima.webm"
+    },
+    {
+      "size": 593942,
+      "path": "/home/opc/gsa-ai/editions/gsa-manha-news-2026-09-08-1h/broll/saude.webm"
+    },
+    {
+      "size": 145079130,
+      "path": "/home/opc/gsa-ai/editions/gsa-manha-news-2026-09-08-1h/broll/tecnologia.webm"
+    },
+    {
+      "size": 13801164,
+      "path": "/home/opc/gsa-ai/editions/gsa-manha-news-2026-09-08-1h/broll/comercio.webm"
+    },
+    {
+      "size": 200472485,
+      "path": "/home/opc/gsa-ai/editions/gsa-manha-news-2026-09-08-1h/broll/futebol.webm"
+    },
+    {
+      "size": 10726897,
+      "path": "/home/opc/gsa-ai/editions/gsa-manha-news-2026-09-08-1h/broll/petroleo.webm"
+    },
+    {
+      "size": 10112146,
+      "path": "/home/opc/gsa-ai/editions/gsa-manha-news-2026-09-08-1h/broll/kyiv.webm"
+    },
+    {
+      "size": 2468445,
+      "path": "/home/opc/gsa-ai/editions/gsa-manha-news-2026-09-08-1h/broll/tenis.webm"
+    },
+    {
+      "size": 408679,
+      "path": "/home/opc/gsa-ai/editions/gsa-manha-news-2026-09-08-1h/broll/futebol_neutral.webm"
+    },
+    {
+      "size": 6488017,
+      "path": "/home/opc/gsa-ai/editions/gsa-manha-news-2026-09-08-1h/broll/futebol_match_2026.webm"
+    }
+  ]
+}

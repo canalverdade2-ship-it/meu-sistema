@@ -19,6 +19,8 @@ import { useConfirm } from '../../hooks/useConfirm';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { useWhatsAppDocument } from '../../hooks/useWhatsAppDocument';
 import { whatsappNotificationService } from '../../lib/whatsappNotificationService';
+import { navigate } from '../../routing/navigationService';
+import { routes } from '../../routing/routeCatalog';
 
 export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavigate }: { clientId: string, initialTab?: string, initialItemId?: string, onNavigate?: (mod: any, tab?: string, itemId?: string) => void }) {
   const { openFile } = useFileViewer();
@@ -1123,7 +1125,7 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
                     if (onNavigate) {
                       onNavigate('financeiro', 'faturas', faturaId);
                     } else {
-                      window.location.href = `/?module=financeiro&tab=faturas&item=${faturaId}`;
+                      navigate(routes.client.finance.invoice(faturaId));
                     }
                     toast.success('Fatura pronta para pagamento!');
                   } catch (error) {

@@ -19,7 +19,7 @@ import { PricingPanel } from './ecommerce/PricingPanel';
 import { Users, Scissors, Package, Boxes, Zap, Share2, Ticket, Trophy, Megaphone, ShieldCheck, Building2, Store, Tag, ChevronLeft, Tags } from 'lucide-react';
 import { useAdminNotifications } from '../../hooks/useAdminNotifications';
 
-type MainTab = 'clientes' | 'servicos' | 'pacotes' | 'produtos' | 'assinaturas' | 'indicacoes' | 'vouchers' | 'premios' | 'promocoes' | 'prestadores' | 'gsa_store' | 'categorias_loja';
+type MainTab = 'clientes' | 'servicos' | 'pacotes' | 'produtos' | 'assinaturas' | 'indicacoes' | 'vouchers' | 'premios' | 'promocoes' | 'prestadores' | 'gsa_store' | 'categorias_loja' | 'cupons';
 
 const SUB_TABS: Record<MainTab, { id: string, label: string }[]> = {
   clientes: [
@@ -77,6 +77,10 @@ const SUB_TABS: Record<MainTab, { id: string, label: string }[]> = {
   ],
   categorias_loja: [
     { id: 'todas', label: 'Todas' }
+  ],
+  cupons: [
+    { id: 'ativos', label: 'Ativos' },
+    { id: 'inativos', label: 'Inativos' }
   ]
 };
 
@@ -210,6 +214,7 @@ export function CadastroModule({
       badge: pendencies.cadastro_premios_pendentes
     },
     { id: 'promocoes', label: 'Promoções por Quantidade', icon: Tags },
+    { id: 'cupons', label: 'Cupons de Desconto', icon: Tag },
     { id: 'categorias_loja', label: 'Categorias Loja', icon: Tag },
     { id: 'gsa_store', label: 'GSA Store Hub', icon: Store },
   ].filter(tab => isAllowedTab(tab.id as MainTab));
@@ -368,6 +373,7 @@ export function CadastroModule({
         {activeTab === 'vouchers' && <VouchersModule activeSubTab={activeSubTab as any} initialItemId={initialItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {activeTab === 'premios' && <PremiosModule activeSubTab={activeSubTab as any} initialItemId={initialItemId} colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {activeTab === 'promocoes' && <PromocaoQuantidadeModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome || 'Administrador'} />}
+        {activeTab === 'cupons' && <CuponsLojaModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {activeTab === 'gsa_store' && activeSubTab === 'cupons' && <CuponsLojaModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {activeTab === 'gsa_store' && activeSubTab === 'trocas' && <LojaTrocasModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}
         {activeTab === 'gsa_store' && activeSubTab === 'reembolsos' && <ReembolsosModule colaboradorId={colaboradorId} colaboradorNome={colaboradorNome} />}

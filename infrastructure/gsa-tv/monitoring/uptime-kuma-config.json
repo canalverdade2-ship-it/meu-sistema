@@ -1,0 +1,82 @@
+{
+  "_comment": "GSA TV — Uptime Kuma monitors (importar via API ou interface)",
+  "monitors": [
+    {
+      "name": "GSA TV — ffplayout HTTP",
+      "type": "http",
+      "url": "http://127.0.0.1:8787/",
+      "interval": 30,
+      "retryInterval": 20,
+      "maxretries": 3,
+      "timeout": 10,
+      "description": "Painel do ffplayout na VPS (acesso interno)",
+      "tags": ["gsa-tv", "playout", "critical"]
+    },
+    {
+      "name": "GSA TV — Media Worker",
+      "type": "http",
+      "url": "http://gsa-tv-media-worker:9200/health",
+      "interval": 30,
+      "retryInterval": 20,
+      "maxretries": 3,
+      "timeout": 10,
+      "description": "Serviço de validação e normalização de mídia",
+      "tags": ["gsa-tv", "media", "critical"]
+    },
+    {
+      "name": "GSA TV — Cache Manager",
+      "type": "http",
+      "url": "http://gsa-tv-cache-manager:9201/health",
+      "interval": 30,
+      "retryInterval": 20,
+      "maxretries": 3,
+      "timeout": 10,
+      "description": "Serviço de preparo e limpeza do cache local",
+      "tags": ["gsa-tv", "cache", "critical"]
+    },
+    {
+      "name": "GSA TV — Playout API",
+      "type": "http",
+      "url": "http://gsa-tv-playout-api:9202/health",
+      "interval": 30,
+      "retryInterval": 20,
+      "maxretries": 3,
+      "timeout": 10,
+      "description": "Proxy seguro do ffplayout — controle sem shell",
+      "tags": ["gsa-tv", "playout", "critical"]
+    },
+    {
+      "name": "GSA TV — Playlist Compiler",
+      "type": "http",
+      "url": "http://gsa-tv-playlist-compiler:9203/health",
+      "interval": 60,
+      "retryInterval": 30,
+      "maxretries": 3,
+      "timeout": 10,
+      "description": "Compilador e publicador atômico de playlists",
+      "tags": ["gsa-tv", "playlist"]
+    },
+    {
+      "name": "GSA TV — Prometheus",
+      "type": "http",
+      "url": "http://gsa-tv-prometheus:9090/-/healthy",
+      "interval": 60,
+      "retryInterval": 30,
+      "maxretries": 3,
+      "timeout": 10,
+      "description": "Servidor de métricas Prometheus",
+      "tags": ["gsa-tv", "monitoring"]
+    },
+    {
+      "name": "GSA TV — Grafana",
+      "type": "http",
+      "url": "http://gsa-tv-grafana:3000/api/health",
+      "interval": 60,
+      "retryInterval": 30,
+      "maxretries": 3,
+      "timeout": 10,
+      "description": "Paineis de monitoramento Grafana",
+      "tags": ["gsa-tv", "monitoring"]
+    }
+  ]
+}

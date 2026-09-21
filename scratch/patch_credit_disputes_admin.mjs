@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+const root = String.raw`C:\Users\Adriano Farias\Downloads\remix-9.10_-grupo-gsa---gestão-de-serviços - Copia (4)`;
+const file = `${root}\\src\\components\\admin\\super-domains\\financeiro\\EmprestimosCreditoView.tsx`;
+let text = fs.readFileSync(file, 'utf8');
+const one = (a,b,label) => { const n=text.split(a).length-1; if(n!==1) throw new Error(`${label}: ${n}`); text=text.replace(a,b); };
+one(`import { StatusBadge } from '../shared/StatusBadge';`, `import { StatusBadge } from '../shared/StatusBadge';\nimport { CreditDisputesAdminPanel } from './CreditDisputesAdminPanel';`, 'import');
+one(`  initialSubTab?: 'emprestimos' | 'credito';`, `  initialSubTab?: 'emprestimos' | 'credito' | 'contestacoes';`, 'prop');
+one(`  const [activeTab, setActiveTab] = useState<'emprestimos' | 'credito'>(initialSubTab);`, `  const [activeTab, setActiveTab] = useState<'emprestimos' | 'credito' | 'contestacoes'>(initialSubTab);`, 'state');
+one(`            fetchCredito();\n          }}`, `            fetchCredito();\n          }}`, 'refresh-anchor');
+one(`          </button>\n        </div>\n\n        <button\n          onClick={() => {\n            fetchEmprestimos();`, `          </button>\n\n          <button\n            onClick={() => setActiveTab('contestacoes')}\n            className={\`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 \${\n              activeTab === 'contestacoes' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'\n            }\`}\n          >\n            <Gavel className=\"h-3.5 w-3.5 text-amber-600\" />\n            <span>Contestações</span>\n          </button>\n        </div>\n\n        <button\n          onClick={() => {\n            fetchEmprestimos();`, 'tab');
+one(`      {activeTab === 'emprestimos' ? (\n        <TacticalDataGrid`, `      {activeTab === 'contestacoes' ? (\n        <CreditDisputesAdminPanel initialItemId={initialItemId} />\n      ) : activeTab === 'emprestimos' ? (\n        <TacticalDataGrid`, 'render');
+fs.writeFileSync(file, text, 'utf8');
+console.log('ADMIN_TABS_PATCH_OK');

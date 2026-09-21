@@ -1,0 +1,1 @@
+import {runSshScript} from './ssh2-run.mjs';const remote=String.raw`sudo ps -eo pid,ppid,etimes,cmd | grep -E '[e]dge-tts|[g]sa-news-edge|docker run.*gsa-news-2026-09-01-v2|[f]fmpeg.*gsa-news-2026-09-01-v2' || true`;const r=await runSshScript(remote,30000);process.stdout.write(r.stdout);if(r.stderr)process.stderr.write(r.stderr);

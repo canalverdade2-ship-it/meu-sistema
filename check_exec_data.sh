@@ -1,1 +1,1 @@
-sudo docker exec -i evo-postgres psql -U evo -d n8n -c "SELECT data FROM execution_data WHERE \"executionId\" = 72;"
+sudo docker exec -e PGPASSWORD='evopass' evo-postgres psql -U evo -d n8n -t -c "SELECT ed.data FROM execution_data ed JOIN execution_entity ee ON ed.\"executionId\" = ee.id WHERE ee.\"workflowId\" = 'AAAABBBBCCCCDDDD' ORDER BY ee.id DESC LIMIT 1;" | head -100

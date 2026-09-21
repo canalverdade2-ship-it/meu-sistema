@@ -31,6 +31,7 @@ import {
   Star,
   Heart
 } from 'lucide-react';
+import { useRealtimeSubscription } from '../../hooks/useRealtime';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import { ClientGSAStore } from './ClientGSAStore';
@@ -147,6 +148,11 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
   const [view, setView] = useState<'hub' | 'shop'>(initialTab === 'shop' || route.submodule?.includes('loja-produtos') || route.submodule?.includes('loja-assinaturas') ? 'shop' : 'hub');
   
   const [isCuponsModalOpen, setIsCuponsModalOpen] = useState(false);
+  const [, setRtRefreshKey] = useState(0);
+  useRealtimeSubscription([
+    { table: 'produtos', onChange: () => setRtRefreshKey(k => k + 1) },
+    { table: 'loja_carrinhos', onChange: () => setRtRefreshKey(k => k + 1) },
+  ]);
   const [isTrocaModalOpen, setIsTrocaModalOpen] = useState(false);
   const [isPurchasesModalOpen, setIsPurchasesModalOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -335,27 +341,8 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
   const fetchMyRefunds = async () => {
     setLoadingRefunds(true);
     try {
-      const { data, error } = await supabase
-        .from('loja_reembolsos')
-        .select(`
-          *,
-          ordens_compra(
-            codigo_ordem,
-            orcamento_id,
-            produtos(nome),
-            orcamentos(codigo_orcamento)
-          ),
-          ordens_assinatura(
-            codigo_ordem,
-            orcamento_id,
-            assinaturas(nome),
-            orcamentos(codigo_orcamento)
-          )
-        `)
-        .eq('cliente_id', clientId)
-        .order('criado_em', { ascending: false });
-      if (error) throw error;
-      setRefunds(data || []);
+      const data = await callClientRpc<any[]>('gsa_client_store_refunds');
+      setRefunds(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Erro ao carregar reembolsos do cliente:', err);
     } finally {
@@ -1436,34 +1423,47 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 pb-20 max-w-6xl mx-auto md:space-y-8">
-      {(onBackToSite || onBackToMarketplace || onRequireAuth) && (
+      {(onBackToSite || onBackToMarketplace || onRequireAuth || clientId) && (
         <div className="mx-2 flex items-center justify-between gap-2 rounded-2xl border border-neutral-200 bg-white/90 p-2 shadow-sm backdrop-blur md:mx-4 md:rounded-full">
-          {onBackToMarketplace ? (
-            <button
-              onClick={onBackToMarketplace}
-              className="hidden md:inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-xs font-bold text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50 hover:text-neutral-950 md:flex-none md:rounded-full md:px-4 md:text-sm"
-            >
-              <ChevronRight className="h-4 w-4 shrink-0 rotate-180" />
-              <span className="truncate">Voltar ao Marketplace</span>
-            </button>
-          ) : onBackToSite && (
-            <button
-              onClick={onBackToSite}
-              className="hidden md:inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-xs font-bold text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50 hover:text-neutral-950 md:flex-none md:rounded-full md:px-4 md:text-sm"
-            >
-              <ChevronRight className="h-4 w-4 shrink-0 rotate-180" />
-              <span className="truncate">Voltar</span>
-            </button>
-          )}
-          {!clientId && onRequireAuth && (
-            <button
-              onClick={onRequireAuth}
-              className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-neutral-950 px-3 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-black md:flex-none md:rounded-full md:px-4 md:text-sm"
-            >
-              <User className="h-4 w-4 shrink-0" />
-              <span className="truncate">Entrar</span>
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {clientId && (
+              <button
+                onClick={() => navigate(routes.client.dashboard())}
+                className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-xs font-bold text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50 hover:text-neutral-950 md:flex-none md:rounded-full md:px-4 md:text-sm"
+              >
+                <ChevronRight className="h-4 w-4 shrink-0 rotate-180" />
+                <span className="truncate">Painel do Cliente</span>
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {onBackToMarketplace ? (
+              <button
+                onClick={onBackToMarketplace}
+                className="hidden md:inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-xs font-bold text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50 hover:text-neutral-950 md:flex-none md:rounded-full md:px-4 md:text-sm"
+              >
+                <span className="truncate">Voltar ao Marketplace</span>
+                <ChevronRight className="h-4 w-4 shrink-0" />
+              </button>
+            ) : onBackToSite && (
+              <button
+                onClick={onBackToSite}
+                className="hidden md:inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-xs font-bold text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50 hover:text-neutral-950 md:flex-none md:rounded-full md:px-4 md:text-sm"
+              >
+                <span className="truncate">Voltar</span>
+                <ChevronRight className="h-4 w-4 shrink-0" />
+              </button>
+            )}
+            {!clientId && onRequireAuth && (
+              <button
+                onClick={onRequireAuth}
+                className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-neutral-950 px-3 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-black md:flex-none md:rounded-full md:px-4 md:text-sm"
+              >
+                <span className="truncate">Entrar</span>
+                <ChevronRight className="h-4 w-4 shrink-0" />
+              </button>
+            )}
+          </div>
         </div>
       )}
       {/* Título Luxuoso e Elegante */}
@@ -1576,7 +1576,7 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
                             </span>
                           ) : (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200/50">
-                              ✓ Disponível (Restam {order.daysRemaining} {order.daysRemaining === 1 ? 'dia' : 'dias'})
+                              âœ“ Disponível (Restam {order.daysRemaining} {order.daysRemaining === 1 ? 'dia' : 'dias'})
                             </span>
                           )}
                         </div>
@@ -1854,13 +1854,13 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
                                     ) : isValorMenor ? (
                                       <div className="p-3 bg-rose-50 border border-rose-150 rounded-xl">
                                         <p className="text-[10px] text-rose-700 leading-normal font-bold">
-                                          ✕ A soma dos novos produtos ({formatCurrency(totalNovosProdutos)}) deve ser <strong>igual ou maior</strong> ao crédito de troca ({formatCurrency(creditoTroca)}). Adicione mais produtos substitutos.
+                                          âœ• A soma dos novos produtos ({formatCurrency(totalNovosProdutos)}) deve ser <strong>igual ou maior</strong> ao crédito de troca ({formatCurrency(creditoTroca)}). Adicione mais produtos substitutos.
                                         </p>
                                       </div>
                                     ) : (
                                       <div className="p-3 bg-emerald-50 border border-emerald-150 rounded-xl">
                                         <p className="text-[10px] text-emerald-700 leading-normal font-bold">
-                                          ✓ Valor da troca equivale exatamente ao crédito. Nenhuma cobrança adicional será gerada.
+                                          âœ“ Valor da troca equivale exatamente ao crédito. Nenhuma cobrança adicional será gerada.
                                         </p>
                                       </div>
                                     )}
@@ -2278,7 +2278,7 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
                                         <span>Aguardando Instruções da GSA</span>
                                       </div>
                                       <p className="text-[11px] text-blue-700 leading-normal font-bold">
-                                        Sua solicitação foi aprovada! A equipe administrativa da GSA está cadastrando o endereço de postagem {isCorreios ? "dos Correios" : "e agendando a data/hora"} para você realizar a troca.
+                                        Sua solicitação foi aprovada! O sistema da GSA está cadastrando o endereço de postagem {isCorreios ? "dos Correios" : "e agendando a data/hora"} para você realizar a troca.
                                       </p>
                                     </div>
                                   );
@@ -2703,7 +2703,7 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
                           </div>
                           
                           <div className="text-[11px] text-emerald-700 leading-normal font-semibold">
-                            ✓ O pagamento via <strong>Crédito GSA Store</strong> foi aprovado instantaneamente.
+                            âœ“ O pagamento via <strong>Crédito GSA Store</strong> foi aprovado instantaneamente.
                             Foram geradas <strong>{faturasCredito.length} faturas</strong> de amortização para este crédito.
                           </div>
 
@@ -2816,7 +2816,7 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
                 // 2. Em Processamento (Pendente)
                 // 3. Concluído (Pago)
                 let currentLevel = 1;
-                if (refund.status === 'pendente') {
+                if (refund.status === 'pendente' || refund.status === 'aguardando_estorno') {
                   currentLevel = 2;
                 } else if (refund.status === 'pago') {
                   currentLevel = 3;
@@ -2835,10 +2835,10 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
                             <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md uppercase tracking-wider">
                               {refund.codigo_reembolso}
                             </span>
-                            {(refund.ordens_compra?.orcamento_id || refund.ordens_assinatura?.orcamento_id) && (
+                            {refund.orcamento_id && (
                               <button
                                 onClick={() => {
-                                  const orcamentoId = refund.ordens_compra?.orcamento_id || refund.ordens_assinatura?.orcamento_id;
+                                  const orcamentoId = refund.orcamento_id;
                                   const orderToOpen = allPurchases.find(p => p.id === orcamentoId);
                                   setIsRefundsModalOpen(false);
                                   if (orderToOpen) {
@@ -2851,7 +2851,7 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
                                 className="text-[9px] font-black text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2 py-0.5 rounded-md uppercase tracking-wider transition-colors inline-flex items-center gap-1"
                                 title="Ver Pedido Original"
                               >
-                                REF: #{refund.ordens_compra?.orcamentos?.codigo_orcamento || refund.ordens_assinatura?.orcamentos?.codigo_orcamento || refund.ordens_compra?.codigo_ordem || refund.ordens_assinatura?.codigo_ordem || 'PEDIDO'}
+                                REF: #{refund.codigo_orcamento || refund.codigo_ordem || 'PEDIDO'}
                               </button>
                             )}
                           </div>
@@ -2868,7 +2868,7 @@ export function StoreHub({ clientId, onNavigate, initialTab, initialItemId, onRe
                             ? 'bg-red-50 text-red-600 border-red-200 animate-pulse'
                             : 'bg-amber-50 text-amber-600 border-amber-200'
                         }`}>
-                          {refund.status === 'pago' ? 'Pago' : refund.status === 'cancelado' ? 'Cancelado' : isOverdue ? 'Atrasado' : `Pendente: ${diffDays}d`}
+                          {refund.status === 'pago' ? 'Pago' : refund.status === 'cancelado' ? 'Cancelado' : refund.status === 'aguardando_estorno' ? 'Aguardando estorno' : isOverdue ? 'Atrasado' : `Pendente: ${diffDays}d`}
                         </span>
                       </div>
 

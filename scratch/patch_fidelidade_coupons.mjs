@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+const p='src/components/admin/super-domains/pessoas/FidelidadePromocoesSection.tsx';
+let s=fs.readFileSync(p,'utf8').replace(/\r\n/g,'\n');
+const old=`      if (editingCoupon) {\n        await supabase.from('cupons_loja').update(payload).eq('id', editingCoupon.id);\n      } else {\n        payload.total_usos = 0;\n        await supabase.from('cupons_loja').insert([payload]);\n      }`;
+const neu=`      if (!editingCoupon) payload.total_usos = 0;\n      await callAdminRpc('gsa_admin_save_store_coupon', {\n        p_cupom_id: editingCoupon?.id || null,\n        p_payload: payload,\n      });`;
+if(!s.includes(old)) throw new Error('save coupon block missing');
+s=s.replace(old,neu);
+const old2=`    try {\n      await supabase.from('cupons_loja').delete().eq('id', coupon.id);\n      toast.success('Excluído');`;
+const new2=`    try {\n      await callAdminRpc('gsa_admin_delete_store_coupon', { p_cupom_id: coupon.id });\n      toast.success('Excluído');`;
+if(!s.includes(old2)) throw new Error('delete coupon block missing');
+s=s.replace(old2,new2);
+fs.writeFileSync(p,s,'utf8');
+console.log('FIDELIDADE_COUPONS_PATCHED');

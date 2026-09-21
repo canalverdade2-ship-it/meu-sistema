@@ -1,0 +1,9 @@
+[Unit]
+Description=Atualiza o ticker automático de notícias da GSA TV
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/gsa-tv/bin/update-live-news-ticker.sh
+

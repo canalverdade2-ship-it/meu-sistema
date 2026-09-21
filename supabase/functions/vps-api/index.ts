@@ -1,5 +1,31 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.98.0';
 
+const EVOLUTION_API_KEY = Deno.env.get('EVOLUTION_API_KEY') || '';
+const VPS_HOST_IP = Deno.env.get('VPS_HOST_IP') || '';
+
+function getAllowedVpsTargets(): Set<string> {
+  const vpsHost = VPS_HOST_IP;
+  const customTargets = (Deno.env.get('ALLOWED_VPS_TARGETS') || '')
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean);
+
+  const list = [
+    vpsHost,
+    '172.19.0.1',
+    '172.17.0.1',
+    '127.0.0.1',
+    'localhost',
+    'evolution-api',
+    'evolution',
+    'n8n',
+    'host.docker.internal',
+    ...customTargets,
+  ].filter(Boolean);
+
+  return new Set(list);
+}
+
 const DEFAULT_ALLOWED_ORIGINS = ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
 function configuredOrigins() {
@@ -114,13 +140,46 @@ async function getRealLinuxMetrics() {
   }
 }
 
-async function handleRequest(request: Request) {
+export async function handleRequest(request: Request) {
   const origin = request.headers.get('origin');
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(origin) });
 
   const authHeader = request.headers.get('authorization') || '';
   const apikey = request.headers.get('apikey') || '';
-  const isAuthorized = true; // Permite chamadas do painel, edge function e administradores
+  const bearerToken = authHeader.replace(/^bearer\s+/i, '').trim() || apikey;
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || serviceRoleKey;
+
+  let isAuthorized = false;
+
+  // 1. Chave service_role direta (para chamadas de sistema / webhooks internos)
+  if (serviceRoleKey && bearerToken === serviceRoleKey) {
+    isAuthorized = true;
+  } else if (bearerToken && supabaseUrl && anonKey) {
+    // 2. JWT Supabase: requer papel de admin ou colaborador
+    try {
+      const authHeaderVal = authHeader.toLowerCase().startsWith('bearer ') ? authHeader : `Bearer ${bearerToken}`;
+      const supabase = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeaderVal } },
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (!userError && user) {
+        const actorType = user.app_metadata?.gsa_actor_type || user.app_metadata?.role || user.user_metadata?.role || user.role;
+        if (actorType === 'admin' || actorType === 'colaborador' || user.role === 'service_role') {
+          isAuthorized = true;
+        }
+      }
+    } catch {
+      isAuthorized = false;
+    }
+  }
+
+  if (!isAuthorized) {
+    return json(401, { error: 'Unauthorized: admin or service_role credentials required' }, origin);
+  }
 
   const url = new URL(request.url);
   const path = url.pathname.replace('/vps-api', ''); 
@@ -129,18 +188,18 @@ async function handleRequest(request: Request) {
   // Função auxiliar para tentar múltiplos hosts do Docker / VPS
   const fetchEvolution = async (endpoint: string, options: RequestInit = {}) => {
     const defaultHeaders = {
-      'apikey': 'gsa_hub_evolution_token_2026',
+      'apikey': EVOLUTION_API_KEY,
       'Content-Type': 'application/json'
     };
     const finalHeaders = { ...defaultHeaders, ...(options.headers || {}) };
     const hosts = [
-      '147.15.43.141',
+      VPS_HOST_IP,
       'localhost',
       '127.0.0.1',
       'evolution-api',
       'evolution',
       'host.docker.internal'
-    ];
+    ].filter(Boolean);
 
     for (const host of hosts) {
       try {
@@ -195,7 +254,15 @@ async function handleRequest(request: Request) {
       }
 
       const action = body.action || '';
-      const targetHost = body.targetIp && body.targetIp !== '127.0.0.1' && body.targetIp !== 'localhost' ? body.targetIp : '172.19.0.1';
+      let targetHost = '172.19.0.1';
+      if (body.targetIp) {
+        const requestedTarget = String(body.targetIp).trim();
+        const allowedTargets = getAllowedVpsTargets();
+        if (!allowedTargets.has(requestedTarget)) {
+          return json(400, { error: 'Invalid or unauthorized target host (SSRF protection)' }, origin);
+        }
+        targetHost = requestedTarget;
+      }
 
       if (action === 'power' || path.endsWith('/power')) {
         const pAction = body.action_type || body.action; // 'start', 'stop', 'reboot'
@@ -227,7 +294,7 @@ async function handleRequest(request: Request) {
       if (action === 'whatsapp-status' || path.includes('/whatsapp-status')) {
         try {
           const evoRes = await fetch(`http://${targetHost}:8080/instance/connectionState/GSA_WhatsApp`, {
-            headers: { 'apikey': 'gsa_hub_evolution_token_2026' },
+            headers: { 'apikey': EVOLUTION_API_KEY },
             signal: AbortSignal.timeout(3000)
           });
           if (evoRes.ok) {
@@ -254,66 +321,78 @@ async function handleRequest(request: Request) {
       }
 
       if (action === 'send-whatsapp' || path.includes('/send-whatsapp')) {
-        const phone = (body.phone || body.telefone || '').replace(/\D/g, '');
+        const rawPhone = String(body.phone || body.telefone || '');
+        const phone = rawPhone.replace(/\D/g, '');
         const message = body.message || body.mensagem || '';
-        if (!phone || !message) {
+        if (!rawPhone || !message) {
           return json(400, { error: 'phone e message sao obrigatorios' }, origin);
         }
 
-        const formattedPhone = phone.startsWith('55') ? phone : `55${phone}`;
+        let targetDestination = rawPhone.includes('@lid') 
+          ? rawPhone 
+          : (phone.includes('11971858372') || phone.includes('1171858372') || phone.includes('971858372'))
+            ? '38830967099420@lid'
+            : (phone.startsWith('55') ? phone : `55${phone}`);
 
         try {
-          // 1. Tenta via n8n webhook na porta 5678 da VPS solicitada
-          const n8nRes = await fetch(`http://${targetHost}:5678/webhook/send-whatsapp`, {
+          // 1. Envio Direto via Evolution API (porta 8080)
+          let evoRes = await fetch(`http://${targetHost}:8080/message/sendText/GSA_WhatsApp`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'apikey': EVOLUTION_API_KEY,
+              'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
-              phone: formattedPhone,
-              message,
-              title: body.title || 'Notificação GSA HUB',
-              category: body.category || 'SISTEMA',
-              timestamp: new Date().toISOString()
-            })
-          });
+              number: targetDestination,
+              text: message,
+              delay: 4000, presence: 'composing',
+              linkPreview: true
+            }),
+            signal: AbortSignal.timeout(6000)
+          }).catch(() => null);
 
-          if (n8nRes.ok) {
-            const resData = await n8nRes.json().catch(() => ({}));
-            return json(200, { success: true, via: 'n8n', data: resData }, origin);
+          if ((!evoRes || !evoRes.ok) && VPS_HOST_IP) {
+            evoRes = await fetch(`http://${VPS_HOST_IP}:8080/message/sendText/GSA_WhatsApp`, {
+              method: 'POST',
+              headers: {
+                'apikey': EVOLUTION_API_KEY,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                number: targetDestination,
+                text: message,
+                delay: 4000, presence: 'composing',
+                linkPreview: true
+              }),
+              signal: AbortSignal.timeout(6000)
+            }).catch(() => null);
           }
-
-          // 2. Fallback direto para Evolution API na porta 8080
-          const evoRes = await fetch(`http://${targetHost}:8080/message/sendText/GSA_WhatsApp`, {
-            method: 'POST',
-            headers: {
-              'apikey': 'gsa_hub_evolution_token_2026',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              number: formattedPhone,
-              text: message,
-              delay: 1200,
-              linkPreview: true
-            })
-          }).catch(() => fetch(`http://147.15.43.141:8080/message/sendText/GSA_WhatsApp`, {
-            method: 'POST',
-            headers: {
-              'apikey': 'gsa_hub_evolution_token_2026',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              number: formattedPhone,
-              text: message,
-              delay: 1200,
-              linkPreview: true
-            })
-          }));
 
           if (evoRes && evoRes.ok) {
             const evoData = await evoRes.json().catch(() => ({}));
             return json(200, { success: true, via: 'evolution-api', data: evoData }, origin);
           }
 
-          return json(500, { error: 'Falha no disparo: n8n e Evolution API responderam com erro' }, origin);
+          // 2. Fallback via n8n webhook na porta 5678 da VPS
+          const n8nRes = await fetch(`http://${targetHost}:5678/webhook/send-whatsapp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone: targetDestination,
+              message,
+              title: body.title || 'Notificação GSA HUB',
+              category: body.category || 'SISTEMA',
+              timestamp: new Date().toISOString()
+            }),
+            signal: AbortSignal.timeout(4000)
+          }).catch(() => null);
+
+          if (n8nRes && n8nRes.ok) {
+            const resData = await n8nRes.json().catch(() => ({}));
+            return json(200, { success: true, via: 'n8n', data: resData }, origin);
+          }
+
+          return json(500, { error: 'Falha no disparo: Evolution API e n8n responderam com erro' }, origin);
         } catch (e: any) {
           return json(500, { error: 'Erro de conexao no servidor de disparo: ' + e.message }, origin);
         }

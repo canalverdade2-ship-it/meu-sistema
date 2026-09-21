@@ -1311,19 +1311,21 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label className="block text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-2">Multa Pós-Vencimento (%)</label>
-            <input 
+            <input  
               type="number" 
               value={editingConfigs.cobranca_multa_porcentagem || ''}
-              onChange={e => setEditingConfigs({...editingConfigs, cobranca_multa_porcentagem: e.target.value})}
+              inputMode="numeric"
+onChange={(e) => setEditingConfigs({...editingConfigs, cobranca_multa_porcentagem: e.target.value})}
               className="w-full bg-neutral-50 border border-neutral-200 rounded-2xl p-4 text-sm font-bold text-neutral-800 outline-none focus:ring-2 focus:ring-indigo-500" 
             />
           </div>
           <div>
             <label className="block text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-2">Juros Mensal (%)</label>
-            <input 
+            <input  
               type="number" 
               value={editingConfigs.cobranca_juros_mensal || ''}
-              onChange={e => setEditingConfigs({...editingConfigs, cobranca_juros_mensal: e.target.value})}
+              inputMode="numeric"
+onChange={(e) => setEditingConfigs({...editingConfigs, cobranca_juros_mensal: e.target.value})}
               className="w-full bg-neutral-50 border border-neutral-200 rounded-2xl p-4 text-sm font-bold text-neutral-800 outline-none focus:ring-2 focus:ring-indigo-500" 
             />
           </div>
@@ -1746,7 +1748,8 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
             <div className="grid grid-cols-3 gap-4 item-end">
               <div className="col-span-2">
                 <label className="block text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-1">Desconto Concedido</label>
-                <input type="number" value={acordoData.desconto || ''} onChange={e => setAcordoData({...acordoData, desconto: Number(e.target.value)})} className="w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm font-bold text-neutral-800 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder={acordoData.tipo_desconto === 'fixo' ? 'R$' : '%'} />
+                <input  type="number" value={acordoData.desconto || ''} inputMode="numeric"
+onChange={(e) => setAcordoData({...acordoData, desconto: Number(e.target.value)})} className="w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm font-bold text-neutral-800 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder={acordoData.tipo_desconto === 'fixo' ? 'R$' : '%'} />
               </div>
               <div>
                 <label className="block text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-1">Tipo</label>
@@ -1759,7 +1762,8 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-1">Qtd. Parcelas</label>
-                <input type="number" min="1" max="120" value={acordoData.parcelas} onChange={e => setAcordoData({...acordoData, parcelas: Number(e.target.value)})} className="w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm font-bold text-neutral-800 focus:ring-2 focus:ring-indigo-500 outline-none" />
+                <input  type="number" min="1" max="120" value={acordoData.parcelas} inputMode="numeric"
+onChange={(e) => setAcordoData({...acordoData, parcelas: Number(e.target.value)})} className="w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm font-bold text-neutral-800 focus:ring-2 focus:ring-indigo-500 outline-none" />
               </div>
               <div>
                 <label className="block text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-1">1º Vencimento</label>
@@ -1889,10 +1893,11 @@ export function CobrancaModule({ initialTab, initialItemId, onNavigate, colabora
           
           <div>
             <label className="block text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-2">Valor Pago</label>
-            <input 
+            <input  
               type="number" 
               value={baixaCobrancaData.valor_pago} 
-              onChange={e => setBaixaCobrancaData({...baixaCobrancaData, valor_pago: Number(e.target.value)})} 
+              inputMode="numeric"
+onChange={(e) => setBaixaCobrancaData({...baixaCobrancaData, valor_pago: Number(e.target.value)})} 
               className="w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm font-bold text-neutral-800 focus:ring-2 focus:ring-emerald-500 outline-none" 
             />
           </div>

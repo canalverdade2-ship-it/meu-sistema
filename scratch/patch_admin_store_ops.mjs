@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+const p='src/lib/adminStoreOperations.ts';
+let s=fs.readFileSync(p,'utf8').replace(/\r\n/g,'\n');
+s=s.replace("import { supabase } from './supabase';\n",'');
+const archive=/export async function archiveAdminCatalogItems\([\s\S]*?\n}\n\nexport async function deleteAdminProductsBulk/;
+if(!archive.test(s)) throw new Error('archive block not found');
+s=s.replace(archive,`export async function archiveAdminCatalogItems(\n  tipo: 'produto' | 'assinatura',\n  ids: string[],\n) {\n  if (!ids || ids.length === 0) return { success: true, updated: 0 };\n  const res = await callAdminRpc<any>('gsa_admin_archive_catalog_items', { p_tipo: tipo, p_ids: ids });\n  return { success: true, updated: Number(res?.updated ?? ids.length) };\n}\n\nexport async function deleteAdminProductsBulk`);
+const del=/export async function deleteAdminProductsBulk\(ids: string\[\]\) \{[\s\S]*?\n}\s*$/;
+if(!del.test(s)) throw new Error('delete block not found');
+s=s.replace(del,`export async function deleteAdminProductsBulk(ids: string[]) {\n  if (!ids || ids.length === 0) return { success: true, deleted: 0 };\n  const res = await callAdminRpc<any>('gsa_admin_delete_products_bulk', { p_ids: ids });\n  return { success: true, deleted: Number(res?.total ?? res?.deleted ?? ids.length) };\n}\n`);
+fs.writeFileSync(p,s,'utf8');
+console.log('ADMIN_STORE_OPS_PATCHED');

@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+const root = 'C:/Users/Adriano Farias/Downloads/remix-9.10_-grupo-gsa---gestão-de-serviços - Copia (4)';
+const env = fs.readFileSync(`${root}/.env`, 'utf8');
+const get = (key) => env.match(new RegExp(`^${key}=(.*)$`, 'm'))?.[1]?.trim().replace(/^['\"]|['\"]$/g, '') || '';
+const url = get('VITE_SUPABASE_URL');
+const key = get('VITE_SUPABASE_ANON_KEY');
+if (!url || !key) throw new Error('Supabase URL/key ausentes');
+const headers = { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
+const openApi = await fetch(`${url}/rest/v1/`, { headers });
+const spec = await openApi.json();
+console.log(`route=${Boolean(spec?.paths?.['/rpc/gsa_client_cancel_support_ticket'])}`);
+const response = await fetch(`${url}/rest/v1/rpc/gsa_client_cancel_support_ticket`, { method: 'POST', headers, body: JSON.stringify({ p_sessao_id: crypto.randomUUID(), p_session_token: 'invalid-test', p_ticket_id: crypto.randomUUID() }) });
+const body = await response.json().catch(() => ({}));
+console.log(`resolved=${String(body?.message || '').toLowerCase().includes('sessao de cliente invalida')}`);
+console.log(`http=${response.status}`);

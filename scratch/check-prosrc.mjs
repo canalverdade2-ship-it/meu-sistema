@@ -1,0 +1,13 @@
+import { runSshScript } from './ssh2-run.mjs';
+
+async function main() {
+  const script = `
+psql "postgresql://supabase_admin:GSA_SENHA_FORTE_2026@127.0.0.1:5433/gsahub" -t -c "
+select prosrc from pg_proc where proname = 'gsa_admin_gsa_tv_snapshot';
+"
+`;
+  const res = await runSshScript(script);
+  console.log(res.stdout);
+}
+
+main().catch(console.error);
