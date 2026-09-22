@@ -3721,6 +3721,45 @@ async function publishedScheduleItems(date) {
     order by b.planned_start_offset_s,b.position`,
     [version.rows[0].id, date, CHANNEL_TIMEZONE],
   );
+
+  const policyResult = await pool.query(
+    "select config->'broadcast_schedule_policy' policy from public.gsa_tv_channels where id=$1 limit 1",
+    [CHANNEL_ID],
+  );
+  const policy = policyResult.rows[0]?.policy || {};
+  const clockSeconds = (value, fallback) => {
+    const raw = String(value || fallback);
+    const parts = raw.split(":").map(Number);
+    if (
+      (parts.length !== 2 && parts.length !== 3) ||
+      parts.some((part) => !Number.isFinite(part))
+    )
+      throw new Error(`Política de horário inválida: ${raw}`);
+    return parts[0] * 3600 + parts[1] * 60 + (parts[2] || 0);
+  };
+  const onAirStart = clockSeconds(policy.on_air_start, "06:00:00");
+  let streamStop = clockSeconds(policy.stream_stop, "23:59:00");
+  if (streamStop <= onAirStart && streamStop === 0) streamStop = 86400;
+
+  let expectedStart = onAirStart;
+  for (const block of blocks.rows) {
+    const blockStart = Number(block.planned_start_offset_s || 0);
+    const blockDuration = Number(block.planned_duration_s || 0);
+    if (!Number.isFinite(blockDuration) || blockDuration <= 0)
+      throw new Error(`Bloco ${block.id} possui duração planejada inválida.`);
+    if (blockStart < onAirStart || blockStart + blockDuration > streamStop)
+      throw new Error(`Bloco ${block.id} está fora da janela oficial de transmissão.`);
+    if (Math.abs(blockStart - expectedStart) > 0.5)
+      throw new Error(
+        `Grade publicada possui lacuna/sobreposição antes do bloco ${block.id}: esperado ${expectedStart}s, recebido ${blockStart}s.`,
+      );
+    expectedStart = blockStart + blockDuration;
+  }
+  if (!blocks.rowCount || Math.abs(expectedStart - streamStop) > 0.5)
+    throw new Error(
+      `Grade publicada não cobre integralmente a janela on-air: final ${expectedStart}s, esperado ${streamStop}s.`,
+    );
+
   const items = [];
   for (const block of blocks.rows) {
     const start = Math.max(0, Number(block.planned_start_offset_s || 0));
@@ -3815,8 +3854,9 @@ async function publishedScheduleItems(date) {
   return { version: version.rows[0], items };
 }
 
-async function compilePlaylist(targetDate = null) {
-  await validateSchedule();
+async function compilePlaylist(targetDate = null, options = {}) {
+  const requirePublished = options?.requirePublished === true;
+  if (!requirePublished) await validateSchedule();
   const rows = await pool.query(
     `select s.id,s.scheduled_start,s.scheduled_end,s.slot_type,m.title,m.drive_path,m.duration_s,m.media_kind,m.approval_state from public.gsa_tv_schedule_slots s join public.gsa_tv_media_items m on m.id=s.media_item_id where s.channel_id=$1 and s.state='confirmed' and s.scheduled_end>now() and s.scheduled_start<now()+interval '48 hours' and m.state='ready' and m.rights_ok and (m.media_kind<>'advertising' or m.approval_state='approved') and (m.rights_expires_at is null or m.rights_expires_at>=s.scheduled_end) order by s.scheduled_start`,
     [CHANNEL_ID],
@@ -3826,7 +3866,7 @@ async function compilePlaylist(targetDate = null) {
   await fs.mkdir(PLAYLISTS_DIR, { recursive: true });
 
   const byDate = new Map();
-  for (const item of rows.rows) {
+  if (!requirePublished) for (const item of rows.rows) {
     const source = resolveMediaPath(item.drive_path);
     try {
       await fs.access(source);
@@ -3887,6 +3927,15 @@ async function compilePlaylist(targetDate = null) {
         items: published.items.length,
       });
     }
+  }
+
+  if (requirePublished) {
+    const publishedDateSet = new Set(publishedVersions.map((item) => item.date));
+    const missingPublished = targetDates.filter((date) => !publishedDateSet.has(date));
+    if (missingPublished.length)
+      throw new Error(
+        `Grade versionada publicada obrigatória para: ${missingPublished.join(", ")}.`,
+      );
   }
 
   const generated = [];
@@ -4405,7 +4454,7 @@ async function executeJob(job) {
     case "validate_schedule":
       return validateSchedule();
     case "compile_playlist":
-      return compilePlaylist(job.payload?.date || null);
+      return compilePlaylist(job.payload?.date || null, { requirePublished: true });
     case "cache_warmup":
       return inspectCache();
     case "materialize_fixed_schedule": {
@@ -4424,20 +4473,20 @@ async function executeJob(job) {
         String(job.payload?.drive_path || ""),
       );
     case "playout_reload": {
-      const compiled = await compilePlaylist();
+      const compiled = await compilePlaylist(localClock(new Date()).date, { requirePublished: true });
       await ffplayoutProcess("restart");
       await waitForHls();
       if (streamState.desired === "running") await startStream(streamState.mode || "program", true);
       return { ...compiled, ffplayout_restarted: true };
     }
     case "stream_start": {
-      await compilePlaylist();
+      await compilePlaylist(localClock(new Date()).date, { requirePublished: true });
       return startStream("program", true);
     }
     case "stream_pause":
       return startStream("paused", true);
     case "stream_resume": {
-      await compilePlaylist();
+      await compilePlaylist(localClock(new Date()).date, { requirePublished: true });
       return startStream("program", true);
     }
     case "stream_stop":
@@ -4468,7 +4517,7 @@ async function executeJob(job) {
       return startStream(`manual-live:${sourceId}`, true);
     }
     case "live_return": {
-      await compilePlaylist();
+      await compilePlaylist(localClock(new Date()).date, { requirePublished: true });
       return startStream("program", true);
     }
     case "credentials_check":
