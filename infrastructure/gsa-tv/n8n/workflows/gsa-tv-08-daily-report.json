@@ -82,7 +82,7 @@
         300
       ],
       "parameters": {
-        "jsCode": "const c=$json.channel||{};return [{json:{type:'daily_operational_report',generated_at:new Date().toISOString(),channel:{status:c.status,desired_state:c.desired_state,playout_state:c.playout_state,signal_state:c.signal_state,last_error:c.last_error||null},open_incidents:($json.open_incidents||[]).length,rights_expiring:($json.rights_expiring||[]).length,execution_24h:$json.execution_24h||{},ai_jobs_24h:$json.ai_jobs_24h||[],latest_backup:($json.backups||[])[0]||null,alerts:$json.alerts||{}}}];"
+        "jsCode": "const c=$json.channel||{};const a=$json.autopilot||{};const r=a.readiness||{};return [{json:{type:'daily_operational_report',generated_at:new Date().toISOString(),channel:{status:c.status,desired_state:c.desired_state,playout_state:c.playout_state,signal_state:c.signal_state,last_error:c.last_error||null},autopilot:{healthy:a.healthy===true,readiness_fresh:r.fresh===true,readiness_age_seconds:r.age_seconds??null,next_day:r.next_day||null,content_factory:a.content_factory||{},duration_engine:a.duration_engine||{}},open_incidents:($json.open_incidents||[]).length,rights_expiring:($json.rights_expiring||[]).length,execution_24h:$json.execution_24h||{},ai_jobs_24h:$json.ai_jobs_24h||[],latest_backup:($json.backups||[])[0]||null,alerts:$json.alerts||{}}}];"
       }
     },
     {
