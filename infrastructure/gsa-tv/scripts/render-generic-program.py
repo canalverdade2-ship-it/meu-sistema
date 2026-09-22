@@ -10,6 +10,8 @@ import subprocess
 import os
 import urllib.request
 import urllib.parse
+import ipaddress
+import socket
 import textwrap
 import unicodedata
 import re
@@ -63,6 +65,74 @@ def compute_timing(audio_duration, slot_seconds, bumper_duration):
 
 used_urls = set()
 
+MEDIA_HOST_SUFFIXES = {
+    'pexels': ('pexels.com',),
+    'pixabay': ('pixabay.com',),
+}
+
+def validate_media_url(url, provider):
+    parsed = urllib.parse.urlparse(str(url))
+    if parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.password:
+        raise ValueError('Unsafe media URL')
+    host = parsed.hostname.lower().rstrip('.')
+    suffixes = MEDIA_HOST_SUFFIXES.get(provider, ())
+    if not suffixes or not any(host == suffix or host.endswith('.' + suffix) for suffix in suffixes):
+        raise ValueError(f'Unexpected media host for {provider}: {host}')
+    try:
+        infos = socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)
+    except socket.gaierror as exc:
+        raise ValueError(f'Media host resolution failed: {host}') from exc
+    addresses = {info[4][0] for info in infos}
+    if not addresses:
+        raise ValueError('Media host resolved without addresses')
+    for raw in addresses:
+        ip = ipaddress.ip_address(raw)
+        if not ip.is_global:
+            raise ValueError(f'Non-public media address blocked: {ip}')
+    return str(url)
+
+class SafeMediaRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def __init__(self, provider):
+        super().__init__()
+        self.provider = provider
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        validate_media_url(newurl, self.provider)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+def download_media(url, out_path, provider, timeout=30):
+    validate_media_url(url, provider)
+    max_bytes = int(os.environ.get('GSA_TV_BROLL_MAX_BYTES', str(512 * 1024 * 1024)))
+    if max_bytes < 1024 * 1024 or max_bytes > 2 * 1024 * 1024 * 1024:
+        raise ValueError('GSA_TV_BROLL_MAX_BYTES outside safe bounds')
+    opener = urllib.request.build_opener(SafeMediaRedirectHandler(provider))
+    request = urllib.request.Request(url, headers={'User-Agent': 'GSA-TV-Autopilot/2'})
+    total = 0
+    try:
+        with opener.open(request, timeout=timeout) as response, open(out_path, 'wb') as target:
+            validate_media_url(response.geturl(), provider)
+            content_length = response.headers.get('Content-Length')
+            if content_length and int(content_length) > max_bytes:
+                raise ValueError('B-roll exceeds configured size limit')
+            while True:
+                chunk = response.read(1024 * 1024)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > max_bytes:
+                    raise ValueError('B-roll exceeded configured size limit while downloading')
+                target.write(chunk)
+    except Exception:
+        try:
+            Path(out_path).unlink(missing_ok=True)
+        except Exception:
+            pass
+        raise
+    if total < 1024:
+        Path(out_path).unlink(missing_ok=True)
+        raise ValueError('B-roll download is unexpectedly small')
+    return out_path
+
 def fetch_video(query, work_dir, index, timeout=30):
     """Busca vídeo B-roll FHD 1080p no Pexels Videos e depois Pixabay Videos.
     Retorna o caminho do arquivo .mp4 baixado, ou None se não encontrar."""
@@ -99,7 +169,7 @@ def fetch_video(query, work_dir, index, timeout=30):
                     url = vf.get('link', '')
                     if url and url not in used_urls:
                         used_urls.add(url)
-                        urllib.request.urlretrieve(url, out_path)
+                        download_media(url, out_path, 'pexels', timeout=timeout)
                         print(f"Pexels video: '{query}' → {vf.get('width')}x{vf.get('height')}")
                         return out_path, {
                             'provider': 'pexels',
@@ -127,7 +197,7 @@ def fetch_video(query, work_dir, index, timeout=30):
                     vid_url = vdata.get('url', '')
                     if vid_url and vid_url not in used_urls:
                         used_urls.add(vid_url)
-                        urllib.request.urlretrieve(vid_url, out_path)
+                        download_media(vid_url, out_path, 'pixabay', timeout=timeout)
                         print(f"Pixabay video ({quality}): '{query}' → {vdata.get('width')}x{vdata.get('height')}")
                         return out_path, {
                             'provider': 'pixabay',
