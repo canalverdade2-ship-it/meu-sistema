@@ -262,6 +262,31 @@ jobs:
             exit 80
           fi
 
+      - name: Link authorized Supabase project
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
+        shell: bash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Validate linked Supabase DB authentication
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
+        shell: bash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          supabase db query --linked "select 1 as auth_ok" >/dev/null
+          echo "SUPABASE_DB_AUTH_OK=true"
+
       - name: Prepare legacy ffplayout snapshot dry-run
         if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
         shell: bash
@@ -288,18 +313,6 @@ jobs:
             | tee "$RUNNER_TEMP/gsa-tv-prepare-snapshot-apply.txt"
           grep -qx 'SNAPSHOT_APPLIED=true' "$RUNNER_TEMP/gsa-tv-prepare-snapshot-apply.txt"
           grep -qx 'SNAPSHOT_VERIFY_OK=true' "$RUNNER_TEMP/gsa-tv-prepare-snapshot-apply.txt"
-
-      - name: Link authorized Supabase project
-        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
-        shell: bash
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
-        run: |
-          set -euo pipefail
-          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
-          supabase link --project-ref "$SUPABASE_PROJECT_ID"
 
       - name: Apply only five canonical Autopilot migrations
         if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
