@@ -118,6 +118,9 @@ jobs:
           assert "EnvironmentFile=-/opt/gsa-tv/autopilot/autopilot.env" in factory_service
           assert "docker run --rm --network host postgres:15-alpine" not in deploy
           assert "docker run --rm --network host postgres:15-alpine" not in preflight
+          assert '[ "$desired" != "stopped" ] || [ "$signal" != "stopped" ] || [ "$playout" != "off_air" ]' in deploy
+          assert 'FIRST_MIGRATION_OFFAIR_READY=$first_migration_offair_ready' in preflight
+          assert 'playout_state' in preflight
 
           assert "gsa-tv/control-plane:1.8.0" in compose
           assert "ENCODER_ENGINE_URL: http://127.0.0.1:9210" in compose
