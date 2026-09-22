@@ -114,13 +114,13 @@ fi
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 tmp="$ROOT/.${stamp}.tmp"
 out="$ROOT/$stamp"
-backup_host="$(docker inspect "$CONTAINER" --format '{{range .Mounts}}{{if eq .Destination "/backups"}}{{.Source}}{{end}}{{end}}' 2>/dev/null || true)"
-[ -n "$backup_host" ] && [ -d "$backup_host" ] || {
-  echo "BLOCKED: ffplayout /backups bind mount is unavailable." >&2
+state_host="$(docker inspect "$CONTAINER" --format '{{range .Mounts}}{{if eq .Destination "/state"}}{{.Source}}{{end}}{{end}}' 2>/dev/null || true)"
+[ -n "$state_host" ] && [ -d "$state_host" ] || {
+  echo "BLOCKED: ffplayout /state bind mount is unavailable." >&2
   exit 80
 }
-container_tmp="/backups/gsa-tv-legacy-snapshot-${stamp}.db"
-host_tmp="$backup_host/gsa-tv-legacy-snapshot-${stamp}.db"
+container_tmp="/state/.gsa-tv-legacy-snapshot-${stamp}.db"
+host_tmp="$state_host/.gsa-tv-legacy-snapshot-${stamp}.db"
 
 cleanup() {
   docker exec "$CONTAINER" rm -f "$container_tmp" >/dev/null 2>&1 || true
@@ -154,13 +154,14 @@ for name in "${paths[@]}"; do
 done
 
 # Replace any live-copied SQLite file with a transactionally consistent SQLite backup.
-# Use the existing writable /backups bind mount rather than the container rootfs/tmp.
-docker exec "$CONTAINER" sqlite3 /state/ffplayout.db ".backup '$container_tmp'"
+# Materialize beside the live DB on the already-writable /state bind mount, then
+# remove the temporary file after copying it into the immutable snapshot.
+docker exec -u 0 "$CONTAINER" sqlite3 /state/ffplayout.db ".backup '$container_tmp'"
 [ -s "$host_tmp" ] || {
-  echo "BLOCKED: SQLite backup was not materialized on the /backups bind mount." >&2
+  echo "BLOCKED: SQLite backup was not materialized on the /state bind mount." >&2
   exit 81
 }
-docker exec "$CONTAINER" sqlite3 -readonly "$container_tmp" "pragma integrity_check;" | grep -qx ok
+docker exec -u 0 "$CONTAINER" sqlite3 -readonly "$container_tmp" "pragma integrity_check;" | grep -qx ok
 rm -f "$tmp/container/state/ffplayout.db"
 cp -a "$host_tmp" "$tmp/container/state/ffplayout.db"
 [ -s "$tmp/container/state/ffplayout.db" ]
