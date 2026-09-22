@@ -265,7 +265,31 @@ if [ "${#missing_paths[@]}" -gt 0 ]; then
     echo "FFPLAYOUT_MOUNTS_BEGIN"
     docker inspect gsa-tv-ffplayout --format '{{range .Mounts}}{{println .Source "->" .Destination}}{{end}}' 2>/dev/null || true
     echo "FFPLAYOUT_MOUNTS_END"
+    echo "FFPLAYOUT_PATHS_BEGIN"
+    docker exec gsa-tv-ffplayout sh -lc '
+      for p in /state /playlists /media /public /logs /backups; do
+        if [ -e "$p" ]; then
+          stat -c "CONTAINER_PATH=%n TYPE=%F OWNER=%u:%g MODE=%a" "$p" 2>/dev/null || true
+          du -sb "$p" 2>/dev/null | awk -v path="$p" "{print \"CONTAINER_BYTES=\" \$1 \" PATH=\" path}"
+          find "$p" -type f 2>/dev/null | wc -l | awk -v path="$p" "{print \"CONTAINER_FILES=\" \$1 \" PATH=\" path}"
+        else
+          echo "CONTAINER_PATH=$p MISSING"
+        fi
+      done
+    ' 2>/dev/null || true
+    echo "FFPLAYOUT_PATHS_END"
   fi
+  if have systemctl; then
+    echo "BACKUP_SERVICE_STATE=$(systemctl show gsa-tv-backup.service -p ActiveState -p SubState -p Result -p ExecMainStatus --value 2>/dev/null | paste -sd ',' - || true)"
+  fi
+  for p in /opt/gsa-tv/backups /opt/gsa-tv/backups/ffplayout /opt/gsa-tv/backups/full; do
+    if [ -e "$p" ]; then
+      stat -c 'BACKUP_PATH=%n TYPE=%F OWNER=%u:%g MODE=%a' "$p" 2>/dev/null || true
+      du -sb "$p" 2>/dev/null | awk -v path="$p" '{print "BACKUP_BYTES=" $1 " PATH=" path}' || true
+    else
+      echo "BACKUP_PATH=$p MISSING"
+    fi
+  done
   if [ -d /opt/gsa-tv/cache/media ]; then
     find /opt/gsa-tv/cache/media -mindepth 1 -maxdepth 1 -type d -printf 'MEDIA_CHILD=%f\n' 2>/dev/null | sort | head -50 || true
   fi
