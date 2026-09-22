@@ -6,6 +6,7 @@ on:
       - "gsa-tv-night-controller.sh"
       - "infrastructure/gsa-tv/**"
       - "docs/gsa-tv-secret-rotation.md"
+      - "supabase/migrations/*gsa_tv_autopilot*.sql"
       - ".github/workflows/gsa-tv-autopilot-v2.yml"
   push:
     branches:
@@ -13,6 +14,8 @@ on:
     paths:
       - "gsa-tv-night-controller.sh"
       - "infrastructure/gsa-tv/**"
+      - "docs/gsa-tv-secret-rotation.md"
+      - "supabase/migrations/*gsa_tv_autopilot*.sql"
       - ".github/workflows/gsa-tv-autopilot-v2.yml"
 
 permissions:
@@ -31,12 +34,23 @@ jobs:
 
       - name: Python syntax
         run: |
-          python -m py_compile             infrastructure/gsa-tv/scripts/autopilot-readiness.py             infrastructure/gsa-tv/scripts/autopilot-content-factory.py             infrastructure/gsa-tv/scripts/night-production.py             infrastructure/gsa-tv/scripts/render-generic-program.py             infrastructure/gsa-tv/scripts/daily-scripts.py             infrastructure/gsa-tv/scripts/test_autopilot_content_factory.py
+          python -m py_compile \
+            infrastructure/gsa-tv/scripts/autopilot-readiness.py \
+            infrastructure/gsa-tv/scripts/autopilot-content-factory.py \
+            infrastructure/gsa-tv/scripts/autopilot-duration-engine.py \
+            infrastructure/gsa-tv/scripts/autopilot-fallback-engine.py \
+            infrastructure/gsa-tv/scripts/night-production.py \
+            infrastructure/gsa-tv/scripts/render-generic-program.py \
+            infrastructure/gsa-tv/scripts/daily-scripts.py \
+            infrastructure/gsa-tv/scripts/test_autopilot_content_factory.py \
+            infrastructure/gsa-tv/scripts/test_autopilot_duration_engine.py \
+            infrastructure/gsa-tv/scripts/test_autopilot_fallback_engine.py
 
       - name: Autopilot unit tests
         run: |
           python infrastructure/gsa-tv/scripts/test_autopilot_content_factory.py
           python infrastructure/gsa-tv/scripts/test_autopilot_duration_engine.py
+          python infrastructure/gsa-tv/scripts/test_autopilot_fallback_engine.py
 
       - name: Runtime JavaScript syntax
         run: |
@@ -51,6 +65,41 @@ jobs:
           bash -n infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh
           bash -n infrastructure/gsa-tv/tests/run-live-test-suite.sh
           bash -n infrastructure/gsa-tv/tests/test-control-plane-restart-continuity.sh
+
+      - name: Runtime contract assertions
+        shell: python
+        run: |
+          from pathlib import Path
+
+          control = Path("infrastructure/gsa-tv/services/playout-api/src/app.js").read_text()
+          encoder = Path("infrastructure/gsa-tv/services/encoder-engine/src/app.js").read_text()
+          compose = Path("infrastructure/gsa-tv/services/playout-api/compose.production.yml").read_text()
+          deploy = Path("infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh").read_text()
+
+          required_control = [
+              "ENCODER_ENGINE_URL",
+              "encoderEngineRequest",
+              "control_plane_shutdown_encoder_preserved",
+              "autopilotSnapshot",
+              "fallback_engine",
+          ]
+          for marker in required_control:
+              assert marker in control, f"Control Plane contract missing: {marker}"
+
+          for marker in ["encryptState", "decryptState", "aes-256-gcm", "redact("]:
+              assert marker in encoder, f"Encoder security contract missing: {marker}"
+
+          assert "gsa-tv/control-plane:1.8.0" in compose
+          assert "ENCODER_ENGINE_URL: http://127.0.0.1:9210" in compose
+
+          migrations = [
+              "20260922131000_gsa_tv_autopilot_compile_gate.sql",
+              "20260922132000_gsa_tv_autopilot_duration_swap.sql",
+              "20260922133000_gsa_tv_autopilot_continuity_fallback.sql",
+          ]
+          for migration in migrations:
+              assert Path("supabase/migrations", migration).is_file(), f"Missing migration: {migration}"
+              assert migration in deploy, f"Deploy contract does not require: {migration}"
 
       - name: Active GSA TV secret guard
         shell: python
