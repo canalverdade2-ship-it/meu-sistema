@@ -107,7 +107,7 @@ update public.gsa_tv_channels
 returning coalesce(desired_state,'unknown'),
           coalesce(signal_state,'unknown'),
           coalesce(playout_state,'unknown'),
-          coalesce(to_jsonb(gsa_tv_channels)->>'updated_at','unknown');
+          updated_at::text;
 commit;
 SQL
 )"
