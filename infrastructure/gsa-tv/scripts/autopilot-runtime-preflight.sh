@@ -459,6 +459,60 @@ SQL
     find /home/opc /opt/gsa-tv/backups /srv /mnt -xdev -type f -name "$name" -printf 'FOUND_MEDIA=%p SIZE=%s\n' 2>/dev/null | head -20 || true
   done
   echo "TARGETED_MEDIA_SEARCH_END"
+  echo "RECOVERY_CANDIDATE_FILES_BEGIN"
+  for root in /opt/gsa-tv/fallback /opt/gsa-tv/preview /opt/gsa-tv/backups/production-editions /home/opc/gsa-ai/assets /home/opc/gsa-program-builder/output; do
+    if [ -d "$root" ]; then
+      count="$(find "$root" -type f \( -iname '*.mp4' -o -iname '*.mov' -o -iname '*.mkv' -o -iname '*.webm' -o -iname '*.wav' -o -iname '*.mp3' \) 2>/dev/null | wc -l)"
+      bytes="$(find "$root" -type f \( -iname '*.mp4' -o -iname '*.mov' -o -iname '*.mkv' -o -iname '*.webm' -o -iname '*.wav' -o -iname '*.mp3' \) -printf '%s\n' 2>/dev/null | awk '{s+=$1} END{print s+0}')"
+      echo "RECOVERY_ROOT=$root FILES=$count BYTES=$bytes"
+      find "$root" -type f \( -iname '*.mp4' -o -iname '*.mov' -o -iname '*.mkv' -o -iname '*.webm' \) -printf '%s|%p\n' 2>/dev/null | sort -nr | head -20 | sed 's/^/RECOVERY_LARGE=/' || true
+    fi
+  done
+  echo "RECOVERY_CANDIDATE_FILES_END"
+  if [ "$psql_available" = true ] && [ -n "$database_url" ]; then
+    echo "MEDIA_BASENAME_RECONCILIATION_BEGIN"
+    psql "$database_url" -X -qAt -F '|' -v ON_ERROR_STOP=1 -c "select id,drive_path from public.gsa_tv_media_items where drive_path like '/media/1/%' order by id" 2>/dev/null \
+      | python3 -c '
+import os,sys
+roots=[
+"/opt/gsa-tv/backups/production-editions",
+"/home/opc/gsa-ai",
+"/home/opc/gsa-program-builder",
+"/opt/gsa-tv/preview",
+"/opt/gsa-tv/fallback",
+]
+exts={".mp4",".mov",".mkv",".webm",".wav",".mp3"}
+index={}
+for root in roots:
+    if not os.path.isdir(root):
+        continue
+    for base,dirs,files in os.walk(root):
+        dirs[:] = [d for d in dirs if d not in {".git","node_modules",".npm",".cache"}]
+        for name in files:
+            if os.path.splitext(name)[1].lower() not in exts:
+                continue
+            index.setdefault(name,[]).append(os.path.join(base,name))
+rows=[]
+for line in sys.stdin:
+    line=line.rstrip("\n")
+    if "|" not in line: continue
+    mid,path=line.split("|",1)
+    rows.append((mid,path))
+matched=ambiguous=missing=0
+for mid,path in rows:
+    cand=index.get(os.path.basename(path),[])
+    if len(cand)==1:
+        matched+=1
+        print("BASENAME_MATCH|%s|%s|%s"%(mid,path,cand[0]))
+    elif len(cand)>1:
+        ambiguous+=1
+        print("BASENAME_AMBIGUOUS|%s|%s|%d"%(mid,path,len(cand)))
+    else:
+        missing+=1
+print("BASENAME_SUMMARY|total=%d|matched=%d|ambiguous=%d|missing=%d"%(len(rows),matched,ambiguous,missing))
+' || true
+    echo "MEDIA_BASENAME_RECONCILIATION_END"
+  fi
   echo "HOME_OPC_DU_BEGIN"
   du -x -B1 -d2 /home/opc 2>/dev/null | sort -n | tail -40 || true
   echo "HOME_OPC_DU_END"
