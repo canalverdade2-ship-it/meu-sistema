@@ -72,6 +72,23 @@ rollback_runtime() {
   done
   systemctl daemon-reload >/dev/null 2>&1 || true
 
+  restore_runtime_files() {
+    local state_file="$1"
+    local backup_dir="$2"
+    local target_dir="$3"
+    [ -s "$state_file" ] || return 0
+    while IFS='|' read -r name state; do
+      [ -n "$name" ] || continue
+      if [ "$state" = "existing" ] && [ -e "$backup_dir/$name" ]; then
+        cp -a "$backup_dir/$name" "$target_dir/$name" || true
+      elif [ "$state" = "missing" ]; then
+        rm -f "$target_dir/$name" || true
+      fi
+    done < "$state_file"
+  }
+  restore_runtime_files "$BACKUP_DIR/bin-files.state" "$BACKUP_DIR/bin" "$BIN_DIR"
+  restore_runtime_files "$BACKUP_DIR/tools-files.state" "$BACKUP_DIR/tools" "$TOOLS_DIR"
+
   if [ -f "$BACKUP_DIR/control-plane.env" ]; then
     cp -f "$BACKUP_DIR/control-plane.env" "$ENV_FILE"
     chmod 600 "$ENV_FILE"
@@ -334,7 +351,7 @@ fi
 
 install -d -m 0700 "$BACKUP_ROOT"
 BACKUP_DIR="$BACKUP_ROOT/$(date -u +%Y%m%dT%H%M%SZ)"
-install -d -m 0700 "$BACKUP_DIR/systemd"
+install -d -m 0700 "$BACKUP_DIR/systemd" "$BACKUP_DIR/bin" "$BACKUP_DIR/tools"
 cp -a "$ENV_FILE" "$BACKUP_DIR/control-plane.env"
 chmod 600 "$BACKUP_DIR/control-plane.env"
 [ -f "$CONTROL_DIR/compose.yml" ] && cp -a "$CONTROL_DIR/compose.yml" "$BACKUP_DIR/control-plane-compose.yml"
@@ -346,6 +363,41 @@ printf '%s\n' "$(docker image inspect "$CONTROL_IMAGE" -f '{{.Id}}' 2>/dev/null 
 printf '%s\n' "$(docker image inspect "$ENCODER_IMAGE" -f '{{.Id}}' 2>/dev/null || echo missing)" > "$BACKUP_DIR/encoder-target-image-id.txt"
 for unit in   gsa-tv-autopilot-readiness.service   gsa-tv-autopilot-readiness.timer   gsa-tv-autopilot-content-factory.service   gsa-tv-autopilot-content-factory.timer   gsa-tv-autopilot-broadcast-controller.service   gsa-tv-autopilot-broadcast-controller.timer; do
   [ -f "/etc/systemd/system/$unit" ] && cp -a "/etc/systemd/system/$unit" "$BACKUP_DIR/systemd/$unit"
+done
+
+runtime_bin_files=(
+  autopilot-runtime-preflight.sh
+  cutover-autopilot-v2.sh
+  autopilot-readiness.py
+  autopilot-content-factory.py
+  autopilot-broadcast-controller.py
+  autopilot-duration-engine.py
+  autopilot-fallback-engine.py
+  night-production.py
+  daily-scripts.py
+)
+runtime_tool_files=(
+  autonomous-script.cjs
+  render-generic-program.py
+  render-original-reflection.py
+)
+: > "$BACKUP_DIR/bin-files.state"
+: > "$BACKUP_DIR/tools-files.state"
+for f in "${runtime_bin_files[@]}"; do
+  if [ -e "$BIN_DIR/$f" ]; then
+    cp -a "$BIN_DIR/$f" "$BACKUP_DIR/bin/$f"
+    printf '%s|existing\n' "$f" >> "$BACKUP_DIR/bin-files.state"
+  else
+    printf '%s|missing\n' "$f" >> "$BACKUP_DIR/bin-files.state"
+  fi
+done
+for f in "${runtime_tool_files[@]}"; do
+  if [ -e "$TOOLS_DIR/$f" ]; then
+    cp -a "$TOOLS_DIR/$f" "$BACKUP_DIR/tools/$f"
+    printf '%s|existing\n' "$f" >> "$BACKUP_DIR/tools-files.state"
+  else
+    printf '%s|missing\n' "$f" >> "$BACKUP_DIR/tools-files.state"
+  fi
 done
 
 trap rollback_runtime ERR
