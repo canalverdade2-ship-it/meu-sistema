@@ -70,6 +70,11 @@ rollback_runtime() {
   done
   systemctl daemon-reload >/dev/null 2>&1 || true
 
+  if [ -f "$BACKUP_DIR/control-plane.env" ]; then
+    cp -f "$BACKUP_DIR/control-plane.env" "$ENV_FILE"
+    chmod 600 "$ENV_FILE"
+  fi
+
   if [ -f "$BACKUP_DIR/control-plane-compose.yml" ]; then
     cp -f "$BACKUP_DIR/control-plane-compose.yml" "$CONTROL_DIR/compose.yml"
     docker compose --project-directory "$CONTROL_DIR" -f "$CONTROL_DIR/compose.yml" up -d --force-recreate >/dev/null 2>&1 || true
@@ -239,6 +244,7 @@ apply=$APPLY
 already_external_migrated=$migrated
 desired_state=$desired
 signal_state=$signal
+playout_state=$playout
 control_plane_current=${cp_image:-missing}
 control_plane_target=$CONTROL_IMAGE
 encoder_target=$ENCODER_IMAGE
@@ -250,9 +256,21 @@ if [ "$APPLY" != true ]; then
   exit 0
 fi
 
+# Rollback must be reconstructable before the first mutation.
+if docker inspect gsa-tv-control-plane >/dev/null 2>&1 && [ ! -f "$CONTROL_DIR/compose.yml" ]; then
+  echo "BLOCKED: Control Plane existente sem compose local para rollback seguro: $CONTROL_DIR/compose.yml" >&2
+  exit 82
+fi
+if docker inspect gsa-tv-encoder-engine >/dev/null 2>&1 && [ ! -f "$ENCODER_DIR/compose.yml" ]; then
+  echo "BLOCKED: Encoder Engine existente sem compose local para rollback seguro: $ENCODER_DIR/compose.yml" >&2
+  exit 83
+fi
+
 install -d -m 0700 "$BACKUP_ROOT"
 BACKUP_DIR="$BACKUP_ROOT/$(date -u +%Y%m%dT%H%M%SZ)"
 install -d -m 0700 "$BACKUP_DIR/systemd"
+cp -a "$ENV_FILE" "$BACKUP_DIR/control-plane.env"
+chmod 600 "$BACKUP_DIR/control-plane.env"
 [ -f "$CONTROL_DIR/compose.yml" ] && cp -a "$CONTROL_DIR/compose.yml" "$BACKUP_DIR/control-plane-compose.yml"
 [ -f "$ENCODER_DIR/compose.yml" ] && cp -a "$ENCODER_DIR/compose.yml" "$BACKUP_DIR/encoder-compose.yml"
 if docker inspect gsa-tv-encoder-engine >/dev/null 2>&1; then echo true > "$BACKUP_DIR/encoder-existed"; else echo false > "$BACKUP_DIR/encoder-existed"; fi
