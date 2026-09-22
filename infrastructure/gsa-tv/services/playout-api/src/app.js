@@ -3641,7 +3641,7 @@ async function publishedScheduleItems(date) {
   return { version: version.rows[0], items };
 }
 
-async function compilePlaylist() {
+async function compilePlaylist(targetDate = null) {
   await validateSchedule();
   const rows = await pool.query(
     `select s.id,s.scheduled_start,s.scheduled_end,s.slot_type,m.title,m.drive_path,m.duration_s,m.media_kind,m.approval_state from public.gsa_tv_schedule_slots s join public.gsa_tv_media_items m on m.id=s.media_item_id where s.channel_id=$1 and s.state='confirmed' and s.scheduled_end>now() and s.scheduled_start<now()+interval '48 hours' and m.state='ready' and m.rights_ok and (m.media_kind<>'advertising' or m.approval_state='approved') and (m.rights_expires_at is null or m.rights_expires_at>=s.scheduled_end) order by s.scheduled_start`,
@@ -3688,10 +3688,18 @@ async function compilePlaylist() {
 
   const now = new Date();
   const targetDates = [];
-  for (const seed of [now, new Date(now.getTime() + 24 * 60 * 60 * 1000)]) {
-    const date = localClock(seed).date;
-    targetDates.push(date);
-    if (!byDate.has(date)) byDate.set(date, []);
+  if (targetDate != null) {
+    const requested = String(targetDate).trim();
+    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(requested))
+      throw new Error("Data de compilação inválida.");
+    targetDates.push(requested);
+    if (!byDate.has(requested)) byDate.set(requested, []);
+  } else {
+    for (const seed of [now, new Date(now.getTime() + 24 * 60 * 60 * 1000)]) {
+      const date = localClock(seed).date;
+      targetDates.push(date);
+      if (!byDate.has(date)) byDate.set(date, []);
+    }
   }
   const publishedVersions = [];
   for (const date of targetDates) {
@@ -3708,9 +3716,10 @@ async function compilePlaylist() {
   }
 
   const generated = [];
-  for (const [date, items] of [...byDate.entries()].sort(([a], [b]) =>
-    a.localeCompare(b),
-  )) {
+  const targetDateSet = new Set(targetDates);
+  for (const [date, items] of [...byDate.entries()]
+    .filter(([date]) => targetDateSet.has(date))
+    .sort(([a], [b]) => a.localeCompare(b))) {
     items.sort((a, b) => a.start - b.start);
     const program = [];
     let timeline = 0;
@@ -4108,7 +4117,7 @@ async function executeJob(job) {
     case "validate_schedule":
       return validateSchedule();
     case "compile_playlist":
-      return compilePlaylist();
+      return compilePlaylist(job.payload?.date || null);
     case "cache_warmup":
       return inspectCache();
     case "materialize_fixed_schedule": {
