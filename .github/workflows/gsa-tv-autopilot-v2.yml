@@ -49,6 +49,8 @@ jobs:
         run: |
           bash -n infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh
           bash -n infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh
+          bash -n infrastructure/gsa-tv/tests/run-live-test-suite.sh
+          bash -n infrastructure/gsa-tv/tests/test-control-plane-restart-continuity.sh
 
       - name: Active GSA TV secret guard
         shell: python
