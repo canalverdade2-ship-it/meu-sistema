@@ -22,6 +22,7 @@ on:
         options:
           - preflight
           - legacy-snapshot
+          - prepare-first-migration
           - deploy
           - cutover
       cutover_scope:
@@ -44,6 +45,10 @@ on:
         description: "Para legacy-snapshot, digite SNAPSHOT-GUARD"
         required: false
         type: string
+      confirm_prepare_policy:
+        description: "Para prepare-first-migration, digite PREPARE-FIRST-MIGRATION"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -56,7 +61,7 @@ jobs:
   runtime:
     runs-on: ubuntu-latest
     environment: gsa-tv-production
-    timeout-minutes: 30
+    timeout-minutes: 60
     env:
       VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
       VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
@@ -65,6 +70,8 @@ jobs:
       RUNTIME_CUTOVER_SCOPE: ${{ github.event_name == 'workflow_dispatch' && inputs.cutover_scope || 'all' }}
       RUNTIME_CUTOVER_CONFIRM_POLICY: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_cutover_policy || '' }}
       RUNTIME_SNAPSHOT_CONFIRM_POLICY: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_legacy_snapshot_policy || '' }}
+      RUNTIME_PREPARE_CONFIRM_POLICY: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_prepare_policy || '' }}
+      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
     steps:
       - uses: actions/checkout@v4
 
@@ -74,6 +81,9 @@ jobs:
         env:
           VPS_SSH_KEY_PRESENT: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
           VPS_KNOWN_HOSTS_PRESENT: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+          SUPABASE_ACCESS_TOKEN_PRESENT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD_PRESENT: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID_PRESENT: ${{ secrets.SUPABASE_PROJECT_ID }}
         run: |
           set -euo pipefail
           test "${RUNTIME_CONFIRM_POLICY}" = "OFFAIR-GUARD" || {
@@ -114,6 +124,29 @@ jobs:
             if [ "${GITHUB_REF_NAME}" != "feat/gsa-tv-autopilot-v2" ] && [ "${GITHUB_REF_NAME}" != "main" ]; then
               echo "Snapshot legado permitido somente na branch de rollout ou main." >&2
               exit 65
+            fi
+          fi
+
+          if [ "${RUNTIME_OPERATION}" = "prepare-first-migration" ]; then
+            if [ "${RUNTIME_PREPARE_CONFIRM_POLICY}" != "PREPARE-FIRST-MIGRATION" ]; then
+              echo "Preparação da primeira migração exige PREPARE-FIRST-MIGRATION." >&2
+              exit 64
+            fi
+            if [ "${GITHUB_REF_NAME}" != "feat/gsa-tv-autopilot-v2" ] && [ "${GITHUB_REF_NAME}" != "main" ]; then
+              echo "Preparação permitida somente na branch de rollout ou main." >&2
+              exit 65
+            fi
+            prep_missing=()
+            [ -n "${SUPABASE_ACCESS_TOKEN_PRESENT:-}" ] || prep_missing+=("SUPABASE_ACCESS_TOKEN")
+            [ -n "${SUPABASE_DB_PASSWORD_PRESENT:-}" ] || prep_missing+=("SUPABASE_DB_PASSWORD")
+            [ -n "${SUPABASE_PROJECT_ID_PRESENT:-}" ] || prep_missing+=("SUPABASE_PROJECT_ID")
+            if [ "${#prep_missing[@]}" -gt 0 ]; then
+              printf 'Secret Supabase obrigatório ausente: %s\n' "${prep_missing[@]}" >&2
+              exit 78
+            fi
+            if [ "${SUPABASE_PROJECT_ID_PRESENT}" != "${EXPECTED_PROJECT_ID}" ]; then
+              echo "Project ref Supabase não corresponde ao projeto autorizado." >&2
+              exit 79
             fi
           fi
 
