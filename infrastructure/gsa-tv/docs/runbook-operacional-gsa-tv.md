@@ -1,7 +1,7 @@
 # GSA TV — Runbook operacional atual
 
-**Versão:** 2.2  
-**Atualizado:** 04/09/2026
+**Versão:** 3.0  
+**Atualizado:** 22/09/2026
 
 A arquitetura vigente está descrita em `docs/arquitetura-atual-gsa-tv.md`. Google Drive/rclone e os serviços antigos 9200/9201/9203 não fazem parte do runtime atual.
 
@@ -9,6 +9,7 @@ A arquitetura vigente está descrita em `docs/arquitetura-atual-gsa-tv.md`. Goog
 
 ```bash
 curl -fsS http://127.0.0.1:9202/health
+curl -fsS http://127.0.0.1:9210/health
 curl -fsS http://127.0.0.1:9204/health
 curl -fsS http://127.0.0.1:9204/metrics
 curl -fsS http://127.0.0.1:8787/
@@ -20,6 +21,7 @@ Um container `healthy` não prova transmissão. Para estado operacional, confirm
 ## Serviços
 
 - Control Plane: `gsa-tv-control-plane`;
+- Encoder Engine: `gsa-tv-encoder-engine`;
 - ffplayout: `gsa-tv-ffplayout`;
 - Watchdog: `gsa-tv-watchdog`;
 - bridge n8n: `gsa-tv-n8n-bridge.service`;
@@ -47,25 +49,66 @@ systemctl list-timers --all | grep gsa-tv-backup
 
 Considere uma execução válida somente quando o registro em `gsa_tv_backup_runs` demonstrar backup completo, checksums e `restored_test`.
 
-## Proteção de implantação durante transmissão
+## Deploy do Autopilot V2 e proteção do sinal
 
-O encoder RTMP da versão 1.6.39 ainda é um processo filho do container do Control Plane. Recriar ou substituir esse container encerra o FFmpeg e pode fazer o YouTube finalizar o evento público, mesmo quando o processo volta a conectar poucos segundos depois.
-
-Enquanto o encoder não for migrado para um serviço independente, toda promoção de imagem deve passar obrigatoriamente por:
+Antes do primeiro deploy:
 
 ```bash
-sudo /opt/gsa-tv/bin/deploy-control-plane-safe.sh gsa-tv/control-plane:<versao>
+sudo ./infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh
 ```
 
-A trava deve recusar a implantação quando o banco indicar `running|sending` ou quando encontrar um FFmpeg ativo. Não contornar essa recusa durante uma transmissão pública.
+O preflight é somente leitura e classifica o runtime. Os estados principais são:
 
-A versão de produção `1.6.39`, promovida em 04/09/2026, contém:
+- `EXTERNAL_READY` — Control Plane já usa Encoder Engine independente;
+- `LEGACY_COUPLED` — relay ainda pertence ao Control Plane;
+- `CONTROL_PLANE_MISSING` — runtime divergente/incompleto;
+- `PARTIAL_EXTERNAL` — migração parcial que exige correção antes de continuar.
 
-- atualização gráfica por FFmpeg/ZMQ sem `graphics_reload` recriar o encoder;
-- advisory lock por canal no PostgreSQL;
-- preservação de `media:<media_item_id>` durante restauração;
-- modo de validação com `GSA_TV_DISABLE_RUNTIME_RESTORE=true`;
-- correção da regressão de escopo associada a `next is not defined`.
-- correção do comando inválido de `drawtext reinit` para corpos baseados em `textfile`; o conteúdo desses corpos continua sendo atualizado por `reload=1` sem reiniciar o RTMP.
+A primeira migração de `LEGACY_COUPLED` para o Encoder Engine independente exige canal off-air. O instalador recusa `running|sending` e nunca envia STOP automaticamente.
 
-Uma futura substituição da versão ativa não deve ocorrer com o canal no ar sem janela explicitamente autorizada. A solução definitiva é executar o encoder em serviço próprio, com ciclo de vida independente do Control Plane, e só então habilitar promoção blue-green do painel.
+Aplicar primeiro as migrations pelo fluxo canônico do Supabase:
+
+- `20260922131000_gsa_tv_autopilot_compile_gate.sql`;
+- `20260922132000_gsa_tv_autopilot_duration_swap.sql`.
+
+Depois executar dry-run e apply:
+
+```bash
+sudo ./infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh
+sudo ./infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh --apply
+```
+
+O instalador:
+
+1. valida estado do canal e contrato do banco;
+2. gera `ENCODER_ENGINE_TOKEN` somente se necessário, sem imprimi-lo;
+3. cria backup local para rollback;
+4. builda imagens versionadas;
+5. inicia/valida `gsa-tv-encoder-engine`;
+6. substitui o Control Plane;
+7. confirma os marcadores do contrato externo;
+8. instala scripts e timers do Autopilot;
+9. executa readiness read-only como smoke test;
+10. habilita timers somente depois das healthchecks.
+
+No runtime externo, reiniciar/substituir o Control Plane não deve parar ffplayout nem o Encoder Engine. O `SIGTERM` do painel preserva a cadeia de sinal; ao retornar, ele reconcilia o estado desejado com o engine.
+
+### Rollback
+
+Cada apply cria diretório protegido em:
+
+`/opt/gsa-tv/backups/autopilot-v2/<timestamp>/`
+
+Falha durante a implantação aciona rollback local dos compose e timers. Não apagar esse backup até concluir os testes de estabilidade.
+
+## Autopilot
+
+```bash
+systemctl status gsa-tv-autopilot-readiness.timer
+systemctl status gsa-tv-autopilot-content-factory.timer
+cat /opt/gsa-tv/runtime/autopilot/readiness-horizon.json
+cat /opt/gsa-tv/runtime/autopilot/content-factory.json
+cat /opt/gsa-tv/runtime/autopilot/duration-engine.json
+```
+
+O readiness roda a cada 15 minutos. O dispatcher de produção roda em ciclos de baixa prioridade e trabalha primeiro D+1, depois D+2/D+3. O Duration Engine atua somente em programas originais futuros; live, reprise e conteúdo de acervo ficam fora da substituição automática.
