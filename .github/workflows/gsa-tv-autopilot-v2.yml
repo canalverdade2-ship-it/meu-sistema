@@ -99,6 +99,7 @@ jobs:
               "ENCODER_ENGINE_URL",
               "encoderEngineRequest",
               "control_plane_shutdown_encoder_preserved",
+              "control_plane_restore_external_encoder_preserved",
               "autopilotSnapshot",
               "fallback_engine",
               "broadcast_controller",
@@ -119,6 +120,9 @@ jobs:
           assert 'case "stream_resume"' in control
           assert 'case "live_return"' in control
           assert 'compilePlaylist(localClock(new Date()).date, { requirePublished: true })' in control
+          assert 'encoder.outer_running && encoder.producer_running' in control
+          assert '"control_plane_restore_external_encoder_preserved"' in control
+          assert 'await encoderEngineStatus()' in control
 
           for marker in ["encryptState", "decryptState", "aes-256-gcm", "redact("]:
               assert marker in encoder, f"Encoder security contract missing: {marker}"
@@ -157,7 +161,11 @@ jobs:
           assert 'FIRST_MIGRATION_OFFAIR_READY=$first_migration_offair_ready' in preflight
           assert 'playout_state' in preflight
           assert "slot_duration_contract_violation" in readiness
+          assert "library_composition_required" in readiness
+          assert "authorized_continuity_fill_s" in readiness
           assert "required_slot_duration_s" in readiness
+          assert "allow_continuity_fill" in night_production
+          assert "allow_trim" in night_production
 
           assert "gsa-tv/control-plane:1.8.0" in compose
           assert "ENCODER_ENGINE_URL: http://127.0.0.1:9210" in compose
