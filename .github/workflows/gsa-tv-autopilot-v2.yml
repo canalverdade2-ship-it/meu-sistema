@@ -87,6 +87,7 @@ jobs:
           autonomous = Path("infrastructure/gsa-tv/scripts/autonomous-script.cjs").read_text()
           night_production = Path("infrastructure/gsa-tv/scripts/night-production.py").read_text()
           renderer = Path("infrastructure/gsa-tv/scripts/render-generic-program.py").read_text()
+          readiness = Path("infrastructure/gsa-tv/scripts/autopilot-readiness.py").read_text()
           gemini = Path("infrastructure/gsa-tv/services/playout-api/src/gemini.js").read_text()
 
           required_control = [
@@ -125,6 +126,8 @@ jobs:
           assert 'Encoder Engine existente sem compose local para rollback seguro' in deploy
           assert 'FIRST_MIGRATION_OFFAIR_READY=$first_migration_offair_ready' in preflight
           assert 'playout_state' in preflight
+          assert "slot_duration_contract_violation" in readiness
+          assert "required_slot_duration_s" in readiness
 
           assert "gsa-tv/control-plane:1.8.0" in compose
           assert "ENCODER_ENGINE_URL: http://127.0.0.1:9210" in compose
@@ -133,6 +136,7 @@ jobs:
               "20260922131000_gsa_tv_autopilot_compile_gate.sql",
               "20260922132000_gsa_tv_autopilot_duration_swap.sql",
               "20260922134000_gsa_tv_autopilot_continuity_fallback.sql",
+              "20260922135000_gsa_tv_cinema_duration_contract.sql",
           ]
           for migration in migrations:
               assert Path("supabase/migrations", migration).is_file(), f"Missing migration: {migration}"
