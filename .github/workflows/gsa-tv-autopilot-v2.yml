@@ -147,6 +147,9 @@ jobs:
           assert "ENCODER_RECREATE_SKIPPED=runtime_not_off_air" in deploy
           assert 'if [ "$ENCODER_MUTATED" = true ]; then' in deploy
           assert '[ "$enc_image" = "$ENCODER_IMAGE" ]' in deploy
+          assert "bin-files.state" in deploy
+          assert "tools-files.state" in deploy
+          assert "restore_runtime_files" in deploy
           assert "CUTOVER_DRY_RUN_OK=true" in cutover
           assert "GSA_TV_BROADCAST_AUTOMATION_ENABLED" in cutover
           assert "GSA_TV_AUTOPILOT_AUTO_APPROVE" in cutover
