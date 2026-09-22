@@ -97,6 +97,7 @@ jobs:
           offair_reconcile = Path("infrastructure/gsa-tv/scripts/reconcile-stale-offair-state.sh").read_text()
           media_recovery = Path("infrastructure/gsa-tv/scripts/recover-local-media-cache.sh").read_text()
           migration_status = Path("infrastructure/gsa-tv/scripts/autopilot-migration-status.sh").read_text()
+          migration_apply = Path("infrastructure/gsa-tv/scripts/apply-autopilot-migration.sh").read_text()
           full_backup = Path("infrastructure/gsa-tv/scripts/backup-full.sh").read_text()
           runtime_workflow = Path(".github/workflows/gsa-tv-autopilot-runtime.yml").read_text()
           prep_start = runtime_workflow.index("- name: First-migration physical off-air gate")
@@ -183,11 +184,15 @@ jobs:
           assert "PREPARE-FIRST-MIGRATION" in runtime_workflow
           assert "PHYSICAL_OFF_AIR_EVIDENCE=true" in runtime_workflow
           assert "HOST_SQLITE_BACKUP_PROBE=ok" in runtime_workflow
-          assert "supabase db query --linked --file" in runtime_workflow
-          assert 'supabase migration list --linked --password "$SUPABASE_DB_PASSWORD"' in runtime_workflow
-          assert "SUPABASE_DB_AUTH_OK=true" in runtime_workflow
-          assert 'supabase migration repair --linked --password "$SUPABASE_DB_PASSWORD" --status applied' in runtime_workflow
-          assert 'supabase db query --linked "select 1 as auth_ok"' not in runtime_workflow
+          assert "SELF_HOSTED_DB_ACCESS_OK=true" in runtime_workflow
+          assert "apply-autopilot-migration.sh" in runtime_workflow
+          assert "SELF_HOSTED_MIGRATION_REMOTE_DIR" in runtime_workflow
+          assert "sha256sum -c manifest.sha256" in runtime_workflow
+          assert "supabase/setup-cli" not in runtime_workflow
+          assert "--linked" not in runtime_workflow
+          assert "SUPABASE_ACCESS_TOKEN" not in runtime_workflow
+          assert "SUPABASE_PROJECT_ID" not in runtime_workflow
+          assert "SUPABASE_DB_PASSWORD" not in runtime_workflow
           assert "reconcile-stale-offair-state.sh" in runtime_workflow
           assert "recover-local-media-cache.sh" in runtime_workflow
           assert "backup-full.sh" in runtime_workflow
@@ -196,9 +201,10 @@ jobs:
           assert "db reset --linked" not in runtime_workflow
           assert "deploy-autopilot-v2.sh" not in prep_section
           assert "cutover-autopilot-v2.sh" not in prep_section
-          assert prep_section.index("Validate linked Supabase DB authentication") < prep_section.index("Prepare legacy ffplayout snapshot apply")
-          assert prep_section.index("Prepare legacy ffplayout snapshot apply") < prep_section.index("Apply only five canonical Autopilot migrations")
-          assert prep_section.index("Apply only five canonical Autopilot migrations") < prep_section.index("Reconcile stale logical off-air state apply")
+          assert prep_section.index("Validate self-hosted production database") < prep_section.index("Prepare legacy ffplayout snapshot apply")
+          assert prep_section.index("Prepare legacy ffplayout snapshot apply") < prep_section.index("Stage canonical self-hosted migration bundle")
+          assert prep_section.index("Stage canonical self-hosted migration bundle") < prep_section.index("Apply only five canonical Autopilot migrations on self-hosted PostgreSQL")
+          assert prep_section.index("Apply only five canonical Autopilot migrations on self-hosted PostgreSQL") < prep_section.index("Reconcile stale logical off-air state apply")
           assert prep_section.index("Reconcile stale logical off-air state apply") < prep_section.index("Full verified backup for first migration")
           assert "PHYSICAL_OFF_AIR_EVIDENCE" in preflight
           assert "AUTOPILOT_DB_CONTRACT_READY" in preflight
@@ -219,6 +225,12 @@ jobs:
           assert 'if [ "$history_table" = "present" ]; then' in migration_status
           assert "pg_get_functiondef(to_regprocedure('public.gsa_tv_production_signature(uuid)'))" in migration_status
           assert "'public.gsa_tv_production_signature(uuid)'::regprocedure" not in migration_status
+          assert "MIGRATION_SELF_HOSTED_TARGET=true" in migration_apply
+          assert "CREATE SCHEMA IF NOT EXISTS supabase_migrations" in migration_apply
+          assert "CREATE TABLE IF NOT EXISTS supabase_migrations.schema_migrations" in migration_apply
+          assert "refusing history repair without verified contract" in migration_apply
+          assert 'psql "$DB_URL" -X -v ON_ERROR_STOP=1 -f "$FILE"' in migration_apply
+          assert "supabase " not in migration_apply
           assert "source.backup(destination)" in full_backup
           assert "media-catalog-missing.txt" in full_backup
           assert "catalog_missing_files" in full_backup
