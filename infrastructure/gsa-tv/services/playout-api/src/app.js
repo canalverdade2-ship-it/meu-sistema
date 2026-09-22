@@ -62,6 +62,9 @@ const SCHEDULE_FILLER_FILE =
   process.env.SCHEDULE_FILLER_FILE ||
   path.join(MEDIA_DIR, "filler/gsa-tv-filler-600.mp4");
 const PREVIEW_DIR = process.env.PREVIEW_DIR || "/preview/1/live";
+const AUTOPILOT_STATE_DIR = String(
+  process.env.AUTOPILOT_STATE_DIR || "/runtime/autopilot",
+);
 const PREVIEW_TOKEN_TTL_SECONDS = Math.max(
   60,
   Math.min(900, Number(process.env.PREVIEW_TOKEN_TTL_SECONDS || 300)),
@@ -4199,8 +4202,91 @@ async function enqueueAutomationJob(body={}){
   try{const q=await pool.query("insert into public.gsa_tv_jobs(channel_id,job_type,status,progress,payload) values($1,$2,'pending',0,$3) returning id,status",[CHANNEL_ID,jobType,payload]);return{accepted:true,job_id:q.rows[0].id,status:q.rows[0].status,already_queued:false};}
   catch(e){if(e.code==='23505'){const q=await pool.query("select id,status from public.gsa_tv_jobs where channel_id=$1 and job_type=$2 and status in ('pending','running') order by created_at desc limit 1",[CHANNEL_ID,jobType]);if(q.rowCount)return{accepted:true,job_id:q.rows[0].id,status:q.rows[0].status,already_queued:true};}throw e;}
 }
+async function readAutopilotStateFile(filename) {
+  const file = path.join(AUTOPILOT_STATE_DIR, filename);
+  try {
+    const stat = await fs.stat(file);
+    if (!stat.isFile() || stat.size > 2 * 1024 * 1024)
+      throw new Error("Arquivo de estado inválido.");
+    const data = JSON.parse(await fs.readFile(file, "utf8"));
+    return {
+      present: true,
+      age_seconds: Math.max(0, Math.round((Date.now() - stat.mtimeMs) / 1000)),
+      data,
+    };
+  } catch (error) {
+    if (error.code === "ENOENT")
+      return { present: false, age_seconds: null, data: null };
+    return {
+      present: false,
+      age_seconds: null,
+      data: null,
+      error: String(error.message || error).slice(0, 300),
+    };
+  }
+}
+
+async function autopilotSnapshot() {
+  const [readinessFile, factoryFile, durationFile] = await Promise.all([
+    readAutopilotStateFile("readiness-horizon.json"),
+    readAutopilotStateFile("content-factory.json"),
+    readAutopilotStateFile("duration-engine.json"),
+  ]);
+  const readiness = readinessFile.data || {};
+  const today = localClock(new Date()).date;
+  const nextDay = (readiness.days_detail || []).find(
+    (day) => day.date > today,
+  ) || null;
+  const readinessFresh =
+    readinessFile.present && readinessFile.age_seconds !== null &&
+    readinessFile.age_seconds <= 1800;
+  return {
+    readiness: {
+      present: readinessFile.present,
+      fresh: readinessFresh,
+      age_seconds: readinessFile.age_seconds,
+      generated_at: readiness.generated_at || null,
+      start_date: readiness.start_date || null,
+      horizon_days: readiness.days || null,
+      ready_days: readiness.ready_days ?? null,
+      next_day: nextDay
+        ? {
+            date: nextDay.date,
+            state: nextDay.state,
+            coverage_pct: nextDay.coverage_pct,
+            content_coverage_pct: nextDay.content_coverage_pct,
+            issue_count: nextDay.issue_count,
+            hard_issue_count: nextDay.hard_issue_count,
+          }
+        : null,
+    },
+    content_factory: {
+      present: factoryFile.present,
+      age_seconds: factoryFile.age_seconds,
+      state: factoryFile.data?.state || null,
+      reason: factoryFile.data?.reason || null,
+      target: factoryFile.data?.target || null,
+      finished_at: factoryFile.data?.finished_at || null,
+    },
+    duration_engine: {
+      present: durationFile.present,
+      age_seconds: durationFile.age_seconds,
+      state: durationFile.data?.state || null,
+      target: durationFile.data?.target || null,
+      finished_at: durationFile.data?.finished_at || null,
+    },
+    healthy:
+      readinessFresh &&
+      (!nextDay || nextDay.state === "ready") &&
+      !["failed", "cycle_failed", "duration_cycle_failed"].includes(
+        String(factoryFile.data?.state || ""),
+      ) &&
+      String(durationFile.data?.state || "") !== "failed",
+  };
+}
+
 async function automationSnapshot(){
-  const [channel,incidents,rights,execution,backups,jobs,ai,schedule,mediaPending,aiReady,alerts]=await Promise.all([
+  const [channel,incidents,rights,execution,backups,jobs,ai,schedule,mediaPending,aiReady,alerts,autopilot]=await Promise.all([
     pool.query("select id,name,status,desired_state,playout_state,signal_state,last_heartbeat_at,last_signal_at,last_error,quality_profile,(coalesce(config->>'youtube_video_id','')<>'') youtube_video_id_configured from public.gsa_tv_channels where id=$1",[CHANNEL_ID]),
     pool.query("select id,severity,message,created_at from public.gsa_tv_incidents where channel_id=$1 and not resolved order by created_at desc limit 20",[CHANNEL_ID]),
     pool.query("select id,title,rights_expires_at from public.gsa_tv_media_items where channel_id=$1 and rights_expires_at is not null and rights_expires_at<now()+interval '7 days' order by rights_expires_at limit 50",[CHANNEL_ID]),
@@ -4211,9 +4297,10 @@ async function automationSnapshot(){
     pool.query("select id,broadcast_date,version,state,title,published_at from public.gsa_tv_schedule_versions where channel_id=$1 order by broadcast_date desc,version desc limit 5",[CHANNEL_ID]),
     pool.query("select id,title,state,updated_at from public.gsa_tv_media_items where channel_id=$1 and state in ('received','processing') and updated_at<now()-interval '2 minutes' order by updated_at limit 50",[CHANNEL_ID]),
     pool.query("select id,name,project_type,state,autonomy_mode,updated_at from public.gsa_tv_ai_projects where channel_id=$1 and state='approved' and autonomy_mode in ('supervised_auto','authorized_routine') order by updated_at limit 20",[CHANNEL_ID]),
-    pool.query("select enabled,min_severity,cooldown_minutes,(coalesce(whatsapp_number,'')<>'') recipient_configured from public.gsa_tv_alert_settings where channel_id=$1 limit 1",[CHANNEL_ID])
+    pool.query("select enabled,min_severity,cooldown_minutes,(coalesce(whatsapp_number,'')<>'') recipient_configured from public.gsa_tv_alert_settings where channel_id=$1 limit 1",[CHANNEL_ID]),
+    autopilotSnapshot()
   ]);
-  return{server_time:new Date().toISOString(),channel:channel.rows[0]||null,open_incidents:incidents.rows,rights_expiring:rights.rows,execution_24h:execution.rows[0]||{},backups:backups.rows,recent_jobs:jobs.rows,ai_jobs_24h:ai.rows,schedule_versions:schedule.rows,media_pending:mediaPending.rows,ai_ready:aiReady.rows,alerts:alerts.rows[0]||{enabled:false,recipient_configured:false},stream:streamState};
+  return{server_time:new Date().toISOString(),channel:channel.rows[0]||null,open_incidents:incidents.rows,rights_expiring:rights.rows,execution_24h:execution.rows[0]||{},backups:backups.rows,recent_jobs:jobs.rows,ai_jobs_24h:ai.rows,schedule_versions:schedule.rows,media_pending:mediaPending.rows,ai_ready:aiReady.rows,alerts:alerts.rows[0]||{enabled:false,recipient_configured:false},autopilot,stream:streamState};
 }
 
 async function executeJob(job) {
@@ -4641,6 +4728,7 @@ const server = http.createServer(async (req, res) => {
       processing,
       last_cycle: lastCycle,
       stream: streamState,
+      autopilot: await autopilotSnapshot(),
     });
   if (req.method === "POST" && url.pathname === "/process") {
     await processJobs();
