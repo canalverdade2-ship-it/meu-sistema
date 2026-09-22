@@ -462,6 +462,39 @@ SQL
   echo "HOME_OPC_DU_BEGIN"
   du -x -B1 -d2 /home/opc 2>/dev/null | sort -n | tail -40 || true
   echo "HOME_OPC_DU_END"
+  if [ "$psql_available" = true ] && [ -n "$database_url" ]; then
+    echo "MEDIA_AUDIT_DIAGNOSTICS_BEGIN"
+    psql "$database_url" -X -qAt -F '|' -v ON_ERROR_STOP=1 <<'SQL' 2>/dev/null || true
+select 'AUDIT',created_at,coalesce(actor,''),coalesce(action,''),coalesce(resource_type,''),coalesce(resource_id,'')
+  from public.gsa_tv_audit_log
+ where created_at > now() - interval '14 days'
+   and (
+     lower(coalesce(action,'')) like '%media%'
+     or lower(coalesce(action,'')) like '%cleanup%'
+     or lower(coalesce(action,'')) like '%prune%'
+     or lower(coalesce(resource_type,'')) like '%media%'
+   )
+ order by created_at desc
+ limit 80;
+select 'JOB',created_at,job_type,status,id
+  from public.gsa_tv_jobs
+ where created_at > now() - interval '14 days'
+ order by created_at desc
+ limit 60;
+SQL
+    echo "MEDIA_AUDIT_DIAGNOSTICS_END"
+  fi
+  if have systemctl; then
+    echo "MEDIA_TIMER_DIAGNOSTICS_BEGIN"
+    systemctl list-timers --all --no-pager 2>/dev/null | grep -Ei 'gsa-tv|cleanup|prune|cache|media' | head -120 || true
+    echo "MEDIA_TIMER_DIAGNOSTICS_END"
+    echo "MEDIA_JOURNAL_DIAGNOSTICS_BEGIN"
+    journalctl --since '2026-09-22 00:00:00' --no-pager -o short-iso 2>/dev/null \
+      | grep -Ei 'gsa-tv|cache/media|media cache|cleanup|prune' \
+      | sed -E 's#(postgres(ql)?://)[^ @]+@#\\1***@#g' \
+      | tail -200 || true
+    echo "MEDIA_JOURNAL_DIAGNOSTICS_END"
+  fi
   echo "LEGACY_MEDIA_DIAGNOSTICS_END"
   if [ -d /opt/gsa-tv/cache/media ]; then
     find /opt/gsa-tv/cache/media -mindepth 1 -maxdepth 1 -type d -printf 'MEDIA_CHILD=%f\n' 2>/dev/null | sort | head -50 || true
