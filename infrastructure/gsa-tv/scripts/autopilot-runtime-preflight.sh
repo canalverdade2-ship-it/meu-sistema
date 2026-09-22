@@ -59,12 +59,16 @@ http_ok http://127.0.0.1:9204/health && watchdog_http=true
 env_present=false
 db_configured=false
 encoder_token_configured=false
+psql_available=false
+database_url=""
 if [ -f "$ENV_FILE" ]; then
   env_present=true
   grep -q '^DATABASE_URL=.' "$ENV_FILE" && db_configured=true || true
+  database_url="$(awk -F= '$1=="DATABASE_URL"{sub(/^[^=]*=/,"");print;exit}' "$ENV_FILE" 2>/dev/null || true)"
   token_len="$(awk -F= '$1=="ENCODER_ENGINE_TOKEN"{sub(/^[^=]*=/,"");print length($0);exit}' "$ENV_FILE" 2>/dev/null || true)"
   if [ -n "$token_len" ] && [ "$token_len" -ge 32 ]; then encoder_token_configured=true; fi
 fi
+have psql && psql_available=true || true
 
 desired_state="unknown"
 signal_state="unknown"
@@ -91,6 +95,16 @@ if container_running gsa-tv-control-plane; then
       }
     })();
   ' 2>/dev/null || true)"
+  if [ -n "$row" ]; then
+    IFS='|' read -r desired_state signal_state playout_state <<<"$row"
+    desired_state="${desired_state:-unknown}"
+    signal_state="${signal_state:-unknown}"
+    playout_state="${playout_state:-unknown}"
+  fi
+fi
+
+if [ "$desired_state" = "unknown" ] && [ "$psql_available" = true ] && [ -n "$database_url" ]; then
+  row="$(psql "$database_url" -X -qAt -F '|' -v ON_ERROR_STOP=1 -c "select coalesce(desired_state,'unknown'),coalesce(signal_state,'unknown'),coalesce(playout_state,'unknown') from public.gsa_tv_channels where id='${CHANNEL_ID}' limit 1" 2>/dev/null || true)"
   if [ -n "$row" ]; then
     IFS='|' read -r desired_state signal_state playout_state <<<"$row"
     desired_state="${desired_state:-unknown}"
@@ -130,6 +144,18 @@ if container_running gsa-tv-control-plane; then
       }
     })().catch(() => process.exitCode = 2);
   ' 2>/dev/null || true)"
+  if [ -n "$backup_row" ]; then
+    IFS='|' read -r latest_backup_state latest_backup_age_s latest_backup_archive <<<"$backup_row"
+    latest_backup_state="${latest_backup_state:-unknown}"
+    latest_backup_age_s="${latest_backup_age_s:-unknown}"
+    if [ -n "${latest_backup_archive:-}" ] &&
+       [ -s "$latest_backup_archive/manifest.sha256" ] &&
+       (cd "$latest_backup_archive" && sha256sum -c manifest.sha256 >/dev/null 2>&1); then
+      latest_backup_manifest_ok=true
+    fi
+  fi
+elif [ "$psql_available" = true ] && [ -n "$database_url" ]; then
+  backup_row="$(psql "$database_url" -X -qAt -F '|' -v ON_ERROR_STOP=1 -c "select coalesce(state,'unknown'), greatest(0,extract(epoch from now()-coalesce(finished_at,started_at)))::bigint, coalesce(archive_path,'') from public.gsa_tv_backup_runs where channel_id='${CHANNEL_ID}' order by coalesce(finished_at,started_at) desc limit 1" 2>/dev/null || true)"
   if [ -n "$backup_row" ]; then
     IFS='|' read -r latest_backup_state latest_backup_age_s latest_backup_archive <<<"$backup_row"
     latest_backup_state="${latest_backup_state:-unknown}"
@@ -219,6 +245,7 @@ echo "LATEST_BACKUP_ARCHIVE=${latest_backup_archive:-none}"
 echo "LATEST_BACKUP_MANIFEST_OK=$latest_backup_manifest_ok"
 echo "ENV_FILE_PRESENT=$env_present"
 echo "DATABASE_CONFIGURED=$db_configured"
+echo "PSQL_AVAILABLE=$psql_available"
 echo "ENCODER_TOKEN_CONFIGURED=$encoder_token_configured"
 echo "LEGACY_BROADCAST_AUTOMATION_ACTIVE=${active_legacy_broadcast[*]:-none}"
 echo "LEGACY_PRODUCTION_AUTOMATION_ACTIVE=${active_legacy_production[*]:-none}"
@@ -234,6 +261,7 @@ if [ "${#missing_paths[@]}" -gt 0 ]; then
     fi
   done
   if container_exists gsa-tv-ffplayout; then
+    echo "FFPLAYOUT_RUNTIME=$(docker inspect gsa-tv-ffplayout --format 'image={{.Config.Image}} network={{.HostConfig.NetworkMode}}' 2>/dev/null || true)"
     echo "FFPLAYOUT_MOUNTS_BEGIN"
     docker inspect gsa-tv-ffplayout --format '{{range .Mounts}}{{println .Source "->" .Destination}}{{end}}' 2>/dev/null || true
     echo "FFPLAYOUT_MOUNTS_END"
