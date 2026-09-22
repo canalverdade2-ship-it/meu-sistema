@@ -213,9 +213,10 @@ db_contract="$(db_query "select
   to_regprocedure('public.gsa_tv_autopilot_replace_shortfall_media(uuid,text,text,date)') is not null,
   position('v_date > v_today + 7' in pg_get_functiondef('public.gsa_tv_guard_automation_compile()'::regprocedure)) > 0,
   to_regprocedure('public.gsa_tv_autopilot_assign_continuity_fallback(uuid,text,text,date)') is not null,
-  to_regprocedure('public.gsa_tv_guard_cinema_duration_compile()') is not null
+  to_regprocedure('public.gsa_tv_guard_cinema_duration_compile()') is not null,
+  position('resolved_media_id' in pg_get_functiondef('public.gsa_tv_production_signature(uuid)'::regprocedure)) > 0
 " 2>/dev/null || true)"
-if [ "$db_contract" != "t|t|t|t" ]; then
+if [ "$db_contract" != "t|t|t|t|t" ]; then
   cat >&2 <<'EOF'
 BLOCKED: migrations do Autopilot ainda não estão aplicadas no banco.
 
@@ -224,6 +225,7 @@ Aplique pelo fluxo canônico de migrations do projeto:
 - 20260922132000_gsa_tv_autopilot_duration_swap.sql
 - 20260922134000_gsa_tv_autopilot_continuity_fallback.sql
 - 20260922135000_gsa_tv_cinema_duration_contract.sql
+- 20260922136000_gsa_tv_resolved_production_signature.sql
 
 O instalador não executa SQL fora do histórico de migrations.
 EOF
