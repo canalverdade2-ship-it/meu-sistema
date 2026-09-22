@@ -242,6 +242,7 @@ if [ "${#missing_paths[@]}" -gt 0 ]; then
     find /opt/gsa-tv/cache/media -mindepth 1 -maxdepth 1 -type d -printf 'MEDIA_CHILD=%f\n' 2>/dev/null | sort | head -50 || true
   fi
   echo "RUNTIME_PATH_DIAGNOSTICS_END"
+fi
 
 if [ "${#missing_paths[@]}" -gt 0 ]; then
   echo "STATUS=BLOCKED"
