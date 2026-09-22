@@ -7,6 +7,10 @@ on:
     paths:
       - ".github/workflows/gsa-tv-autopilot-runtime.yml"
       - "infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh"
+      - "infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh"
+      - "infrastructure/gsa-tv/services/playout-api/**"
+      - "infrastructure/gsa-tv/services/encoder-engine/**"
+      - "infrastructure/gsa-tv/systemd/gsa-tv-autopilot-**"
   workflow_dispatch:
     inputs:
       operation:
