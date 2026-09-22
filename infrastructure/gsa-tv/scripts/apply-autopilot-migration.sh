@@ -78,7 +78,10 @@ history_present() {
     echo f
     return
   fi
-  psql "$DB_URL" -X -qAt -v ON_ERROR_STOP=1 -v version="$VERSION" -c     "select case when exists(select 1 from supabase_migrations.schema_migrations where version=:'version') then 't' else 'f' end"
+  # VERSION is safe to interpolate because the canonical identity whitelist above
+  # admits only five hard-coded numeric versions.
+  psql "$DB_URL" -X -qAt -v ON_ERROR_STOP=1 -c \
+    "select case when exists(select 1 from supabase_migrations.schema_migrations where version='$VERSION') then 't' else 'f' end"
 }
 
 provision_history() {
@@ -98,9 +101,11 @@ SQL
 }
 
 record_history() {
-  psql "$DB_URL" -X -qAt -v ON_ERROR_STOP=1     -v version="$VERSION" -v name="$NAME" <<'SQL'
+  # VERSION and NAME are both constrained by the canonical identity whitelist,
+  # so literal interpolation cannot introduce arbitrary SQL.
+  psql "$DB_URL" -X -qAt -v ON_ERROR_STOP=1 <<SQL
 INSERT INTO supabase_migrations.schema_migrations(version,name,statements)
-VALUES (:'version', :'name', NULL)
+VALUES ('$VERSION', '$NAME', NULL)
 ON CONFLICT (version) DO UPDATE
 SET name=EXCLUDED.name;
 SQL
