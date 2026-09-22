@@ -43,7 +43,7 @@ with checks(version, history_ok, contract_ok) as (
       to_regprocedure('public.gsa_tv_production_signature(uuid)') is not null
       and position(
         'resolved_media_id'
-        in coalesce(pg_get_functiondef('public.gsa_tv_production_signature(uuid)'::regprocedure),'')
+        in coalesce(pg_get_functiondef(to_regprocedure('public.gsa_tv_production_signature(uuid)')),'')
       ) > 0
     )
 )
@@ -64,7 +64,7 @@ with checks(version, history_ok, contract_ok) as (
       to_regprocedure('public.gsa_tv_production_signature(uuid)') is not null
       and position(
         'resolved_media_id'
-        in coalesce(pg_get_functiondef('public.gsa_tv_production_signature(uuid)'::regprocedure),'')
+        in coalesce(pg_get_functiondef(to_regprocedure('public.gsa_tv_production_signature(uuid)')),'')
       ) > 0
     )
 )
