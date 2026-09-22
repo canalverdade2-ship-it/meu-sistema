@@ -210,6 +210,9 @@ jobs:
           assert "rm -rf" not in media_recovery
           assert "MIGRATION_STATUS=" in migration_status
           assert "MIGRATION_STATE=" in migration_status
+          assert "MIGRATION_HISTORY_TABLE=" in migration_status
+          assert "to_regclass('supabase_migrations.schema_migrations')" in migration_status
+          assert 'if [ "$history_table" = "present" ]; then' in migration_status
           assert "source.backup(destination)" in full_backup
           assert "media-catalog-missing.txt" in full_backup
           assert "catalog_missing_files" in full_backup
