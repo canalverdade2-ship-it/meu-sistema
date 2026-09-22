@@ -33,9 +33,10 @@ jobs:
         run: |
           python -m py_compile             infrastructure/gsa-tv/scripts/autopilot-readiness.py             infrastructure/gsa-tv/scripts/autopilot-content-factory.py             infrastructure/gsa-tv/scripts/night-production.py             infrastructure/gsa-tv/scripts/render-generic-program.py             infrastructure/gsa-tv/scripts/daily-scripts.py             infrastructure/gsa-tv/scripts/test_autopilot_content_factory.py
 
-      - name: Content factory unit tests
+      - name: Autopilot unit tests
         run: |
           python infrastructure/gsa-tv/scripts/test_autopilot_content_factory.py
+          python infrastructure/gsa-tv/scripts/test_autopilot_duration_engine.py
 
       - name: Autonomous Node pipeline syntax
         run: |
