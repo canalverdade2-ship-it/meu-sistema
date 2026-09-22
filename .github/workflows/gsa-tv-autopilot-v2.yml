@@ -149,6 +149,8 @@ jobs:
           assert '"stream_stop"' in broadcast_controller
           assert "hold_manual_pause" in broadcast_controller
           assert "hold_manual_live_overtime" in broadcast_controller
+          assert "legacy_broadcast_automation_active" in broadcast_controller
+          assert "legacy_production_automation_active" in content_factory
           assert "autopilot-broadcast-controller.py" in deploy
           assert "gsa-tv-autopilot-broadcast-controller.timer" in deploy
           assert "docker run --rm --network host postgres:15-alpine" not in deploy
@@ -158,7 +160,13 @@ jobs:
           assert 'cp -f "$BACKUP_DIR/control-plane.env" "$ENV_FILE"' in deploy
           assert 'Control Plane existente sem compose local para rollback seguro' in deploy
           assert 'Encoder Engine existente sem compose local para rollback seguro' in deploy
+          assert 'deploy exige backup full restaurado/testado e íntegro' in deploy
+          assert 'backup_manifest_ok' in deploy
+          assert 'GSA_TV_DEPLOY_BACKUP_MAX_AGE_S' in deploy
           assert 'FIRST_MIGRATION_OFFAIR_READY=$first_migration_offair_ready' in preflight
+          assert 'LATEST_BACKUP_MANIFEST_OK=$latest_backup_manifest_ok' in preflight
+          assert 'LEGACY_BROADCAST_AUTOMATION_ACTIVE=' in preflight
+          assert 'LEGACY_PRODUCTION_AUTOMATION_ACTIVE=' in preflight
           assert 'playout_state' in preflight
           assert "slot_duration_contract_violation" in readiness
           assert "library_composition_required" in readiness
