@@ -7,8 +7,8 @@ DECLARE
   v_program_id uuid;
   v_count integer;
 BEGIN
-  SELECT count(*), min(id)
-    INTO v_count, v_program_id
+  SELECT count(*)
+    INTO v_count
     FROM public.gsa_tv_programs
    WHERE channel_id='ch-main'
      AND name='GSA Cinema';
@@ -16,6 +16,13 @@ BEGIN
   IF v_count <> 1 THEN
     RAISE EXCEPTION 'GSA TV: esperado exatamente um programa GSA Cinema; encontrados %', v_count;
   END IF;
+
+  SELECT id
+    INTO v_program_id
+    FROM public.gsa_tv_programs
+   WHERE channel_id='ch-main'
+     AND name='GSA Cinema'
+   LIMIT 1;
 
   UPDATE public.gsa_tv_programs
      SET default_duration_s=3600,
