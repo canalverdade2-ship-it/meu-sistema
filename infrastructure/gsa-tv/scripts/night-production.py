@@ -127,7 +127,7 @@ def media_issue(m, block, date):
         actual = probe(path)
         library = bool(block.get('is_reprise') or (block.get('metadata') or {}).get('content_mode')=='library')
         if actual > block['planned_duration_s']+1 and not library: return 'overlong'
-        # Playout compiler automatically pads underfilled slots with Continuidade filler.
+        if actual + 1 < block['planned_duration_s'] and not library: return 'underfilled'
         if abs(actual-float(m['duration_s'])) > 2: return 'metadata_duration_mismatch'
     except Exception:
         return 'probe_failed'
