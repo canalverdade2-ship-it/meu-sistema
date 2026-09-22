@@ -56,3 +56,26 @@ O controlador ativo descrito na arquitetura atual é o Python em
 ## Histórico Git
 
 Como o repositório é público, a rotação é obrigatória mesmo após a remoção dos arquivos atuais. Reescrita de histórico é uma operação separada e de maior impacto; não deve ser executada sem plano de coordenação, porque altera SHAs e clones existentes.
+
+
+## Rotação do ENCODER_ENGINE_TOKEN
+
+O Encoder Engine V2 deriva do `ENCODER_ENGINE_TOKEN` a chave AES-256-GCM usada para proteger o arquivo local de recuperação:
+
+`/opt/gsa-tv/runtime/encoder-state.json`
+
+Por isso, a troca desse token deve ser tratada como uma operação coordenada de runtime.
+
+Procedimento recomendado:
+
+1. executar em janela off-air;
+2. confirmar que o canal está `stopped` e que o Encoder Engine não possui transporte/produtor ativo;
+3. remover o estado persistido antigo somente depois de confirmar que não há transmissão a restaurar;
+4. gerar/configurar o novo token no secret store/`.env` protegido;
+5. recriar Encoder Engine e Control Plane com o mesmo novo token;
+6. verificar `/health` e `/v1/status`;
+7. iniciar novamente pelo fluxo operacional normal.
+
+Não rotacionar o token durante uma transmissão pública. Um token novo não consegue descriptografar um estado persistido com a chave anterior.
+
+O valor do token nunca deve aparecer em logs, relatórios, commits ou comandos copiados para documentação.
