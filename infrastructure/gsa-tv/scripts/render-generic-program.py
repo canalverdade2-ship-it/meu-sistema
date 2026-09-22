@@ -70,7 +70,14 @@ def fetch_video(query, work_dir, index, timeout=30):
     pixabay_key = os.environ.get('PIXABAY_API_KEY', '').strip()
 
     if not query:
-        return None
+        return None, {
+            'provider': 'internal_generated',
+            'asset_id': None,
+            'source_page_url': None,
+            'contributor': None,
+            'license_basis': 'GSA internal generated background',
+            'query': query,
+        }
 
     query_encoded = urllib.parse.quote(query)
     out_path = work_dir / f'video_{index}.mp4'
@@ -94,7 +101,14 @@ def fetch_video(query, work_dir, index, timeout=30):
                         used_urls.add(url)
                         urllib.request.urlretrieve(url, out_path)
                         print(f"Pexels video: '{query}' → {vf.get('width')}x{vf.get('height')}")
-                        return out_path
+                        return out_path, {
+                            'provider': 'pexels',
+                            'asset_id': video.get('id'),
+                            'source_page_url': video.get('url'),
+                            'contributor': (video.get('user') or {}).get('name'),
+                            'license_basis': 'Pexels License',
+                            'query': query,
+                        }
         except Exception as e:
             print(f"Pexels video error for '{query}': {e}")
 
@@ -115,11 +129,25 @@ def fetch_video(query, work_dir, index, timeout=30):
                         used_urls.add(vid_url)
                         urllib.request.urlretrieve(vid_url, out_path)
                         print(f"Pixabay video ({quality}): '{query}' → {vdata.get('width')}x{vdata.get('height')}")
-                        return out_path
+                        return out_path, {
+                            'provider': 'pixabay',
+                            'asset_id': hit.get('id'),
+                            'source_page_url': hit.get('pageURL'),
+                            'contributor': hit.get('user'),
+                            'license_basis': 'Pixabay Content License',
+                            'query': query,
+                        }
         except Exception as e:
             print(f"Pixabay video error for '{query}': {e}")
 
-    return None
+    return None, {
+        'provider': 'internal_generated',
+        'asset_id': None,
+        'source_page_url': None,
+        'contributor': None,
+        'license_basis': 'GSA internal generated background',
+        'query': query,
+    }
 
 def main():
     parser = argparse.ArgumentParser()
@@ -163,6 +191,7 @@ def main():
     title.write_text('\n'.join(textwrap.wrap(script['program'], width=40)), encoding='utf-8')
     
     sections = script['sections']
+    visual_provenance = []
     total_words = sum(len(x['text'].split()) for x in sections)
     start = 0.0
     
@@ -175,7 +204,10 @@ def main():
         seg_dur = end - start
         query = section.get('visual_query', '')
 
-        clip = fetch_video(query, work, index)
+        clip, provenance = fetch_video(query, work, index)
+        provenance['section_index'] = index
+        provenance['section_title'] = section.get('title')
+        visual_provenance.append(provenance)
 
         if clip:
             # Vídeo B-roll: loop se necessário, escala para 1920×1080, reset de timestamps
@@ -255,8 +287,8 @@ def main():
               'duration_s': final_actual, 'target_duration_s': args.seconds, 'body_target_duration_s': body_seconds,
               'bumper_duration_s': bumper_duration, 'audio_speed': speed,
               'script_sha256': script['script_sha256'], 'master_sha256': sha(output),
-              'audio_sha256': sha(audio), 'visual_provenance': 'pexels_pixabay_fallback',
-              'visual_review': 'pending', 'published': False}
+              'audio_sha256': sha(audio), 'visual_provenance': visual_provenance,
+              'visual_review': {'state': 'pending', 'pass': False}, 'published': False}
     output.with_suffix('.qc.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
     print(json.dumps(report))
 
