@@ -103,6 +103,9 @@ def decide(window, state):
     if window == "prepare":
         return "prepare"
 
+    if "unknown" in {desired, signal, playout}:
+        return "block_unknown_state"
+
     if window == "on_air":
         if desired == "paused":
             return "hold_manual_pause"
@@ -110,13 +113,19 @@ def decide(window, state):
             return "preserve_manual_live"
         if desired == "running" and signal == "sending":
             return "noop_on_air"
-        return "start"
+        if desired == "stopped" and signal == "stopped" and playout == "off_air":
+            return "start"
+        return "block_inconsistent_state"
 
+    if desired == "paused":
+        return "hold_manual_pause"
     if playout.startswith("manual-live:") and signal == "sending":
         return "hold_manual_live_overtime"
     if desired == "stopped" and signal == "stopped" and playout == "off_air":
         return "noop_off_air"
-    return "stop"
+    if desired == "running" and signal == "sending" and not playout.startswith("manual-live:"):
+        return "stop"
+    return "block_inconsistent_state"
 
 
 def runtime_state():
@@ -328,6 +337,15 @@ def run():
             audit("broadcast_prepare_blocked", base)
             atomic_write(base)
             return 2
+
+    if action in {"block_unknown_state", "block_inconsistent_state"}:
+        base.update(
+            state="blocked",
+            reason=action,
+            finished_at=local_now().isoformat(),
+        )
+        atomic_write(base)
+        return 2
 
     if action in {
         "hold_manual_pause",
