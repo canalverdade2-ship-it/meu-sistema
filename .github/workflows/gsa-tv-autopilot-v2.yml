@@ -144,6 +144,9 @@ jobs:
           assert "visual_provenance = []" in renderer
           assert "autopilot-fallback-engine.py" in deploy
           assert "cutover-autopilot-v2.sh" in deploy
+          assert "ENCODER_RECREATE_SKIPPED=runtime_not_off_air" in deploy
+          assert 'if [ "$ENCODER_MUTATED" = true ]; then' in deploy
+          assert '[ "$enc_image" = "$ENCODER_IMAGE" ]' in deploy
           assert "CUTOVER_DRY_RUN_OK=true" in cutover
           assert "GSA_TV_BROADCAST_AUTOMATION_ENABLED" in cutover
           assert "GSA_TV_AUTOPILOT_AUTO_APPROVE" in cutover
