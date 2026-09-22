@@ -106,6 +106,31 @@ if [ "$desired_state" = "stopped" ] &&
   first_migration_offair_ready=true
 fi
 
+legacy_broadcast_units=(
+  gsa-tv-morning-start.timer
+  gsa-tv-morning-start.service
+  gsa-tv-signoff.timer
+  gsa-tv-signoff.service
+)
+legacy_production_units=(
+  gsa-tv-night-factory.timer
+  gsa-tv-night-factory.service
+)
+active_legacy_broadcast=()
+active_legacy_production=()
+if have systemctl; then
+  for unit in "${legacy_broadcast_units[@]}"; do
+    if systemctl is-active --quiet "$unit" 2>/dev/null; then
+      active_legacy_broadcast+=("$unit")
+    fi
+  done
+  for unit in "${legacy_production_units[@]}"; do
+    if systemctl is-active --quiet "$unit" 2>/dev/null; then
+      active_legacy_production+=("$unit")
+    fi
+  done
+fi
+
 required_paths=(
   /opt/gsa-tv/cache/media/1
   /opt/gsa-tv/playlists/1
@@ -155,6 +180,8 @@ echo "FIRST_MIGRATION_OFFAIR_READY=$first_migration_offair_ready"
 echo "ENV_FILE_PRESENT=$env_present"
 echo "DATABASE_CONFIGURED=$db_configured"
 echo "ENCODER_TOKEN_CONFIGURED=$encoder_token_configured"
+echo "LEGACY_BROADCAST_AUTOMATION_ACTIVE=${active_legacy_broadcast[*]:-none}"
+echo "LEGACY_PRODUCTION_AUTOMATION_ACTIVE=${active_legacy_production[*]:-none}"
 echo "MISSING_PATHS=${missing_paths[*]:-none}"
 
 if [ "${#missing_paths[@]}" -gt 0 ]; then
