@@ -242,7 +242,7 @@ async function main(){
   const qcPath = mp4Path.replace(/\.mp4$/, '.qc.json');
   const qc = JSON.parse(await fs.readFile(qcPath, 'utf8'));
 
-  if (task.mode === 'generic_program') {
+  if (task.mode === 'generic_program' || task.mode === 'source_bound_program') {
     let visualReview = {
       state: 'failed',
       pass: false,
