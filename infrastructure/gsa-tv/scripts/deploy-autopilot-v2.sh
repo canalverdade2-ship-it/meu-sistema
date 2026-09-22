@@ -45,6 +45,46 @@ RUNTIME_DIR="/opt/gsa-tv/runtime"
 TOOLS_DIR="/opt/gsa-tv/cache/media/1/production/autonomous/tools"
 CONTROL_IMAGE="gsa-tv/control-plane:1.8.0"
 ENCODER_IMAGE="gsa-tv/encoder-engine:1.0.0"
+BACKUP_ROOT="/opt/gsa-tv/backups/autopilot-v2"
+BACKUP_DIR=""
+MUTATION_STARTED=false
+
+rollback_runtime() {
+  local rc=$?
+  if [ "$MUTATION_STARTED" != true ] || [ -z "$BACKUP_DIR" ]; then
+    exit "$rc"
+  fi
+
+  echo "Deploy falhou (rc=$rc). Iniciando rollback local..." >&2
+  set +e
+
+  systemctl disable --now gsa-tv-autopilot-content-factory.timer >/dev/null 2>&1 || true
+  systemctl disable --now gsa-tv-autopilot-readiness.timer >/dev/null 2>&1 || true
+
+  for unit in     gsa-tv-autopilot-readiness.service     gsa-tv-autopilot-readiness.timer     gsa-tv-autopilot-content-factory.service     gsa-tv-autopilot-content-factory.timer; do
+    if [ -f "$BACKUP_DIR/systemd/$unit" ]; then
+      cp -f "$BACKUP_DIR/systemd/$unit" "/etc/systemd/system/$unit"
+    elif [ -f "/etc/systemd/system/$unit" ]; then
+      rm -f "/etc/systemd/system/$unit"
+    fi
+  done
+  systemctl daemon-reload >/dev/null 2>&1 || true
+
+  if [ -f "$BACKUP_DIR/control-plane-compose.yml" ]; then
+    cp -f "$BACKUP_DIR/control-plane-compose.yml" "$CONTROL_DIR/compose.yml"
+    docker compose --project-directory "$CONTROL_DIR" -f "$CONTROL_DIR/compose.yml" up -d --force-recreate >/dev/null 2>&1 || true
+  fi
+
+  if [ -f "$BACKUP_DIR/encoder-compose.yml" ]; then
+    cp -f "$BACKUP_DIR/encoder-compose.yml" "$ENCODER_DIR/compose.yml"
+    docker compose --project-directory "$ENCODER_DIR" -f "$ENCODER_DIR/compose.yml" up -d --force-recreate >/dev/null 2>&1 || true
+  elif [ "$(cat "$BACKUP_DIR/encoder-existed" 2>/dev/null)" != "true" ]; then
+    docker rm -f gsa-tv-encoder-engine >/dev/null 2>&1 || true
+  fi
+
+  echo "Rollback local concluído. Backup: $BACKUP_DIR" >&2
+  exit "$rc"
+}
 
 required_repo_files=(
   "$CONTROL_SRC/Dockerfile"
@@ -178,6 +218,21 @@ if [ "$APPLY" != true ]; then
   exit 0
 fi
 
+install -d -m 0700 "$BACKUP_ROOT"
+BACKUP_DIR="$BACKUP_ROOT/$(date -u +%Y%m%dT%H%M%SZ)"
+install -d -m 0700 "$BACKUP_DIR/systemd"
+[ -f "$CONTROL_DIR/compose.yml" ] && cp -a "$CONTROL_DIR/compose.yml" "$BACKUP_DIR/control-plane-compose.yml"
+[ -f "$ENCODER_DIR/compose.yml" ] && cp -a "$ENCODER_DIR/compose.yml" "$BACKUP_DIR/encoder-compose.yml"
+if docker inspect gsa-tv-encoder-engine >/dev/null 2>&1; then echo true > "$BACKUP_DIR/encoder-existed"; else echo false > "$BACKUP_DIR/encoder-existed"; fi
+printf '%s\n' "${cp_image:-missing}" > "$BACKUP_DIR/control-plane-image.txt"
+printf '%s\n' "$(docker inspect gsa-tv-encoder-engine -f '{{.Config.Image}}' 2>/dev/null || echo missing)" > "$BACKUP_DIR/encoder-image.txt"
+for unit in   gsa-tv-autopilot-readiness.service   gsa-tv-autopilot-readiness.timer   gsa-tv-autopilot-content-factory.service   gsa-tv-autopilot-content-factory.timer; do
+  [ -f "/etc/systemd/system/$unit" ] && cp -a "/etc/systemd/system/$unit" "$BACKUP_DIR/systemd/$unit"
+done
+
+trap rollback_runtime ERR
+MUTATION_STARTED=true
+
 install -d -m 0755 "$CONTROL_DIR" "$ENCODER_DIR" "$BIN_DIR" /opt/gsa-tv/releases
 install -d -m 2770 -o 989 -g 989 "$RUNTIME_DIR" "$RUNTIME_DIR/autopilot"
 install -d -m 2775 -o 989 -g 989 "$TOOLS_DIR"
@@ -270,5 +325,8 @@ if [ "$desired" = "running" ] || [ "$signal" = "sending" ]; then
   printf '%s' "$engine_state" | grep -q '"producer_running":true'
 fi
 
+MUTATION_STARTED=false
+trap - ERR
 echo "DEPLOY_OK=true"
 echo "RELEASE_DIR=$release"
+echo "ROLLBACK_BACKUP=$BACKUP_DIR"
