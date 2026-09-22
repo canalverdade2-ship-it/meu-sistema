@@ -102,6 +102,20 @@ class DurationEngineTests(unittest.TestCase):
         }
         self.assertEqual(engine.validate_block(block)[1], "shortfall_already_resolved")
 
+    def test_duration_outcome_requires_successful_compile(self):
+        self.assertEqual(
+            engine.duration_outcome("replaced", {"returncode": 0}),
+            ("replaced", 0),
+        )
+        self.assertEqual(
+            engine.duration_outcome("replaced", {"returncode": 1}),
+            ("compile_failed", 2),
+        )
+        self.assertEqual(
+            engine.duration_outcome("replaced", {"returncode": None}),
+            ("compile_failed", 2),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
