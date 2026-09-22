@@ -147,7 +147,8 @@ jobs:
           assert "GSA_TV_BROADCAST_AUTOMATION_ENABLED" in cutover
           assert "GSA_TV_AUTOPILOT_AUTO_APPROVE" in cutover
           assert "assert_recent_readiness" in cutover
-          assert "systemctl disable" in cutover
+          assert "systemctl disable --now" in cutover
+          assert "systemctl enable --now" in cutover
           assert "systemctl stop" not in cutover
           assert "GSA_TV_AUTOPILOT_AUTO_APPROVE=false" in deploy
           assert "EnvironmentFile=-/opt/gsa-tv/autopilot/autopilot.env" in factory_service
