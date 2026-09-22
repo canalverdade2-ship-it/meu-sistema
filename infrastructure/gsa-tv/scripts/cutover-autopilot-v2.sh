@@ -156,10 +156,6 @@ if [ "$broadcast_selected" = true ]; then
 fi
 
 if [ "$production_selected" = true ]; then
-  truthy "$(read_policy GSA_TV_AUTOPILOT_AUTO_APPROVE)" || {
-    echo "Falha de pós-condição: production policy não foi ativada." >&2
-    exit 80
-  }
   assert_timer_active gsa-tv-autopilot-content-factory.timer
   assert_timer_active gsa-tv-autopilot-readiness.timer
   assert_no_active_legacy_services "${PRODUCTION_LEGACY_SERVICES[@]}"
@@ -293,6 +289,10 @@ if [ "$broadcast_selected" = true ]; then
 fi
 
 if [ "$production_selected" = true ]; then
+  truthy "$(read_policy GSA_TV_AUTOPILOT_AUTO_APPROVE)" || {
+    echo "Falha de pós-condição: production policy não foi ativada." >&2
+    exit 80
+  }
   assert_timer_active gsa-tv-autopilot-content-factory.timer
   assert_timer_active gsa-tv-autopilot-readiness.timer
   for unit in "${PRODUCTION_LEGACY_TIMERS[@]}"; do
