@@ -99,10 +99,10 @@ BEGIN
      WHERE b.schedule_version_id=v_schedule_id
        AND p.channel_id='ch-main'
        AND p.name='GSA Cinema'
-       AND b.planned_duration_s < 3600
+       AND b.planned_duration_s <> 3600
   ) THEN
     RAISE EXCEPTION
-      'GSA TV: compilação bloqueada para %; GSA Cinema exige bloco contínuo de 60 minutos',
+      'GSA TV: compilação bloqueada para %; GSA Cinema exige bloco de exatamente 60 minutos',
       v_date;
   END IF;
 
@@ -111,7 +111,7 @@ END;
 $$;
 
 COMMENT ON FUNCTION public.gsa_tv_guard_cinema_duration_compile() IS
-  'Bloqueia compile_playlist quando GSA Cinema estiver materializado com menos de 3600 segundos.';
+  'Bloqueia compile_playlist quando GSA Cinema não estiver materializado com exatamente 3600 segundos.';
 
 DROP TRIGGER IF EXISTS gsa_tv_cinema_duration_compile_gate ON public.gsa_tv_jobs;
 CREATE TRIGGER gsa_tv_cinema_duration_compile_gate
