@@ -150,7 +150,7 @@ Constatação da infraestrutura local:
 
 **Opções Técnicas Viáveis para os Workers:**
 - **Opção A (Recomendada — Staging Seguro no VPS)**: Criar um banco de dados ou schema isolado no PostgreSQL do VPS (ex: `gsa_staging` na mesma instância PostgreSQL que já roda lá), aplicando as migrations de `supabase/migrations/` e o script de seed determinístico. A aplicação local aponta para essa URL de staging, com risco zero para a produção.
-- **Opção B (Instalação Local de PostgreSQL via Winget)**: Instalar PostgreSQL 16 via `winget install PostgreSQL.PostgreSQL.16`, rodar as migrations locais e apontar `.env` local para `postgresql://postgres:postgres@localhost:5432/postgres`.
+- **Opção B (Instalação Local de PostgreSQL via Winget)**: Instalar PostgreSQL 16 via `winget install PostgreSQL.PostgreSQL.16`, rodar as migrations locais e apontar `.env` local para `[REDACTED_DATABASE_URL]`.
 - **Opção C (Harness com Mock Contratual e In-Memory Database / SQLite / PGLite)**: Para testes do Vitest que não dependam de extensões proprietárias C de PostgreSQL, PGLite ou schemas em memória podem validar a integridade funcional instantaneamente.
 
 ---
