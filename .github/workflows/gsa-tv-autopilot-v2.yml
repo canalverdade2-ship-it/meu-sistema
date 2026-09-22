@@ -184,9 +184,10 @@ jobs:
           assert "PHYSICAL_OFF_AIR_EVIDENCE=true" in runtime_workflow
           assert "HOST_SQLITE_BACKUP_PROBE=ok" in runtime_workflow
           assert "supabase db query --linked --file" in runtime_workflow
-          assert 'supabase db query --linked "select 1 as auth_ok"' in runtime_workflow
+          assert 'supabase migration list --linked --password "$SUPABASE_DB_PASSWORD"' in runtime_workflow
           assert "SUPABASE_DB_AUTH_OK=true" in runtime_workflow
-          assert "supabase migration repair --status applied" in runtime_workflow
+          assert 'supabase migration repair --linked --password "$SUPABASE_DB_PASSWORD" --status applied' in runtime_workflow
+          assert 'supabase db query --linked "select 1 as auth_ok"' not in runtime_workflow
           assert "reconcile-stale-offair-state.sh" in runtime_workflow
           assert "recover-local-media-cache.sh" in runtime_workflow
           assert "backup-full.sh" in runtime_workflow
