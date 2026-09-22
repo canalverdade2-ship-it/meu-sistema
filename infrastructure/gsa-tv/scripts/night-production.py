@@ -366,9 +366,37 @@ def main():
                 item.update(state='validated',master=str(output),duration=qc['probe']['duration'])
                 # No broad matching, no forged approval: register a reviewable candidate.
                 media_id='media-master-'+name+'-'+date+'-'+str(block['id'])
-                metadata={'program_slug':name,'program_id':block['program_id'],'broadcast_date':date,'production_qc':qc,'target_block_id':block['id'],'target_duration_s':budget}
-                query("insert into gsa_tv_media_items(id,channel_id,title,original_filename,duration_s,video_codec,video_width,video_height,video_fps,audio_codec,audio_sample_rate,audio_channels,state,rights_ok,drive_path,media_kind,source_type,ai_generated,approval_state,metadata) values($1,'ch-main',$2,$3,$4,'h264',1920,1080,30,'aac',48000,2,'ready',true,$5,'program','services',true,'approved',$6::jsonb) on conflict(id) do update set approval_state='approved',rights_ok=true,metadata=excluded.metadata,duration_s=excluded.duration_s,drive_path=excluded.drive_path,updated_at=now()",[media_id,block['name']+' — '+date,output.name,round(qc['probe']['duration']),'/media/1/program-masters/'+output.name,json.dumps(metadata)])
-                item['state']='validated'
+                auto_approval_enabled = str(os.environ.get('GSA_TV_AUTOPILOT_AUTO_APPROVE','')).strip().lower() in ('1','true','yes','on')
+                technical_passed = (
+                    qc.get('state') == 'validated'
+                    and abs(float(qc['probe']['duration']) - float(budget)) <= 1.5
+                )
+                provenance_declared = bool(qc.get('source_ledger') or qc.get('visual_provenance') or source_ledger)
+                automated_approval = auto_approval_enabled and technical_passed and provenance_declared
+                approval_state = 'approved' if automated_approval else 'pending'
+                rights_ok = bool(automated_approval)
+                metadata={
+                    'program_slug':name,
+                    'program_id':block['program_id'],
+                    'broadcast_date':date,
+                    'production_qc':qc,
+                    'target_block_id':block['id'],
+                    'target_duration_s':budget,
+                    'automated_approval':{
+                        'enabled':auto_approval_enabled,
+                        'approved':automated_approval,
+                        'policy':'gsa_tv_autopilot_generated_content_v1',
+                        'technical_qc_passed':technical_passed,
+                        'provenance_declared':provenance_declared,
+                        'decided_at':now().isoformat(),
+                    },
+                    'rights_basis':{
+                        'policy':'autopilot_generated_content_v1',
+                        'source_ledger':source_ledger,
+                    } if automated_approval else None,
+                }
+                query("insert into gsa_tv_media_items(id,channel_id,title,original_filename,duration_s,video_codec,video_width,video_height,video_fps,audio_codec,audio_sample_rate,audio_channels,state,rights_ok,drive_path,media_kind,source_type,ai_generated,approval_state,metadata) values($1,'ch-main',$2,$3,$4,'h264',1920,1080,30,'aac',48000,2,'ready',$5,$6,'program','services',true,$7,$8::jsonb) on conflict(id) do update set approval_state=excluded.approval_state,rights_ok=excluded.rights_ok,metadata=excluded.metadata,duration_s=excluded.duration_s,drive_path=excluded.drive_path,updated_at=now()",[media_id,block['name']+' — '+date,output.name,round(qc['probe']['duration']),rights_ok,'/media/1/program-masters/'+output.name,approval_state,json.dumps(metadata)])
+                item['state']='validated' if automated_approval else 'awaiting_automated_approval_policy'
                 item['media_id']=media_id
             except (InterruptedError,TimeoutError): raise
             except Exception as exc:
