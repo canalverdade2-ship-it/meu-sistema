@@ -37,12 +37,14 @@ jobs:
           python -m py_compile \
             infrastructure/gsa-tv/scripts/autopilot-readiness.py \
             infrastructure/gsa-tv/scripts/autopilot-content-factory.py \
+            infrastructure/gsa-tv/scripts/autopilot-broadcast-controller.py \
             infrastructure/gsa-tv/scripts/autopilot-duration-engine.py \
             infrastructure/gsa-tv/scripts/autopilot-fallback-engine.py \
             infrastructure/gsa-tv/scripts/night-production.py \
             infrastructure/gsa-tv/scripts/render-generic-program.py \
             infrastructure/gsa-tv/scripts/daily-scripts.py \
             infrastructure/gsa-tv/scripts/test_autopilot_content_factory.py \
+            infrastructure/gsa-tv/scripts/test_autopilot_broadcast_controller.py \
             infrastructure/gsa-tv/scripts/test_autopilot_duration_engine.py \
             infrastructure/gsa-tv/scripts/test_autopilot_fallback_engine.py \
             infrastructure/gsa-tv/scripts/test_render_generic_program.py
@@ -50,6 +52,7 @@ jobs:
       - name: Autopilot unit tests
         run: |
           python infrastructure/gsa-tv/scripts/test_autopilot_content_factory.py
+          python infrastructure/gsa-tv/scripts/test_autopilot_broadcast_controller.py
           python infrastructure/gsa-tv/scripts/test_autopilot_duration_engine.py
           python infrastructure/gsa-tv/scripts/test_autopilot_fallback_engine.py
           python infrastructure/gsa-tv/scripts/test_render_generic_program.py
@@ -84,6 +87,8 @@ jobs:
           deploy = Path("infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh").read_text()
           preflight = Path("infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh").read_text()
           factory_service = Path("infrastructure/gsa-tv/systemd/gsa-tv-autopilot-content-factory.service").read_text()
+          broadcast_service = Path("infrastructure/gsa-tv/systemd/gsa-tv-autopilot-broadcast-controller.service").read_text()
+          broadcast_controller = Path("infrastructure/gsa-tv/scripts/autopilot-broadcast-controller.py").read_text()
           autonomous = Path("infrastructure/gsa-tv/scripts/autonomous-script.cjs").read_text()
           night_production = Path("infrastructure/gsa-tv/scripts/night-production.py").read_text()
           renderer = Path("infrastructure/gsa-tv/scripts/render-generic-program.py").read_text()
@@ -96,6 +101,7 @@ jobs:
               "control_plane_shutdown_encoder_preserved",
               "autopilotSnapshot",
               "fallback_engine",
+              "broadcast_controller",
           ]
           for marker in required_control:
               assert marker in control, f"Control Plane contract missing: {marker}"
@@ -117,6 +123,16 @@ jobs:
           assert "autopilot-fallback-engine.py" in deploy
           assert "GSA_TV_AUTOPILOT_AUTO_APPROVE=false" in deploy
           assert "EnvironmentFile=-/opt/gsa-tv/autopilot/autopilot.env" in factory_service
+          assert "EnvironmentFile=-/opt/gsa-tv/autopilot/autopilot.env" in broadcast_service
+          assert "GSA_TV_BROADCAST_AUTOMATION_ENABLED=false" in broadcast_service
+          assert "GSA_TV_BROADCAST_AUTOMATION_ENABLED=false" in deploy
+          assert '"stream_standby"' not in broadcast_controller
+          assert '"stream_start"' in broadcast_controller
+          assert '"stream_stop"' in broadcast_controller
+          assert "hold_manual_pause" in broadcast_controller
+          assert "hold_manual_live_overtime" in broadcast_controller
+          assert "autopilot-broadcast-controller.py" in deploy
+          assert "gsa-tv-autopilot-broadcast-controller.timer" in deploy
           assert "docker run --rm --network host postgres:15-alpine" not in deploy
           assert "docker run --rm --network host postgres:15-alpine" not in preflight
           assert '[ "$desired" != "stopped" ] || [ "$signal" != "stopped" ] || [ "$playout" != "off_air" ]' in deploy
