@@ -1,6 +1,6 @@
 services:
   control-plane:
-    image: gsa-tv/control-plane:1.7.0
+    image: gsa-tv/control-plane:1.8.0
     container_name: gsa-tv-control-plane
     restart: unless-stopped
     network_mode: host
