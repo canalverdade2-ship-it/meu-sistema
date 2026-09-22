@@ -325,6 +325,67 @@ if [ "${#missing_paths[@]}" -gt 0 ]; then
     grep -nE '35000|cache/media|docker|tar |pg_dump|pg_restore|ffplayout|df |du |restore|manifest|BACKUP|backup' /opt/gsa-tv/backup/gsa-tv-backup-full.sh 2>/dev/null | head -160 || true
     echo "LIVE_BACKUP_SCRIPT_CONTRACT_END"
   fi
+  echo "LEGACY_MEDIA_DIAGNOSTICS_BEGIN"
+  if container_running gsa-tv-ffplayout; then
+    echo "FFPLAYOUT_PROCESS_BEGIN"
+    docker top gsa-tv-ffplayout -eo pid,args 2>/dev/null | head -20 || true
+    echo "FFPLAYOUT_PROCESS_END"
+    echo "FFPLAYOUT_SQLITE_TABLES=$(docker exec gsa-tv-ffplayout sqlite3 -readonly /state/ffplayout.db "select group_concat(name,',') from sqlite_master where type='table' order by name;" 2>/dev/null || true)"
+  fi
+  echo "RECENT_PLAYLIST_SOURCES_BEGIN"
+  python3 - <<'PY' 2>/dev/null || true
+import json
+from pathlib import Path
+root=Path("/opt/gsa-tv/playlists")
+files=sorted(root.rglob("*.json"), key=lambda p:p.stat().st_mtime, reverse=True)[:8] if root.exists() else []
+sources={}
+def walk(x):
+    if isinstance(x, dict):
+        for k,v in x.items():
+            if k in ("source","path","file","filename","drive_path") and isinstance(v,str) and (v.startswith("/") or v.endswith((".mp4",".mkv",".mov",".webm",".mp3",".wav"))):
+                sources[v]=sources.get(v,0)+1
+            walk(v)
+    elif isinstance(x,list):
+        for v in x: walk(v)
+for p in files:
+    try:
+        walk(json.loads(p.read_text()))
+    except Exception:
+        pass
+print("PLAYLIST_FILES=" + ",".join(str(p) for p in files))
+for src,count in sorted(sources.items(), key=lambda kv:(-kv[1],kv[0]))[:60]:
+    print(f"PLAYLIST_SOURCE_COUNT={count} SOURCE={src}")
+print(f"PLAYLIST_UNIQUE_SOURCES={len(sources)}")
+PY
+  echo "RECENT_PLAYLIST_SOURCES_END"
+  if [ "$psql_available" = true ] && [ -n "$database_url" ]; then
+    echo "MEDIA_DB_DIAGNOSTICS_BEGIN"
+    psql "$database_url" -X -qAt -F '|' -v ON_ERROR_STOP=1 <<'SQL' 2>/dev/null || true
+select 'MEDIA_TOTAL',count(*) from public.gsa_tv_media_items;
+select 'MEDIA_READY',count(*) from public.gsa_tv_media_items where state='ready';
+select 'MEDIA_WITH_PATH',count(*) from public.gsa_tv_media_items where nullif(drive_path,'') is not null;
+select 'MEDIA_BY_KIND',coalesce(media_kind,'null'),count(*) from public.gsa_tv_media_items group by 2 order by 3 desc,2;
+select 'MEDIA_PATH_PREFIX',
+       case
+         when drive_path like '/media/1/%' then '/media/1/'
+         when drive_path like '/media/%' then '/media/'
+         when drive_path like '/preview/%' then '/preview/'
+         when drive_path like '/%' then split_part(drive_path,'/',2)
+         else coalesce(split_part(drive_path,'/',1),'null')
+       end,
+       count(*)
+  from public.gsa_tv_media_items
+ where nullif(drive_path,'') is not null
+ group by 2 order by 3 desc,2;
+select 'MEDIA_SAMPLE',id,state,approval_state,rights_ok,coalesce(drive_path,'')
+  from public.gsa_tv_media_items
+ where nullif(drive_path,'') is not null
+ order by updated_at desc nulls last
+ limit 25;
+SQL
+    echo "MEDIA_DB_DIAGNOSTICS_END"
+  fi
+  echo "LEGACY_MEDIA_DIAGNOSTICS_END"
   if [ -d /opt/gsa-tv/cache/media ]; then
     find /opt/gsa-tv/cache/media -mindepth 1 -maxdepth 1 -type d -printf 'MEDIA_CHILD=%f\n' 2>/dev/null | sort | head -50 || true
   fi
