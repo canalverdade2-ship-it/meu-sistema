@@ -3564,7 +3564,9 @@ async function heartbeat() {
     ["failed", "cycle_failed", "duration_cycle_failed"].includes(
       String(autopilot.content_factory.state || ""),
     ) ||
-    String(autopilot.duration_engine.state || "") === "failed" ||
+    ["failed", "compile_failed"].includes(
+      String(autopilot.duration_engine.state || ""),
+    ) ||
     ["failed", "fallback_incomplete", "fallback_compile_failed"].includes(
       String(autopilot.fallback_engine.state || ""),
     );
