@@ -225,6 +225,25 @@ echo "LEGACY_PRODUCTION_AUTOMATION_ACTIVE=${active_legacy_production[*]:-none}"
 echo "MISSING_PATHS=${missing_paths[*]:-none}"
 
 if [ "${#missing_paths[@]}" -gt 0 ]; then
+  echo "RUNTIME_PATH_DIAGNOSTICS_BEGIN"
+  for p in     /opt/gsa-tv     /opt/gsa-tv/cache     /opt/gsa-tv/cache/media     /opt/gsa-tv/playlists     /opt/gsa-tv/preview     /opt/gsa-tv/fallback     /opt/gsa-tv/runtime; do
+    if [ -e "$p" ]; then
+      stat -c 'PATH=%n TYPE=%F OWNER=%u:%g MODE=%a' "$p" 2>/dev/null || true
+    else
+      echo "PATH=$p MISSING"
+    fi
+  done
+  if container_exists gsa-tv-ffplayout; then
+    echo "FFPLAYOUT_MOUNTS_BEGIN"
+    docker inspect gsa-tv-ffplayout --format '{{range .Mounts}}{{println .Source "->" .Destination}}{{end}}' 2>/dev/null || true
+    echo "FFPLAYOUT_MOUNTS_END"
+  fi
+  if [ -d /opt/gsa-tv/cache/media ]; then
+    find /opt/gsa-tv/cache/media -mindepth 1 -maxdepth 1 -type d -printf 'MEDIA_CHILD=%f\n' 2>/dev/null | sort | head -50 || true
+  fi
+  echo "RUNTIME_PATH_DIAGNOSTICS_END"
+
+if [ "${#missing_paths[@]}" -gt 0 ]; then
   echo "STATUS=BLOCKED"
   echo "REASON=missing_runtime_paths"
   exit 20
