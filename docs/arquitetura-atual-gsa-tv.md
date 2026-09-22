@@ -103,8 +103,8 @@ O fluxo versionado é:
 
 ```bash
 sudo infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh
+# aplicar as migrations do Autopilot pelo fluxo canônico do Supabase
 sudo infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh
-# aplicar migrations pelo fluxo canônico do Supabase
 sudo infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh --apply
 ```
 
