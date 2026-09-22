@@ -23,11 +23,16 @@ services:
 
   control-plane:
     build: ./services/playout-api
-    image: gsa-tv/control-plane:1.6.4
+    image: gsa-tv/control-plane:1.8.0
     container_name: gsa-tv-control-plane
     restart: unless-stopped
     network_mode: host
     env_file: /opt/gsa-tv/control-plane/.env
+    environment:
+      ENCODER_ENGINE_URL: http://127.0.0.1:9210
+    depends_on:
+      encoder-engine:
+        condition: service_healthy
     read_only: true
     tmpfs:
       - /tmp:size=64m,mode=1777
@@ -39,6 +44,7 @@ services:
       - /opt/gsa-tv/cache/media:/media
       - /opt/gsa-tv/fallback:/fallback:ro
       - /opt/gsa-tv/preview:/preview:ro
+      - /opt/gsa-tv/runtime:/runtime
       - /opt/gsa-tv/control-plane/secrets/ffplayout-admin-password:/run/secrets/ffplayout-admin-password:ro
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:9202/health',r=>process.exit(r.statusCode===200?0:1))"]
