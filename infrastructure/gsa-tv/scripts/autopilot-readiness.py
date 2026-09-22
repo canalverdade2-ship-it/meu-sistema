@@ -107,6 +107,7 @@ def inspect_day(day):
     scheduled_s = 0.0
     eligible_s = 0.0
     actual_content_s = 0.0
+    authorized_fill_s = 0.0
     eligible_blocks = 0
     issues = []
 
@@ -159,17 +160,35 @@ def inspect_day(day):
             actual_content_s += max(0.0, actual)
             if row.get("block_type") != "live":
                 media_duration = float(row.get("media_duration_s") or 0)
-                library = bool(row.get("is_reprise") or (row.get("block_metadata") or {}).get("content_mode") == "library")
-                if not library and media_duration + 1 < duration:
+                metadata = row.get("block_metadata") or {}
+                library = bool(row.get("is_reprise") or metadata.get("content_mode") == "library")
+                allow_fill = metadata.get("allow_continuity_fill") is True
+                allow_trim = metadata.get("allow_trim") is True
+
+                if media_duration + 1 < duration:
+                    if allow_fill:
+                        authorized_fill_s += max(0.0, duration - media_duration)
+                    else:
+                        issues.append({
+                            "block_id": row["id"],
+                            "program": row.get("program_name"),
+                            "issue": "library_composition_required" if library else "content_shortfall",
+                            "planned_start_offset_s": row.get("planned_start_offset_s"),
+                            "planned_duration_s": duration,
+                            "media_item_id": row.get("media_item_id"),
+                            "media_duration_s": media_duration,
+                            "shortfall_s": round(duration - media_duration, 3),
+                        })
+                elif media_duration > duration + 1 and not allow_trim:
                     issues.append({
                         "block_id": row["id"],
                         "program": row.get("program_name"),
-                        "issue": "content_shortfall",
+                        "issue": "content_overlong",
                         "planned_start_offset_s": row.get("planned_start_offset_s"),
                         "planned_duration_s": duration,
                         "media_item_id": row.get("media_item_id"),
                         "media_duration_s": media_duration,
-                        "shortfall_s": round(duration - media_duration, 3),
+                        "overrun_s": round(media_duration - duration, 3),
                     })
         else:
             issues.append({
@@ -195,6 +214,7 @@ def inspect_day(day):
         "scheduled_duration_s": round(scheduled_s, 3),
         "eligible_duration_s": round(eligible_s, 3),
         "actual_content_duration_s": round(actual_content_s, 3),
+        "authorized_continuity_fill_s": round(authorized_fill_s, 3),
         "coverage_pct": round(coverage, 2),
         "content_coverage_pct": round(content_coverage, 2),
         "issue_count": len(issues),
