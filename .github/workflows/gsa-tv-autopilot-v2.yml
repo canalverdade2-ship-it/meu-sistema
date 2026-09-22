@@ -1,0 +1,82 @@
+name: GSA TV Autopilot V2
+
+on:
+  pull_request:
+    paths:
+      - "gsa-tv-night-controller.sh"
+      - "infrastructure/gsa-tv/**"
+      - "docs/gsa-tv-secret-rotation.md"
+      - ".github/workflows/gsa-tv-autopilot-v2.yml"
+  push:
+    branches:
+      - "feat/gsa-tv-autopilot-v2"
+    paths:
+      - "gsa-tv-night-controller.sh"
+      - "infrastructure/gsa-tv/**"
+      - ".github/workflows/gsa-tv-autopilot-v2.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  autopilot-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Python syntax
+        run: |
+          python -m py_compile             infrastructure/gsa-tv/scripts/autopilot-readiness.py             infrastructure/gsa-tv/scripts/autopilot-content-factory.py             infrastructure/gsa-tv/scripts/night-production.py             infrastructure/gsa-tv/scripts/render-generic-program.py             infrastructure/gsa-tv/scripts/daily-scripts.py             infrastructure/gsa-tv/scripts/test_autopilot_content_factory.py
+
+      - name: Content factory unit tests
+        run: |
+          python infrastructure/gsa-tv/scripts/test_autopilot_content_factory.py
+
+      - name: Autonomous Node pipeline syntax
+        run: |
+          node --check infrastructure/gsa-tv/scripts/autonomous-script.cjs
+
+      - name: Active GSA TV secret guard
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          import sys
+
+          files = [
+              Path("gsa-tv-night-controller.sh"),
+              *Path("infrastructure/gsa-tv").rglob("*"),
+          ]
+          text_files = [
+              p for p in files
+              if p.is_file()
+              and p.suffix.lower() in {".py",".js",".cjs",".mjs",".sh",".yml",".yaml",".json",".md",".conf",".service",".timer"}
+              and "__pycache__" not in p.parts
+          ]
+
+          checks = [
+              ("postgres_password_uri", re.compile(r"postgres(?:ql)?://[^\s\"'/:]+:[^@\s\"']+@", re.I)),
+              ("literal_private_key", re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")),
+              ("literal_long_secret", re.compile(r"(?:TOKEN|SECRET|PASSWORD|API[_-]?KEY)\s*=\s*[\"'][A-Za-z0-9._~+/=-]{24,}[\"']", re.I)),
+          ]
+
+          failures = []
+          for path in text_files:
+              try:
+                  content = path.read_text(encoding="utf-8")
+              except UnicodeDecodeError:
+                  continue
+              for name, pattern in checks:
+                  if pattern.search(content):
+                      failures.append(f"{path}: {name}")
+
+          if failures:
+              print("Potential active GSA TV secrets detected:")
+              print("\n".join(failures))
+              sys.exit(1)
+          print(f"Secret guard passed across {len(text_files)} active GSA TV text files.")
