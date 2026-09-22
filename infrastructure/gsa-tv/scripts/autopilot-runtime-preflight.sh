@@ -305,6 +305,26 @@ if [ "${#missing_paths[@]}" -gt 0 ]; then
       echo "BACKUP_PATH=$p MISSING"
     fi
   done
+  echo "DISK_DIAGNOSTICS_BEGIN"
+  df -hP / /opt/gsa-tv /var/lib/docker 2>/dev/null || true
+  echo "DISK_BYTES_BEGIN"
+  df -PB1 / /opt/gsa-tv /var/lib/docker 2>/dev/null || true
+  echo "DISK_BYTES_END"
+  echo "OPT_GSA_TV_DU_BEGIN"
+  du -x -B1 -d1 /opt/gsa-tv 2>/dev/null | sort -n | tail -30 || true
+  echo "OPT_GSA_TV_DU_END"
+  echo "BACKUPS_DU_BEGIN"
+  du -x -B1 -d2 /opt/gsa-tv/backups 2>/dev/null | sort -n | tail -40 || true
+  echo "BACKUPS_DU_END"
+  echo "DOCKER_SYSTEM_DF_BEGIN"
+  docker system df 2>/dev/null || true
+  echo "DOCKER_SYSTEM_DF_END"
+  if [ -f /opt/gsa-tv/backup/gsa-tv-backup-full.sh ]; then
+    echo "LIVE_BACKUP_SCRIPT_SHA256=$(sha256sum /opt/gsa-tv/backup/gsa-tv-backup-full.sh 2>/dev/null | awk '{print $1}' || true)"
+    echo "LIVE_BACKUP_SCRIPT_CONTRACT_BEGIN"
+    grep -nE '35000|cache/media|docker|tar |pg_dump|pg_restore|ffplayout|df |du |restore|manifest|BACKUP|backup' /opt/gsa-tv/backup/gsa-tv-backup-full.sh 2>/dev/null | head -160 || true
+    echo "LIVE_BACKUP_SCRIPT_CONTRACT_END"
+  fi
   if [ -d /opt/gsa-tv/cache/media ]; then
     find /opt/gsa-tv/cache/media -mindepth 1 -maxdepth 1 -type d -printf 'MEDIA_CHILD=%f\n' 2>/dev/null | sort | head -50 || true
   fi
