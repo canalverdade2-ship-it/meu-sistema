@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import hashlib
 import importlib.util
 from pathlib import Path
 import unittest
@@ -10,6 +11,28 @@ SPEC.loader.exec_module(renderer)
 
 
 class GenericRendererTimingTests(unittest.TestCase):
+    def test_source_bound_program_is_supported(self):
+        narration = "Texto factual neutro sustentado pelas fontes."
+        digest = hashlib.sha256(narration.encode()).hexdigest()
+        script = {
+            "narration": narration,
+            "review": {
+                "pass": True,
+                "violations": [],
+                "script_sha256": digest,
+            },
+            "script_sha256": digest,
+            "mode": "source_bound_program",
+            "date": "2026-09-23",
+            "program": "Programa Factual",
+        }
+        manifest = {
+            "script_sha256": digest,
+            "broadcast_date": "2026-09-23",
+            "program": "Programa Factual",
+        }
+        renderer.validate_inputs(script, manifest, 1800.0)
+
     def test_timing_uses_body_after_bumpers(self):
         body, speed = renderer.compute_timing(
             audio_duration=1620.0,
