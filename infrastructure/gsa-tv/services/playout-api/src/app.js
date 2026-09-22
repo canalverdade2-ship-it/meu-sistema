@@ -79,15 +79,26 @@ const FFPLAYOUT_PASSWORD_FILE = String(
 const CHANNEL_TIMEZONE = String(
   process.env.CHANNEL_TIMEZONE || "America/Sao_Paulo",
 );
+const ENCODER_ENGINE_URL = String(process.env.ENCODER_ENGINE_URL || "").replace(
+  /\/$/,
+  "",
+);
+const ENCODER_ENGINE_TOKEN = String(process.env.ENCODER_ENGINE_TOKEN || "");
+const USE_EXTERNAL_ENCODER = Boolean(ENCODER_ENGINE_URL);
 const QUALITY_PROFILES = {
   "720p30": { width: 1280, height: 720, fps: 30, bitrate: "4000" },
   "1080p30": { width: 1920, height: 1080, fps: 30, bitrate: "6000" },
   "1080p60": { width: 1920, height: 1080, fps: 60, bitrate: "8500" },
 };
-const SERVICE_URLS = { ffplayout: `${FFPLAYOUT_URL}/` };
+const SERVICE_URLS = {
+  ffplayout: `${FFPLAYOUT_URL}/`,
+  ...(USE_EXTERNAL_ENCODER ? { encoder_engine: `${ENCODER_ENGINE_URL}/health` } : {}),
+};
 if (!DATABASE_URL) throw new Error("DATABASE_URL é obrigatória.");
 if (!INTERNAL_API_TOKEN || INTERNAL_API_TOKEN.length < 32)
   throw new Error("INTERNAL_API_TOKEN forte é obrigatório.");
+if (USE_EXTERNAL_ENCODER && ENCODER_ENGINE_TOKEN.length < 32)
+  throw new Error("ENCODER_ENGINE_TOKEN forte é obrigatório quando o Encoder Engine está habilitado.");
 const pool = new Pool({
   connectionString: DATABASE_URL,
   max: 3,
@@ -395,7 +406,53 @@ async function persistStreamState() {
     ],
   );
 }
+async function encoderEngineRequest(route, options = {}) {
+  if (!USE_EXTERNAL_ENCODER)
+    throw new Error("Encoder Engine externo não está configurado.");
+  const method = options.method || "GET";
+  const body = options.body === undefined ? undefined : JSON.stringify(options.body);
+  const response = await fetch(`${ENCODER_ENGINE_URL}${route}`, {
+    method,
+    headers: {
+      authorization: `Bearer ${ENCODER_ENGINE_TOKEN}`,
+      ...(body ? { "content-type": "application/json" } : {}),
+    },
+    body,
+    signal: AbortSignal.timeout(options.timeoutMs || 10000),
+  });
+  const text = await response.text();
+  let payload = {};
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = { raw: text.slice(0, 500) };
+    }
+  }
+  if (!response.ok)
+    throw new Error(
+      `Encoder Engine ${method} ${route} falhou: HTTP ${response.status} ${text.slice(0, 400)}`,
+    );
+  return payload;
+}
+
+async function encoderEngineStatus() {
+  return encoderEngineRequest("/v1/status", { timeoutMs: 5000 });
+}
+
 async function terminateRelay() {
+  if (USE_EXTERNAL_ENCODER) {
+    try {
+      await encoderEngineRequest("/v1/stop", {
+        method: "POST",
+        body: {},
+        timeoutMs: 12000,
+      });
+    } finally {
+      streamProcess = null;
+    }
+    return;
+  }
   if (!streamProcess || streamProcess.killed) {
     streamProcess = null;
     return;
@@ -794,14 +851,30 @@ async function startStreamUnlocked(mode = "program", force = false) {
   const desired = mode === "paused" ? "paused" : "running";
   if (
     !force &&
-    streamProcess &&
-    !streamProcess.killed &&
     streamState.desired === desired &&
     streamState.mode === mode
-  )
-    return streamState;
+  ) {
+    if (USE_EXTERNAL_ENCODER) {
+      try {
+        const status = await encoderEngineStatus();
+        if (status.outer_running && status.producer_running) {
+          streamProcess = {
+            external: true,
+            killed: false,
+            pid: status.producer_pid || null,
+          };
+          streamState.actual = "sending";
+          streamState.last_error = null;
+          return streamState;
+        }
+      } catch {}
+    } else if (streamProcess && !streamProcess.killed) {
+      return streamState;
+    }
+  }
   if (recordingProcess) await stopLiveRecording();
-  if (streamProcess && !streamProcess.killed) await terminateRelay();
+  if (!USE_EXTERNAL_ENCODER && streamProcess && !streamProcess.killed)
+    await terminateRelay();
 
   const target = await outputTarget();
   const profile = await currentQualityProfile();
@@ -926,6 +999,35 @@ async function startStreamUnlocked(mode = "program", force = false) {
     last_error: null,
   };
   await persistStreamState();
+
+  if (USE_EXTERNAL_ENCODER) {
+    const status = await encoderEngineRequest("/v1/ensure", {
+      method: "POST",
+      body: { args, mode },
+      timeoutMs: 15000,
+    });
+    if (!status.outer_running || !status.producer_running)
+      throw new Error(
+        status.last_error || "Encoder Engine não confirmou transporte e produtor ativos.",
+      );
+    streamProcess = {
+      external: true,
+      killed: false,
+      pid: status.producer_pid || null,
+    };
+    streamState.actual = "sending";
+    streamState.last_error = null;
+    await persistStreamState();
+    log("info", "stream_attached_to_encoder_engine", {
+      mode,
+      producer_pid: status.producer_pid || null,
+      outer_pid: status.outer_pid || null,
+      transport_restarted: Boolean(status.transport_restarted),
+      producer_restarted: Boolean(status.producer_restarted),
+    });
+    return streamState;
+  }
+
   const proc = spawn("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
   streamProcess = proc;
   let stderrTail = "";
@@ -3438,7 +3540,11 @@ async function heartbeat() {
     status,
     services: states,
     playout: playoutStatus,
-    stream: { ...streamState, process_pid: streamProcess?.pid || null },
+    stream: {
+      ...streamState,
+      process_pid: streamProcess?.pid || null,
+      encoder_external: USE_EXTERNAL_ENCODER,
+    },
     degraded,
   };
 }
@@ -4615,14 +4721,22 @@ process.on("SIGTERM", async () => {
   clearInterval(heartbeatTimer);
   clearInterval(aiTimer);
   await stopLiveRecording().catch(() => {});
-  await terminateRelay().catch(() => {});
-  try {
-    await ffplayoutProcess("stop");
-  } catch {}
-  if (streamState.desired !== "stopped") {
-    streamState.actual = "recovering";
-    streamState.last_error = "Control plane em reinicialização.";
-    await persistStreamState().catch(() => {});
+  if (USE_EXTERNAL_ENCODER) {
+    streamProcess = null;
+    log("info", "control_plane_shutdown_encoder_preserved", {
+      desired: streamState.desired,
+      mode: streamState.mode,
+    });
+  } else {
+    await terminateRelay().catch(() => {});
+    try {
+      await ffplayoutProcess("stop");
+    } catch {}
+    if (streamState.desired !== "stopped") {
+      streamState.actual = "recovering";
+      streamState.last_error = "Control plane em reinicialização.";
+      await persistStreamState().catch(() => {});
+    }
   }
   server.close();
   await pool.end();
