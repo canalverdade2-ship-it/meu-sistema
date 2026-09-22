@@ -67,6 +67,7 @@ jobs:
       - name: Runtime shell syntax
         run: |
           bash -n infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh
+          bash -n infrastructure/gsa-tv/scripts/cutover-autopilot-v2.sh
           bash -n infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh
           bash -n infrastructure/gsa-tv/tests/run-live-test-suite.sh
           bash -n infrastructure/gsa-tv/tests/test-control-plane-restart-continuity.sh
@@ -86,6 +87,7 @@ jobs:
           compose = Path("infrastructure/gsa-tv/services/playout-api/compose.production.yml").read_text()
           deploy = Path("infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh").read_text()
           preflight = Path("infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh").read_text()
+          cutover = Path("infrastructure/gsa-tv/scripts/cutover-autopilot-v2.sh").read_text()
           factory_service = Path("infrastructure/gsa-tv/systemd/gsa-tv-autopilot-content-factory.service").read_text()
           content_factory = Path("infrastructure/gsa-tv/scripts/autopilot-content-factory.py").read_text()
           broadcast_service = Path("infrastructure/gsa-tv/systemd/gsa-tv-autopilot-broadcast-controller.service").read_text()
@@ -140,6 +142,13 @@ jobs:
           assert "source_bound_program" in renderer
           assert "visual_provenance = []" in renderer
           assert "autopilot-fallback-engine.py" in deploy
+          assert "cutover-autopilot-v2.sh" in deploy
+          assert "CUTOVER_DRY_RUN_OK=true" in cutover
+          assert "GSA_TV_BROADCAST_AUTOMATION_ENABLED" in cutover
+          assert "GSA_TV_AUTOPILOT_AUTO_APPROVE" in cutover
+          assert "assert_recent_readiness" in cutover
+          assert "systemctl disable" in cutover
+          assert "systemctl stop" not in cutover
           assert "GSA_TV_AUTOPILOT_AUTO_APPROVE=false" in deploy
           assert "EnvironmentFile=-/opt/gsa-tv/autopilot/autopilot.env" in factory_service
           assert "SuccessExitStatus=2" in factory_service
