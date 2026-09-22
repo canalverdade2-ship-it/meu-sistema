@@ -169,6 +169,32 @@ def terminate_group(child):
             pass
 
 
+def run_fallback_engine():
+    command = [
+        sys.executable,
+        str(BIN / "autopilot-fallback-engine.py"),
+    ]
+    result = subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
+    fallback_state = STATE_DIR / "fallback-engine.json"
+    payload = None
+    if fallback_state.is_file():
+        try:
+            payload = json.loads(fallback_state.read_text())
+        except Exception:
+            payload = None
+    return {
+        "returncode": result.returncode,
+        "stdout_tail": (result.stdout or "")[-1200:],
+        "stderr_tail": (result.stderr or "")[-1200:],
+        "fallback_engine": payload,
+    }
+
+
 def run_duration_engine(horizon_days, cycle_minutes):
     command = [
         sys.executable,
@@ -276,6 +302,18 @@ def main():
 
     refresh_readiness(max(args.horizon_days + 1, 4))
     report = load_readiness()
+
+    # Final continuity fallback is evaluated every cycle but remains a no-op
+    # until the late D0 activation window opens.
+    try:
+        fallback_cycle = run_fallback_engine()
+        state["fallback_cycle"] = fallback_cycle
+        if fallback_cycle["returncode"] in (0, 2):
+            refresh_readiness(max(args.horizon_days + 1, 4))
+            report = load_readiness()
+    except subprocess.TimeoutExpired:
+        state["fallback_cycle"] = {"returncode": 124, "state": "timeout"}
+
     target, blockers = select_target(report, args.horizon_days)
     state["blockers"] = blockers
 
