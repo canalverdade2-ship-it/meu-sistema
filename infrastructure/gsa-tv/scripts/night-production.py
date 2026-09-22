@@ -291,7 +291,20 @@ def main():
                 item['state']='autonomous_generation';save(state)
                 print(f'[Night Production] Starting autonomous generation for {block["name"]} (budget: {budget}s)...', flush=True)
                 try:
-                    target_words=min(1200,max(500,int(budget*0.6)))
+                    try:
+                        speech_wpm=float(os.environ.get('GSA_TV_AUTOPILOT_SPEECH_WPM','125'))
+                    except ValueError:
+                        speech_wpm=125.0
+                    speech_wpm=min(170.0,max(90.0,speech_wpm))
+                    program_bumper=MEDIA/'identity/vinhetas'/('vinheta-'+name+'.mp4')
+                    fallback_bumper=MEDIA/'identity/vinhetas'/'vinheta-gsa-tv-40s-broadcast-safe.mp4'
+                    selected_bumper=program_bumper if program_bumper.is_file() else fallback_bumper
+                    try:
+                        bumper_reserve=2*probe(selected_bumper)
+                    except Exception:
+                        bumper_reserve=80.0
+                    speech_seconds=max(60.0,float(budget)-bumper_reserve)
+                    target_words=min(10000,max(500,int(round((speech_seconds/60.0)*speech_wpm))))
                     task_json={'output':f"/media/1/production/autonomous/{date}/{name}-{block['id']}.json",'mode':'generic_program','targetWords':target_words,'targetSeconds':budget,'date':date,'program':block['name']}
                     remaining=(deadline-now()).total_seconds()
                     if remaining<=0: raise TimeoutError('Janela de produção encerrada')
