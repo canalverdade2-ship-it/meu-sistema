@@ -73,6 +73,7 @@ jobs:
           bash -n infrastructure/gsa-tv/scripts/reconcile-stale-offair-state.sh
           bash -n infrastructure/gsa-tv/scripts/recover-local-media-cache.sh
           bash -n infrastructure/gsa-tv/scripts/autopilot-migration-status.sh
+          bash -n infrastructure/gsa-tv/scripts/apply-autopilot-migration.sh
           bash -n infrastructure/gsa-tv/scripts/backup-full.sh
           bash -n infrastructure/gsa-tv/tests/run-live-test-suite.sh
           bash -n infrastructure/gsa-tv/tests/test-control-plane-restart-continuity.sh
