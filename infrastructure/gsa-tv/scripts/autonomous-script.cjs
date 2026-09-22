@@ -193,6 +193,9 @@ async function main(){
   
   const metadata = {
     program_slug: task.program.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+    program_id: task.programId || null,
+    target_block_id: task.targetBlockId || null,
+    production_reason: task.productionReason || 'missing_media',
     broadcast_date: task.date,
     production_qc: qc,
     target_duration_s: expectedSeconds,
