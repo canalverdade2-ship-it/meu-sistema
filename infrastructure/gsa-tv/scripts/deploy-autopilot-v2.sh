@@ -230,6 +230,37 @@ EOF
   exit 79
 fi
 
+backup_row="$(db_query "select state, greatest(0,extract(epoch from now()-coalesce(finished_at,started_at)))::bigint, coalesce(archive_path,'') from public.gsa_tv_backup_runs where channel_id='ch-main' order by coalesce(finished_at,started_at) desc limit 1" 2>/dev/null || true)"
+IFS='|' read -r backup_state backup_age_s backup_archive <<<"$backup_row"
+backup_state="${backup_state:-unknown}"
+backup_age_s="${backup_age_s:-999999999}"
+backup_archive="${backup_archive:-}"
+backup_max_age_s="${GSA_TV_DEPLOY_BACKUP_MAX_AGE_S:-172800}"
+
+backup_manifest_ok=false
+if [ -n "$backup_archive" ] &&
+   [ -s "$backup_archive/manifest.sha256" ] &&
+   (cd "$backup_archive" && sha256sum -c manifest.sha256 >/dev/null 2>&1); then
+  backup_manifest_ok=true
+fi
+
+if [ "$backup_state" != "restored_test" ] ||
+   ! [[ "$backup_age_s" =~ ^[0-9]+$ ]] ||
+   [ "$backup_age_s" -gt "$backup_max_age_s" ] ||
+   [ "$backup_manifest_ok" != true ]; then
+  cat >&2 <<EOF
+BLOCKED: deploy exige backup full restaurado/testado e íntegro.
+backup_state=$backup_state
+backup_age_s=$backup_age_s
+backup_max_age_s=$backup_max_age_s
+backup_archive=${backup_archive:-missing}
+backup_manifest_ok=$backup_manifest_ok
+
+Execute/verifique gsa-tv-backup.service antes do rollout.
+EOF
+  exit 84
+fi
+
 token="$(read_env ENCODER_ENGINE_TOKEN)"
 if [ -z "$token" ] || [ "${#token}" -lt 32 ]; then
   if [ "$APPLY" != true ]; then
@@ -254,6 +285,9 @@ playout_state=$playout
 control_plane_current=${cp_image:-missing}
 control_plane_target=$CONTROL_IMAGE
 encoder_target=$ENCODER_IMAGE
+backup_state=$backup_state
+backup_age_s=$backup_age_s
+backup_manifest_ok=$backup_manifest_ok
 enable_timers=$ENABLE_TIMERS
 EOF
 
