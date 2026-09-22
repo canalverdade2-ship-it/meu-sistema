@@ -263,6 +263,11 @@ trap rollback_runtime ERR
 MUTATION_STARTED=true
 
 install -d -m 0755 "$CONTROL_DIR" "$ENCODER_DIR" "$BIN_DIR" /opt/gsa-tv/releases
+install -d -m 0750 /opt/gsa-tv/autopilot
+if [ ! -f /opt/gsa-tv/autopilot/autopilot.env ]; then
+  printf '%s\n' 'GSA_TV_AUTOPILOT_AUTO_APPROVE=false' > /opt/gsa-tv/autopilot/autopilot.env
+  chmod 0600 /opt/gsa-tv/autopilot/autopilot.env
+fi
 install -d -m 2770 -o 989 -g 989 "$RUNTIME_DIR" "$RUNTIME_DIR/autopilot"
 install -d -m 2775 -o 989 -g 989 "$TOOLS_DIR"
 
