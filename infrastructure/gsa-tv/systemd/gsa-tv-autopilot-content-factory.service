@@ -9,6 +9,8 @@ WorkingDirectory=/opt/gsa-tv
 Environment=PATH=/usr/local/bin:/usr/bin:/bin
 Environment=GSA_TV_ROOT=/opt/gsa-tv
 Environment=GSA_TV_AUTOPILOT_SPEECH_WPM=125
+Environment=GSA_TV_AUTOPILOT_AUTO_APPROVE=false
+EnvironmentFile=-/opt/gsa-tv/autopilot/autopilot.env
 ExecStart=/usr/bin/python3 /opt/gsa-tv/bin/autopilot-content-factory.py --horizon-days 3 --cycle-minutes 40
 
 # Production is intentionally lower priority than playout/control-plane.
