@@ -237,6 +237,106 @@ async function main(){
   const qcPath = mp4Path.replace(/\.mp4$/, '.qc.json');
   const qc = JSON.parse(await fs.readFile(qcPath, 'utf8'));
 
+  if (task.mode === 'generic_program') {
+    let visualReview = {
+      state: 'failed',
+      pass: false,
+      method: 'gemini_sampled_master_v1',
+      identifiable_people: true,
+      visible_logos_or_brands: true,
+      sensitive_or_misleading_context: true,
+      copyrighted_artwork_or_screen: true,
+      notes: ['visual_review_not_completed']
+    };
+    const pathModule = require('node:path');
+    const os = require('node:os');
+    let reviewDir = null;
+    try {
+      const duration = Number(qc.duration_s || expectedSeconds);
+      if (!Number.isFinite(duration) || duration <= 0) throw Error('Duração inválida para revisão visual');
+      reviewDir = await fs.mkdtemp(pathModule.join(os.tmpdir(), 'gsa-tv-visual-review-'));
+      const fractions = [0.08, 0.24, 0.40, 0.56, 0.72, 0.88];
+      const images = [];
+      for (let i = 0; i < fractions.length; i++) {
+        const second = Math.max(0, Math.min(duration - 0.2, duration * fractions[i]));
+        const frame = pathModule.join(reviewDir, `frame-${String(i + 1).padStart(2, '0')}.jpg`);
+        await execFileAsync('ffmpeg', [
+          '-hide_banner','-nostdin','-loglevel','error','-y',
+          '-ss', String(second),
+          '-i', mp4Path,
+          '-frames:v','1',
+          '-vf','scale=640:-2',
+          '-q:v','4',
+          frame
+        ], { timeout: 60000, maxBuffer: 1024 * 1024 });
+        images.push({ buffer: await fs.readFile(frame), mimeType: 'image/jpeg' });
+      }
+
+      const reviewResult = await gemini.reviewImages({
+        apiKey,
+        model: row.default_model,
+        images,
+        instructions: [
+          'Você é um revisor visual conservador de compliance para televisão.',
+          'Analise somente o que está visível nas imagens fornecidas.',
+          'Marque risco se houver pessoa identificável, logotipo/marca reconhecível, obra artística/tela protegida aparente,',
+          'ou contexto visual que possa gerar associação enganosa, sensível ou depreciativa.',
+          'Na dúvida, reprove. Não faça inferências sobre identidade, profissão, saúde ou intenção das pessoas.',
+          'Responda somente JSON válido.'
+        ].join(' '),
+        prompt: JSON.stringify({
+          task: 'gsa_tv_visual_compliance_review',
+          program: task.program,
+          broadcast_date: task.date,
+          required_output: {
+            pass: 'boolean',
+            identifiable_people: 'boolean',
+            visible_logos_or_brands: 'boolean',
+            sensitive_or_misleading_context: 'boolean',
+            copyrighted_artwork_or_screen: 'boolean',
+            notes: ['string']
+          },
+          pass_rule: 'pass somente se todos os quatro campos de risco forem false'
+        })
+      });
+
+      const parsedReview = parse(reviewResult.text);
+      const flags = {
+        identifiable_people: parsedReview.identifiable_people === true,
+        visible_logos_or_brands: parsedReview.visible_logos_or_brands === true,
+        sensitive_or_misleading_context: parsedReview.sensitive_or_misleading_context === true,
+        copyrighted_artwork_or_screen: parsedReview.copyrighted_artwork_or_screen === true,
+      };
+      const pass = parsedReview.pass === true && !Object.values(flags).some(Boolean);
+      visualReview = {
+        state: pass ? 'passed' : 'rejected',
+        pass,
+        method: 'gemini_sampled_master_v1',
+        model: reviewResult.model,
+        sample_count: images.length,
+        ...flags,
+        notes: Array.isArray(parsedReview.notes) ? parsedReview.notes.slice(0, 20).map(String) : []
+      };
+
+      await pool.query(
+        "insert into gsa_tv_ai_usage(channel_id,provider,model,operation,input_units,output_units,metadata) values('ch-main',$1,$2,'visual_compliance_review',$3,$4,$5::jsonb)",
+        [row.provider, reviewResult.model, reviewResult.usage?.input_tokens ?? null, reviewResult.usage?.output_tokens ?? null,
+         JSON.stringify({ pipeline:'autonomous-script', broadcast_date:task.date, program:task.program, visual_review:visualReview })]
+      );
+    } catch (error) {
+      visualReview = {
+        ...visualReview,
+        state: 'failed',
+        pass: false,
+        error: String(error.message || error).slice(0, 500)
+      };
+    } finally {
+      if (reviewDir) await fs.rm(reviewDir, { recursive: true, force: true }).catch(() => {});
+    }
+    qc.visual_review = visualReview;
+    await fs.writeFile(qcPath, JSON.stringify(qc, null, 2), { mode: 0o640 });
+  }
+
   const mediaId = 'media-auto-' + crypto.randomUUID();
   const title = task.program + ' — ' + task.date;
   const originalName = require('node:path').basename(mp4Path);
@@ -251,12 +351,19 @@ async function main(){
   const technicalPassed = qc?.state === 'technical_validated' &&
     Number.isFinite(Number(qc?.duration_s)) &&
     Math.abs(Number(qc.duration_s) - Number(expectedSeconds)) <= 0.75;
-  const provenanceDeclared = Boolean(qc?.visual_provenance);
+  const provenanceDeclared = Array.isArray(qc?.visual_provenance) &&
+    qc.visual_provenance.length > 0;
+  const visualPassed = qc?.visual_review?.pass === true &&
+    qc?.visual_review?.identifiable_people !== true &&
+    qc?.visual_review?.visible_logos_or_brands !== true &&
+    qc?.visual_review?.sensitive_or_misleading_context !== true &&
+    qc?.visual_review?.copyrighted_artwork_or_screen !== true;
 
   const automatedApproval = autoApprovalEnabled &&
     editorialPassed &&
     technicalPassed &&
-    provenanceDeclared;
+    provenanceDeclared &&
+    visualPassed;
 
   const approvalState = automatedApproval ? 'approved' : 'pending';
   const rightsOk = automatedApproval;
@@ -280,6 +387,8 @@ async function main(){
       editorial_review_passed: editorialPassed,
       technical_qc_passed: technicalPassed,
       visual_provenance_declared: provenanceDeclared,
+      visual_review_passed: visualPassed,
+      visual_review: qc.visual_review || null,
       decided_at: new Date().toISOString()
     },
     rights_basis: automatedApproval
