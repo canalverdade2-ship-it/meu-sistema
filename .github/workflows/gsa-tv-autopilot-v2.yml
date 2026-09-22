@@ -44,13 +44,15 @@ jobs:
             infrastructure/gsa-tv/scripts/daily-scripts.py \
             infrastructure/gsa-tv/scripts/test_autopilot_content_factory.py \
             infrastructure/gsa-tv/scripts/test_autopilot_duration_engine.py \
-            infrastructure/gsa-tv/scripts/test_autopilot_fallback_engine.py
+            infrastructure/gsa-tv/scripts/test_autopilot_fallback_engine.py \
+            infrastructure/gsa-tv/scripts/test_render_generic_program.py
 
       - name: Autopilot unit tests
         run: |
           python infrastructure/gsa-tv/scripts/test_autopilot_content_factory.py
           python infrastructure/gsa-tv/scripts/test_autopilot_duration_engine.py
           python infrastructure/gsa-tv/scripts/test_autopilot_fallback_engine.py
+          python infrastructure/gsa-tv/scripts/test_render_generic_program.py
 
       - name: Runtime JavaScript syntax
         run: |
