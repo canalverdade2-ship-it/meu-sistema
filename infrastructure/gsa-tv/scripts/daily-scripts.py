@@ -36,14 +36,44 @@ def build(date):
     ledger={'date':date,'schedule_version_id':version,'programs':[]}
     for index,b in enumerate(programs.values(),1):
         # reference_only cannot be copied into automatic narration as licensed material.
-        stories=production.query("select id,title,summary,canonical_url,rights_classification from gsa_tv_editorial_items where program_id=$1 and validation_state='verified' and rights_classification in ('open_data','owned','licensed') and published_at >= $2::date - interval '2 days' and published_at < $2::date + interval '1 day' order by published_at desc,id limit 10",[b['program_id'],date])
+        stories=production.query("""select i.id,i.source_id,i.title,i.summary,i.canonical_url,i.rights_classification,
+                                      s.name source_name,s.provider,s.attribution
+                                 from gsa_tv_editorial_items i
+                                 join gsa_tv_editorial_sources s on s.id=i.source_id
+                                where i.program_id=$1
+                                  and i.validation_state='verified'
+                                  and i.rights_classification in ('open_data','public_domain','licensed')
+                                  and i.published_at >= $2::date - interval '2 days'
+                                  and i.published_at < $2::date + interval '1 day'
+                                order by i.published_at desc,i.id
+                                limit 12""",[b['program_id'],date])
         word_budget=max(0,int((b['planned_duration_s']-60)*1.5)-80)
-        paragraphs=[];used=[]
+        paragraphs=[];used=[];source_items=[]
         for story in stories:
             text=bounded_story(story['title'],story['summary'],word_budget)
             if not text: continue
             paragraphs.append(text);used.append(story['id']);word_budget-=len(text.split())
-        item={'program_id':b['program_id'],'slug':production.slug(b['name']),'source_ids':used,'state':'ready' if paragraphs else 'missing_verified_sources','budget_seconds':b['planned_duration_s']}
+            source_items.append({
+                'id':str(story['id']),
+                'source_id':story.get('source_id'),
+                'source_name':clean(story.get('source_name')),
+                'provider':clean(story.get('provider')),
+                'attribution':clean(story.get('attribution')),
+                'title':clean(story.get('title')),
+                'summary':clean(story.get('summary')),
+                'canonical_url':story.get('canonical_url'),
+                'rights_classification':story.get('rights_classification')
+            })
+        item={
+            'program_id':b['program_id'],
+            'slug':production.slug(b['name']),
+            'content_mode':(b.get('metadata') or {}).get('content_mode'),
+            'source_ids':used,
+            'source_items':source_items,
+            'source_word_count':sum(len((x.get('title','')+' '+x.get('summary','')).split()) for x in source_items),
+            'state':'ready' if paragraphs else 'missing_verified_sources',
+            'budget_seconds':b['planned_duration_s']
+        }
         ledger['programs'].append(item)
         if not paragraphs: continue
         start=b['planned_start_offset_s'];end=start+b['planned_duration_s']
