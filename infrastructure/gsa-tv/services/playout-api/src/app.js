@@ -3706,7 +3706,7 @@ async function publishedScheduleItems(date) {
       join public.gsa_tv_episodes e on e.series_id=se.id
       join public.gsa_tv_media_items m on m.id=e.media_item_id
       where b.media_item_id is null and b.episode_id is null and b.program_id is not null and se.program_id=b.program_id
-      order by case when b.is_reprise then e.last_run_at else e.first_run_at end nulls first,e.season_number,e.episode_number
+      order by case when b.is_reprise then e.last_run_at else e.first_run_at end nulls first,e.season_number,e.episode_number,e.id
       limit 1
     ) pm on true
     left join lateral (
@@ -3715,7 +3715,7 @@ async function publishedScheduleItems(date) {
       join public.gsa_tv_ad_campaigns c on c.id=aa.campaign_id
       where b.campaign_id is not null and aa.campaign_id=b.campaign_id and c.status='active'
         and (($2::date + make_interval(secs=>b.planned_start_offset_s)) at time zone $3) between c.starts_at and c.ends_at and m.state='ready' and m.rights_ok and m.approval_state='approved'
-      order by aa.weight desc,m.updated_at asc limit 1
+      order by aa.weight desc,m.updated_at asc,m.id limit 1
     ) cm on true
     where b.schedule_version_id=$1
     order by b.planned_start_offset_s,b.position`,
