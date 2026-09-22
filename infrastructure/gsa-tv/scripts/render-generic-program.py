@@ -13,9 +13,6 @@ import urllib.parse
 import textwrap
 import unicodedata
 import re
-import ssl
-
-ssl._create_default_https_context = ssl._create_unverified_context
 
 def sha(path):
     h = hashlib.sha256()
@@ -50,8 +47,8 @@ used_urls = set()
 def fetch_video(query, work_dir, index, timeout=30):
     """Busca vídeo B-roll FHD 1080p no Pexels Videos e depois Pixabay Videos.
     Retorna o caminho do arquivo .mp4 baixado, ou None se não encontrar."""
-    pexels_key = os.environ.get('PEXELS_API_KEY', 'vzRYUjFgGAouI5uYTbjlvonzRU2kiefK0P7JRPyf0Iq7CcDzU5gOZUbz')
-    pixabay_key = os.environ.get('PIXABAY_API_KEY', '57596721-7e8e67b2aa9e242e8ade98871')
+    pexels_key = os.environ.get('PEXELS_API_KEY', '').strip()
+    pixabay_key = os.environ.get('PIXABAY_API_KEY', '').strip()
 
     if not query:
         return None
