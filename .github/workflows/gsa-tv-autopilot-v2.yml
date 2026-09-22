@@ -158,7 +158,8 @@ jobs:
           assert "SNAPSHOT_APPLIED=true" in snapshot
           assert "SNAPSHOT_VERIFY_OK=true" in snapshot
           assert "docker cp" in snapshot
-          assert '".backup ' in snapshot
+          assert "source.backup(destination)" in snapshot
+          assert "pragma integrity_check" in snapshot
           assert "manifest.sha256" in snapshot
           assert "docker stop" not in snapshot
           assert "docker restart" not in snapshot
