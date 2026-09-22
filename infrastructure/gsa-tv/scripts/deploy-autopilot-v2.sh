@@ -60,8 +60,9 @@ rollback_runtime() {
 
   systemctl disable --now gsa-tv-autopilot-content-factory.timer >/dev/null 2>&1 || true
   systemctl disable --now gsa-tv-autopilot-readiness.timer >/dev/null 2>&1 || true
+  systemctl disable --now gsa-tv-autopilot-broadcast-controller.timer >/dev/null 2>&1 || true
 
-  for unit in     gsa-tv-autopilot-readiness.service     gsa-tv-autopilot-readiness.timer     gsa-tv-autopilot-content-factory.service     gsa-tv-autopilot-content-factory.timer; do
+  for unit in     gsa-tv-autopilot-readiness.service     gsa-tv-autopilot-readiness.timer     gsa-tv-autopilot-content-factory.service     gsa-tv-autopilot-content-factory.timer     gsa-tv-autopilot-broadcast-controller.service     gsa-tv-autopilot-broadcast-controller.timer; do
     if [ -f "$BACKUP_DIR/systemd/$unit" ]; then
       cp -f "$BACKUP_DIR/systemd/$unit" "/etc/systemd/system/$unit"
     elif [ -f "/etc/systemd/system/$unit" ]; then
@@ -101,6 +102,7 @@ required_repo_files=(
   "$INFRA/scripts/autopilot-runtime-preflight.sh"
   "$INFRA/scripts/autopilot-readiness.py"
   "$INFRA/scripts/autopilot-content-factory.py"
+  "$INFRA/scripts/autopilot-broadcast-controller.py"
   "$INFRA/scripts/autopilot-duration-engine.py"
   "$INFRA/scripts/autopilot-fallback-engine.py"
   "$INFRA/scripts/night-production.py"
@@ -111,6 +113,8 @@ required_repo_files=(
   "$SYSTEMD_SRC/gsa-tv-autopilot-readiness.timer"
   "$SYSTEMD_SRC/gsa-tv-autopilot-content-factory.service"
   "$SYSTEMD_SRC/gsa-tv-autopilot-content-factory.timer"
+  "$SYSTEMD_SRC/gsa-tv-autopilot-broadcast-controller.service"
+  "$SYSTEMD_SRC/gsa-tv-autopilot-broadcast-controller.timer"
 )
 for f in "${required_repo_files[@]}"; do
   [ -f "$f" ] || { echo "Arquivo obrigatório ausente no checkout: $f" >&2; exit 66; }
@@ -278,7 +282,7 @@ chmod 600 "$BACKUP_DIR/control-plane.env"
 if docker inspect gsa-tv-encoder-engine >/dev/null 2>&1; then echo true > "$BACKUP_DIR/encoder-existed"; else echo false > "$BACKUP_DIR/encoder-existed"; fi
 printf '%s\n' "${cp_image:-missing}" > "$BACKUP_DIR/control-plane-image.txt"
 printf '%s\n' "$(docker inspect gsa-tv-encoder-engine -f '{{.Config.Image}}' 2>/dev/null || echo missing)" > "$BACKUP_DIR/encoder-image.txt"
-for unit in   gsa-tv-autopilot-readiness.service   gsa-tv-autopilot-readiness.timer   gsa-tv-autopilot-content-factory.service   gsa-tv-autopilot-content-factory.timer; do
+for unit in   gsa-tv-autopilot-readiness.service   gsa-tv-autopilot-readiness.timer   gsa-tv-autopilot-content-factory.service   gsa-tv-autopilot-content-factory.timer   gsa-tv-autopilot-broadcast-controller.service   gsa-tv-autopilot-broadcast-controller.timer; do
   [ -f "/etc/systemd/system/$unit" ] && cp -a "/etc/systemd/system/$unit" "$BACKUP_DIR/systemd/$unit"
 done
 
@@ -288,7 +292,10 @@ MUTATION_STARTED=true
 install -d -m 0755 "$CONTROL_DIR" "$ENCODER_DIR" "$BIN_DIR" /opt/gsa-tv/releases
 install -d -m 0750 /opt/gsa-tv/autopilot
 if [ ! -f /opt/gsa-tv/autopilot/autopilot.env ]; then
-  printf '%s\n' 'GSA_TV_AUTOPILOT_AUTO_APPROVE=false' > /opt/gsa-tv/autopilot/autopilot.env
+  printf '%s\n' \
+    'GSA_TV_AUTOPILOT_AUTO_APPROVE=false' \
+    'GSA_TV_BROADCAST_AUTOMATION_ENABLED=false' \
+    > /opt/gsa-tv/autopilot/autopilot.env
   chmod 0600 /opt/gsa-tv/autopilot/autopilot.env
 fi
 install -d -m 2770 -o 989 -g 989 "$RUNTIME_DIR" "$RUNTIME_DIR/autopilot"
@@ -343,7 +350,7 @@ if(!s.includes("control_plane_shutdown_encoder_preserved") || !s.includes("encod
 docker inspect gsa-tv-control-plane --format '{{range .Config.Env}}{{println .}}{{end}}'   | grep -q '^ENCODER_ENGINE_URL=http://127\.0\.0\.1:9210$'
 
 # Install Autopilot scripts.
-for f in   autopilot-runtime-preflight.sh   autopilot-readiness.py   autopilot-content-factory.py   autopilot-duration-engine.py   autopilot-fallback-engine.py   night-production.py   daily-scripts.py; do
+for f in   autopilot-runtime-preflight.sh   autopilot-readiness.py   autopilot-content-factory.py   autopilot-broadcast-controller.py   autopilot-duration-engine.py   autopilot-fallback-engine.py   night-production.py   daily-scripts.py; do
   install -m 0755 "$INFRA/scripts/$f" "$BIN_DIR/$f"
 done
 
@@ -367,6 +374,7 @@ systemctl daemon-reload
 if [ "$ENABLE_TIMERS" = true ]; then
   systemctl enable --now gsa-tv-autopilot-readiness.timer
   systemctl enable --now gsa-tv-autopilot-content-factory.timer
+  systemctl enable --now gsa-tv-autopilot-broadcast-controller.timer
 fi
 
 # Final invariant checks.
