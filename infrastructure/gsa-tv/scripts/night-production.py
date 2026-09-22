@@ -211,6 +211,7 @@ def main():
     parser.add_argument('--reconcile',action='store_true')
     parser.add_argument('--date',default=now().date().isoformat())
     parser.add_argument('--force',action='store_true',help='Bypass time window check')
+    parser.add_argument('--max-runtime-minutes',type=int,default=None,help='Bound a forced production cycle without changing the nightly default')
     args=parser.parse_args()
     date=dt.date.fromisoformat(args.date).isoformat()
     if args.compile_ready:
@@ -263,6 +264,11 @@ def main():
     deadline=dt.datetime.combine(dt.date.fromisoformat(date),dt.time(5,59),TZ)
     if args.force and deadline < now():
         deadline = now() + dt.timedelta(hours=6)
+    if args.max_runtime_minutes is not None:
+        if not 5 <= args.max_runtime_minutes <= 360:
+            raise ValueError('--max-runtime-minutes deve ficar entre 5 e 360')
+        runtime_deadline = now() + dt.timedelta(minutes=args.max_runtime_minutes)
+        deadline = min(deadline, runtime_deadline) if deadline > now() else runtime_deadline
     logfile=STATE/(date+'-execution.log')
     save(state)
     def interrupted(signum, frame):
