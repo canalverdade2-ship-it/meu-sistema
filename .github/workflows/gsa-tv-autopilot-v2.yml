@@ -82,6 +82,9 @@ jobs:
           encoder = Path("infrastructure/gsa-tv/services/encoder-engine/src/app.js").read_text()
           compose = Path("infrastructure/gsa-tv/services/playout-api/compose.production.yml").read_text()
           deploy = Path("infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh").read_text()
+          autonomous = Path("infrastructure/gsa-tv/scripts/autonomous-script.cjs").read_text()
+          night_production = Path("infrastructure/gsa-tv/scripts/night-production.py").read_text()
+          renderer = Path("infrastructure/gsa-tv/scripts/render-generic-program.py").read_text()
 
           required_control = [
               "ENCODER_ENGINE_URL",
@@ -95,6 +98,12 @@ jobs:
 
           for marker in ["encryptState", "decryptState", "aes-256-gcm", "redact("]:
               assert marker in encoder, f"Encoder security contract missing: {marker}"
+
+          assert "GSA_TV_AUTOPILOT_AUTO_APPROVE" in autonomous
+          assert "approvalState = automatedApproval ? 'approved' : 'pending'" in autonomous
+          assert "GSA_TV_AUTOPILOT_AUTO_APPROVE" in night_production
+          assert "approval_state = 'approved' if automated_approval else 'pending'" in night_production
+          assert "def compute_timing(" in renderer
 
           assert "gsa-tv/control-plane:1.8.0" in compose
           assert "ENCODER_ENGINE_URL: http://127.0.0.1:9210" in compose
