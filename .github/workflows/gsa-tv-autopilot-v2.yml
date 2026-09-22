@@ -71,6 +71,8 @@ jobs:
           bash -n infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh
           bash -n infrastructure/gsa-tv/scripts/snapshot-legacy-ffplayout.sh
           bash -n infrastructure/gsa-tv/scripts/reconcile-stale-offair-state.sh
+          bash -n infrastructure/gsa-tv/scripts/recover-local-media-cache.sh
+          bash -n infrastructure/gsa-tv/scripts/autopilot-migration-status.sh
           bash -n infrastructure/gsa-tv/scripts/backup-full.sh
           bash -n infrastructure/gsa-tv/tests/run-live-test-suite.sh
           bash -n infrastructure/gsa-tv/tests/test-control-plane-restart-continuity.sh
@@ -93,6 +95,8 @@ jobs:
           cutover = Path("infrastructure/gsa-tv/scripts/cutover-autopilot-v2.sh").read_text()
           snapshot = Path("infrastructure/gsa-tv/scripts/snapshot-legacy-ffplayout.sh").read_text()
           offair_reconcile = Path("infrastructure/gsa-tv/scripts/reconcile-stale-offair-state.sh").read_text()
+          media_recovery = Path("infrastructure/gsa-tv/scripts/recover-local-media-cache.sh").read_text()
+          migration_status = Path("infrastructure/gsa-tv/scripts/autopilot-migration-status.sh").read_text()
           full_backup = Path("infrastructure/gsa-tv/scripts/backup-full.sh").read_text()
           runtime_workflow = Path(".github/workflows/gsa-tv-autopilot-runtime.yml").read_text()
           factory_service = Path("infrastructure/gsa-tv/systemd/gsa-tv-autopilot-content-factory.service").read_text()
@@ -181,6 +185,12 @@ jobs:
           assert "physical_off_air" in offair_reconcile
           assert "docker stop" not in offair_reconcile
           assert "systemctl stop" not in offair_reconcile
+          assert "RECOVERY_APPLIED=true" in media_recovery
+          assert "RECOVERY_UNRESOLVED_COUNT" in media_recovery
+          assert "cp --reflink=auto" in media_recovery
+          assert "rm -rf" not in media_recovery
+          assert "MIGRATION_STATUS=" in migration_status
+          assert "MIGRATION_STATE=" in migration_status
           assert "source.backup(destination)" in full_backup
           assert "media-catalog-missing.txt" in full_backup
           assert "catalog_missing_files" in full_backup
