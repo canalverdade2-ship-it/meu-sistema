@@ -363,7 +363,7 @@ if [ -f "$INFRA/scripts/render-original-reflection.py" ]; then
 fi
 
 # Install timer units but do not remove legacy units in this migration.
-for unit in   gsa-tv-autopilot-readiness.service   gsa-tv-autopilot-readiness.timer   gsa-tv-autopilot-content-factory.service   gsa-tv-autopilot-content-factory.timer; do
+for unit in   gsa-tv-autopilot-readiness.service   gsa-tv-autopilot-readiness.timer   gsa-tv-autopilot-content-factory.service   gsa-tv-autopilot-content-factory.timer   gsa-tv-autopilot-broadcast-controller.service   gsa-tv-autopilot-broadcast-controller.timer; do
   install -m 0644 "$SYSTEMD_SRC/$unit" "/etc/systemd/system/$unit"
 done
 systemctl daemon-reload
