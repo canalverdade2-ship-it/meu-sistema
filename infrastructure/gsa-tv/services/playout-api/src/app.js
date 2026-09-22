@@ -3563,13 +3563,18 @@ async function heartbeat() {
   const autopilotFailure =
     ["failed", "cycle_failed", "duration_cycle_failed"].includes(
       String(autopilot.content_factory.state || ""),
-    ) || String(autopilot.duration_engine.state || "") === "failed";
+    ) ||
+    String(autopilot.duration_engine.state || "") === "failed" ||
+    ["failed", "fallback_incomplete"].includes(
+      String(autopilot.fallback_engine.state || ""),
+    );
   if (autopilotFailure)
     await incident(
       "Fábrica Autopilot da GSA TV falhou",
       {
         content_factory: autopilot.content_factory,
         duration_engine: autopilot.duration_engine,
+        fallback_engine: autopilot.fallback_engine,
       },
       "warning",
     );
@@ -4264,10 +4269,11 @@ async function readAutopilotStateFile(filename) {
 }
 
 async function autopilotSnapshot() {
-  const [readinessFile, factoryFile, durationFile] = await Promise.all([
+  const [readinessFile, factoryFile, durationFile, fallbackFile] = await Promise.all([
     readAutopilotStateFile("readiness-horizon.json"),
     readAutopilotStateFile("content-factory.json"),
     readAutopilotStateFile("duration-engine.json"),
+    readAutopilotStateFile("fallback-engine.json"),
   ]);
   const readiness = readinessFile.data || {};
   const today = localClock(new Date()).date;
@@ -4312,13 +4318,26 @@ async function autopilotSnapshot() {
       target: durationFile.data?.target || null,
       finished_at: durationFile.data?.finished_at || null,
     },
+    fallback_engine: {
+      present: fallbackFile.present,
+      age_seconds: fallbackFile.age_seconds,
+      state: fallbackFile.data?.state || null,
+      broadcast_date: fallbackFile.data?.broadcast_date || null,
+      assigned: fallbackFile.data?.assigned ?? null,
+      failed: fallbackFile.data?.failed ?? null,
+      activate_at: fallbackFile.data?.activate_at || null,
+      finished_at: fallbackFile.data?.finished_at || null,
+    },
     healthy:
       readinessFresh &&
       (!nextDay || nextDay.state === "ready") &&
       !["failed", "cycle_failed", "duration_cycle_failed"].includes(
         String(factoryFile.data?.state || ""),
       ) &&
-      String(durationFile.data?.state || "") !== "failed",
+      String(durationFile.data?.state || "") !== "failed" &&
+      !["failed", "fallback_incomplete"].includes(
+        String(fallbackFile.data?.state || ""),
+      ),
   };
 }
 
