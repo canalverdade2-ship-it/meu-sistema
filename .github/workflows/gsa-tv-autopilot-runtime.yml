@@ -157,7 +157,8 @@ jobs:
             docs/gsa-tv-secret-rotation.md \
             supabase/migrations/20260922131000_gsa_tv_autopilot_compile_gate.sql \
             supabase/migrations/20260922132000_gsa_tv_autopilot_duration_swap.sql \
-            supabase/migrations/20260922134000_gsa_tv_autopilot_continuity_fallback.sql
+            supabase/migrations/20260922134000_gsa_tv_autopilot_continuity_fallback.sql \
+            supabase/migrations/20260922135000_gsa_tv_cinema_duration_contract.sql
           (cd "$dir" && sha256sum source.tgz > source.sha256)
           cat "$dir/source.sha256"
 
