@@ -112,3 +112,38 @@ cat /opt/gsa-tv/runtime/autopilot/duration-engine.json
 ```
 
 O readiness roda a cada 15 minutos. O dispatcher de produção roda em ciclos de baixa prioridade e trabalha primeiro D+1, depois D+2/D+3. O Duration Engine atua somente em programas originais futuros; live, reprise e conteúdo de acervo ficam fora da substituição automática.
+
+
+## Homologação Autopilot
+
+Após o deploy, executar os testes temporais em ordem crescente:
+
+```bash
+sudo bash infrastructure/gsa-tv/tests/run-live-test-suite.sh 1   # 30 min
+sudo bash infrastructure/gsa-tv/tests/run-live-test-suite.sh 2   # 2 h
+sudo bash infrastructure/gsa-tv/tests/run-live-test-suite.sh 3   # 6 h
+sudo bash infrastructure/gsa-tv/tests/run-live-test-suite.sh 4   # 12 h
+sudo bash infrastructure/gsa-tv/tests/run-live-test-suite.sh 5   # 24 h
+sudo bash infrastructure/gsa-tv/tests/run-live-test-suite.sh 6   # 72 h
+sudo bash infrastructure/gsa-tv/tests/run-live-test-suite.sh 7   # 7 dias
+```
+
+Cada amostra valida Control Plane, Encoder Engine, Watchdog/HLS, ausência de black/silence/freeze, freshness do Readiness Horizon e timers do Autopilot ativos. Um período só resulta em PASS depois do tempo real integral.
+
+### Chaos test — restart do Control Plane
+
+Somente depois do preflight retornar `EXTERNAL_READY` e com o canal `running|sending`:
+
+```bash
+sudo bash infrastructure/gsa-tv/tests/test-control-plane-restart-continuity.sh --confirm-live-chaos
+```
+
+Esse teste reinicia exclusivamente o container `gsa-tv-control-plane` e exige que:
+
+- o Encoder Engine continue com `outer_running=true`;
+- o PID do transporte RTMP permaneça o mesmo;
+- o PID do produtor permaneça o mesmo;
+- o Control Plane recupere health;
+- o Watchdog continue reportando HLS válido.
+
+O teste não reinicia o Encoder Engine nem o ffplayout. Falha nesse teste bloqueia a classificação de continuidade do runtime externo.
