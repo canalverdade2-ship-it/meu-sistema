@@ -115,6 +115,19 @@ def inspect_day(day):
         scheduled_s += max(0.0, duration)
         issue = None
 
+        block_metadata = row.get("block_metadata") or {}
+        required_slot_duration = float(block_metadata.get("required_slot_duration_s") or 0)
+        if required_slot_duration > 0 and duration + 0.001 < required_slot_duration:
+            issues.append({
+                "block_id": row["id"],
+                "program": row.get("program_name"),
+                "issue": "slot_duration_contract_violation",
+                "planned_duration_s": duration,
+                "required_duration_s": required_slot_duration,
+                "shortfall_s": round(required_slot_duration - duration, 3),
+            })
+            continue
+
         if row.get("block_type") == "live" and row.get("live_source_id"):
             eligible = True
             actual = duration
