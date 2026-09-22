@@ -231,6 +231,10 @@ jobs:
           assert "CREATE TABLE IF NOT EXISTS supabase_migrations.schema_migrations" in migration_apply
           assert "refusing history repair without verified contract" in migration_apply
           assert 'psql "$DB_URL" -X -v ON_ERROR_STOP=1 -f "$FILE"' in migration_apply
+          assert "VALUES ('$VERSION', '$NAME', NULL)" in migration_apply
+          assert "version='$VERSION'" in migration_apply
+          assert ":'version'" not in migration_apply
+          assert ":'name'" not in migration_apply
           assert "supabase " not in migration_apply
           assert "source.backup(destination)" in full_backup
           assert "media-catalog-missing.txt" in full_backup
