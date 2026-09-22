@@ -383,8 +383,33 @@ select 'MEDIA_SAMPLE',id,state,approval_state,rights_ok,coalesce(drive_path,'')
  order by updated_at desc nulls last
  limit 25;
 SQL
+    echo "MEDIA_SCHEMA_DIAGNOSTICS_BEGIN"
+    psql "$database_url" -X -qAt -F '|' -v ON_ERROR_STOP=1 <<'SQL' 2>/dev/null || true
+select 'MEDIA_COLUMNS',string_agg(column_name,',' order by ordinal_position)
+  from information_schema.columns
+ where table_schema='public' and table_name='gsa_tv_media_items';
+select 'MEDIA_METADATA_KEYS',string_agg(key,',' order by key)
+  from (
+    select distinct jsonb_object_keys(coalesce(metadata,'{}'::jsonb)) key
+      from public.gsa_tv_media_items
+  ) s;
+SQL
+    echo "MEDIA_SCHEMA_DIAGNOSTICS_END"
     echo "MEDIA_DB_DIAGNOSTICS_END"
   fi
+  echo "RCLONE_DIAGNOSTICS_BEGIN"
+  echo "RCLONE_BIN=$(command -v rclone 2>/dev/null || echo missing)"
+  for p in /opt/gsa-tv/config/rclone/rclone.conf /opt/gsa-tv/bin/sync-media-cache.sh /opt/gsa-tv/rclone/sync-media-cache.sh; do
+    if [ -e "$p" ]; then
+      stat -c 'RCLONE_PATH=%n TYPE=%F OWNER=%u:%g MODE=%a SIZE=%s' "$p" 2>/dev/null || true
+    else
+      echo "RCLONE_PATH=$p MISSING"
+    fi
+  done
+  if command -v rclone >/dev/null 2>&1 && [ -f /opt/gsa-tv/config/rclone/rclone.conf ]; then
+    rclone listremotes --config /opt/gsa-tv/config/rclone/rclone.conf 2>/dev/null | sed 's/^/RCLONE_REMOTE=/' || true
+  fi
+  echo "RCLONE_DIAGNOSTICS_END"
   echo "LEGACY_MEDIA_DIAGNOSTICS_END"
   if [ -d /opt/gsa-tv/cache/media ]; then
     find /opt/gsa-tv/cache/media -mindepth 1 -maxdepth 1 -type d -printf 'MEDIA_CHILD=%f\n' 2>/dev/null | sort | head -50 || true
