@@ -67,8 +67,8 @@ def published(date):
                 and b.program_id is not null
                 and se.program_id=b.program_id
               order by case when b.is_reprise then e.last_run_at else e.first_run_at end nulls first,
-                       e.season_number,e.episode_number
-              limit 1
+                       e.season_number,e.episode_number,e.id
+      limit 1
            ) pm on true
            left join lateral (
              select m.*
