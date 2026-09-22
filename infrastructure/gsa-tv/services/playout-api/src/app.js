@@ -3691,9 +3691,11 @@ async function publishedScheduleItems(date) {
       coalesce(dm.drive_path,em.drive_path,pm.drive_path,cm.drive_path) as drive_path,
       coalesce(dm.duration_s,em.duration_s,pm.duration_s,cm.duration_s) as media_duration_s,
       coalesce(dm.media_kind,em.media_kind,pm.media_kind,cm.media_kind) as media_kind,
+      coalesce(dm.state,em.state,pm.state,cm.state) as media_state,
       coalesce(dm.approval_state,em.approval_state,pm.approval_state,cm.approval_state) as approval_state,
       coalesce(dm.rights_ok,em.rights_ok,pm.rights_ok,cm.rights_ok) as rights_ok,
-      coalesce(dm.rights_expires_at,em.rights_expires_at,pm.rights_expires_at,cm.rights_expires_at) as rights_expires_at
+      coalesce(dm.rights_expires_at,em.rights_expires_at,pm.rights_expires_at,cm.rights_expires_at) as rights_expires_at,
+      (($2::date + make_interval(secs=>b.planned_start_offset_s+b.planned_duration_s)) at time zone $3) as block_ends_at
     from public.gsa_tv_program_blocks b
     left join public.gsa_tv_programs p on p.id=b.program_id
     left join public.gsa_tv_media_items dm on dm.id=b.media_item_id
@@ -3736,35 +3738,53 @@ async function publishedScheduleItems(date) {
       });
       continue;
     }
-    if (!block.drive_path) {
-      items.push({
-        start,
-        duration: planned,
-        source: SCHEDULE_FILLER_FILE,
-        clipIn: 0,
-        ad: false,
-        title: block.resolved_title || "Continuidade GSA TV",
-        blockId: block.id,
-      });
-      continue;
-    }
+    const metadata =
+      block.metadata && typeof block.metadata === "object" ? block.metadata : {};
+    const requiredSlotDuration = Math.max(
+      0,
+      Number(metadata.required_slot_duration_s || 0),
+    );
+    if (requiredSlotDuration > 0 && planned + 0.001 < requiredSlotDuration)
+      throw new Error(
+        `Bloco ${block.id} viola duração contratual: ${planned}s < ${requiredSlotDuration}s.`,
+      );
+
+    if (!block.drive_path)
+      throw new Error(`Bloco ${block.id} não possui mídia resolvida.`);
+    if (block.media_state !== "ready")
+      throw new Error(`Bloco ${block.id} usa mídia fora do estado ready.`);
+    if (block.approval_state !== "approved")
+      throw new Error(`Bloco ${block.id} usa mídia sem aprovação editorial.`);
+    if (block.rights_ok !== true)
+      throw new Error(`Bloco ${block.id} usa mídia sem direitos confirmados.`);
     if (
-      block.rights_ok !== true ||
-      (block.rights_expires_at &&
-        new Date(block.rights_expires_at).getTime() < Date.now())
+      block.rights_expires_at &&
+      new Date(block.rights_expires_at).getTime() <
+        new Date(block.block_ends_at).getTime()
     )
-      throw new Error(`Bloco ${block.id} usa mídia sem direitos válidos.`);
-    if (
-      block.media_kind === "advertising" &&
-      block.approval_state !== "approved"
-    )
-      throw new Error(`Bloco publicitário ${block.id} não está aprovado.`);
+      throw new Error(
+        `Bloco ${block.id} usa mídia cujos direitos expiram antes do fim da exibição.`,
+      );
+
     const source = resolveMediaPath(block.drive_path);
     await fs.access(source);
-    const playable = Math.min(
-      planned,
-      Math.max(0.04, Number(block.media_duration_s || planned)),
+    const mediaDuration = Math.max(
+      0.04,
+      Number(block.media_duration_s || 0),
     );
+    const allowFill = metadata.allow_continuity_fill === true;
+    const allowTrim = metadata.allow_trim === true;
+
+    if (mediaDuration + 1 < planned && !allowFill)
+      throw new Error(
+        `Bloco ${block.id} está subpreenchido (${mediaDuration}s de ${planned}s) sem composição autorizada.`,
+      );
+    if (mediaDuration > planned + 1 && !allowTrim)
+      throw new Error(
+        `Bloco ${block.id} excede a janela (${mediaDuration}s para ${planned}s) e não pode ser truncado.`,
+      );
+
+    const playable = Math.min(planned, mediaDuration);
     items.push({
       start,
       duration: playable,
@@ -3778,7 +3798,9 @@ async function publishedScheduleItems(date) {
       campaignId: block.campaign_id || null,
       episodeId: block.episode_id || null,
     });
-    if (playable + 0.04 < planned)
+    if (playable + 0.04 < planned) {
+      if (!allowFill)
+        throw new Error(`Bloco ${block.id} exige composição editorial explícita.`);
       items.push({
         start: start + playable,
         duration: planned - playable,
@@ -3788,6 +3810,7 @@ async function publishedScheduleItems(date) {
         title: "Continuidade GSA TV",
         blockId: block.id,
       });
+    }
   }
   return { version: version.rows[0], items };
 }
