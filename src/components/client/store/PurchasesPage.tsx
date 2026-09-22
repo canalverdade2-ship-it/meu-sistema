@@ -87,23 +87,17 @@ function getOrderStatus(order: any): string {
 
 function getPresentation(order: any): OrderPresentation {
   const status = getOrderStatus(order);
-  const isCredit = Boolean(
-    order.forma_pagamento_loja === 'credito_loja' ||
-    order.descricao_adicional?.includes('Credito GSA') ||
-    order.descricao_adicional?.includes('Crédito GSA')
-  );
+  const isCredit = order.forma_pagamento_loja === 'credito_loja';
   const isSubscription = order.ordens_items?.[0]?.tipo === 'assinatura';
   const createdAt = new Date(order.data_criacao);
   const expiresAt = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
   const remainingMs = expiresAt.getTime() - Date.now();
   const hoursLeft = Math.max(0, Math.floor(remainingMs / (1000 * 60 * 60)));
   const minutesLeft = Math.max(0, Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60)));
-  const expiredPending = !isCredit
-    && remainingMs <= 0
-    && ['aberto', 'em_analise'].includes(status);
+  const expiredPending = status === 'expirado';
   const isCancelled = status === 'cancelado';
   const isExpired = isCancelled || expiredPending;
-  const isPaid = ['pago', 'aprovado', 'em_expedicao', 'em_transporte', 'concluido'].includes(status) || isCredit;
+  const isPaid = ['pago', 'aprovado', 'em_expedicao', 'em_transporte', 'concluido'].includes(status);
   const isAwaiting = ['aberto', 'em_analise'].includes(status) && !isCredit && !isExpired;
   const canCancelBeforeDelivery = !isSubscription
     && !isCancelled
@@ -275,22 +269,13 @@ export function PurchasesPage({ clientId, onRequireAuth, initialOrderId }: Purch
 
       const enriched = (orcamentos || []).map(orc => ({
         ...orc,
+        entregas_rastreaveis: (ocsByOrc[orc.id] || []).filter((oc: any) => oc.entrega_rastreavel && oc.codigo_rastreio),
         ordens_items: normalizedByOrc[orc.id]?.length
           ? normalizedByOrc[orc.id].map((item: any) => ({ ...item, status: orc.status }))
           : [...(ocsByOrc[orc.id] || []), ...(oasByOrc[orc.id] || [])],
       }));
 
-      // Auto-cancelar pedidos expirados (24h)
-      const now = new Date();
-      const updated = enriched.map(order => {
-        const created = new Date(order.data_criacao);
-        const hoursDiff = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
-        const isCredit = order.descricao_adicional?.includes('Crédito GSA');
-        if (!isCredit && order.status === 'aberto' && hoursDiff > 24) {
-          return { ...order, status: 'cancelado', is_expired: true };
-        }
-        return order;
-      });
+      const updated = enriched;
 
       setAllPurchases(updated);
 
@@ -797,8 +782,15 @@ export function PurchasesPage({ clientId, onRequireAuth, initialOrderId }: Purch
                       <div className="rounded-xl bg-[#f8faff] border border-[#e0e8f5] p-4">
                         <div className="flex items-center justify-between mb-4">
                           <span className="flex items-center gap-1.5 font-black text-[#17345f] uppercase tracking-wider text-[11px]"><Truck className="h-3.5 w-3.5" />Status da Entrega</span>
-                          {order.codigo_rastreio && <span className="font-mono text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">Rastreio: {order.codigo_rastreio}</span>}
+                          {!order.entregas_rastreaveis?.length && order.codigo_rastreio && <span className="break-all font-mono text-xs font-bold text-blue-700">Rastreio: {order.codigo_rastreio}</span>}
                         </div>
+                        {order.entregas_rastreaveis?.map((entrega: any) => (
+                          <div key={entrega.id} className="mb-3 rounded-lg border border-blue-200 bg-white p-3">
+                            <p className="text-xs font-semibold text-slate-600">{entrega.produtos?.nome || entrega.codigo_ordem || 'Entrega rastreável'}</p>
+                            <p className="mt-1 text-xs text-slate-500">Código para consultar na transportadora</p>
+                            <p className="mt-1 select-all break-all font-mono text-sm font-bold text-blue-800">{entrega.codigo_rastreio}</p>
+                          </div>
+                        ))}
                         <div className="flex items-start">
                           {([
                             { label: 'Pedido\nRealizado', icon: CheckCircle2, done: true },

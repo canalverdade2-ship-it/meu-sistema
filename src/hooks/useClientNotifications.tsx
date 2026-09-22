@@ -102,6 +102,13 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
   const registrationDateRef = useRef<string | null>(null);
   const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isSubscribedRef = useRef(false);
+  const seenNotificationsRef = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    registrationDateRef.current = null;
+    seenNotificationsRef.current = null;
+    setNotifications([]);
+    setUnreadNotifications(0);
+  }, [clientId]);
 
   const fetchPendencies = useCallback(async () => {
     if (!clientId) return;
@@ -188,27 +195,30 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
     try {
       // 1. Obter data de cadastro para filtrar broadcasts (cacheado em ref)
       if (!registrationDateRef.current) {
-        const { data: client } = await supabase
+        const { data: client, error: registrationError } = await supabase
           .from('clientes')
           .select('data_cadastro')
           .eq('id', clientId)
           .maybeSingle();
         
-        registrationDateRef.current = client?.data_cadastro || new Date().toISOString();
+        if (registrationError) console.error('Não foi possível consultar a data de cadastro:', registrationError);
+        registrationDateRef.current = client?.data_cadastro || null;
       }
 
-      const regTime = new Date(registrationDateRef.current).getTime();
+      const regTime = registrationDateRef.current ? new Date(registrationDateRef.current).getTime() : 0;
       const safetyBuffer = 10 * 60 * 1000; // 10 min de margem
 
       // 2. Buscar notificações (Nominais + Broadcasts)
-      const { data: notifs, error } = await supabase
-        .from('notificacoes')
-        .select('*')
-        .or(`cliente_id.eq.${clientId},destinatario_tipo.in.(broadcast_clientes,broadcast_todos)`)
-        .order('data_criacao', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
+      const notifs: any[] = [];
+      for (let offset = 0; ; offset += 200) {
+        const { data: page, error } = await supabase.from('notificacoes').select('*')
+          .or(`cliente_id.eq.${clientId},destinatario_tipo.in.(broadcast_clientes,broadcast_todos)`)
+          .order('data_criacao', { ascending: false }).order('id', { ascending: false })
+          .range(offset, offset + 199);
+        if (error) throw error;
+        notifs.push(...(page || []));
+        if (!page || page.length < 200) break;
+      }
 
       if (notifs) {
         const notificationIds = notifs.map((notification) => notification.id);
@@ -233,7 +243,6 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
             const notifTime = new Date(n.data_criacao).getTime();
             return notifTime >= (regTime - safetyBuffer);
           })
-          .slice(0, 30)
           .map(n => ({
             id: n.id,
             tipo: n.tipo || 'sistema',
@@ -247,6 +256,13 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
             prioridade: n.prioridade || 'normal'
           }));
 
+        const previous = seenNotificationsRef.current;
+        const fresh = normalized.find(n => !n.lida && previous && !previous.has(n.id));
+        seenNotificationsRef.current = new Set(normalized.map(n => n.id));
+        if (fresh) {
+          playPremiumBeep();
+          showAnimatedToast(fresh.titulo, fresh.mensagem, fresh.modulo || 'bell');
+        }
         setNotifications(normalized);
         setUnreadNotifications(normalized.filter(n => !n.lida).length);
       }
@@ -331,8 +347,6 @@ export function ClientNotificationProvider({ children, clientId }: { children: R
         
         if (isForMe || isBroadcast) {
           console.log('[Realtime Client] Nova notificação recebida:', n.titulo);
-          playPremiumBeep();
-          showAnimatedToast(n.titulo, n.mensagem, n.modulo || 'bell');
           fetchNotifications();
         }
       })

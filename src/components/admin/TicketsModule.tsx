@@ -63,6 +63,19 @@ export function TicketsModule({ initialTab, initialItemId, adminType, colaborado
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
   const hasAutoOpened = useRef<string | null>(null);
+  useEffect(() => {
+    if (!initialItemId || hasAutoOpened.current === initialItemId) return;
+    let cancelled = false;
+    void (async () => {
+      const { data, error } = await supabase.from('tickets').select('*, clientes(nome, codigo_cliente)').eq('id', initialItemId).maybeSingle();
+      if (cancelled) return;
+      if (error || !data) { toast.error('Chamado não encontrado ou sem permissão de acesso.'); return; }
+      hasAutoOpened.current = initialItemId;
+      setSelectedTicket(data);
+      setIsDetailOpen(true);
+    })();
+    return () => { cancelled = true; };
+  }, [initialItemId]);
 
   useEffect(() => {
     if (initialItemId && tickets.length > 0 && hasAutoOpened.current !== initialItemId) {
@@ -325,14 +338,7 @@ export function TicketsModule({ initialTab, initialItemId, adminType, colaborado
       messagePersisted = true;
 
       if (selectedTicket.cliente_id) {
-        await notificationService.notifyClient(
-          selectedTicket.cliente_id,
-          '💬 Nova Mensagem no Suporte',
-          `Você recebeu uma nova mensagem no ticket: ${selectedTicket.assunto}`,
-          'suporte',
-          'ticket_respondido',
-          { itemId: selectedTicket.id, prioridade: 'alta', contexto: { ticket_id: selectedTicket.id, assunto: selectedTicket.assunto } },
-        );
+        // Notificação gravada pelo banco na mesma transação da ação.
       } else if (selectedTicket.prestador_id) {
         await createNotification(
           selectedTicket.prestador_id,

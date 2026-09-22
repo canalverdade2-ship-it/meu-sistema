@@ -195,7 +195,7 @@ export function RestrictedAccessHubPage({
 
           <div className="mt-8 grid gap-8 lg:grid-cols-[0.86fr_1.14fr] lg:gap-12">
             <div>
-              <div className="grid border-l border-t border-[#cfc6b7] sm:grid-cols-3 lg:grid-cols-1">
+              <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
                 {([
                   ['colaborador', roleContent.colaborador],
                   ['gestao', roleContent.gestao],
@@ -211,30 +211,32 @@ export function RestrictedAccessHubPage({
                       aria-pressed={isActive}
                       aria-controls="restricted-credential-form"
                       onClick={() => selectRole(roleId)}
-                      className={`group min-h-[154px] border-b border-r border-[#cfc6b7] p-5 text-left transition focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#806329] sm:p-6 ${
+                      className={`group relative flex min-h-[140px] flex-col justify-between overflow-hidden rounded-2xl border p-5 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f] sm:p-6 ${
                         isActive
-                          ? 'bg-[#0c1c2b] text-white'
-                          : 'bg-[#f8f6f1] text-[#0b1825] hover:bg-white'
+                          ? 'border-transparent bg-[#0b1522] text-white shadow-xl shadow-[#0b1522]/10 scale-[1.02]'
+                          : 'border-[#e2e7eb] bg-white text-[#344154] hover:border-[#d8bd73]/50 hover:bg-[#fffcf5] hover:shadow-md'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-5">
-                        <span className={`flex h-10 w-10 items-center justify-center border ${
+                        <span className={`flex h-12 w-12 items-center justify-center rounded-xl border transition-colors ${
                           isActive
-                            ? 'border-[#d5b86b]/60 text-[#d5b86b]'
-                            : 'border-[#ad9256]/55 text-[#806329]'
+                            ? 'border-[#d8bd73]/30 bg-[#d8bd73]/10 text-[#edcf83]'
+                            : 'border-[#e2e7eb] bg-[#f8f9fa] text-[#71808e] group-hover:border-[#d8bd73]/30 group-hover:bg-[#d8bd73]/10 group-hover:text-[#8a651f]'
                         }`}>
-                          <Icon className="h-5 w-5" />
+                          <Icon className="h-6 w-6" />
                         </span>
-                        <span className={`text-[10px] font-bold uppercase tracking-[0.18em] ${
-                          isActive ? 'text-[#d5b86b]' : 'text-[#806329]'
+                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors ${
+                          isActive ? 'text-[#d5b86b]' : 'text-[#9aa4af] group-hover:text-[#8a651f]'
                         }`}>
                           {isActive ? 'Selecionado' : content.eyebrow}
                         </span>
                       </div>
-                      <h3 className="mt-5 text-xl font-semibold">{content.title}</h3>
-                      <p className={`mt-2 text-xs leading-5 ${isActive ? 'text-white/62' : 'text-[#666b70]'}`}>
-                        {content.description}
-                      </p>
+                      <div>
+                        <h3 className={`mt-5 text-lg font-black transition-colors ${isActive ? 'text-white' : 'text-[#0b1522]'}`}>{content.title}</h3>
+                        <p className={`mt-2 text-xs leading-5 transition-colors ${isActive ? 'text-white/60' : 'text-[#71808e]'}`}>
+                          {content.description}
+                        </p>
+                      </div>
                     </button>
                   );
                 })}
@@ -247,34 +249,35 @@ export function RestrictedAccessHubPage({
             </div>
 
             <motion.section
-              initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25 }}
-              className="border border-[#cfc6b7] bg-[#f8f6f1]"
+              key={role} // forçar re-render na animação quando trocar perfil
+              initial={reduceMotion ? false : { opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col overflow-hidden rounded-[2rem] border border-[#e2e7eb] bg-[#fbfcfd] shadow-2xl shadow-black/5"
             >
-              <div className="border-b border-[#cfc6b7] px-6 py-6 sm:px-8">
-                <div className="flex items-start gap-4">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-[#ad9256]/55 text-[#806329]">
-                    <SelectedIcon className="h-5 w-5" />
+              <div className="border-b border-[#e2e7eb] bg-white px-6 py-6 sm:px-10 sm:py-8">
+                <div className="flex items-start gap-5">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#d8bd73]/35 bg-[#fff9ea] text-[#8a651f]">
+                    <SelectedIcon className="h-6 w-6" />
                   </span>
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#806329]">{selected.eyebrow}</p>
-                    <h2 className="mt-2 text-2xl font-semibold tracking-[-0.025em] text-[#0b1825]">{selected.title}</h2>
-                    <p className="mt-2 text-sm leading-6 text-[#687078]">{selected.description}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#8a651f]">{selected.eyebrow}</p>
+                    <h2 className="mt-1 text-2xl font-black tracking-[-0.03em] text-[#0b1522] sm:text-3xl">{selected.title}</h2>
+                    <p className="mt-2 max-w-md text-sm leading-6 text-[#71808e]">{selected.description}</p>
                   </div>
                 </div>
               </div>
 
-              <form id="restricted-credential-form" onSubmit={handleLogin}>
-                <div className="px-6 py-7 sm:px-8 sm:py-8">
-                  <label htmlFor={`restricted-code-${role}`} className="block text-sm font-semibold text-[#28343e]">
+              <form id="restricted-credential-form" onSubmit={handleLogin} className="flex flex-1 flex-col">
+                <div className="flex-1 px-6 py-8 sm:px-10">
+                  <label htmlFor={`restricted-code-${role}`} className="grid gap-2 text-sm font-bold text-[#344154]">
                     {selected.label}
+                    <p className="text-xs font-normal leading-5 text-[#71808e]">
+                      Digite a credencial individual recebida da administração da GSA.
+                    </p>
                   </label>
-                  <p className="mt-2 text-xs leading-5 text-[#687078]">
-                    Digite a credencial individual recebida da administração da GSA.
-                  </p>
 
-                  <div className="relative mt-4">
+                  <div className="relative mt-5">
                     <input
                       key={role}
                       id={`restricted-code-${role}`}
@@ -286,13 +289,13 @@ export function RestrictedAccessHubPage({
                       value={code}
                       onChange={(event) => setCode(event.target.value)}
                       placeholder="Digite sua credencial"
-                      className="min-h-14 w-full border border-[#bcb7ac] bg-white px-4 pr-14 text-center font-mono text-lg tracking-[0.24em] text-[#0b1825] outline-none transition placeholder:text-sm placeholder:font-normal placeholder:tracking-normal placeholder:text-[#8a8f92] focus:border-[#806329] focus:ring-2 focus:ring-[#806329]/15"
+                      className="min-h-16 w-full rounded-xl border border-[#d7dde3] bg-white px-5 pr-14 text-center font-mono text-xl tracking-[0.24em] text-[#0b1522] outline-none transition placeholder:text-sm placeholder:font-normal placeholder:tracking-normal placeholder:text-[#9aa4af] focus:border-[#8a651f] focus:ring-4 focus:ring-[#d8bd73]/15"
                     />
                     <button
                       type="button"
                       onClick={() => setShowCode((current) => !current)}
                       aria-label={showCode ? 'Ocultar credencial' : 'Mostrar credencial'}
-                      className="absolute right-1.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-[#687078] transition hover:bg-[#eee9de] hover:text-[#0b1825] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#806329]"
+                      className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-lg text-[#9aa4af] transition hover:bg-[#f1f3f5] hover:text-[#0b1522] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f]"
                     >
                       {showCode ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
@@ -301,16 +304,16 @@ export function RestrictedAccessHubPage({
                   <button
                     type="submit"
                     disabled={loading || !code.trim()}
-                    className="mt-5 inline-flex min-h-14 w-full items-center justify-center gap-2 bg-[#0b1825] px-5 text-sm font-semibold text-white transition hover:bg-[#142a3c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#806329] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0b1522] px-5 text-sm font-black text-white transition hover:bg-[#14263a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8a651f] disabled:cursor-not-allowed disabled:opacity-55"
                   >
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4 text-[#d5b86b]" />}
                     {loading ? 'Autorizando acesso...' : selected.button}
                   </button>
                 </div>
 
-                <div className="flex items-start gap-3 border-t border-[#cfc6b7] bg-[#eee9de] px-6 py-4 text-xs leading-5 text-[#5f5748] sm:px-8">
-                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#806329]" />
-                  <span>Nenhuma informação administrativa é exibida antes da autenticação.</span>
+                <div className="flex items-start gap-3 border-t border-[#e2e7eb] bg-[#f4f6f8] px-6 py-5 text-xs leading-5 text-[#71808e] sm:px-10">
+                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#8a651f]" />
+                  <span>Nenhuma informação administrativa é exibida antes da autenticação. Sessão criptografada ponta a ponta.</span>
                 </div>
               </form>
             </motion.section>

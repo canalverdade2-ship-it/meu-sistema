@@ -267,7 +267,7 @@ export function AdminNotificationProvider({ children }: { children: React.ReactN
     if (document.visibilityState !== 'visible') return;
     try {
       const data = await callAdminRpc<AdminNotificacao[]>('gsa_admin_list_notifications', {
-        p_limit: 50,
+        p_limit: 10000,
       });
       const next = Array.isArray(data) ? data : [];
       if (notifyOnNew && notificationsLoadedRef.current) {

@@ -1215,7 +1215,7 @@ export function CheckoutPage({ clientId, onRequireAuth, onBack }: CheckoutPagePr
 
       // 3. Se for Boleto Bancário
       if (formaPagamento === 'boleto') {
-        toast.success('🎉 Pedido Registrado! Seu boleto bancário está disponível para pagamento.', { duration: 5000 });
+        toast.success('Pedido registrado. Consulte os detalhes para verificar a emissão e as instruções de pagamento do boleto.', { duration: 5000 });
         checkoutRequestId.current = generateUUID();
         localStorage.removeItem(PENDING_STORE_CHECKOUT_KEY);
         localStorage.removeItem(PENDING_STORE_COUPONS_KEY);

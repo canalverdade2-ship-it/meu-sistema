@@ -235,13 +235,7 @@ export function ClientSuporte({ clientId, initialItemId, modulo = 'cliente' }: {
       }
 
       const adminTab = selectedTicket.status === 'aberto' ? 'abertos' : 'em_andamento';
-      await notificationService.notifyAdmin(
-        '💬 Nova Mensagem no Suporte',
-        `O cliente ${cliente?.nome || clientId} enviou uma mensagem no ticket #${selectedTicket.id.slice(0, 8)}.`,
-        'suporte',
-        'ticket_mensagem_cliente',
-        { itemId: selectedTicket.id, tab: adminTab },
-      );
+      // Notificação gravada pelo banco na mesma transação da ação.
     } catch (error) {
       if (!messagePersisted && uploadedReference) {
         await removePrivateDocument(uploadedReference).catch(() => undefined);
@@ -297,23 +291,10 @@ export function ClientSuporte({ clientId, initialItemId, modulo = 'cliente' }: {
       }
         // Notify Admin com notifyAdmin para gerar badge no sininho
         const moduloTag = modulo === 'afiliado' ? ' [Afiliado]' : '';
-        await notificationService.notifyAdmin(
-          `🎟️ Novo Ticket de Suporte${moduloTag}`,
-          `${clientId} abriu um ticket: "${formData.assunto}"`,
-          'suporte',
-          'ticket_aberto_cliente',
-          { itemId: ticket.id, tab: 'abertos' }
-        );
+        // Notificação gravada pelo banco na mesma transação da ação.
 
         // Notify Client
-        await notificationService.notifyClient(
-          clientId,
-          'Ticket de Suporte Aberto! 💬',
-          `Seu chamado "${formData.assunto}" foi registrado. Nossa equipe retornará em breve.`,
-          'suporte',
-          'ticket_aberto',
-          { itemId: ticket.id, tab: 'abertos' }
-        );
+        // Notificação gravada pelo banco na mesma transação da ação.
 
         toast.success('Ticket aberto com sucesso. Aguarde o atendimento.');
         setIsModalOpen(false);

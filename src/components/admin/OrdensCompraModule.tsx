@@ -1079,10 +1079,10 @@ export function CompraDetails({
                 }}
                 className="w-full bg-white rounded-xl border border-indigo-200 px-4 py-3 text-xs font-black text-neutral-800 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all uppercase tracking-wider disabled:bg-neutral-50 disabled:text-neutral-400 disabled:border-neutral-200 disabled:cursor-not-allowed"
               >
-                <option value="pago">📦 Pedido Aprovado (Pago)</option>
-                <option value="em_expedicao">📦 Em Expedição</option>
-                <option value="em_transporte">🚚 Em Transporte</option>
-                <option value="concluido">✅ Pedido Entregue</option>
+                <option value="pago" disabled={!['em_analise','pago','aprovado'].includes(ordem.status)}>📦 Pedido Aprovado (Pago)</option>
+                <option value="em_expedicao" disabled={!['em_analise','pago','aprovado','em_expedicao'].includes(ordem.status)}>📦 Em Expedição</option>
+                <option value="em_transporte" disabled={!['em_expedicao','em_transporte'].includes(ordem.status)}>🚚 Em Transporte</option>
+                <option value="concluido" disabled={!['em_transporte','concluido'].includes(ordem.status)}>✅ Pedido Entregue</option>
               </select>
               <p className="text-[10px] text-neutral-500 leading-normal">
                 Ao alterar este status, o cliente será avisado em tempo real em seu painel de compras e receberá notificação no sistema.

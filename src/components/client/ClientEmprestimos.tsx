@@ -225,13 +225,7 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
       });
 
       // Notificar admin
-      await notificationService.notifyAdmin(
-        '💰 Nova Solicitação de Empréstimo',
-        `Um cliente solicitou um empréstimo de R$ ${dadosEmprestimo.valor_desejado}`,
-        'emprestimos',
-        'emprestimo_criado',
-        { itemId: newEmp.id, tab: 'solicitacoes', prioridade: 'alta' }
-      );
+      // Notificação gravada pelo banco na mesma transação da ação.
 
       toast.success('Solicitação enviada com sucesso! Prazo de retorno: 5 dias úteis.');
       setShowSolicitarModal(false);
@@ -375,7 +369,7 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
       dados_bancarios: dadosBancarios, status: 'analise_final'
     }, { id: selected.id });
     await clientOperationalWrite(clientId, 'emprestimo_historico', 'insert', { emprestimo_id: selected.id, tipo_acao: 'proposta_aceita', descricao: 'Cliente aceitou: ' + parcelasEscolhidas + 'x de ' + formatCurrency(calc.valorParcela), usuario_tipo: 'cliente', usuario_id: clientId });
-    await notificationService.notifyAdmin('✅ Proposta aceita', `Cliente aceitou proposta do empréstimo ${selected.codigo_emprestimo}`, 'emprestimos', 'emprestimo_aceito', { itemId: selected.id, tab: 'propostas' });
+    // Notificação gravada pelo banco na mesma transação da ação.
     toast.success('Proposta aceita!');
     setShowDetail(false);
     setShowAcceptInfo(true);
@@ -405,7 +399,7 @@ export function ClientEmprestimos({ clientId, initialTab, initialItemId, onNavig
     const { url: publicUrl, path: r2Path } = await uploadToR2(signatureFile, 'emprestimos', path);
     await clientOperationalWrite(clientId, 'emprestimos', 'update', { assinatura_url: publicUrl, data_assinatura: new Date().toISOString(), status: 'analise_contrato' }, { id: selected.id });
     await clientOperationalWrite(clientId, 'emprestimo_historico', 'insert', { emprestimo_id: selected.id, tipo_acao: 'contrato_assinado', descricao: 'Cliente assinou contrato digitalmente', usuario_tipo: 'cliente', usuario_id: clientId });
-    await notificationService.notifyAdmin('📝 Contrato assinado', `Cliente assinou contrato do empréstimo ${selected.codigo_emprestimo}`, 'emprestimos', 'emprestimo_assinado', { itemId: selected.id, tab: 'ativos' });
+    // Notificação gravada pelo banco na mesma transação da ação.
     toast.success('Contrato assinado com sucesso!');
     setShowSign(false);
     setShowDetail(false);

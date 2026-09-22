@@ -1,4 +1,6 @@
 import { supabase } from './supabase';
+import { sessionService } from './sessionService';
+import { callClientRpc } from './clientRpc';
 import { Module } from '../types';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
@@ -110,6 +112,20 @@ export async function createNotification(
       destinatarioTipo = 'broadcast_todos';
     }
 
+    const session = sessionService.getCurrentSession();
+    if (session?.atorTipo === 'cliente') {
+      if (destinatarioTipo !== 'admin' && !(destinatarioTipo === 'cliente' && clienteId === session.atorId)) {
+        throw new Error('Destinatário não permitido para esta sessão.');
+      }
+      await callClientRpc(destinatarioTipo === 'admin' ? 'gsa_client_notify_admin' : 'gsa_client_notify_self', {
+        p_titulo: finalTitulo, p_mensagem: mensagem, p_modulo: modulo,
+        p_tab: tab || null, p_item_id: itemId || null,
+        p_acao_origem: options?.acaoOrigem || 'sistema',
+        p_prioridade: options?.prioridade || 'normal', p_contexto: options?.contexto || {},
+        ...(destinatarioTipo === 'cliente' ? { p_tipo: tipo || 'sistema' } : {}),
+      });
+      return;
+    }
     const { error } = await supabase
       .from('notificacoes')
       .insert([{
@@ -127,14 +143,16 @@ export async function createNotification(
         destinatario_tipo: destinatarioTipo,
         acao_origem: options?.acaoOrigem || 'sistema',
         prioridade: options?.prioridade || 'normal',
-        contexto: options?.contexto ? JSON.stringify(options.contexto) : null
+        contexto: options?.contexto || null
       }]);
 
     if (error) {
       console.warn('Aviso: Erro ao criar notificação:', error.message);
+      throw error;
     }
   } catch (err) {
     console.error('Falha crítica ao tentar criar notificação:', err);
+    throw err;
   }
 }
 

@@ -162,123 +162,36 @@ export async function createInfinitePayOrderCheckout({
       return { success: true, total: valorFinal };
     }
 
-    // Chamar a API da InfinitePay para registrar a transação e obter o link de checkout
-    const valorEmCentavos = Math.round(valorFinal * 100);
-    const orderNsu = `${codigoOrcamento}-${Date.now()}`;
-    const redirectBase = typeof window !== 'undefined' ? window.location.origin : 'https://sistema.grupogsaservicos.com.br';
-    const redirectUrl = `${redirectBase}/marketplace/loja/compras?orderId=${orcamentoId}`;
-    const webhookUrl = 'https://api.147-15-43-141.nip.io/functions/v1/gsa-payments';
-
-    const customer: any = {};
-    if (clienteNome && clienteNome.trim().length >= 2) {
-      customer.name = clienteNome.trim();
-    }
-    if (clienteEmail && clienteEmail.trim().length > 3 && clienteEmail.includes('@') && clienteEmail.includes('.')) {
-      customer.email = clienteEmail.trim();
-    }
-    const rawPhone = clienteTelefone ? clienteTelefone.replace(/\D/g, '') : '';
-    if (rawPhone.length >= 10) {
-      customer.phone_number = rawPhone.startsWith('55') ? `+${rawPhone}` : `+55${rawPhone}`;
+    // Obter sessão para a Edge Function autenticada
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error('Usuário não autenticado.');
     }
 
-    const ipPayload: any = {
-      handle: INFINITEPAY_HANDLE,
-      items: [{
-        quantity: 1,
-        price: valorEmCentavos,
-        description: `Pedido ${codigoOrcamento} - Grupo GSA`,
-      }],
-      order_nsu: orderNsu,
-      webhook_url: webhookUrl,
-      redirect_url: redirectUrl,
-    };
+    // Chama a Edge Function para criar o link no backend (protegendo a manipulação de preço)
+    const { data, error: invokeError } = await supabase.functions.invoke('gsa-payments', {
+      body: {
+        action: 'create_store_link',
+        orcamento_id: orcamentoId,
+        sessao_id: session.user.id,
+        session_token: session.access_token,
+      },
+    });
 
-    if (Object.keys(customer).length > 0) {
-      ipPayload.customer = customer;
+    if (invokeError) {
+      console.error('[pixService] Erro ao invocar gsa-payments:', invokeError);
+      return { success: false, error: 'Falha de comunicação ao gerar pagamento.' };
     }
 
-    let checkoutLink = '';
-
-    try {
-      const resp = await fetch(INFINITEPAY_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(ipPayload),
-      });
-
-      if (resp.ok) {
-        const ipData = await resp.json();
-        checkoutLink = ipData.url || ipData.link || ipData.payment_url || ipData.checkout_url || '';
-      }
-    } catch (apiErr) {
-      console.warn('[pixService] InfinitePay endpoint indisponível:', apiErr);
-    }
-
-    if (!checkoutLink) {
-      return { success: false, total: valorFinal, error: 'A InfinitePay não retornou um link de pagamento válido.' };
-    }
-
-    // 3. Atualizar ou criar fatura se aplicável enriquecendo com os itens do orçamento
-    try {
-      const { data: orcData } = await supabase
-        .from('orcamentos')
-        .select(`
-          *,
-          loja_pedido_itens (
-            id, nome, codigo, tipo, valor_unitario, quantidade, subtotal, is_brinde,
-            produtos (id, nome, imagem_url, codigo_produto, codigo_barras, valor)
-          ),
-          ordens_compra (
-            id, codigo_ordem, quantidade,
-            produtos (id, nome, imagem_url, codigo_produto, codigo_barras, valor)
-          )
-        `)
-        .eq('id', orcamentoId)
-        .maybeSingle();
-
-      let itemsFaturados: any[] = [];
-      if (orcData?.loja_pedido_itens && orcData.loja_pedido_itens.length > 0) {
-        itemsFaturados = orcData.loja_pedido_itens.map((li: any) => ({
-          nome: li.nome,
-          descricao: li.nome,
-          codigo: li.codigo || li.produtos?.codigo_produto || '',
-          quantidade: Number(li.quantidade) || 1,
-          valor_unitario: Number(li.valor_unitario || li.produtos?.valor || 0),
-          subtotal: Number(li.subtotal || ((li.valor_unitario || li.produtos?.valor || 0) * (li.quantidade || 1))),
-          imagem_url: li.produtos?.imagem_url || null,
-          tipo: li.tipo || 'produto'
-        }));
-      } else if (orcData?.ordens_compra && orcData.ordens_compra.length > 0) {
-        itemsFaturados = orcData.ordens_compra.map((oc: any) => ({
-          nome: oc.produtos?.nome || 'Produto',
-          descricao: oc.produtos?.nome || 'Produto',
-          codigo: oc.produtos?.codigo_produto || oc.codigo_ordem || '',
-          quantidade: Number(oc.quantidade) || 1,
-          valor_unitario: Number(oc.produtos?.valor || 0),
-          subtotal: Number((oc.produtos?.valor || 0) * (oc.quantidade || 1)),
-          imagem_url: oc.produtos?.imagem_url || null,
-          tipo: 'produto'
-        }));
-      }
-
-      const firstOcId = orcData?.ordens_compra?.[0]?.id || null;
-      const subtotalBase = Number(orcData?.subtotal_preco_tabela || orcData?.subtotal_itens || valorFinal);
-
-      await callClientRpc('gsa_client_sync_pix_invoice', {
-        p_orcamento_id: orcamentoId,
-        p_checkout_link: checkoutLink || null,
-        p_order_nsu: orderNsu,
-        p_itens: itemsFaturados,
-      });
-    } catch (dbErr) {
-      console.warn('[pixService] Aviso ao persistir dados no banco:', dbErr);
+    if (data?.error) {
+      return { success: false, error: data.error };
     }
 
     return {
       success: true,
-      link: checkoutLink,
-      orderNsu: orderNsu,
-      total: valorFinal,
+      link: data.link,
+      orderNsu: data.order_nsu,
+      total: data.total || valorFinal,
     };
   } catch (err: any) {
     console.error('[pixService] Erro ao criar checkout:', err);

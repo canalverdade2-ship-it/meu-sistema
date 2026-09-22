@@ -1,5 +1,5 @@
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { useAppLocation } from '../../../routing/useAppLocation';
 import { routes } from '../../../routing/routeCatalog';
 import { navigate } from '../../../routing/navigationService';
@@ -186,8 +186,7 @@ function MarketplaceGSAStoreInner({
     }
     if (currentSubmodule === 'minhas-viagens') {
       if (!clientId) {
-        onRequireAuth?.();
-        return null;
+        return <MarketplaceLoginGate onRequireAuth={onRequireAuth} />;
       }
       if (route.itemId) {
         return (
@@ -202,22 +201,19 @@ function MarketplaceGSAStoreInner({
     }
     if (currentSubmodule === 'minhas-propostas') {
       if (!clientId) {
-        onRequireAuth?.();
-        return null;
+        return <MarketplaceLoginGate onRequireAuth={onRequireAuth} />;
       }
       return <TravelProposalsPage clientId={clientId} onBack={backToTravelHub} />;
     }
     if (currentSubmodule === 'documentos') {
       if (!clientId) {
-        onRequireAuth?.();
-        return null;
+        return <MarketplaceLoginGate onRequireAuth={onRequireAuth} />;
       }
       return <MyTripsPage clientId={clientId} onBack={backToTravelHub} />;
     }
     if (currentSubmodule === 'cancelamentos') {
       if (!clientId) {
-        onRequireAuth?.();
-        return null;
+        return <MarketplaceLoginGate onRequireAuth={onRequireAuth} />;
       }
       return <TravelCancellationsPage clientId={clientId} onBack={backToTravelHub} />;
     }
@@ -280,36 +276,31 @@ function MarketplaceGSAStoreInner({
     }
     if (currentSubmodule === 'meus-anuncios') {
       if (!clientId) {
-        onRequireAuth?.();
-        return null;
+        return <MarketplaceLoginGate onRequireAuth={onRequireAuth} />;
       }
       return <MyClassifiedsPage clientId={clientId} />;
     }
     if (currentSubmodule === 'anunciar') {
       if (!clientId) {
-        onRequireAuth?.();
-        return null;
+        return <MarketplaceLoginGate onRequireAuth={onRequireAuth} />;
       }
       return <CreateListingWizard clientId={clientId} onBack={() => handleNavigate(routes.marketplace.classifieds.root())} />;
     }
     if (currentSubmodule === 'negociacoes') {
       if (!clientId) {
-        onRequireAuth?.();
-        return null;
+        return <MarketplaceLoginGate onRequireAuth={onRequireAuth} />;
       }
       return <MyNegotiationsPage clientId={clientId} />;
     }
     if (currentSubmodule === 'minhas-vendas') {
       if (!clientId) {
-        onRequireAuth?.();
-        return null;
+        return <MarketplaceLoginGate onRequireAuth={onRequireAuth} />;
       }
       return <MyClassifiedSalesPage clientId={clientId} />;
     }
     if (currentSubmodule === 'comissoes') {
       if (!clientId) {
-        onRequireAuth?.();
-        return null;
+        return <MarketplaceLoginGate onRequireAuth={onRequireAuth} />;
       }
       return <MyClassifiedCommissionsPage clientId={clientId} />;
     }
@@ -487,3 +478,8 @@ export function MarketplaceGSAStore(props: MarketplaceGSAStoreProps) {
 }
 
 export default MarketplaceGSAStore;
+
+function MarketplaceLoginGate({ onRequireAuth }: { onRequireAuth?: () => void }) {
+ useEffect(() => { onRequireAuth?.(); }, [onRequireAuth]);
+ return <main className="mx-auto max-w-lg px-6 py-16 text-center"><h1 className="text-xl font-semibold">Entre para continuar</h1><p className="mt-3 text-neutral-600">Acesse sua conta para consultar esta área.</p><button type="button" onClick={onRequireAuth} className="mt-6 rounded-xl bg-neutral-900 px-6 py-3 text-white">Entrar na minha conta</button></main>;
+}
