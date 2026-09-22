@@ -30,8 +30,6 @@ jobs:
     env:
       VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
       VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
-      VPS_SSH_KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
-      VPS_KNOWN_HOSTS: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
     steps:
       - uses: actions/checkout@v4
 
@@ -43,34 +41,33 @@ jobs:
             echo "Confirmação inválida. O deploy nunca deve desligar a transmissão automaticamente." >&2
             exit 64
           }
+          test -n "${VPS_HOST:-}" || { echo "Secret obrigatório ausente: GSA_TV_VPS_HOST" >&2; exit 78; }
+          test -n "${VPS_USER:-}" || { echo "Secret obrigatório ausente: GSA_TV_VPS_USER" >&2; exit 78; }
           if [ "${{ inputs.operation }}" = "deploy" ] && [ "${GITHUB_REF_NAME}" != "main" ]; then
             echo "Deploy de produção permitido somente a partir da branch main." >&2
             exit 65
           fi
 
-      - name: Validate runtime secrets
-        shell: bash
-        run: |
-          set -euo pipefail
-          for name in VPS_HOST VPS_USER VPS_SSH_KEY VPS_KNOWN_HOSTS; do
-            test -n "${!name:-}" || {
-              echo "Secret obrigatório ausente: $name" >&2
-              exit 78
-            }
-          done
-          test "${#VPS_SSH_KEY}" -ge 100
-          test "${#VPS_KNOWN_HOSTS}" -ge 20
-
       - name: Configure SSH with pinned host key
         shell: bash
+        env:
+          VPS_SSH_KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
+          test "${#VPS_SSH_KEY}" -ge 100 || {
+            echo "Secret obrigatório ausente/inválido: GSA_TV_VPS_SSH_KEY" >&2
+            exit 78
+          }
+          test "${#VPS_KNOWN_HOSTS}" -ge 20 || {
+            echo "Secret obrigatório ausente/inválido: GSA_TV_VPS_KNOWN_HOSTS" >&2
+            exit 78
+          }
           install -d -m 0700 "$HOME/.ssh"
           printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/gsa-tv-deploy"
           chmod 0600 "$HOME/.ssh/gsa-tv-deploy"
           printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
           chmod 0600 "$HOME/.ssh/known_hosts"
-          unset VPS_SSH_KEY VPS_KNOWN_HOSTS
 
       - name: Verify SSH identity and remote prerequisites
         shell: bash
@@ -83,53 +80,22 @@ jobs:
             "$VPS_USER@$VPS_HOST" \
             'set -e; hostname; command -v sudo; command -v docker; sudo -n true; docker --version; sudo docker compose version'
 
-      - name: Package immutable runtime source
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/gsa-tv-runtime"
-          tar -C "$GITHUB_WORKSPACE" -czf "$RUNNER_TEMP/gsa-tv-runtime/source.tgz" \
-            infrastructure/gsa-tv \
-            docs/gsa-tv-secret-rotation.md \
-            supabase/migrations/20260922131000_gsa_tv_autopilot_compile_gate.sql \
-            supabase/migrations/20260922132000_gsa_tv_autopilot_duration_swap.sql \
-            supabase/migrations/20260922133000_gsa_tv_autopilot_continuity_fallback.sql
-          sha256sum "$RUNNER_TEMP/gsa-tv-runtime/source.tgz" | tee "$RUNNER_TEMP/gsa-tv-runtime/source.sha256"
-
-      - name: Upload release source
-        shell: bash
-        run: |
-          set -euo pipefail
-          remote="/opt/gsa-tv/releases/source-${GITHUB_SHA}"
-          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
-            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
-            "$VPS_USER@$VPS_HOST" \
-            "sudo install -d -m 0755 '$remote' && sudo chown $(id -u):$(id -g) '$remote'"
-          scp -i "$HOME/.ssh/gsa-tv-deploy" \
-            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
-            "$RUNNER_TEMP/gsa-tv-runtime/source.tgz" \
-            "$RUNNER_TEMP/gsa-tv-runtime/source.sha256" \
-            "$VPS_USER@$VPS_HOST:$remote/"
-          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
-            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
-            "$VPS_USER@$VPS_HOST" \
-            "set -e; cd '$remote'; sha256sum -c source.sha256; tar -xzf source.tgz; chmod -R go-w ."
-
       - name: Runtime preflight
         id: preflight
         shell: bash
         run: |
           set -euo pipefail
-          remote="/opt/gsa-tv/releases/source-${GITHUB_SHA}"
           set +e
           ssh -i "$HOME/.ssh/gsa-tv-deploy" \
             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
             "$VPS_USER@$VPS_HOST" \
-            "sudo bash '$remote/infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh'" \
-            | tee "$RUNNER_TEMP/gsa-tv-runtime/preflight.txt"
+            'sudo bash -s' \
+            < infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh \
+            | tee "$RUNNER_TEMP/gsa-tv-preflight.txt"
           rc=${PIPESTATUS[0]}
           set -e
           echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
+
           if [ "${{ inputs.operation }}" = "deploy" ] && [ "$rc" -eq 20 ]; then
             echo "Preflight encontrou runtime bloqueado/parcial." >&2
             exit 20
@@ -141,7 +107,43 @@ jobs:
       - name: Stop after read-only preflight
         if: ${{ inputs.operation == 'preflight' }}
         run: |
-          echo "Preflight concluído. Nenhuma mutação de runtime foi executada."
+          echo "Preflight concluído por stdin. Nenhum arquivo de release foi criado na VPS."
+
+      - name: Package immutable runtime source
+        if: ${{ inputs.operation == 'deploy' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          dir="$RUNNER_TEMP/gsa-tv-runtime"
+          mkdir -p "$dir"
+          tar -C "$GITHUB_WORKSPACE" -czf "$dir/source.tgz" \
+            infrastructure/gsa-tv \
+            docs/gsa-tv-secret-rotation.md \
+            supabase/migrations/20260922131000_gsa_tv_autopilot_compile_gate.sql \
+            supabase/migrations/20260922132000_gsa_tv_autopilot_duration_swap.sql \
+            supabase/migrations/20260922133000_gsa_tv_autopilot_continuity_fallback.sql
+          (cd "$dir" && sha256sum source.tgz > source.sha256)
+          cat "$dir/source.sha256"
+
+      - name: Upload immutable release source
+        if: ${{ inputs.operation == 'deploy' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          remote="/opt/gsa-tv/releases/source-${GITHUB_SHA}"
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "sudo install -d -m 0755 '$remote' && sudo chown \"\$(id -u)\":\"\$(id -g)\" '$remote'"
+          scp -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$RUNNER_TEMP/gsa-tv-runtime/source.tgz" \
+            "$RUNNER_TEMP/gsa-tv-runtime/source.sha256" \
+            "$VPS_USER@$VPS_HOST:$remote/"
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "set -e; cd '$remote'; sha256sum -c source.sha256; tar -xzf source.tgz; chmod -R go-w ."
 
       - name: Guarded deploy dry-run
         if: ${{ inputs.operation == 'deploy' }}
@@ -184,8 +186,8 @@ jobs:
              sudo test -s /opt/gsa-tv/runtime/autopilot/readiness-horizon.json;
              sudo python3 -c "import json; x=json.load(open('/opt/gsa-tv/runtime/autopilot/readiness-horizon.json')); print(json.dumps({'generated_at':x.get('generated_at'),'ready_days':x.get('ready_days'),'days':x.get('days')},ensure_ascii=False))"'
 
-      - name: Remove local SSH key
+      - name: Remove local SSH material
         if: always()
         shell: bash
         run: |
-          rm -f "$HOME/.ssh/gsa-tv-deploy"
+          rm -f "$HOME/.ssh/gsa-tv-deploy" "$HOME/.ssh/known_hosts"
