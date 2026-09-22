@@ -145,10 +145,15 @@ production_selected=false
 if [ "$SCOPE" = "all" ] || [ "$SCOPE" = "broadcast" ]; then broadcast_selected=true; fi
 if [ "$SCOPE" = "all" ] || [ "$SCOPE" = "production" ]; then production_selected=true; fi
 
+[ -f "$POLICY_FILE" ] || {
+  echo "BLOCKED: policy file ausente: $POLICY_FILE" >&2
+  exit 79
+}
+
 if [ "$broadcast_selected" = true ]; then
   truthy "$(read_policy GSA_TV_BROADCAST_AUTOMATION_ENABLED)" || {
-    echo "BLOCKED: GSA_TV_BROADCAST_AUTOMATION_ENABLED precisa estar true antes do cutover broadcast." >&2
-    exit 79
+    echo "Falha de pós-condição: broadcast policy não foi ativada." >&2
+    exit 80
   }
   assert_timer_active gsa-tv-autopilot-broadcast-controller.timer
   assert_no_active_legacy_services "${BROADCAST_LEGACY_SERVICES[@]}"
@@ -156,8 +161,8 @@ fi
 
 if [ "$production_selected" = true ]; then
   truthy "$(read_policy GSA_TV_AUTOPILOT_AUTO_APPROVE)" || {
-    echo "BLOCKED: GSA_TV_AUTOPILOT_AUTO_APPROVE precisa estar true antes de retirar a fábrica legada." >&2
-    exit 79
+    echo "Falha de pós-condição: production policy não foi ativada." >&2
+    exit 80
   }
   assert_timer_active gsa-tv-autopilot-content-factory.timer
   assert_timer_active gsa-tv-autopilot-readiness.timer
@@ -170,6 +175,8 @@ echo "scope=$SCOPE"
 echo "apply=$APPLY"
 echo "broadcast_selected=$broadcast_selected"
 echo "production_selected=$production_selected"
+echo "broadcast_policy_current=$(read_policy GSA_TV_BROADCAST_AUTOMATION_ENABLED)"
+echo "production_policy_current=$(read_policy GSA_TV_AUTOPILOT_AUTO_APPROVE)"
 
 for unit in "${BROADCAST_LEGACY_TIMERS[@]}" "${PRODUCTION_LEGACY_TIMERS[@]}"; do
   if timer_exists "$unit"; then
@@ -189,6 +196,8 @@ fi
 install -d -m 0700 "$BACKUP_ROOT"
 BACKUP_DIR="$BACKUP_ROOT/$(date -u +%Y%m%dT%H%M%SZ)"
 install -d -m 0700 "$BACKUP_DIR"
+cp -a "$POLICY_FILE" "$BACKUP_DIR/autopilot.env"
+chmod 600 "$BACKUP_DIR/autopilot.env"
 
 record_unit_state() {
   local unit="$1"
@@ -204,6 +213,10 @@ record_unit_state() {
 rollback() {
   local rc=$?
   set +e
+  if [ -f "$BACKUP_DIR/autopilot.env" ]; then
+    cp -f "$BACKUP_DIR/autopilot.env" "$POLICY_FILE" || true
+    chmod 600 "$POLICY_FILE" || true
+  fi
   if [ -s "$BACKUP_DIR/legacy-timers.state" ]; then
     while IFS='|' read -r unit state; do
       if [ "$state" = "enabled" ]; then
@@ -228,9 +241,44 @@ fi
 if [ "$production_selected" = true ]; then
   for unit in "${PRODUCTION_LEGACY_TIMERS[@]}"; do
     record_unit_state "$unit"
-    timer_exists "$unit" && systemctl disable "$unit"
+    timer_exists "$unit" && systemctl disable --now "$unit"
   done
 fi
+
+python3 - "$POLICY_FILE" "$broadcast_selected" "$production_selected" <<'PY'
+import os
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+broadcast = sys.argv[2] == "true"
+production = sys.argv[3] == "true"
+desired = {}
+if broadcast:
+    desired["GSA_TV_BROADCAST_AUTOMATION_ENABLED"] = "true"
+if production:
+    desired["GSA_TV_AUTOPILOT_AUTO_APPROVE"] = "true"
+
+lines = path.read_text(encoding="utf-8").splitlines()
+seen = set()
+out = []
+for line in lines:
+    stripped = line.strip()
+    key = stripped.split("=", 1)[0] if "=" in stripped and not stripped.startswith("#") else None
+    if key in desired:
+        out.append(f"{key}={desired[key]}")
+        seen.add(key)
+    else:
+        out.append(line)
+for key, value in desired.items():
+    if key not in seen:
+        out.append(f"{key}={value}")
+
+tmp = path.with_suffix(path.suffix + ".tmp")
+tmp.write_text("\n".join(out) + "\n", encoding="utf-8")
+os.chmod(tmp, 0o600)
+os.replace(tmp, path)
+PY
 
 systemctl daemon-reload
 
