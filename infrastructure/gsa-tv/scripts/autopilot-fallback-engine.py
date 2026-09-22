@@ -12,6 +12,7 @@ No current-day block is mutated.
 import argparse
 import datetime as dt
 import fcntl
+import hashlib
 import json
 import math
 import os
@@ -151,9 +152,16 @@ def probe(path):
     }
 
 
+def sha256_file(path):
+    digest = hashlib.sha256()
+    with open(path, 'rb') as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def ensure_official_continuity():
     candidates = [
-        MEDIA / "filler" / "gsa-tv-filler-600.mp4",
         MEDIA / "identity" / "gsa-tv-fallback-720p30.mp4",
         ROOT / "fallback" / "gsa-tv-fallback-720p30.mp4",
     ]
@@ -177,10 +185,24 @@ def ensure_official_continuity():
         tech = probe(source)
         drive_path = "/media/1/identity/gsa-tv-fallback-720p30.mp4"
 
+    source_sha256 = sha256_file(source)
+    existing = query(
+        """select id,drive_path,metadata
+             from public.gsa_tv_media_items
+            where id=$1 and channel_id='ch-main'
+            limit 1""",
+        [FALLBACK_MEDIA_ID],
+    )
+    if existing:
+        previous_sha = str((existing[0].get("metadata") or {}).get("sha256") or "")
+        if previous_sha and previous_sha != source_sha256:
+            raise RuntimeError("official continuity checksum changed; manual review required")
+
     metadata = {
         "autopilot_official_continuity": True,
         "source": "official_gsa_tv_continuity",
         "purpose": "last_resort_schedule_fallback",
+        "sha256": source_sha256,
     }
     query(
         """insert into public.gsa_tv_media_items(
@@ -226,6 +248,7 @@ def ensure_official_continuity():
         "media_id": FALLBACK_MEDIA_ID,
         "drive_path": drive_path,
         "duration_s": tech["duration_s"],
+        "sha256": source_sha256,
     }
 
 
