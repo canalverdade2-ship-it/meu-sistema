@@ -150,6 +150,27 @@ class FallbackEngineTests(unittest.TestCase):
         self.assertNotIn("gap_or_overlap", engine.ACTIONABLE)
         self.assertNotIn("day_coverage", engine.ACTIONABLE)
 
+    def test_fallback_outcome_requires_successful_compile(self):
+        ready = {"state": "ready"}
+        self.assertEqual(
+            engine.fallback_outcome(ready, {"returncode": 0}, 0),
+            ("fallback_ready", 0),
+        )
+        self.assertEqual(
+            engine.fallback_outcome(ready, {"returncode": 1}, 0),
+            ("fallback_compile_failed", 2),
+        )
+        self.assertEqual(
+            engine.fallback_outcome({"state": "incomplete"}, None, 0),
+            ("fallback_incomplete", 2),
+        )
+
+    def test_fallback_outcome_preserves_assignment_failure_exit(self):
+        self.assertEqual(
+            engine.fallback_outcome({"state": "ready"}, {"returncode": 0}, 1),
+            ("fallback_ready", 2),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
