@@ -100,6 +100,7 @@ required_repo_files=(
   "$ENCODER_SRC/src/app.js"
   "$ENCODER_SRC/compose.production.yml"
   "$INFRA/scripts/autopilot-runtime-preflight.sh"
+  "$INFRA/scripts/cutover-autopilot-v2.sh"
   "$INFRA/scripts/autopilot-readiness.py"
   "$INFRA/scripts/autopilot-content-factory.py"
   "$INFRA/scripts/autopilot-broadcast-controller.py"
@@ -386,7 +387,7 @@ if(!s.includes("control_plane_shutdown_encoder_preserved") || !s.includes("encod
 docker inspect gsa-tv-control-plane --format '{{range .Config.Env}}{{println .}}{{end}}'   | grep -q '^ENCODER_ENGINE_URL=http://127\.0\.0\.1:9210$'
 
 # Install Autopilot scripts.
-for f in   autopilot-runtime-preflight.sh   autopilot-readiness.py   autopilot-content-factory.py   autopilot-broadcast-controller.py   autopilot-duration-engine.py   autopilot-fallback-engine.py   night-production.py   daily-scripts.py; do
+for f in   autopilot-runtime-preflight.sh   cutover-autopilot-v2.sh   autopilot-readiness.py   autopilot-content-factory.py   autopilot-broadcast-controller.py   autopilot-duration-engine.py   autopilot-fallback-engine.py   night-production.py   daily-scripts.py; do
   install -m 0755 "$INFRA/scripts/$f" "$BIN_DIR/$f"
 done
 
