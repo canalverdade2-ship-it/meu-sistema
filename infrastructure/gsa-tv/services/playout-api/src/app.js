@@ -4888,16 +4888,81 @@ async function restoreRuntime() {
       [CHANNEL_ID],
     );
     const desired = result.rows[0]?.desired_state || "stopped";
-    const mode = String(result.rows[0]?.playout_state || "program");
-    if (desired === "running")
-      await startStream(
-        mode.startsWith("live:") || mode.startsWith("manual-live:")
-          ? mode
-          : "program",
-        true,
-      );
-    else if (desired === "paused") await startStream("paused", true);
-    else {
+    const storedMode = String(result.rows[0]?.playout_state || "program");
+    const mode =
+      storedMode.startsWith("live:") || storedMode.startsWith("manual-live:")
+        ? storedMode
+        : storedMode === "paused"
+          ? "paused"
+          : "program";
+
+    if (USE_EXTERNAL_ENCODER) {
+      try {
+        const encoder = await encoderEngineStatus();
+        if (encoder.outer_running && encoder.producer_running) {
+          const actualMode = String(encoder.mode || mode || "program");
+          const mismatch =
+            desired !== "running" ||
+            (mode !== actualMode &&
+              !(mode === "program" && actualMode === "program"));
+
+          // control_plane_restore_external_encoder_preserved:
+          // Reattach to the already-running relay without restarting ffplayout,
+          // recompiling a playlist or calling /v1/ensure.
+          streamProcess = {
+            external: true,
+            killed: false,
+            pid: encoder.producer_pid || null,
+          };
+          streamState = {
+            desired: "running",
+            actual: "sending",
+            mode: actualMode,
+            started_at: new Date().toISOString(),
+            last_error: encoder.last_error || null,
+          };
+          await persistStreamState();
+
+          if (mismatch) {
+            await incident(
+              "Estado do Control Plane divergiu do Encoder preservado",
+              {
+                stored_desired: desired,
+                stored_mode: storedMode,
+                encoder_mode: actualMode,
+                producer_pid: encoder.producer_pid || null,
+                outer_pid: encoder.outer_pid || null,
+              },
+              "warning",
+            ).catch(() => {});
+          }
+          log("info", "control_plane_restore_external_encoder_preserved", {
+            stored_desired: desired,
+            stored_mode: storedMode,
+            encoder_mode: actualMode,
+            producer_pid: encoder.producer_pid || null,
+            outer_pid: encoder.outer_pid || null,
+          });
+          await resolveIncident("Falha ao restaurar a transmissão da GSA TV");
+          return;
+        }
+      } catch (error) {
+        log("warn", "external_encoder_restore_probe_failed", {
+          error: error.message,
+        });
+      }
+    }
+
+    if (desired === "running") {
+      if (mode === "program") {
+        await compilePlaylist(localClock(new Date()).date, {
+          requirePublished: true,
+        });
+      }
+      await startStream(mode, true);
+    } else if (desired === "paused") {
+      await startStream("paused", true);
+    } else {
       streamState.desired = "stopped";
       streamState.actual = "stopped";
       streamState.mode = "off_air";
