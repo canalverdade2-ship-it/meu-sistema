@@ -346,10 +346,26 @@ def main():
     
     final_data = probe(final_temp)
     final_actual = float(final_data['format']['duration'])
-    if abs(final_actual - args.seconds) > 0.75:
+    final_video = next((x for x in final_data['streams'] if x.get('codec_type') == 'video'), None)
+    final_audio = next((x for x in final_data['streams'] if x.get('codec_type') == 'audio'), None)
+    final_ok = (
+        abs(final_actual - args.seconds) <= 0.75
+        and final_video is not None
+        and final_audio is not None
+        and (final_video.get('width'), final_video.get('height'), final_video.get('codec_name')) == (1920, 1080, 'h264')
+        and final_audio.get('codec_name') == 'aac'
+        and str(final_audio.get('sample_rate')) == '48000'
+        and int(final_audio.get('channels') or 0) == 2
+    )
+    if not final_ok:
         raise ValueError(
-            f'Final master duration mismatch: {final_actual:.3f}s for {args.seconds:.3f}s slot'
+            f'Final master failed broadcast verification: duration={final_actual:.3f}s '
+            f'target={args.seconds:.3f}s'
         )
+    subprocess.run(
+        ['ffmpeg', '-nostdin', '-v', 'error', '-xerror', '-i', str(final_temp), '-f', 'null', '-'],
+        check=True,
+    )
 
     final_temp.rename(output)
     
