@@ -115,12 +115,6 @@ def main():
     validate_inputs(script, manifest, args.seconds)
     audio = Path(manifest['audio_wav'])
     duration = float(probe(audio)['format']['duration'])
-    speed = duration / body_seconds
-    if not math.isfinite(speed) or not 0.90 <= speed <= 1.10:
-        raise ValueError(
-            f'Narration needs editorial adjustment: {duration:.2f}s for '
-            f'{body_seconds:.2f}s body inside {args.seconds:.2f}s slot; no excessive stretching allowed'
-        )
     output = args.output.resolve()
     work = output.parent / (output.stem + '-graphics')
     temp = output.with_name(output.stem + '.partial.mp4')
@@ -148,6 +142,13 @@ def main():
         raise ValueError(
             f'Slot too short for opening/closing bumpers: slot={args.seconds:.2f}s '
             f'bumpers={2 * bumper_duration:.2f}s'
+        )
+
+    speed = duration / body_seconds
+    if not math.isfinite(speed) or not 0.90 <= speed <= 1.10:
+        raise ValueError(
+            f'Narration needs editorial adjustment: {duration:.2f}s for '
+            f'{body_seconds:.2f}s body inside {args.seconds:.2f}s slot; no excessive stretching allowed'
         )
 
     title = work / 'program.txt'
@@ -223,21 +224,13 @@ def main():
     
     list_file = work / 'concat_list.txt'
     
-    slug = unicodedata.normalize('NFKD', script['program']).encode('ascii', 'ignore').decode('ascii').lower()
-    slug = re.sub(r'[^a-z0-9\s-]', '', slug)
-    slug = re.sub(r'[-\s]+', '-', slug).strip('-')
-    
-    bumper_path = f'/opt/gsa-tv/cache/media/1/identity/vinhetas/vinheta-{slug}.mp4'
-    if Path(bumper_path).exists():
-        bumper_file = bumper_path
-    else:
-        bumper_file = '/opt/gsa-tv/cache/media/1/identity/vinheta-gsa-tv-40s-broadcast-safe.mp4'
-        
+    # Reuse the exact bumper Path already selected and probed above.
+    safe_bumper = bumper_file.resolve().as_posix().replace("'", r"'\''")
     with open(list_file, 'w', encoding='utf-8') as f:
-        f.write(f"file '{bumper_file.as_posix()}'\n")
+        f.write(f"file '{safe_bumper}'\n")
         safe_temp = temp.resolve().as_posix().replace("'", r"'\''")
         f.write(f"file '{safe_temp}'\n")
-        f.write(f"file '{bumper_file}'\n")
+        f.write(f"file '{safe_bumper}'\n")
         
     final_temp = output.with_name(output.stem + '.final.mp4')
     subprocess.run(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', str(list_file), '-c', 'copy', str(final_temp)], check=True)
