@@ -97,6 +97,7 @@ jobs:
           renderer = Path("infrastructure/gsa-tv/scripts/render-generic-program.py").read_text()
           readiness = Path("infrastructure/gsa-tv/scripts/autopilot-readiness.py").read_text()
           gemini = Path("infrastructure/gsa-tv/services/playout-api/src/gemini.js").read_text()
+          cinema_migration = Path("supabase/migrations/20260922135000_gsa_tv_cinema_duration_contract.sql").read_text()
 
           required_control = [
               "ENCODER_ENGINE_URL",
@@ -185,6 +186,8 @@ jobs:
           assert 'playout_state' in preflight
           assert "slot_duration_contract_violation" in readiness
           assert "library_composition_required" in readiness
+          assert "b.planned_duration_s <> 3600" in cinema_migration
+          assert "exatamente 60 minutos" in cinema_migration
           assert "authorized_continuity_fill_s" in readiness
           assert "required_slot_duration_s" in readiness
           assert "allow_continuity_fill" in night_production
