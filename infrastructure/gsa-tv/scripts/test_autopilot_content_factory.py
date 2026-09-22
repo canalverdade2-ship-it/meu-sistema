@@ -49,6 +49,18 @@ class ContentFactorySelectionTests(unittest.TestCase):
         self.assertIsNone(target)
         self.assertEqual(blockers[0]["shortfalls"], 1)
 
+    def test_slot_duration_contract_violation_is_non_actionable_blocker(self):
+        report = {
+            "days_detail": [
+                {"date": "2026-09-23", "schedule_state": "published",
+                 "issues": [{"issue": "slot_duration_contract_violation", "block_id": "cinema"}]}
+            ]
+        }
+        target, blockers = factory.select_target(report, 3)
+        self.assertIsNone(target)
+        self.assertEqual(blockers[0]["shortfalls"], 0)
+        self.assertEqual(blockers[0]["non_actionable"], ["slot_duration_contract_violation"])
+
     def test_unpublished_schedule_is_not_produced(self):
         report = {
             "days_detail": [
