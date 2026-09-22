@@ -141,7 +141,9 @@ jobs:
           assert "autopilot-fallback-engine.py" in deploy
           assert "GSA_TV_AUTOPILOT_AUTO_APPROVE=false" in deploy
           assert "EnvironmentFile=-/opt/gsa-tv/autopilot/autopilot.env" in factory_service
+          assert "SuccessExitStatus=2" in factory_service
           assert "EnvironmentFile=-/opt/gsa-tv/autopilot/autopilot.env" in broadcast_service
+          assert "SuccessExitStatus=2" in broadcast_service
           assert "GSA_TV_BROADCAST_AUTOMATION_ENABLED=false" in broadcast_service
           assert "GSA_TV_BROADCAST_AUTOMATION_ENABLED=false" in deploy
           assert '"stream_standby"' not in broadcast_controller
