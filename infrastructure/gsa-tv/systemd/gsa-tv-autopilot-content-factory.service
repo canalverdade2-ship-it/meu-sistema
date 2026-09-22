@@ -12,6 +12,7 @@ Environment=GSA_TV_AUTOPILOT_SPEECH_WPM=125
 Environment=GSA_TV_AUTOPILOT_AUTO_APPROVE=false
 EnvironmentFile=-/opt/gsa-tv/autopilot/autopilot.env
 ExecStart=/usr/bin/python3 /opt/gsa-tv/bin/autopilot-content-factory.py --horizon-days 3 --cycle-minutes 40
+SuccessExitStatus=2
 
 # Production is intentionally lower priority than playout/control-plane.
 Nice=15
