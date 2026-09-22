@@ -146,7 +146,8 @@ def inspect_day(day):
             actual_content_s += max(0.0, actual)
             if row.get("block_type") != "live":
                 media_duration = float(row.get("media_duration_s") or 0)
-                if media_duration + 1 < duration:
+                library = bool(row.get("is_reprise") or (row.get("block_metadata") or {}).get("content_mode") == "library")
+                if not library and media_duration + 1 < duration:
                     issues.append({
                         "block_id": row["id"],
                         "program": row.get("program_name"),
@@ -167,7 +168,7 @@ def inspect_day(day):
 
     coverage = (eligible_s / scheduled_s * 100.0) if scheduled_s else 0.0
     content_coverage = (actual_content_s / scheduled_s * 100.0) if scheduled_s else 0.0
-    hard_issues = [x for x in issues if x["issue"] != "content_shortfall"]
+    hard_issues = list(issues)
 
     return {
         "date": day.isoformat(),
