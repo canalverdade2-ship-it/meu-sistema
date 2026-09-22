@@ -69,7 +69,8 @@ A primeira migração de `LEGACY_COUPLED` para o Encoder Engine independente exi
 Aplicar primeiro as migrations pelo fluxo canônico do Supabase:
 
 - `20260922131000_gsa_tv_autopilot_compile_gate.sql`;
-- `20260922132000_gsa_tv_autopilot_duration_swap.sql`.
+- `20260922132000_gsa_tv_autopilot_duration_swap.sql`;
+- `20260922133000_gsa_tv_autopilot_continuity_fallback.sql`.
 
 Depois executar dry-run e apply:
 
@@ -109,6 +110,7 @@ systemctl status gsa-tv-autopilot-content-factory.timer
 cat /opt/gsa-tv/runtime/autopilot/readiness-horizon.json
 cat /opt/gsa-tv/runtime/autopilot/content-factory.json
 cat /opt/gsa-tv/runtime/autopilot/duration-engine.json
+cat /opt/gsa-tv/runtime/autopilot/fallback-engine.json
 ```
 
 O readiness roda a cada 15 minutos. O dispatcher de produção roda em ciclos de baixa prioridade e trabalha primeiro D+1, depois D+2/D+3. O Duration Engine atua somente em programas originais futuros; live, reprise e conteúdo de acervo ficam fora da substituição automática.
