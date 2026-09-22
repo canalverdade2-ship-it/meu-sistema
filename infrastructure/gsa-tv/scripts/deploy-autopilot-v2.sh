@@ -209,7 +209,7 @@ BLOCKED: migrations do Autopilot ainda não estão aplicadas no banco.
 Aplique pelo fluxo canônico de migrations do projeto:
 - 20260922131000_gsa_tv_autopilot_compile_gate.sql
 - 20260922132000_gsa_tv_autopilot_duration_swap.sql
-- 20260922133000_gsa_tv_autopilot_continuity_fallback.sql
+- 20260922134000_gsa_tv_autopilot_continuity_fallback.sql
 
 O instalador não executa SQL fora do histórico de migrations.
 EOF
