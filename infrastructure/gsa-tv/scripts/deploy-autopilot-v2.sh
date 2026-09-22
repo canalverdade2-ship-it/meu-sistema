@@ -159,13 +159,11 @@ db_query() {
   return 78
 }
 
-state="$(db_query "select coalesce(desired_state,'unknown'),coalesce(signal_state,'unknown') from public.gsa_tv_channels where id='ch-main'" 2>/dev/null || true)"
-desired="${state%%|*}"
-signal="${state#*|}"
-if [ -z "$state" ] || [ "$desired" = "$state" ]; then
-  desired="unknown"
-  signal="unknown"
-fi
+state="$(db_query "select coalesce(desired_state,'unknown'),coalesce(signal_state,'unknown'),coalesce(playout_state,'unknown') from public.gsa_tv_channels where id='ch-main'" 2>/dev/null || true)"
+IFS='|' read -r desired signal playout <<<"$state"
+desired="${desired:-unknown}"
+signal="${signal:-unknown}"
+playout="${playout:-unknown}"
 
 cp_image="$(docker inspect gsa-tv-control-plane -f '{{.Config.Image}}' 2>/dev/null || true)"
 encoder_running="$(docker inspect gsa-tv-encoder-engine -f '{{.State.Running}}' 2>/dev/null || true)"
@@ -182,15 +180,20 @@ if [ "$cp_image" = "$CONTROL_IMAGE" ] && [ "$cp_external" = true ] && [ "$encode
 fi
 
 if [ "$migrated" != true ]; then
-  if [ "$desired" = "running" ] || [ "$signal" = "sending" ] || [ "$desired" = "unknown" ]; then
+  if [ "$desired" != "stopped" ] || [ "$signal" != "stopped" ] || [ "$playout" != "off_air" ]; then
     cat >&2 <<EOF
-BLOCKED: primeira migração para Encoder Engine independente exige janela off-air.
+BLOCKED: primeira migração para Encoder Engine independente exige estado off-air explícito.
 desired_state=$desired
 signal_state=$signal
+playout_state=$playout
 control_plane_image=${cp_image:-missing}
 
-Encerre o relay de forma operacional e execute novamente. O instalador não
-desliga uma transmissão pública automaticamente.
+Estado exigido para primeira migração:
+desired_state=stopped
+signal_state=stopped
+playout_state=off_air
+
+O instalador é fail-closed e não desliga uma transmissão pública automaticamente.
 EOF
     exit 75
   fi
