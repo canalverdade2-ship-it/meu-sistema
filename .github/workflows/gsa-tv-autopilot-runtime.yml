@@ -238,6 +238,220 @@ jobs:
         run: |
           echo "Preflight concluído por stdin. Nenhum arquivo de release foi criado na VPS."
 
+      - name: First-migration physical off-air gate
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          file="$RUNNER_TEMP/gsa-tv-preflight.txt"
+          grep -qx 'PHYSICAL_OFF_AIR_EVIDENCE=true' "$file"
+          grep -qx 'HOST_RTMP_FFMPEG_COUNT=0' "$file"
+          grep -qx 'FFPLAYOUT_STREAM_SOCKET_COUNT=0' "$file"
+          grep -qx 'HOST_SQLITE_BACKUP_PROBE=ok' "$file"
+          grep -qx 'FFPLAYOUT_HEALTH=healthy' "$file"
+
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'sudo bash -s' \
+            < infrastructure/gsa-tv/scripts/autopilot-migration-status.sh \
+            | tee "$RUNNER_TEMP/gsa-tv-migration-before.txt"
+
+          if grep -q '^MIGRATION_STATE=inconsistent$' "$RUNNER_TEMP/gsa-tv-migration-before.txt"; then
+            echo "Histórico de migrations inconsistente; abortando antes da primeira mutação." >&2
+            exit 80
+          fi
+
+      - name: Prepare legacy ffplayout snapshot dry-run
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'sudo bash -s' \
+            < infrastructure/gsa-tv/scripts/snapshot-legacy-ffplayout.sh \
+            | tee "$RUNNER_TEMP/gsa-tv-prepare-snapshot-dry.txt"
+          grep -qx 'DRY_RUN_OK=true' "$RUNNER_TEMP/gsa-tv-prepare-snapshot-dry.txt"
+
+      - name: Prepare legacy ffplayout snapshot apply
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'sudo bash -s -- --apply' \
+            < infrastructure/gsa-tv/scripts/snapshot-legacy-ffplayout.sh \
+            | tee "$RUNNER_TEMP/gsa-tv-prepare-snapshot-apply.txt"
+          grep -qx 'SNAPSHOT_APPLIED=true' "$RUNNER_TEMP/gsa-tv-prepare-snapshot-apply.txt"
+          grep -qx 'SNAPSHOT_VERIFY_OK=true' "$RUNNER_TEMP/gsa-tv-prepare-snapshot-apply.txt"
+
+      - name: Link authorized Supabase project
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
+        shell: bash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
+          supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Apply only five canonical Autopilot migrations
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
+        shell: bash
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          remote_status() {
+            ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+              -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+              "$VPS_USER@$VPS_HOST" \
+              'sudo bash -s' \
+              < infrastructure/gsa-tv/scripts/autopilot-migration-status.sh
+          }
+
+          migrations=(
+            "20260922131000:supabase/migrations/20260922131000_gsa_tv_autopilot_compile_gate.sql"
+            "20260922132000:supabase/migrations/20260922132000_gsa_tv_autopilot_duration_swap.sql"
+            "20260922134000:supabase/migrations/20260922134000_gsa_tv_autopilot_continuity_fallback.sql"
+            "20260922135000:supabase/migrations/20260922135000_gsa_tv_cinema_duration_contract.sql"
+            "20260922136000:supabase/migrations/20260922136000_gsa_tv_resolved_production_signature.sql"
+          )
+
+          for item in "${migrations[@]}"; do
+            version="${item%%:*}"
+            file="${item#*:}"
+            status="$(remote_status)"
+            line="$(printf '%s\n' "$status" | grep "^MIGRATION_STATUS=$version|" || true)"
+            [ -n "$line" ] || { echo "Sem status para $version." >&2; exit 81; }
+            history="$(sed -n 's/.*|history=\([^|]*\).*/\1/p' <<<"$line")"
+            contract="$(sed -n 's/.*|contract=\([^|]*\).*/\1/p' <<<"$line")"
+
+            if [ "$history" = t ] && [ "$contract" = t ]; then
+              echo "MIGRATION_SKIP_READY=$version"
+              continue
+            fi
+            if [ "$history" = t ] && [ "$contract" != t ]; then
+              echo "Migration $version no histórico sem contrato correspondente." >&2
+              exit 82
+            fi
+
+            if [ "$contract" != t ]; then
+              echo "MIGRATION_APPLY=$version"
+              supabase db query --linked --file "$file"
+            else
+              echo "MIGRATION_REPAIR_HISTORY_ONLY=$version"
+            fi
+
+            supabase migration repair --status applied "$version"
+
+            verified="$(remote_status | grep "^MIGRATION_STATUS=$version|" || true)"
+            grep -q '|history=t|contract=t$' <<<"$verified" || {
+              echo "Migration $version não confirmou history+contract." >&2
+              exit 83
+            }
+          done
+
+          remote_status | tee "$RUNNER_TEMP/gsa-tv-migration-after.txt"
+          grep -qx 'MIGRATION_STATE=ready' "$RUNNER_TEMP/gsa-tv-migration-after.txt"
+
+      - name: Reconcile stale logical off-air state dry-run
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'sudo bash -s' \
+            < infrastructure/gsa-tv/scripts/reconcile-stale-offair-state.sh \
+            | tee "$RUNNER_TEMP/gsa-tv-offair-dry-run.txt"
+          grep -qx 'DRY_RUN_OK=true' "$RUNNER_TEMP/gsa-tv-offair-dry-run.txt"
+
+      - name: Reconcile stale logical off-air state apply
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'sudo bash -s -- --apply' \
+            < infrastructure/gsa-tv/scripts/reconcile-stale-offair-state.sh \
+            | tee "$RUNNER_TEMP/gsa-tv-offair-apply.txt"
+          grep -qx 'OFFAIR_RECONCILE_APPLIED=true' "$RUNNER_TEMP/gsa-tv-offair-apply.txt"
+
+      - name: Recover deterministic local media cache dry-run
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'sudo bash -s' \
+            < infrastructure/gsa-tv/scripts/recover-local-media-cache.sh \
+            | tee "$RUNNER_TEMP/gsa-tv-media-recovery-dry-run.txt"
+          grep -qx 'DRY_RUN_OK=true' "$RUNNER_TEMP/gsa-tv-media-recovery-dry-run.txt"
+
+      - name: Recover deterministic local media cache apply
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'sudo bash -s -- --apply' \
+            < infrastructure/gsa-tv/scripts/recover-local-media-cache.sh \
+            | tee "$RUNNER_TEMP/gsa-tv-media-recovery-apply.txt"
+          grep -qx 'RECOVERY_APPLIED=true' "$RUNNER_TEMP/gsa-tv-media-recovery-apply.txt"
+
+      - name: Full verified backup for first migration
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'sudo bash -s' \
+            < infrastructure/gsa-tv/scripts/backup-full.sh \
+            | tee "$RUNNER_TEMP/gsa-tv-full-backup.txt"
+
+      - name: Final first-migration preparation evidence
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'sudo bash -s' \
+            < infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh \
+            | tee "$RUNNER_TEMP/gsa-tv-preflight-after.txt"
+
+          file="$RUNNER_TEMP/gsa-tv-preflight-after.txt"
+          grep -qx 'PHYSICAL_OFF_AIR_EVIDENCE=true' "$file"
+          grep -qx 'DESIRED_STATE=stopped' "$file"
+          grep -qx 'SIGNAL_STATE=stopped' "$file"
+          grep -qx 'PLAYOUT_STATE=off_air' "$file"
+          grep -qx 'FIRST_MIGRATION_OFFAIR_READY=true' "$file"
+          grep -qx 'AUTOPILOT_DB_CONTRACT_READY=true' "$file"
+          grep -qx 'AUTOPILOT_MIGRATION_COUNT=5' "$file"
+          grep -qx 'LATEST_BACKUP_STATE=restored_test' "$file"
+          grep -qx 'LATEST_BACKUP_MANIFEST_OK=true' "$file"
+          grep -qx 'MISSING_PATHS=none' "$file"
+          echo "FIRST_MIGRATION_PREP_READY=true"
+
       - name: Legacy ffplayout snapshot dry-run
         if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'legacy-snapshot' }}
         shell: bash
