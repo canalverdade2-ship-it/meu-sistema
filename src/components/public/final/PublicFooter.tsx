@@ -11,9 +11,10 @@ interface PublicFooterProps {
   setPublicPage: (page: PublicPage) => void;
   onGuestStore?: () => void;
   onAdminLogin: () => void;
+  onPrivacyNotice?: () => void;
 }
 
-export function PublicFooter({ setPublicPage, onGuestStore, onAdminLogin }: PublicFooterProps) {
+export function PublicFooter({ setPublicPage, onGuestStore, onAdminLogin, onPrivacyNotice }: PublicFooterProps) {
   return (
     <footer className="border-t border-white/10 bg-neutral-950 py-10 text-white">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
@@ -33,7 +34,7 @@ export function PublicFooter({ setPublicPage, onGuestStore, onAdminLogin }: Publ
             <a href="/fornecedor" className="w-fit hover:text-[#d8bd73]">Portal do Fornecedor</a>
             <a href="/afiliados" className="w-fit hover:text-[#d8bd73]">Programa de Afiliados</a>
             <a href="/trabalhe-conosco" className="w-fit hover:text-[#d8bd73]">Trabalhe Conosco</a>
-            <button type="button" onClick={() => navigate(routes.public.privacy())} className="w-fit hover:text-[#d8bd73]">Privacidade</button>
+            <button type="button" onClick={() => onPrivacyNotice ? onPrivacyNotice() : navigate(routes.public.privacy())} className="w-fit hover:text-[#d8bd73]">Privacidade</button>
           </div>
         </nav>
         <nav aria-label="Links de publicidade">
