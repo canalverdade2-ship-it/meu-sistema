@@ -70,6 +70,8 @@ jobs:
           bash -n infrastructure/gsa-tv/scripts/cutover-autopilot-v2.sh
           bash -n infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh
           bash -n infrastructure/gsa-tv/scripts/snapshot-legacy-ffplayout.sh
+          bash -n infrastructure/gsa-tv/scripts/reconcile-stale-offair-state.sh
+          bash -n infrastructure/gsa-tv/scripts/backup-full.sh
           bash -n infrastructure/gsa-tv/tests/run-live-test-suite.sh
           bash -n infrastructure/gsa-tv/tests/test-control-plane-restart-continuity.sh
 
@@ -90,6 +92,8 @@ jobs:
           preflight = Path("infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh").read_text()
           cutover = Path("infrastructure/gsa-tv/scripts/cutover-autopilot-v2.sh").read_text()
           snapshot = Path("infrastructure/gsa-tv/scripts/snapshot-legacy-ffplayout.sh").read_text()
+          offair_reconcile = Path("infrastructure/gsa-tv/scripts/reconcile-stale-offair-state.sh").read_text()
+          full_backup = Path("infrastructure/gsa-tv/scripts/backup-full.sh").read_text()
           runtime_workflow = Path(".github/workflows/gsa-tv-autopilot-runtime.yml").read_text()
           factory_service = Path("infrastructure/gsa-tv/systemd/gsa-tv-autopilot-content-factory.service").read_text()
           content_factory = Path("infrastructure/gsa-tv/scripts/autopilot-content-factory.py").read_text()
@@ -169,6 +173,19 @@ jobs:
           assert "legacy-snapshot" in runtime_workflow
           assert "SNAPSHOT-GUARD" in runtime_workflow
           assert "snapshot-legacy-ffplayout.sh" in runtime_workflow
+          assert "PHYSICAL_OFF_AIR_EVIDENCE" in preflight
+          assert "AUTOPILOT_DB_CONTRACT_READY" in preflight
+          assert "AUTOPILOT_MIGRATION_COUNT" in preflight
+          assert "DRY_RUN_OK=true" in offair_reconcile
+          assert "OFFAIR_RECONCILE_APPLIED=true" in offair_reconcile
+          assert "physical_off_air" in offair_reconcile
+          assert "docker stop" not in offair_reconcile
+          assert "systemctl stop" not in offair_reconcile
+          assert "source.backup(destination)" in full_backup
+          assert "media-catalog-missing.txt" in full_backup
+          assert "catalog_missing_files" in full_backup
+          assert "cache_media_present" in full_backup
+          assert "docker exec gsa-tv-ffplayout sqlite3" not in full_backup
           assert "CUTOVER_DRY_RUN_OK=true" in cutover
           assert "GSA_TV_BROADCAST_AUTOMATION_ENABLED" in cutover
           assert "GSA_TV_AUTOPILOT_AUTO_APPROVE" in cutover
