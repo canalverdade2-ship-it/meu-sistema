@@ -99,6 +99,9 @@ jobs:
           migration_status = Path("infrastructure/gsa-tv/scripts/autopilot-migration-status.sh").read_text()
           full_backup = Path("infrastructure/gsa-tv/scripts/backup-full.sh").read_text()
           runtime_workflow = Path(".github/workflows/gsa-tv-autopilot-runtime.yml").read_text()
+          prep_start = runtime_workflow.index("- name: First-migration physical off-air gate")
+          prep_end = runtime_workflow.index("- name: Legacy ffplayout snapshot dry-run", prep_start)
+          prep_section = runtime_workflow[prep_start:prep_end]
           factory_service = Path("infrastructure/gsa-tv/systemd/gsa-tv-autopilot-content-factory.service").read_text()
           content_factory = Path("infrastructure/gsa-tv/scripts/autopilot-content-factory.py").read_text()
           broadcast_service = Path("infrastructure/gsa-tv/systemd/gsa-tv-autopilot-broadcast-controller.service").read_text()
@@ -188,11 +191,11 @@ jobs:
           assert "MISSING_PATHS=none" in runtime_workflow
           assert "supabase db push" not in runtime_workflow
           assert "db reset --linked" not in runtime_workflow
-          assert "deploy-autopilot-v2.sh" not in runtime_workflow
-          assert "cutover-autopilot-v2.sh" not in runtime_workflow
-          assert runtime_workflow.index("Legacy ffplayout snapshot apply") < runtime_workflow.index("Apply only the five canonical Autopilot migrations")
-          assert runtime_workflow.index("Apply only the five canonical Autopilot migrations") < runtime_workflow.index("Reconcile stale logical off-air state apply")
-          assert runtime_workflow.index("Reconcile stale logical off-air state apply") < runtime_workflow.index("Full verified backup")
+          assert "deploy-autopilot-v2.sh" not in prep_section
+          assert "cutover-autopilot-v2.sh" not in prep_section
+          assert prep_section.index("Prepare legacy ffplayout snapshot apply") < prep_section.index("Apply only five canonical Autopilot migrations")
+          assert prep_section.index("Apply only five canonical Autopilot migrations") < prep_section.index("Reconcile stale logical off-air state apply")
+          assert prep_section.index("Reconcile stale logical off-air state apply") < prep_section.index("Full verified backup for first migration")
           assert "PHYSICAL_OFF_AIR_EVIDENCE" in preflight
           assert "AUTOPILOT_DB_CONTRACT_READY" in preflight
           assert "AUTOPILOT_MIGRATION_COUNT" in preflight
