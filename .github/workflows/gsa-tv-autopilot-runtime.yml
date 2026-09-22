@@ -1,6 +1,12 @@
 name: GSA TV Autopilot V2 Runtime
 
 on:
+  push:
+    branches:
+      - "feat/gsa-tv-autopilot-v2"
+    paths:
+      - ".github/workflows/gsa-tv-autopilot-runtime.yml"
+      - "infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh"
   workflow_dispatch:
     inputs:
       operation:
@@ -30,6 +36,8 @@ jobs:
     env:
       VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
       VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+      RUNTIME_OPERATION: ${{ github.event_name == 'workflow_dispatch' && inputs.operation || 'preflight' }}
+      RUNTIME_CONFIRM_POLICY: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_first_migration_policy || 'OFFAIR-GUARD' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -37,13 +45,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "${{ inputs.confirm_first_migration_policy }}" = "OFFAIR-GUARD" || {
+          test "${RUNTIME_CONFIRM_POLICY}" = "OFFAIR-GUARD" || {
             echo "Confirmação inválida. O deploy nunca deve desligar a transmissão automaticamente." >&2
             exit 64
           }
           test -n "${VPS_HOST:-}" || { echo "Secret obrigatório ausente: GSA_TV_VPS_HOST" >&2; exit 78; }
           test -n "${VPS_USER:-}" || { echo "Secret obrigatório ausente: GSA_TV_VPS_USER" >&2; exit 78; }
-          if [ "${{ inputs.operation }}" = "deploy" ] && [ "${GITHUB_REF_NAME}" != "main" ]; then
+          if [ "${RUNTIME_OPERATION}" = "deploy" ] && [ "${GITHUB_REF_NAME}" != "main" ]; then
             echo "Deploy de produção permitido somente a partir da branch main." >&2
             exit 65
           fi
@@ -96,7 +104,7 @@ jobs:
           set -e
           echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
 
-          if [ "${{ inputs.operation }}" = "deploy" ] && [ "$rc" -eq 20 ]; then
+          if [ "${RUNTIME_OPERATION}" = "deploy" ] && [ "$rc" -eq 20 ]; then
             echo "Preflight encontrou runtime bloqueado/parcial." >&2
             exit 20
           fi
@@ -105,12 +113,12 @@ jobs:
           fi
 
       - name: Stop after read-only preflight
-        if: ${{ inputs.operation == 'preflight' }}
+        if: ${{ env.RUNTIME_OPERATION == 'preflight' }}
         run: |
           echo "Preflight concluído por stdin. Nenhum arquivo de release foi criado na VPS."
 
       - name: Package immutable runtime source
-        if: ${{ inputs.operation == 'deploy' }}
+        if: ${{ env.RUNTIME_OPERATION == 'deploy' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -126,7 +134,7 @@ jobs:
           cat "$dir/source.sha256"
 
       - name: Upload immutable release source
-        if: ${{ inputs.operation == 'deploy' }}
+        if: ${{ env.RUNTIME_OPERATION == 'deploy' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -146,7 +154,7 @@ jobs:
             "set -e; cd '$remote'; sha256sum -c source.sha256; tar -xzf source.tgz; chmod -R go-w ."
 
       - name: Guarded deploy dry-run
-        if: ${{ inputs.operation == 'deploy' }}
+        if: ${{ env.RUNTIME_OPERATION == 'deploy' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -157,7 +165,7 @@ jobs:
             "sudo bash '$remote/infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh'"
 
       - name: Guarded deploy apply
-        if: ${{ inputs.operation == 'deploy' }}
+        if: ${{ env.RUNTIME_OPERATION == 'deploy' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -168,7 +176,7 @@ jobs:
             "sudo bash '$remote/infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh' --apply"
 
       - name: Post-deploy evidence
-        if: ${{ inputs.operation == 'deploy' }}
+        if: ${{ env.RUNTIME_OPERATION == 'deploy' }}
         shell: bash
         run: |
           set -euo pipefail
