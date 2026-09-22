@@ -1,7 +1,7 @@
 # GSA TV — Infraestrutura atual
 
 **Fonte de verdade operacional:** [Arquitetura atual](../../docs/arquitetura-atual-gsa-tv.md)  
-**Atualizado:** 01/09/2026
+**Atualizado:** 22/09/2026
 
 > A arquitetura antiga baseada em Google Drive/rclone, cache-manager e serviços separados nas portas 9200/9201/9203 foi descontinuada. Arquivos históricos podem permanecer no repositório para rastreabilidade, mas não descrevem o runtime atual.
 
@@ -10,7 +10,8 @@
 A implantação atual usa:
 
 - `gsa-tv-ffplayout` — playout/HLS, `127.0.0.1:8787`;
-- `gsa-tv-control-plane` — jobs, mídia, grade, relay, IA, `127.0.0.1:9202`;
+- `gsa-tv-control-plane` — jobs, mídia, grade, orquestração e IA, `127.0.0.1:9202`;
+- `gsa-tv-encoder-engine` — transporte FFmpeg/RTMP independente, `127.0.0.1:9210`;
 - `gsa-tv-watchdog` — supervisão independente, `127.0.0.1:9204`;
 - `gsa-tv-n8n-bridge` — ponte privada de automação;
 - n8n GSA existente — reconciliação, monitoramento e relatórios;
@@ -61,6 +62,20 @@ Os arquivos em `n8n/workflows/` representam a arquitetura atual e usam apenas a 
 
 `tests/test-vps-storage-resilience.sh` valida a resiliência do armazenamento local definitivo.
 
+## Autopilot V2
+
+O Autopilot mantém uma janela rolante de prontidão, produz conteúdo faltante para D+1..D+3 e corrige duração insuficiente em programas originais futuros. O ffplayout e o Encoder Engine continuam responsáveis pela cadeia de exibição/transporte; o Autopilot não executa comandos de transmissão.
+
+Deploy oficial:
+
+```bash
+sudo ./infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh
+sudo ./infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh
+sudo ./infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh --apply
+```
+
+O segundo comando é dry-run. A primeira migração do encoder acoplado exige canal off-air. O instalador se recusa a executar as migrations SQL fora do fluxo canônico do Supabase.
+
 ## Arquivos legados
 
-`compose.yml`, migrations antigas sob `db/` e scripts históricos podem documentar fases anteriores. Para deploy do Control Plane, use o script de runtime versionado em `scratch/deploy-gsa-tv-runtime-1_4.mjs` até que ele seja promovido a instalador definitivo. Antes de reutilizar qualquer arquivo legado, confirme sua aderência à arquitetura descrita aqui.
+`compose.yml`, migrations antigas sob `db/` e scripts em `scratch/` podem documentar fases anteriores e não devem ser usados como instaladores de produção. O instalador definitivo do Autopilot V2 é `scripts/deploy-autopilot-v2.sh`. Antes de reutilizar qualquer artefato legado, confirme sua aderência à arquitetura descrita aqui.
