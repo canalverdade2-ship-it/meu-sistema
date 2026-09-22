@@ -14,6 +14,23 @@ TZ = ZoneInfo("America/Sao_Paulo")
 
 
 class BroadcastControllerTests(unittest.TestCase):
+    def test_legacy_broadcast_unit_detection(self):
+        original = controller.subprocess.run
+        try:
+            class Result:
+                def __init__(self, code):
+                    self.returncode = code
+            def fake_run(command, **_kwargs):
+                unit = command[-1]
+                return Result(0 if unit == "gsa-tv-morning-start.timer" else 3)
+            controller.subprocess.run = fake_run
+            self.assertEqual(
+                controller.active_legacy_broadcast_units(),
+                ["gsa-tv-morning-start.timer"],
+            )
+        finally:
+            controller.subprocess.run = original
+
     def test_phase_prepare(self):
         moment = dt.datetime(2026, 9, 23, 5, 55, tzinfo=TZ)
         self.assertEqual(controller.phase(moment), "prepare")
