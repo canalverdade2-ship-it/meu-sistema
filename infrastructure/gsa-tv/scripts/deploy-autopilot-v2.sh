@@ -48,6 +48,7 @@ ENCODER_IMAGE="gsa-tv/encoder-engine:1.0.0"
 BACKUP_ROOT="/opt/gsa-tv/backups/autopilot-v2"
 BACKUP_DIR=""
 MUTATION_STARTED=false
+ENCODER_MUTATED=false
 
 rollback_runtime() {
   local rc=$?
@@ -76,16 +77,27 @@ rollback_runtime() {
     chmod 600 "$ENV_FILE"
   fi
 
+  if [ -s "$BACKUP_DIR/control-plane-target-image-id.txt" ]; then
+    old_control_image_id="$(cat "$BACKUP_DIR/control-plane-target-image-id.txt")"
+    [ "$old_control_image_id" = "missing" ] || docker tag "$old_control_image_id" "$CONTROL_IMAGE" >/dev/null 2>&1 || true
+  fi
+  if [ -s "$BACKUP_DIR/encoder-target-image-id.txt" ]; then
+    old_encoder_image_id="$(cat "$BACKUP_DIR/encoder-target-image-id.txt")"
+    [ "$old_encoder_image_id" = "missing" ] || docker tag "$old_encoder_image_id" "$ENCODER_IMAGE" >/dev/null 2>&1 || true
+  fi
+
   if [ -f "$BACKUP_DIR/control-plane-compose.yml" ]; then
     cp -f "$BACKUP_DIR/control-plane-compose.yml" "$CONTROL_DIR/compose.yml"
     docker compose --project-directory "$CONTROL_DIR" -f "$CONTROL_DIR/compose.yml" up -d --force-recreate >/dev/null 2>&1 || true
   fi
 
-  if [ -f "$BACKUP_DIR/encoder-compose.yml" ]; then
-    cp -f "$BACKUP_DIR/encoder-compose.yml" "$ENCODER_DIR/compose.yml"
-    docker compose --project-directory "$ENCODER_DIR" -f "$ENCODER_DIR/compose.yml" up -d --force-recreate >/dev/null 2>&1 || true
-  elif [ "$(cat "$BACKUP_DIR/encoder-existed" 2>/dev/null)" != "true" ]; then
-    docker rm -f gsa-tv-encoder-engine >/dev/null 2>&1 || true
+  if [ "$ENCODER_MUTATED" = true ]; then
+    if [ -f "$BACKUP_DIR/encoder-compose.yml" ]; then
+      cp -f "$BACKUP_DIR/encoder-compose.yml" "$ENCODER_DIR/compose.yml"
+      docker compose --project-directory "$ENCODER_DIR" -f "$ENCODER_DIR/compose.yml" up -d --force-recreate >/dev/null 2>&1 || true
+    elif [ "$(cat "$BACKUP_DIR/encoder-existed" 2>/dev/null)" != "true" ]; then
+      docker rm -f gsa-tv-encoder-engine >/dev/null 2>&1 || true
+    fi
   fi
 
   echo "Rollback local concluído. Backup: $BACKUP_DIR" >&2
@@ -176,14 +188,23 @@ signal="${signal:-unknown}"
 playout="${playout:-unknown}"
 
 cp_image="$(docker inspect gsa-tv-control-plane -f '{{.Config.Image}}' 2>/dev/null || true)"
+enc_image="$(docker inspect gsa-tv-encoder-engine -f '{{.Config.Image}}' 2>/dev/null || true)"
 encoder_running="$(docker inspect gsa-tv-encoder-engine -f '{{.State.Running}}' 2>/dev/null || true)"
 cp_external=false
 if docker inspect gsa-tv-control-plane >/dev/null 2>&1; then
   docker inspect gsa-tv-control-plane --format '{{range .Config.Env}}{{println .}}{{end}}'     | grep -q '^ENCODER_ENGINE_URL=http://127\.0\.0\.1:9210$' && cp_external=true || true
 fi
 
+runtime_off_air=false
+if [ "$desired" = "stopped" ] && [ "$signal" = "stopped" ] && [ "$playout" = "off_air" ]; then
+  runtime_off_air=true
+fi
+
 migrated=false
-if [ "$cp_image" = "$CONTROL_IMAGE" ] && [ "$cp_external" = true ] && [ "$encoder_running" = "true" ]; then
+if [ "$cp_image" = "$CONTROL_IMAGE" ] &&
+   [ "$enc_image" = "$ENCODER_IMAGE" ] &&
+   [ "$cp_external" = true ] &&
+   [ "$encoder_running" = "true" ]; then
   if curl -fsS --max-time 4 http://127.0.0.1:9210/health >/dev/null 2>&1; then
     migrated=true
   fi
@@ -287,7 +308,9 @@ signal_state=$signal
 playout_state=$playout
 control_plane_current=${cp_image:-missing}
 control_plane_target=$CONTROL_IMAGE
+encoder_current=${enc_image:-missing}
 encoder_target=$ENCODER_IMAGE
+runtime_off_air=$runtime_off_air
 backup_state=$backup_state
 backup_age_s=$backup_age_s
 backup_manifest_ok=$backup_manifest_ok
@@ -318,7 +341,9 @@ chmod 600 "$BACKUP_DIR/control-plane.env"
 [ -f "$ENCODER_DIR/compose.yml" ] && cp -a "$ENCODER_DIR/compose.yml" "$BACKUP_DIR/encoder-compose.yml"
 if docker inspect gsa-tv-encoder-engine >/dev/null 2>&1; then echo true > "$BACKUP_DIR/encoder-existed"; else echo false > "$BACKUP_DIR/encoder-existed"; fi
 printf '%s\n' "${cp_image:-missing}" > "$BACKUP_DIR/control-plane-image.txt"
-printf '%s\n' "$(docker inspect gsa-tv-encoder-engine -f '{{.Config.Image}}' 2>/dev/null || echo missing)" > "$BACKUP_DIR/encoder-image.txt"
+printf '%s\n' "${enc_image:-missing}" > "$BACKUP_DIR/encoder-image.txt"
+printf '%s\n' "$(docker image inspect "$CONTROL_IMAGE" -f '{{.Id}}' 2>/dev/null || echo missing)" > "$BACKUP_DIR/control-plane-target-image-id.txt"
+printf '%s\n' "$(docker image inspect "$ENCODER_IMAGE" -f '{{.Id}}' 2>/dev/null || echo missing)" > "$BACKUP_DIR/encoder-target-image-id.txt"
 for unit in   gsa-tv-autopilot-readiness.service   gsa-tv-autopilot-readiness.timer   gsa-tv-autopilot-content-factory.service   gsa-tv-autopilot-content-factory.timer   gsa-tv-autopilot-broadcast-controller.service   gsa-tv-autopilot-broadcast-controller.timer; do
   [ -f "/etc/systemd/system/$unit" ] && cp -a "/etc/systemd/system/$unit" "$BACKUP_DIR/systemd/$unit"
 done
@@ -353,8 +378,15 @@ docker build --pull -t "$CONTROL_IMAGE" "$release/control-plane"
 install -m 0644 "$ENCODER_SRC/compose.production.yml" "$ENCODER_DIR/compose.yml"
 install -m 0644 "$CONTROL_SRC/compose.production.yml" "$CONTROL_DIR/compose.yml"
 
-# Start/refresh the independent encoder first. In stopped state it opens only the API.
-docker compose --project-directory "$ENCODER_DIR" -f "$ENCODER_DIR/compose.yml" up -d --force-recreate
+# Start/refresh the independent encoder first only while explicitly off-air.
+# On an already-migrated live runtime the encoder transport is continuity-critical:
+# do not recreate it as part of a Control Plane rollout.
+if [ "$runtime_off_air" = true ]; then
+  ENCODER_MUTATED=true
+  docker compose --project-directory "$ENCODER_DIR" -f "$ENCODER_DIR/compose.yml" up -d --force-recreate
+else
+  echo "ENCODER_RECREATE_SKIPPED=runtime_not_off_air"
+fi
 deadline=$((SECONDS + 60))
 until curl -fsS --max-time 3 http://127.0.0.1:9210/health >/dev/null 2>&1; do
   [ "$SECONDS" -lt "$deadline" ] || {
