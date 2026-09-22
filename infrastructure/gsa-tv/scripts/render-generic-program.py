@@ -31,8 +31,8 @@ def probe(path):
 def validate_inputs(script, manifest, target):
     digest = hashlib.sha256(script['narration'].encode()).hexdigest()
     review = script.get('review', {})
-    if script.get('mode') not in ['generic_program', 'original_reflection']:
-        raise ValueError('Only generic program or original reflection is supported')
+    if script.get('mode') not in ['generic_program', 'source_bound_program']:
+        raise ValueError('Only generic or source-bound programs are supported')
     if review.get('pass') is not True or review.get('violations') != []:
         raise ValueError('Editorial review is missing or rejected')
     if any(x != digest for x in [script.get('script_sha256'), review.get('script_sha256'), manifest.get('script_sha256')]):
