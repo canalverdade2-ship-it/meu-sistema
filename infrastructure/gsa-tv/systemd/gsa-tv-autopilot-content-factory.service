@@ -1,0 +1,22 @@
+[Unit]
+Description=GSA TV Autopilot V2 - bounded continuous content factory
+After=docker.service network-online.target
+Wants=docker.service network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/gsa-tv
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=GSA_TV_ROOT=/opt/gsa-tv
+Environment=GSA_TV_AUTOPILOT_SPEECH_WPM=125
+ExecStart=/usr/bin/python3 /opt/gsa-tv/bin/autopilot-content-factory.py --horizon-days 3 --cycle-minutes 40
+
+# Production is intentionally lower priority than playout/control-plane.
+Nice=15
+CPUWeight=20
+IOWeight=20
+MemoryHigh=6G
+MemoryMax=8G
+TimeoutStartSec=45min
+TimeoutStopSec=45
+KillMode=control-group
