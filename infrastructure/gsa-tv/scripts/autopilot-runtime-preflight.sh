@@ -49,6 +49,19 @@ if container_running gsa-tv-encoder-engine; then
   enc_ffmpeg="$(docker top gsa-tv-encoder-engine -eo args 2>/dev/null       | grep -c '[f]fmpeg' || true)"
 fi
 
+host_rtmp_ffmpeg_count="$(ps -eo args 2>/dev/null | grep '[f]fmpeg' | grep -Eic 'rtmps?://|(^|[[:space:]])-f[[:space:]]+flv([[:space:]]|$)' || true)"
+ffplayout_stream_socket_count=0
+if command -v ss >/dev/null 2>&1; then
+  ffplayout_stream_socket_count="$(ss -Htnp state established 2>/dev/null | grep -Eic 'ffplayout|ffmpeg' || true)"
+fi
+physical_off_air_evidence=false
+if ! container_running gsa-tv-control-plane &&
+   ! container_running gsa-tv-encoder-engine &&
+   [ "${host_rtmp_ffmpeg_count:-0}" = "0" ] &&
+   [ "${ffplayout_stream_socket_count:-0}" = "0" ]; then
+  physical_off_air_evidence=true
+fi
+
 control_http=false
 encoder_http=false
 watchdog_http=false
@@ -73,6 +86,9 @@ have psql && psql_available=true || true
 desired_state="unknown"
 signal_state="unknown"
 playout_state="unknown"
+channel_updated_at="unknown"
+autopilot_db_contract_ready=false
+autopilot_migration_count=0
 if container_running gsa-tv-control-plane; then
   row="$(docker exec -e GSA_TV_PREFLIGHT_CHANNEL_ID="$CHANNEL_ID" gsa-tv-control-plane node -e '
     const { Pool } = require("pg");
@@ -111,6 +127,20 @@ if [ "$desired_state" = "unknown" ] && [ "$psql_available" = true ] && [ -n "$da
     signal_state="${signal_state:-unknown}"
     playout_state="${playout_state:-unknown}"
   fi
+fi
+
+if [ "$psql_available" = true ] && [ -n "$database_url" ]; then
+  channel_updated_at="$(psql "$database_url" -X -qAt -v ON_ERROR_STOP=1 -c "select coalesce(to_jsonb(c)->>'updated_at','unknown') from public.gsa_tv_channels c where id='${CHANNEL_ID}' limit 1" 2>/dev/null || echo unknown)"
+  db_contract="$(psql "$database_url" -X -qAt -F '|' -v ON_ERROR_STOP=1 -c "select
+    to_regprocedure('public.gsa_tv_autopilot_replace_shortfall_media(uuid,text,text,date)') is not null,
+    position('v_date > v_today + 7' in pg_get_functiondef('public.gsa_tv_guard_automation_compile()'::regprocedure)) > 0,
+    to_regprocedure('public.gsa_tv_autopilot_assign_continuity_fallback(uuid,text,text,date)') is not null,
+    to_regprocedure('public.gsa_tv_guard_cinema_duration_compile()') is not null,
+    to_regprocedure('public.gsa_tv_production_signature(uuid)') is not null
+  " 2>/dev/null || true)"
+  [ "$db_contract" = "t|t|t|t|t" ] && autopilot_db_contract_ready=true || true
+  autopilot_migration_count="$(psql "$database_url" -X -qAt -v ON_ERROR_STOP=1 -c "select count(*) from supabase_migrations.schema_migrations where version in ('20260922131000','20260922132000','20260922134000','20260922135000','20260922136000')" 2>/dev/null || echo 0)"
+  [[ "$autopilot_migration_count" =~ ^[0-9]+$ ]] || autopilot_migration_count=0
 fi
 
 first_migration_offair_ready=false
@@ -235,9 +265,15 @@ echo "ENCODER_ENGINE_IMAGE=$enc_image"
 echo "CONTROL_PLANE_EXTERNAL_ENCODER=$cp_external"
 echo "CONTROL_PLANE_RTMP_FFMPEG_COUNT=$cp_rtmp_ffmpeg"
 echo "ENCODER_FFMPEG_COUNT=$enc_ffmpeg"
+echo "HOST_RTMP_FFMPEG_COUNT=$host_rtmp_ffmpeg_count"
+echo "FFPLAYOUT_STREAM_SOCKET_COUNT=$ffplayout_stream_socket_count"
+echo "PHYSICAL_OFF_AIR_EVIDENCE=$physical_off_air_evidence"
 echo "DESIRED_STATE=$desired_state"
 echo "SIGNAL_STATE=$signal_state"
 echo "PLAYOUT_STATE=$playout_state"
+echo "CHANNEL_UPDATED_AT=$channel_updated_at"
+echo "AUTOPILOT_DB_CONTRACT_READY=$autopilot_db_contract_ready"
+echo "AUTOPILOT_MIGRATION_COUNT=$autopilot_migration_count"
 echo "FIRST_MIGRATION_OFFAIR_READY=$first_migration_offair_ready"
 echo "LATEST_BACKUP_STATE=$latest_backup_state"
 echo "LATEST_BACKUP_AGE_S=$latest_backup_age_s"
@@ -353,6 +389,10 @@ PY
     docker top gsa-tv-ffplayout -eo pid,args 2>/dev/null | head -20 || true
     echo "FFPLAYOUT_PROCESS_END"
     echo "FFPLAYOUT_SQLITE_TABLES=$(docker exec gsa-tv-ffplayout sqlite3 -readonly /state/ffplayout.db "select group_concat(name,',') from sqlite_master where type='table' order by name;" 2>/dev/null || true)"
+    echo "FFPLAYOUT_OUTPUT_ROWS=$(docker exec gsa-tv-ffplayout sqlite3 -readonly /state/ffplayout.db "select count(*) from outputs;" 2>/dev/null || echo unknown)"
+    echo "FFPLAYOUT_OUTPUT_SCHEMA_BEGIN"
+    docker exec gsa-tv-ffplayout sqlite3 -readonly /state/ffplayout.db "pragma table_info(outputs);" 2>/dev/null || true
+    echo "FFPLAYOUT_OUTPUT_SCHEMA_END"
   fi
   echo "RECENT_PLAYLIST_SOURCES_BEGIN"
   python3 - <<'PY' 2>/dev/null || true
