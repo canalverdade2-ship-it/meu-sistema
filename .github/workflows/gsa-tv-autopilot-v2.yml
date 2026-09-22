@@ -8,7 +8,6 @@ on:
       - "docs/gsa-tv-secret-rotation.md"
       - "supabase/migrations/*gsa_tv_autopilot*.sql"
       - ".github/workflows/gsa-tv-autopilot*.yml"
-      - ".github/workflows/gsa-tv-first-migration-prep.yml"
   push:
     branches:
       - "feat/gsa-tv-autopilot-v2"
@@ -18,7 +17,6 @@ on:
       - "docs/gsa-tv-secret-rotation.md"
       - "supabase/migrations/*gsa_tv_autopilot*.sql"
       - ".github/workflows/gsa-tv-autopilot*.yml"
-      - ".github/workflows/gsa-tv-first-migration-prep.yml"
 
 permissions:
   contents: read
@@ -101,7 +99,6 @@ jobs:
           migration_status = Path("infrastructure/gsa-tv/scripts/autopilot-migration-status.sh").read_text()
           full_backup = Path("infrastructure/gsa-tv/scripts/backup-full.sh").read_text()
           runtime_workflow = Path(".github/workflows/gsa-tv-autopilot-runtime.yml").read_text()
-          prep_workflow = Path(".github/workflows/gsa-tv-first-migration-prep.yml").read_text()
           factory_service = Path("infrastructure/gsa-tv/systemd/gsa-tv-autopilot-content-factory.service").read_text()
           content_factory = Path("infrastructure/gsa-tv/scripts/autopilot-content-factory.py").read_text()
           broadcast_service = Path("infrastructure/gsa-tv/systemd/gsa-tv-autopilot-broadcast-controller.service").read_text()
@@ -180,22 +177,22 @@ jobs:
           assert "legacy-snapshot" in runtime_workflow
           assert "SNAPSHOT-GUARD" in runtime_workflow
           assert "snapshot-legacy-ffplayout.sh" in runtime_workflow
-          assert "PREPARE-FIRST-MIGRATION" in prep_workflow
-          assert "PHYSICAL_OFF_AIR_EVIDENCE=true" in prep_workflow
-          assert "HOST_SQLITE_BACKUP_PROBE=ok" in prep_workflow
-          assert "supabase db query --linked --file" in prep_workflow
-          assert "supabase migration repair --status applied" in prep_workflow
-          assert "reconcile-stale-offair-state.sh" in prep_workflow
-          assert "recover-local-media-cache.sh" in prep_workflow
-          assert "backup-full.sh" in prep_workflow
-          assert "MISSING_PATHS=none" in prep_workflow
-          assert "supabase db push" not in prep_workflow
-          assert "db reset --linked" not in prep_workflow
-          assert "deploy-autopilot-v2.sh" not in prep_workflow
-          assert "cutover-autopilot-v2.sh" not in prep_workflow
-          assert prep_workflow.index("Legacy ffplayout snapshot apply") < prep_workflow.index("Apply only the five canonical Autopilot migrations")
-          assert prep_workflow.index("Apply only the five canonical Autopilot migrations") < prep_workflow.index("Reconcile stale logical off-air state apply")
-          assert prep_workflow.index("Reconcile stale logical off-air state apply") < prep_workflow.index("Full verified backup")
+          assert "PREPARE-FIRST-MIGRATION" in runtime_workflow
+          assert "PHYSICAL_OFF_AIR_EVIDENCE=true" in runtime_workflow
+          assert "HOST_SQLITE_BACKUP_PROBE=ok" in runtime_workflow
+          assert "supabase db query --linked --file" in runtime_workflow
+          assert "supabase migration repair --status applied" in runtime_workflow
+          assert "reconcile-stale-offair-state.sh" in runtime_workflow
+          assert "recover-local-media-cache.sh" in runtime_workflow
+          assert "backup-full.sh" in runtime_workflow
+          assert "MISSING_PATHS=none" in runtime_workflow
+          assert "supabase db push" not in runtime_workflow
+          assert "db reset --linked" not in runtime_workflow
+          assert "deploy-autopilot-v2.sh" not in runtime_workflow
+          assert "cutover-autopilot-v2.sh" not in runtime_workflow
+          assert runtime_workflow.index("Legacy ffplayout snapshot apply") < runtime_workflow.index("Apply only the five canonical Autopilot migrations")
+          assert runtime_workflow.index("Apply only the five canonical Autopilot migrations") < runtime_workflow.index("Reconcile stale logical off-air state apply")
+          assert runtime_workflow.index("Reconcile stale logical off-air state apply") < runtime_workflow.index("Full verified backup")
           assert "PHYSICAL_OFF_AIR_EVIDENCE" in preflight
           assert "AUTOPILOT_DB_CONTRACT_READY" in preflight
           assert "AUTOPILOT_MIGRATION_COUNT" in preflight
