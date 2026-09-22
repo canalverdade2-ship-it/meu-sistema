@@ -165,6 +165,8 @@ jobs:
           assert "content_mode','library'" in fallback_migration
           assert "fallback_compile_failed" in control
           assert "fallback_outcome" in Path("infrastructure/gsa-tv/scripts/autopilot-fallback-engine.py").read_text()
+          assert "compile_failed" in Path("infrastructure/gsa-tv/scripts/autopilot-duration-engine.py").read_text()
+          assert "previous_duration_compile_failed" in content_factory
           assert "GSA_TV_AUTOPILOT_AUTO_APPROVE=false" in deploy
           assert "EnvironmentFile=-/opt/gsa-tv/autopilot/autopilot.env" in factory_service
           assert "SuccessExitStatus=2" in factory_service
