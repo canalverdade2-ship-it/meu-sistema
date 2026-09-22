@@ -1,0 +1,42 @@
+name: Temporary Browserslist Lock Refresh
+
+on:
+  push:
+    branches:
+      - "feat/gsa-tv-autopilot-v2"
+    paths:
+      - ".github/workflows/tmp-browserslist-lock-refresh.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Pin patched browserslist and regenerate lock
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const p = JSON.parse(fs.readFileSync('package.json','utf8'));
+          p.overrides ||= {};
+          p.overrides.browserslist = '4.29.0';
+          fs.writeFileSync('package.json', JSON.stringify(p, null, 2) + '\n');
+          NODE
+          npm install --package-lock-only --ignore-scripts --no-fund
+      - name: Security audit
+        run: npm audit --audit-level=high
+      - uses: actions/upload-artifact@v4
+        with:
+          name: browserslist-lock-refresh
+          if-no-files-found: error
+          path: |
+            package.json
+            package-lock.json
+          retention-days: 1
