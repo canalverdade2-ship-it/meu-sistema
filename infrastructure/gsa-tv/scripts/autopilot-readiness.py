@@ -84,24 +84,58 @@ def inspect_day(day):
                b.program_id,
                p.name as program_name,
                b.live_source_id,
-               b.media_item_id,
-               b.planned_start_offset_s,
-               b.planned_duration_s,
                b.is_reprise,
                b.metadata as block_metadata,
-               m.state as media_state,
-               m.approval_state,
-               m.rights_ok,
-               m.rights_expires_at,
-               m.duration_s as media_duration_s,
-               m.drive_path
+               b.planned_start_offset_s,
+               b.planned_duration_s,
+               coalesce(dm.id,em.id,pm.id,cm.id) as media_item_id,
+               coalesce(dm.state,em.state,pm.state,cm.state) as media_state,
+               coalesce(dm.approval_state,em.approval_state,pm.approval_state,cm.approval_state) as approval_state,
+               coalesce(dm.rights_ok,em.rights_ok,pm.rights_ok,cm.rights_ok) as rights_ok,
+               coalesce(dm.rights_expires_at,em.rights_expires_at,pm.rights_expires_at,cm.rights_expires_at) as rights_expires_at,
+               coalesce(dm.duration_s,em.duration_s,pm.duration_s,cm.duration_s) as media_duration_s,
+               coalesce(dm.drive_path,em.drive_path,pm.drive_path,cm.drive_path) as drive_path
            from public.gsa_tv_program_blocks b
            left join public.gsa_tv_programs p on p.id=b.program_id
-           left join public.gsa_tv_media_items m
-                  on m.id=b.media_item_id and m.channel_id=$1
+           left join public.gsa_tv_media_items dm
+                  on dm.id=b.media_item_id and dm.channel_id=$1
+           left join public.gsa_tv_episodes ep on ep.id=b.episode_id
+           left join public.gsa_tv_media_items em
+                  on em.id=ep.media_item_id and em.channel_id=$1
+           left join lateral (
+             select m.*
+               from public.gsa_tv_series se
+               join public.gsa_tv_episodes e on e.series_id=se.id
+               join public.gsa_tv_media_items m on m.id=e.media_item_id
+              where b.media_item_id is null
+                and b.episode_id is null
+                and b.program_id is not null
+                and se.program_id=b.program_id
+                and m.channel_id=$1
+              order by case when b.is_reprise then e.last_run_at else e.first_run_at end nulls first,
+                       e.season_number,e.episode_number
+              limit 1
+           ) pm on true
+           left join lateral (
+             select m.*
+               from public.gsa_tv_ad_assets aa
+               join public.gsa_tv_media_items m on m.id=aa.media_item_id
+               join public.gsa_tv_ad_campaigns c on c.id=aa.campaign_id
+              where b.campaign_id is not null
+                and aa.campaign_id=b.campaign_id
+                and c.status='active'
+                and (($3::date + make_interval(secs=>b.planned_start_offset_s)) at time zone $4)
+                    between c.starts_at and c.ends_at
+                and m.channel_id=$1
+                and m.state='ready'
+                and m.rights_ok
+                and m.approval_state='approved'
+              order by aa.weight desc,m.updated_at asc
+              limit 1
+           ) cm on true
           where b.schedule_version_id=$2
           order by b.planned_start_offset_s,b.position""",
-        [CHANNEL_ID, version["id"]],
+        [CHANNEL_ID, version["id"], day.isoformat(), "America/Sao_Paulo"],
     )
 
     scheduled_s = 0.0
