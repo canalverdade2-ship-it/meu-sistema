@@ -3539,6 +3539,42 @@ async function heartbeat() {
       "critical",
     );
   else await resolveIncident("Transmissão da GSA TV degradada");
+
+  const autopilot = await autopilotSnapshot();
+  if (!autopilot.readiness.present || !autopilot.readiness.fresh)
+    await incident(
+      "Autopilot da GSA TV sem heartbeat",
+      { readiness: autopilot.readiness },
+      "warning",
+    );
+  else await resolveIncident("Autopilot da GSA TV sem heartbeat");
+
+  if (
+    autopilot.readiness.next_day &&
+    autopilot.readiness.next_day.state !== "ready"
+  )
+    await incident(
+      "Grade D+1 da GSA TV incompleta",
+      { next_day: autopilot.readiness.next_day },
+      "warning",
+    );
+  else await resolveIncident("Grade D+1 da GSA TV incompleta");
+
+  const autopilotFailure =
+    ["failed", "cycle_failed", "duration_cycle_failed"].includes(
+      String(autopilot.content_factory.state || ""),
+    ) || String(autopilot.duration_engine.state || "") === "failed";
+  if (autopilotFailure)
+    await incident(
+      "Fábrica Autopilot da GSA TV falhou",
+      {
+        content_factory: autopilot.content_factory,
+        duration_engine: autopilot.duration_engine,
+      },
+      "warning",
+    );
+  else await resolveIncident("Fábrica Autopilot da GSA TV falhou");
+
   return {
     status,
     services: states,
@@ -3549,6 +3585,7 @@ async function heartbeat() {
       encoder_external: USE_EXTERNAL_ENCODER,
     },
     degraded,
+    autopilot,
   };
 }
 async function validateSchedule() {
