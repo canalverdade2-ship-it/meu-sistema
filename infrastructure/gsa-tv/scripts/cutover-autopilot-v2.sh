@@ -207,7 +207,7 @@ rollback() {
   if [ -s "$BACKUP_DIR/legacy-timers.state" ]; then
     while IFS='|' read -r unit state; do
       if [ "$state" = "enabled" ]; then
-        systemctl enable "$unit" >/dev/null 2>&1 || true
+        systemctl enable --now "$unit" >/dev/null 2>&1 || true
       else
         systemctl disable "$unit" >/dev/null 2>&1 || true
       fi
@@ -221,7 +221,7 @@ trap rollback ERR
 if [ "$broadcast_selected" = true ]; then
   for unit in "${BROADCAST_LEGACY_TIMERS[@]}"; do
     record_unit_state "$unit"
-    timer_exists "$unit" && systemctl disable "$unit"
+    timer_exists "$unit" && systemctl disable --now "$unit"
   done
 fi
 
