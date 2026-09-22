@@ -394,6 +394,46 @@ select 'MEDIA_METADATA_KEYS',string_agg(key,',' order by key)
       from public.gsa_tv_media_items
   ) s;
 SQL
+    echo "MEDIA_RECOVERY_METADATA_BEGIN"
+    psql "$database_url" -X -qAt -F '|' -v ON_ERROR_STOP=1 <<'SQL' 2>/dev/null || true
+select 'RECOVERY_KEY_COUNTS',
+       count(*) filter (where nullif(metadata->>'original_path','') is not null),
+       count(*) filter (where nullif(metadata->>'original_drive_path','') is not null),
+       count(*) filter (where nullif(metadata->>'relative_path','') is not null),
+       count(*) filter (where nullif(metadata->>'storage','') is not null),
+       count(*) filter (where nullif(metadata->>'sha256','') is not null),
+       count(*) filter (where nullif(metadata->>'size_bytes','') is not null)
+  from public.gsa_tv_media_items
+ where drive_path like '/media/1/%';
+select 'RECOVERY_SAMPLE',id,drive_path,
+       coalesce(metadata->>'original_path',''),
+       coalesce(metadata->>'original_drive_path',''),
+       coalesce(metadata->>'relative_path',''),
+       coalesce(metadata->>'storage',''),
+       coalesce(metadata->>'sha256',''),
+       coalesce(metadata->>'size_bytes','')
+  from public.gsa_tv_media_items
+ where id in (
+   'media-autopilot-official-continuity',
+   'media-gsa-tv-continuity-1080p30',
+   'media-gsa-tv-filler-600'
+ )
+    or drive_path in (
+      '/media/1/identity/gsa-tv-continuity-1080p30.mp4',
+      '/media/1/filler/gsa-tv-filler-600.mp4'
+    )
+ order by id;
+select 'RECOVERY_RECENT',id,drive_path,
+       coalesce(metadata->>'original_path',''),
+       coalesce(metadata->>'original_drive_path',''),
+       coalesce(metadata->>'relative_path',''),
+       coalesce(metadata->>'storage','')
+  from public.gsa_tv_media_items
+ where drive_path like '/media/1/%'
+ order by updated_at desc nulls last
+ limit 15;
+SQL
+    echo "MEDIA_RECOVERY_METADATA_END"
     echo "MEDIA_SCHEMA_DIAGNOSTICS_END"
     echo "MEDIA_DB_DIAGNOSTICS_END"
   fi
@@ -410,6 +450,18 @@ SQL
     rclone listremotes --config /opt/gsa-tv/config/rclone/rclone.conf 2>/dev/null | sed 's/^/RCLONE_REMOTE=/' || true
   fi
   echo "RCLONE_DIAGNOSTICS_END"
+  echo "TARGETED_MEDIA_SEARCH_BEGIN"
+  for name in \
+    gsa-tv-continuity-1080p30.mp4 \
+    gsa-tv-filler-600.mp4 \
+    doa-1949-classic-noir-1080p.mp4 \
+    gsa-historias-da-biblia-o-filho-prodigo-30m.mp4; do
+    find /home/opc /opt/gsa-tv/backups /srv /mnt -xdev -type f -name "$name" -printf 'FOUND_MEDIA=%p SIZE=%s\n' 2>/dev/null | head -20 || true
+  done
+  echo "TARGETED_MEDIA_SEARCH_END"
+  echo "HOME_OPC_DU_BEGIN"
+  du -x -B1 -d2 /home/opc 2>/dev/null | sort -n | tail -40 || true
+  echo "HOME_OPC_DU_END"
   echo "LEGACY_MEDIA_DIAGNOSTICS_END"
   if [ -d /opt/gsa-tv/cache/media ]; then
     find /opt/gsa-tv/cache/media -mindepth 1 -maxdepth 1 -type d -printf 'MEDIA_CHILD=%f\n' 2>/dev/null | sort | head -50 || true
