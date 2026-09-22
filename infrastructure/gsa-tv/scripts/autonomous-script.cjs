@@ -242,6 +242,25 @@ async function main(){
   const originalName = require('node:path').basename(mp4Path);
   const drivePath = mp4Path.startsWith('/media/1/') ? mp4Path : require('node:path').join(require('node:path').dirname(task.output), originalName);
   
+  const autoApprovalEnabled = ['1','true','yes','on'].includes(
+    String(process.env.GSA_TV_AUTOPILOT_AUTO_APPROVE || '').trim().toLowerCase()
+  );
+  const editorialPassed = result?.review?.pass === true &&
+    Array.isArray(result?.review?.violations) &&
+    result.review.violations.length === 0;
+  const technicalPassed = qc?.state === 'technical_validated' &&
+    Number.isFinite(Number(qc?.duration_s)) &&
+    Math.abs(Number(qc.duration_s) - Number(expectedSeconds)) <= 0.75;
+  const provenanceDeclared = Boolean(qc?.visual_provenance);
+
+  const automatedApproval = autoApprovalEnabled &&
+    editorialPassed &&
+    technicalPassed &&
+    provenanceDeclared;
+
+  const approvalState = automatedApproval ? 'approved' : 'pending';
+  const rightsOk = automatedApproval;
+
   const metadata = {
     program_slug: task.program.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
     program_id: task.programId || null,
@@ -253,16 +272,51 @@ async function main(){
     broadcast_date: task.date,
     production_qc: qc,
     target_duration_s: expectedSeconds,
-    autonomous_pilot: true
+    autonomous_pilot: true,
+    automated_approval: {
+      enabled: autoApprovalEnabled,
+      approved: automatedApproval,
+      policy: 'gsa_tv_autopilot_generated_content_v1',
+      editorial_review_passed: editorialPassed,
+      technical_qc_passed: technicalPassed,
+      visual_provenance_declared: provenanceDeclared,
+      decided_at: new Date().toISOString()
+    },
+    rights_basis: automatedApproval
+      ? {
+          policy: 'autopilot_generated_content_v1',
+          narration: 'original_generated_and_editorially_reviewed',
+          visuals: qc.visual_provenance,
+          internal_brand_assets: true
+        }
+      : null
   };
 
   await pool.query(`
     insert into gsa_tv_media_items
     (id,channel_id,title,original_filename,duration_s,video_codec,video_width,video_height,video_fps,audio_codec,audio_sample_rate,audio_channels,state,rights_ok,drive_path,media_kind,source_type,ai_generated,approval_state,metadata)
-    values($1,'ch-main',$2,$3,$4,'h264',1920,1080,30,'aac',48000,2,'ready',true,$5,'program','services',true,'approved',$6::jsonb)
-  `, [mediaId, title, originalName, Math.round(qc.duration_s), drivePath, JSON.stringify(metadata)]);
+    values($1,'ch-main',$2,$3,$4,'h264',1920,1080,30,'aac',48000,2,'ready',$5,$6,'program','services',true,$7,$8::jsonb)
+  `, [
+    mediaId,
+    title,
+    originalName,
+    Math.round(qc.duration_s),
+    rightsOk,
+    drivePath,
+    approvalState,
+    JSON.stringify(metadata)
+  ]);
 
-  console.log(JSON.stringify({state:'editorially_and_technically_validated',word_count:result.word_count,script_sha256:result.script_sha256,output:task.output,media_id:mediaId,duration_s:qc.duration_s}));
+  console.log(JSON.stringify({
+    state: automatedApproval ? 'editorially_and_technically_validated' : 'awaiting_automated_approval_policy',
+    word_count: result.word_count,
+    script_sha256: result.script_sha256,
+    output: task.output,
+    media_id: mediaId,
+    duration_s: qc.duration_s,
+    approval_state: approvalState,
+    rights_ok: rightsOk
+  }));
  }finally{await pool.end();}
 }
 main().catch(e=>{console.error(e.message);process.exitCode=1});
