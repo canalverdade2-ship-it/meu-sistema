@@ -239,7 +239,9 @@ def generate_candidate(block, date, timeout_minutes):
     }
 
     child = subprocess.Popen(
-        ["docker", "exec", "-i", "gsa-tv-control-plane", "node",
+        ["docker", "exec", "-i", "-e",
+         f"GSA_TV_AUTOPILOT_AUTO_APPROVE={os.environ.get('GSA_TV_AUTOPILOT_AUTO_APPROVE','false')}",
+         "gsa-tv-control-plane", "node",
          "/media/1/production/autonomous/tools/autonomous-script.cjs"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
