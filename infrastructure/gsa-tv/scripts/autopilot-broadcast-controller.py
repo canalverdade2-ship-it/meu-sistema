@@ -158,6 +158,29 @@ def control_plane_running():
     return result.returncode == 0 and result.stdout.strip().lower() == "true"
 
 
+def active_legacy_broadcast_units():
+    units = (
+        "gsa-tv-morning-start.timer",
+        "gsa-tv-morning-start.service",
+        "gsa-tv-signoff.timer",
+        "gsa-tv-signoff.service",
+    )
+    active = []
+    for unit in units:
+        try:
+            result = subprocess.run(
+                ["systemctl", "is-active", "--quiet", unit],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=5,
+            )
+            if result.returncode == 0:
+                active.append(unit)
+        except (OSError, subprocess.SubprocessError):
+            continue
+    return active
+
+
 def heartbeat_fresh(state, moment):
     raw = state.get("last_heartbeat_at")
     if not raw:
@@ -238,6 +261,16 @@ def run():
 
     if not control_plane_running():
         base.update(state="blocked", reason="control_plane_not_running")
+        atomic_write(base)
+        return 2
+
+    legacy_units = active_legacy_broadcast_units()
+    if legacy_units:
+        base.update(
+            state="blocked",
+            reason="legacy_broadcast_automation_active",
+            legacy_units=legacy_units,
+        )
         atomic_write(base)
         return 2
 
