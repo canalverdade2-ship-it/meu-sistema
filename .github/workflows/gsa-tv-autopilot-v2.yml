@@ -152,6 +152,8 @@ jobs:
           assert '"stream_stop"' in broadcast_controller
           assert "hold_manual_pause" in broadcast_controller
           assert "hold_manual_live_overtime" in broadcast_controller
+          assert "block_unknown_state" in broadcast_controller
+          assert "block_inconsistent_state" in broadcast_controller
           assert "legacy_broadcast_automation_active" in broadcast_controller
           assert "legacy_production_automation_active" in content_factory
           assert "autopilot-broadcast-controller.py" in deploy
