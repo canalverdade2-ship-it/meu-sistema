@@ -1,0 +1,12 @@
+[Unit]
+Description=GSA TV Autopilot V2 - refresh readiness every 15 minutes
+
+[Timer]
+OnCalendar=*-*-* *:00/15:00 America/Sao_Paulo
+Persistent=true
+AccuracySec=30s
+RandomizedDelaySec=15s
+Unit=gsa-tv-autopilot-readiness.service
+
+[Install]
+WantedBy=timers.target
