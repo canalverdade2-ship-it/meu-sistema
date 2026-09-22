@@ -80,6 +80,23 @@ def process_ok(command):
     ).returncode == 0
 
 
+def active_legacy_production_units():
+    active = []
+    for unit in ("gsa-tv-night-factory.timer", "gsa-tv-night-factory.service"):
+        try:
+            result = subprocess.run(
+                ["systemctl", "is-active", "--quiet", unit],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=5,
+            )
+            if result.returncode == 0:
+                active.append(unit)
+        except (OSError, subprocess.SubprocessError):
+            continue
+    return active
+
+
 def runtime_ready():
     for name in ("gsa-tv-control-plane", "gsa-tv-ffplayout"):
         if not process_ok(["docker", "inspect", "-f", "{{.State.Running}}", name]):
@@ -313,6 +330,17 @@ def main():
     ready, runtime_reason = runtime_ready()
     if not ready:
         state.update(state="blocked", reason=runtime_reason, finished_at=now().isoformat())
+        atomic_write(FACTORY_FILE, state)
+        return 2
+
+    legacy_units = active_legacy_production_units()
+    if legacy_units:
+        state.update(
+            state="blocked",
+            reason="legacy_production_automation_active",
+            legacy_units=legacy_units,
+            finished_at=now().isoformat(),
+        )
         atomic_write(FACTORY_FILE, state)
         return 2
 
