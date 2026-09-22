@@ -114,10 +114,17 @@ fi
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 tmp="$ROOT/.${stamp}.tmp"
 out="$ROOT/$stamp"
-container_tmp="/tmp/gsa-tv-legacy-snapshot-${stamp}.db"
+backup_host="$(docker inspect "$CONTAINER" --format '{{range .Mounts}}{{if eq .Destination "/backups"}}{{.Source}}{{end}}{{end}}' 2>/dev/null || true)"
+[ -n "$backup_host" ] && [ -d "$backup_host" ] || {
+  echo "BLOCKED: ffplayout /backups bind mount is unavailable." >&2
+  exit 80
+}
+container_tmp="/backups/gsa-tv-legacy-snapshot-${stamp}.db"
+host_tmp="$backup_host/gsa-tv-legacy-snapshot-${stamp}.db"
 
 cleanup() {
   docker exec "$CONTAINER" rm -f "$container_tmp" >/dev/null 2>&1 || true
+  rm -f "$host_tmp" >/dev/null 2>&1 || true
   if [ -n "${tmp:-}" ] && [ -d "$tmp" ]; then rm -rf "$tmp"; fi
 }
 trap cleanup EXIT
@@ -147,10 +154,15 @@ for name in "${paths[@]}"; do
 done
 
 # Replace any live-copied SQLite file with a transactionally consistent SQLite backup.
+# Use the existing writable /backups bind mount rather than the container rootfs/tmp.
 docker exec "$CONTAINER" sqlite3 /state/ffplayout.db ".backup '$container_tmp'"
+[ -s "$host_tmp" ] || {
+  echo "BLOCKED: SQLite backup was not materialized on the /backups bind mount." >&2
+  exit 81
+}
 docker exec "$CONTAINER" sqlite3 -readonly "$container_tmp" "pragma integrity_check;" | grep -qx ok
 rm -f "$tmp/container/state/ffplayout.db"
-docker cp "$CONTAINER:$container_tmp" "$tmp/container/state/ffplayout.db"
+cp -a "$host_tmp" "$tmp/container/state/ffplayout.db"
 [ -s "$tmp/container/state/ffplayout.db" ]
 
 {
@@ -174,6 +186,7 @@ mv "$tmp" "$out"
 tmp=""
 trap - EXIT
 docker exec "$CONTAINER" rm -f "$container_tmp" >/dev/null 2>&1 || true
+rm -f "$host_tmp" >/dev/null 2>&1 || true
 
 verify_dir "$out"
 echo "SNAPSHOT_APPLIED=true"
