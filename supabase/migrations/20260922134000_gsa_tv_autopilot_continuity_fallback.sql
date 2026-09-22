@@ -95,6 +95,8 @@ BEGIN
      SET media_item_id=p_fallback_media_id,
          metadata=COALESCE(metadata,'{}'::jsonb) || jsonb_build_object(
            'content_mode','library',
+           'allow_continuity_fill',true,
+           'allow_trim',true,
            'autopilot_fallback',true,
            'autopilot_fallback_reason','production_deadline',
            'autopilot_previous_media_id',v_expected,
