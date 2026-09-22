@@ -119,6 +119,10 @@ jobs:
           assert "docker run --rm --network host postgres:15-alpine" not in deploy
           assert "docker run --rm --network host postgres:15-alpine" not in preflight
           assert '[ "$desired" != "stopped" ] || [ "$signal" != "stopped" ] || [ "$playout" != "off_air" ]' in deploy
+          assert 'cp -a "$ENV_FILE" "$BACKUP_DIR/control-plane.env"' in deploy
+          assert 'cp -f "$BACKUP_DIR/control-plane.env" "$ENV_FILE"' in deploy
+          assert 'Control Plane existente sem compose local para rollback seguro' in deploy
+          assert 'Encoder Engine existente sem compose local para rollback seguro' in deploy
           assert 'FIRST_MIGRATION_OFFAIR_READY=$first_migration_offair_ready' in preflight
           assert 'playout_state' in preflight
 
