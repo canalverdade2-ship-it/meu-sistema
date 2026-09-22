@@ -42,21 +42,43 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Guard operation contract
+        id: guard
         shell: bash
+        env:
+          VPS_SSH_KEY_PRESENT: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS_PRESENT: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
           test "${RUNTIME_CONFIRM_POLICY}" = "OFFAIR-GUARD" || {
             echo "Confirmação inválida. O deploy nunca deve desligar a transmissão automaticamente." >&2
             exit 64
           }
-          test -n "${VPS_HOST:-}" || { echo "Secret obrigatório ausente: GSA_TV_VPS_HOST" >&2; exit 78; }
-          test -n "${VPS_USER:-}" || { echo "Secret obrigatório ausente: GSA_TV_VPS_USER" >&2; exit 78; }
+
+          missing=()
+          [ -n "${VPS_HOST:-}" ] || missing+=("GSA_TV_VPS_HOST")
+          [ -n "${VPS_USER:-}" ] || missing+=("GSA_TV_VPS_USER")
+          [ "${#VPS_SSH_KEY_PRESENT:-0}" -ge 100 ] || missing+=("GSA_TV_VPS_SSH_KEY")
+          [ "${#VPS_KNOWN_HOSTS_PRESENT:-0}" -ge 20 ] || missing+=("GSA_TV_VPS_KNOWN_HOSTS")
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            if [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${RUNTIME_OPERATION}" = "preflight" ]; then
+              echo "runtime_configured=false" >> "$GITHUB_OUTPUT"
+              echo "RUNTIME_PREFLIGHT_SKIPPED=missing_environment_secrets"
+              printf 'Missing runtime secret: %s\n' "${missing[@]}"
+              exit 0
+            fi
+            printf 'Secret obrigatório ausente/inválido: %s\n' "${missing[@]}" >&2
+            exit 78
+          fi
+
+          echo "runtime_configured=true" >> "$GITHUB_OUTPUT"
           if [ "${RUNTIME_OPERATION}" = "deploy" ] && [ "${GITHUB_REF_NAME}" != "main" ]; then
             echo "Deploy de produção permitido somente a partir da branch main." >&2
             exit 65
           fi
 
       - name: Configure SSH with pinned host key
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' }}
         shell: bash
         env:
           VPS_SSH_KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
@@ -78,6 +100,7 @@ jobs:
           chmod 0600 "$HOME/.ssh/known_hosts"
 
       - name: Verify SSH identity and remote prerequisites
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -89,6 +112,7 @@ jobs:
             'set -e; hostname; command -v sudo; command -v docker; sudo -n true; docker --version; sudo docker compose version'
 
       - name: Runtime preflight
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' }}
         id: preflight
         shell: bash
         run: |
@@ -113,12 +137,12 @@ jobs:
           fi
 
       - name: Stop after read-only preflight
-        if: ${{ env.RUNTIME_OPERATION == 'preflight' }}
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'preflight' }}
         run: |
           echo "Preflight concluído por stdin. Nenhum arquivo de release foi criado na VPS."
 
       - name: Package immutable runtime source
-        if: ${{ env.RUNTIME_OPERATION == 'deploy' }}
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'deploy' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -134,7 +158,7 @@ jobs:
           cat "$dir/source.sha256"
 
       - name: Upload immutable release source
-        if: ${{ env.RUNTIME_OPERATION == 'deploy' }}
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'deploy' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -154,7 +178,7 @@ jobs:
             "set -e; cd '$remote'; sha256sum -c source.sha256; tar -xzf source.tgz; chmod -R go-w ."
 
       - name: Guarded deploy dry-run
-        if: ${{ env.RUNTIME_OPERATION == 'deploy' }}
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'deploy' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -165,7 +189,7 @@ jobs:
             "sudo bash '$remote/infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh'"
 
       - name: Guarded deploy apply
-        if: ${{ env.RUNTIME_OPERATION == 'deploy' }}
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'deploy' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -176,7 +200,7 @@ jobs:
             "sudo bash '$remote/infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh' --apply"
 
       - name: Post-deploy evidence
-        if: ${{ env.RUNTIME_OPERATION == 'deploy' }}
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'deploy' }}
         shell: bash
         run: |
           set -euo pipefail
