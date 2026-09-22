@@ -125,7 +125,7 @@ jobs:
           migrations = [
               "20260922131000_gsa_tv_autopilot_compile_gate.sql",
               "20260922132000_gsa_tv_autopilot_duration_swap.sql",
-              "20260922133000_gsa_tv_autopilot_continuity_fallback.sql",
+              "20260922134000_gsa_tv_autopilot_continuity_fallback.sql",
           ]
           for migration in migrations:
               assert Path("supabase/migrations", migration).is_file(), f"Missing migration: {migration}"
