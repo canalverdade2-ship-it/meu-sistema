@@ -29,6 +29,8 @@ READINESS_FILE = STATE_DIR / "readiness-horizon.json"
 FACTORY_FILE = STATE_DIR / "content-factory.json"
 LOCK_FILE = "/tmp/gsa-tv-autopilot-content-factory.lock"
 
+PG = r"""const{Pool}=require('pg');let s='';process.stdin.on('data',c=>s+=c);process.stdin.on('end',async()=>{const p=new Pool({connectionString:process.env.DATABASE_URL});try{const q=JSON.parse(s);const r=await p.query(q.sql,q.params);console.log(JSON.stringify(r.rows||[]))}catch(e){console.error(e.message);process.exitCode=1}finally{await p.end()}});"""
+
 ACTIONABLE_ISSUES = {"missing_media"}
 
 
@@ -41,6 +43,32 @@ def atomic_write(path, payload):
     tmp = path.with_suffix(".tmp")
     tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2))
     tmp.replace(path)
+
+
+def query(sql, params=None):
+    result = subprocess.run(
+        ["docker", "exec", "-i", "gsa-tv-control-plane", "node", "-e", PG],
+        input=json.dumps({"sql": sql, "params": params or []}),
+        text=True,
+        capture_output=True,
+        timeout=45,
+    )
+    if result.returncode != 0:
+        raise RuntimeError((result.stderr or result.stdout or "database query failed").strip())
+    return json.loads(result.stdout or "[]")
+
+
+def ensure_schedule_horizon(days=7):
+    days = max(1, min(30, int(days)))
+    rows = query(
+        """select public.gsa_tv_refresh_fixed_schedule_horizon(
+               (now() at time zone 'America/Sao_Paulo')::date + 1,
+               $1,
+               $2
+             ) result""",
+        [days, "ch-main"],
+    )
+    return rows[0].get("result") if rows else None
 
 
 def process_ok(command):
@@ -300,7 +328,11 @@ def main():
         atomic_write(FACTORY_FILE, state)
         return 0
 
-    refresh_readiness(max(args.horizon_days + 1, 4))
+    horizon_days = max(7, args.horizon_days + 1)
+    state["schedule_horizon"] = ensure_schedule_horizon(horizon_days)
+    atomic_write(FACTORY_FILE, state)
+
+    refresh_readiness(horizon_days)
     report = load_readiness()
 
     # Final continuity fallback is evaluated every cycle but remains a no-op
@@ -309,7 +341,7 @@ def main():
         fallback_cycle = run_fallback_engine()
         state["fallback_cycle"] = fallback_cycle
         if fallback_cycle["returncode"] in (0, 2):
-            refresh_readiness(max(args.horizon_days + 1, 4))
+            refresh_readiness(horizon_days)
             report = load_readiness()
     except subprocess.TimeoutExpired:
         state["fallback_cycle"] = {"returncode": 124, "state": "timeout"}
@@ -364,7 +396,7 @@ def main():
     # Always refresh after a bounded cycle so the next dispatcher decision is
     # based on the actual post-production state.
     try:
-        refresh_readiness(max(args.horizon_days + 1, 4))
+        refresh_readiness(horizon_days)
         after = load_readiness()
         selected_after = next((x for x in after.get("days_detail", []) if x.get("date") == target["date"]), None)
         state["target_after"] = selected_after
