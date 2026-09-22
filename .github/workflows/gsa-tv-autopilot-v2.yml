@@ -106,6 +106,20 @@ jobs:
           for marker in required_control:
               assert marker in control, f"Control Plane contract missing: {marker}"
 
+          for marker in [
+              "Grade versionada publicada obrigatória",
+              "usa mídia sem aprovação editorial",
+              "allow_continuity_fill",
+              "required_slot_duration_s",
+              "requirePublished: true",
+          ]:
+              assert marker in control, f"Published schedule safety contract missing: {marker}"
+
+          assert 'case "stream_start"' in control
+          assert 'case "stream_resume"' in control
+          assert 'case "live_return"' in control
+          assert 'compilePlaylist(localClock(new Date()).date, { requirePublished: true })' in control
+
           for marker in ["encryptState", "decryptState", "aes-256-gcm", "redact("]:
               assert marker in encoder, f"Encoder security contract missing: {marker}"
 
