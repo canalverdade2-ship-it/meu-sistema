@@ -1,0 +1,12 @@
+[Unit]
+Description=GSA TV Autopilot V2 - continuous content factory dispatcher
+
+[Timer]
+OnCalendar=*-*-* *:20,50:00 America/Sao_Paulo
+Persistent=true
+AccuracySec=30s
+RandomizedDelaySec=20s
+Unit=gsa-tv-autopilot-content-factory.service
+
+[Install]
+WantedBy=timers.target
