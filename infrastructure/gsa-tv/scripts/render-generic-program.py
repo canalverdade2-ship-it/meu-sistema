@@ -327,8 +327,8 @@ def main():
     video = next(x for x in data['streams'] if x['codec_type'] == 'video')
     sound = next(x for x in data['streams'] if x['codec_type'] == 'audio')
     actual = float(data['format']['duration'])
-    if abs(actual - args.seconds) > 0.15 or (video['width'], video['height'], video['codec_name']) != (1920, 1080, 'h264') or sound['codec_name'] != 'aac' or sound['sample_rate'] != '48000' or sound['channels'] != 2:
-        raise ValueError('Master failed technical verification')
+    if abs(actual - body_seconds) > 0.15 or (video['width'], video['height'], video['codec_name']) != (1920, 1080, 'h264') or sound['codec_name'] != 'aac' or sound['sample_rate'] != '48000' or sound['channels'] != 2:
+        raise ValueError('Program body failed technical verification')
     subprocess.run(['ffmpeg', '-nostdin', '-v', 'error', '-xerror', '-i', str(temp), '-f', 'null', '-'], check=True)
     
     list_file = work / 'concat_list.txt'
