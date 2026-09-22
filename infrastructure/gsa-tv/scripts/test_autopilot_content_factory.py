@@ -22,6 +22,23 @@ class ContentFactorySelectionTests(unittest.TestCase):
     def tearDown(self):
         factory.now = self.original_now
 
+    def test_legacy_night_factory_detection(self):
+        original = factory.subprocess.run
+        try:
+            class Result:
+                def __init__(self, code):
+                    self.returncode = code
+            def fake_run(command, **_kwargs):
+                unit = command[-1]
+                return Result(0 if unit == "gsa-tv-night-factory.timer" else 3)
+            factory.subprocess.run = fake_run
+            self.assertEqual(
+                factory.active_legacy_production_units(),
+                ["gsa-tv-night-factory.timer"],
+            )
+        finally:
+            factory.subprocess.run = original
+
     def test_selects_nearest_future_day_with_missing_media(self):
         report = {
             "days_detail": [
