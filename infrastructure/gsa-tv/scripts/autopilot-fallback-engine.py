@@ -305,6 +305,14 @@ def compile_if_ready(date):
     }
 
 
+def fallback_outcome(d1_after, compile_result, assignment_failures):
+    if not d1_after or d1_after.get("state") != "ready":
+        return "fallback_incomplete", 2
+    if not compile_result or compile_result.get("returncode") != 0:
+        return "fallback_compile_failed", 2
+    return "fallback_ready", (2 if assignment_failures else 0)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--fallback-hours", type=float, default=7.0)
@@ -402,15 +410,19 @@ def main():
     state["assigned"] = sum(1 for x in state["assignments"] if x["state"] == "assigned")
     state["failed"] = sum(1 for x in state["assignments"] if x["state"] == "failed")
 
+    compile_result = None
     if d1_after and d1_after.get("state") == "ready":
-        state["compile"] = compile_if_ready(window["tomorrow"].isoformat())
-        state["state"] = "fallback_ready"
-    else:
-        state["state"] = "fallback_incomplete"
+        compile_result = compile_if_ready(window["tomorrow"].isoformat())
+        state["compile"] = compile_result
 
+    state["state"], exit_code = fallback_outcome(
+        d1_after,
+        compile_result,
+        state["failed"],
+    )
     state["finished_at"] = now().isoformat()
     atomic_write(state)
-    return 0 if state["failed"] == 0 else 2
+    return exit_code
 
 
 if __name__ == "__main__":
