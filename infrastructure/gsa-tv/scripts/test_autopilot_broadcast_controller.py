@@ -67,6 +67,48 @@ class BroadcastControllerTests(unittest.TestCase):
         })
         self.assertEqual(action, "preserve_manual_live")
 
+    def test_off_air_manual_pause_is_preserved(self):
+        action = controller.decide("off_air", {
+            "desired_state": "paused",
+            "signal_state": "stopped",
+            "playout_state": "paused",
+        })
+        self.assertEqual(action, "hold_manual_pause")
+
+    def test_unknown_state_blocks_instead_of_starting_or_stopping(self):
+        self.assertEqual(
+            controller.decide("on_air", {
+                "desired_state": "unknown",
+                "signal_state": "stopped",
+                "playout_state": "off_air",
+            }),
+            "block_unknown_state",
+        )
+        self.assertEqual(
+            controller.decide("off_air", {
+                "desired_state": "running",
+                "signal_state": "unknown",
+                "playout_state": "program",
+            }),
+            "block_unknown_state",
+        )
+
+    def test_inconsistent_on_air_state_blocks(self):
+        action = controller.decide("on_air", {
+            "desired_state": "running",
+            "signal_state": "stopped",
+            "playout_state": "off_air",
+        })
+        self.assertEqual(action, "block_inconsistent_state")
+
+    def test_inconsistent_off_air_state_blocks(self):
+        action = controller.decide("off_air", {
+            "desired_state": "running",
+            "signal_state": "stopped",
+            "playout_state": "program",
+        })
+        self.assertEqual(action, "block_inconsistent_state")
+
     def test_off_air_manual_live_is_not_force_stopped(self):
         action = controller.decide("off_air", {
             "desired_state": "running",
