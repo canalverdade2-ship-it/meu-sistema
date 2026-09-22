@@ -130,7 +130,33 @@ dburl="$(read_env DATABASE_URL)"
 [ -n "$dburl" ] || { echo "BLOCKED: DATABASE_URL ausente no env protegido." >&2; exit 78; }
 
 db_query() {
-  docker run --rm --network host postgres:15-alpine     psql "$dburl" -X -qAt -F '|' -v ON_ERROR_STOP=1 -c "$1"
+  local sql="$1"
+  if command -v psql >/dev/null 2>&1; then
+    PGPASSWORD="" psql "$dburl" -X -qAt -F '|' -v ON_ERROR_STOP=1 -c "$sql"
+    return
+  fi
+  if docker inspect gsa-tv-control-plane >/dev/null 2>&1 &&
+     [ "$(docker inspect -f '{{.State.Running}}' gsa-tv-control-plane 2>/dev/null || true)" = "true" ]; then
+    docker exec -i gsa-tv-control-plane node -e '
+      const { Pool } = require("pg");
+      let sql = "";
+      process.stdin.on("data", c => sql += c);
+      process.stdin.on("end", async () => {
+        const p = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
+        try {
+          const r = await p.query(sql);
+          for (const row of r.rows || []) {
+            process.stdout.write(Object.values(row).map(v => v == null ? "" : String(v)).join("|") + "\n");
+          }
+        } finally {
+          await p.end().catch(() => {});
+        }
+      });
+    ' <<<"$sql"
+    return
+  fi
+  echo "BLOCKED: validação DB read-only exige psql no host ou Control Plane em execução; nenhum container auxiliar será criado." >&2
+  return 78
 }
 
 state="$(db_query "select coalesce(desired_state,'unknown'),coalesce(signal_state,'unknown') from public.gsa_tv_channels where id='ch-main'" 2>/dev/null || true)"
@@ -289,7 +315,7 @@ if(!s.includes("control_plane_shutdown_encoder_preserved") || !s.includes("encod
 docker inspect gsa-tv-control-plane --format '{{range .Config.Env}}{{println .}}{{end}}'   | grep -q '^ENCODER_ENGINE_URL=http://127\.0\.0\.1:9210$'
 
 # Install Autopilot scripts.
-for f in   autopilot-runtime-preflight.sh   autopilot-readiness.py   autopilot-content-factory.py   autopilot-duration-engine.py   night-production.py   daily-scripts.py; do
+for f in   autopilot-runtime-preflight.sh   autopilot-readiness.py   autopilot-content-factory.py   autopilot-duration-engine.py   autopilot-fallback-engine.py   night-production.py   daily-scripts.py; do
   install -m 0755 "$INFRA/scripts/$f" "$BIN_DIR/$f"
 done
 
