@@ -11,6 +11,36 @@ SPEC.loader.exec_module(renderer)
 
 
 class GenericRendererTimingTests(unittest.TestCase):
+    def test_media_url_rejects_http(self):
+        with self.assertRaises(ValueError):
+            renderer.validate_media_url("http://videos.pexels.com/video.mp4", "pexels")
+
+    def test_media_url_rejects_unexpected_host(self):
+        with self.assertRaises(ValueError):
+            renderer.validate_media_url("https://example.com/video.mp4", "pexels")
+
+    def test_media_url_rejects_private_dns_resolution(self):
+        original = renderer.socket.getaddrinfo
+        try:
+            renderer.socket.getaddrinfo = lambda *_args, **_kwargs: [
+                (renderer.socket.AF_INET, renderer.socket.SOCK_STREAM, 6, "", ("127.0.0.1", 443))
+            ]
+            with self.assertRaises(ValueError):
+                renderer.validate_media_url("https://videos.pexels.com/video.mp4", "pexels")
+        finally:
+            renderer.socket.getaddrinfo = original
+
+    def test_media_url_accepts_public_allowed_resolution(self):
+        original = renderer.socket.getaddrinfo
+        try:
+            renderer.socket.getaddrinfo = lambda *_args, **_kwargs: [
+                (renderer.socket.AF_INET, renderer.socket.SOCK_STREAM, 6, "", ("8.8.8.8", 443))
+            ]
+            value = renderer.validate_media_url("https://videos.pexels.com/video.mp4", "pexels")
+            self.assertEqual(value, "https://videos.pexels.com/video.mp4")
+        finally:
+            renderer.socket.getaddrinfo = original
+
     def test_source_bound_program_is_supported(self):
         narration = "Texto factual neutro sustentado pelas fontes."
         digest = hashlib.sha256(narration.encode()).hexdigest()
