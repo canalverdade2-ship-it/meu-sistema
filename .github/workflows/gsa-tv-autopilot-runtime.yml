@@ -9,6 +9,7 @@ on:
       - "infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh"
       - "infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh"
       - "infrastructure/gsa-tv/scripts/cutover-autopilot-v2.sh"
+      - "infrastructure/gsa-tv/scripts/snapshot-legacy-ffplayout.sh"
       - "infrastructure/gsa-tv/services/playout-api/**"
       - "infrastructure/gsa-tv/services/encoder-engine/**"
       - "infrastructure/gsa-tv/systemd/gsa-tv-autopilot-**"
@@ -20,6 +21,7 @@ on:
         type: choice
         options:
           - preflight
+          - legacy-snapshot
           - deploy
           - cutover
       cutover_scope:
@@ -37,6 +39,10 @@ on:
       confirm_first_migration_policy:
         description: "Digite OFFAIR-GUARD para confirmar que o workflow nunca deve desligar o canal automaticamente"
         required: true
+        type: string
+      confirm_legacy_snapshot_policy:
+        description: "Para legacy-snapshot, digite SNAPSHOT-GUARD"
+        required: false
         type: string
 
 permissions:
@@ -58,6 +64,7 @@ jobs:
       RUNTIME_CONFIRM_POLICY: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_first_migration_policy || 'OFFAIR-GUARD' }}
       RUNTIME_CUTOVER_SCOPE: ${{ github.event_name == 'workflow_dispatch' && inputs.cutover_scope || 'all' }}
       RUNTIME_CUTOVER_CONFIRM_POLICY: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_cutover_policy || '' }}
+      RUNTIME_SNAPSHOT_CONFIRM_POLICY: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_legacy_snapshot_policy || '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -94,7 +101,18 @@ jobs:
           echo "runtime_configured=true" >> "$GITHUB_OUTPUT"
           if [ "${RUNTIME_OPERATION}" = "deploy" ] || [ "${RUNTIME_OPERATION}" = "cutover" ]; then
             if [ "${GITHUB_REF_NAME}" != "main" ]; then
-              echo "Operação mutante de produção permitida somente a partir da branch main." >&2
+              echo "Operação mutante de deploy/cutover permitida somente a partir da branch main." >&2
+              exit 65
+            fi
+          fi
+
+          if [ "${RUNTIME_OPERATION}" = "legacy-snapshot" ]; then
+            if [ "${RUNTIME_SNAPSHOT_CONFIRM_POLICY}" != "SNAPSHOT-GUARD" ]; then
+              echo "Snapshot legado exige confirmação explícita SNAPSHOT-GUARD." >&2
+              exit 64
+            fi
+            if [ "${GITHUB_REF_NAME}" != "feat/gsa-tv-autopilot-v2" ] && [ "${GITHUB_REF_NAME}" != "main" ]; then
+              echo "Snapshot legado permitido somente na branch de rollout ou main." >&2
               exit 65
             fi
           fi
@@ -171,6 +189,39 @@ jobs:
         if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'preflight' }}
         run: |
           echo "Preflight concluído por stdin. Nenhum arquivo de release foi criado na VPS."
+
+      - name: Legacy ffplayout snapshot dry-run
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'legacy-snapshot' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'sudo bash -s' \
+            < infrastructure/gsa-tv/scripts/snapshot-legacy-ffplayout.sh
+
+      - name: Legacy ffplayout snapshot apply
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'legacy-snapshot' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'sudo bash -s -- --apply' \
+            < infrastructure/gsa-tv/scripts/snapshot-legacy-ffplayout.sh
+
+      - name: Post-snapshot evidence
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'legacy-snapshot' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'sudo bash -s -- --verify-latest' \
+            < infrastructure/gsa-tv/scripts/snapshot-legacy-ffplayout.sh
 
       - name: Package immutable runtime source
         if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'deploy' }}
