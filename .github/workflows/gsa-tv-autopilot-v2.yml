@@ -69,6 +69,7 @@ jobs:
           bash -n infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh
           bash -n infrastructure/gsa-tv/scripts/cutover-autopilot-v2.sh
           bash -n infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh
+          bash -n infrastructure/gsa-tv/scripts/snapshot-legacy-ffplayout.sh
           bash -n infrastructure/gsa-tv/tests/run-live-test-suite.sh
           bash -n infrastructure/gsa-tv/tests/test-control-plane-restart-continuity.sh
 
@@ -88,6 +89,8 @@ jobs:
           deploy = Path("infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh").read_text()
           preflight = Path("infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh").read_text()
           cutover = Path("infrastructure/gsa-tv/scripts/cutover-autopilot-v2.sh").read_text()
+          snapshot = Path("infrastructure/gsa-tv/scripts/snapshot-legacy-ffplayout.sh").read_text()
+          runtime_workflow = Path(".github/workflows/gsa-tv-autopilot-runtime.yml").read_text()
           factory_service = Path("infrastructure/gsa-tv/systemd/gsa-tv-autopilot-content-factory.service").read_text()
           content_factory = Path("infrastructure/gsa-tv/scripts/autopilot-content-factory.py").read_text()
           broadcast_service = Path("infrastructure/gsa-tv/systemd/gsa-tv-autopilot-broadcast-controller.service").read_text()
@@ -151,6 +154,20 @@ jobs:
           assert "bin-files.state" in deploy
           assert "tools-files.state" in deploy
           assert "restore_runtime_files" in deploy
+          assert "DRY_RUN_OK=true" in snapshot
+          assert "SNAPSHOT_APPLIED=true" in snapshot
+          assert "SNAPSHOT_VERIFY_OK=true" in snapshot
+          assert "docker cp" in snapshot
+          assert '".backup ' in snapshot
+          assert "manifest.sha256" in snapshot
+          assert "docker stop" not in snapshot
+          assert "docker restart" not in snapshot
+          assert "docker rm" not in snapshot
+          assert "systemctl stop" not in snapshot
+          assert "systemctl restart" not in snapshot
+          assert "legacy-snapshot" in runtime_workflow
+          assert "SNAPSHOT-GUARD" in runtime_workflow
+          assert "snapshot-legacy-ffplayout.sh" in runtime_workflow
           assert "CUTOVER_DRY_RUN_OK=true" in cutover
           assert "GSA_TV_BROADCAST_AUTOMATION_ENABLED" in cutover
           assert "GSA_TV_AUTOPILOT_AUTO_APPROVE" in cutover
