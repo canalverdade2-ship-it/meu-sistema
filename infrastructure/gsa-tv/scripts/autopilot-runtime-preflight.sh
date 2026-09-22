@@ -69,13 +69,26 @@ fi
 desired_state="unknown"
 signal_state="unknown"
 if container_running gsa-tv-control-plane; then
-  dburl="$(docker inspect gsa-tv-control-plane --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null       | awk -F= '$1=="DATABASE_URL"{sub(/^[^=]*=/,"");print;exit}')"
-  if [ -n "${dburl:-}" ]; then
-    row="$(docker run --rm --network host postgres:15-alpine       psql "$dburl" -X -qAt -F '|'       -c "select coalesce(desired_state,'unknown'),coalesce(signal_state,'unknown') from public.gsa_tv_channels where id='$CHANNEL_ID'"       2>/dev/null || true)"
-    if [ -n "$row" ]; then
-      desired_state="${row%%|*}"
-      signal_state="${row#*|}"
-    fi
+  row="$(docker exec -e GSA_TV_PREFLIGHT_CHANNEL_ID="$CHANNEL_ID" gsa-tv-control-plane node -e '
+    const { Pool } = require("pg");
+    (async () => {
+      const p = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
+      try {
+        const r = await p.query(
+          "select coalesce(desired_state,$2) desired_state, coalesce(signal_state,$2) signal_state from public.gsa_tv_channels where id=$1 limit 1",
+          [process.env.GSA_TV_PREFLIGHT_CHANNEL_ID, "unknown"]
+        );
+        if (r.rowCount) process.stdout.write(String(r.rows[0].desired_state) + "|" + String(r.rows[0].signal_state));
+      } catch (_) {
+        process.exitCode = 2;
+      } finally {
+        await p.end().catch(() => {});
+      }
+    })();
+  ' 2>/dev/null || true)"
+  if [ -n "$row" ]; then
+    desired_state="${row%%|*}"
+    signal_state="${row#*|}"
   fi
 fi
 
