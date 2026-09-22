@@ -237,6 +237,16 @@ if [ "$production_selected" = true ]; then
   done
 fi
 
+# Close the timer->service race before enabling replacement policies.
+# A legacy service may have been queued between the initial precheck and
+# disabling its timer; fail closed rather than allow both automations.
+if [ "$broadcast_selected" = true ]; then
+  assert_no_active_legacy_services "${BROADCAST_LEGACY_SERVICES[@]}"
+fi
+if [ "$production_selected" = true ]; then
+  assert_no_active_legacy_services "${PRODUCTION_LEGACY_SERVICES[@]}"
+fi
+
 python3 - "$POLICY_FILE" "$broadcast_selected" "$production_selected" <<'PY'
 import os
 import pathlib
