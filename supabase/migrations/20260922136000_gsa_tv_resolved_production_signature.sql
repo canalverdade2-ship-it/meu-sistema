@@ -13,6 +13,14 @@ WITH version_info AS (
     FROM public.gsa_tv_schedule_versions
    WHERE id=p_version
 ),
+block_inputs AS (
+  SELECT
+    b.*,
+    nullif(to_jsonb(b)->>'live_source_id','')::uuid AS compat_live_source_id,
+    nullif(to_jsonb(b)->>'episode_id','')::uuid AS compat_episode_id,
+    nullif(to_jsonb(b)->>'campaign_id','')::uuid AS compat_campaign_id
+  FROM public.gsa_tv_program_blocks b
+),
 resolved AS (
   SELECT
     b.id,
@@ -22,9 +30,9 @@ resolved AS (
     b.planned_duration_s,
     b.is_reprise,
     b.metadata,
-    b.live_source_id,
-    b.episode_id,
-    b.campaign_id,
+    b.compat_live_source_id AS live_source_id,
+    b.compat_episode_id AS episode_id,
+    b.compat_campaign_id AS campaign_id,
     coalesce(dm.id,em.id,pm.id,cm.id) resolved_media_id,
     coalesce(ep.id,pm.resolved_episode_id) resolved_episode_id,
     coalesce(dm.state,em.state,pm.state,cm.state) media_state,
@@ -35,10 +43,10 @@ resolved AS (
     coalesce(dm.duration_s,em.duration_s,pm.duration_s,cm.duration_s) duration_s,
     coalesce(dm.updated_at,em.updated_at,pm.updated_at,cm.updated_at) media_updated_at
   FROM version_info v
-  JOIN public.gsa_tv_program_blocks b ON b.schedule_version_id=v.id
+  JOIN block_inputs b ON b.schedule_version_id=v.id
   LEFT JOIN public.gsa_tv_media_items dm
     ON dm.id=b.media_item_id AND dm.channel_id=v.channel_id
-  LEFT JOIN public.gsa_tv_episodes ep ON ep.id=b.episode_id
+  LEFT JOIN public.gsa_tv_episodes ep ON ep.id=b.compat_episode_id
   LEFT JOIN public.gsa_tv_media_items em
     ON em.id=ep.media_item_id AND em.channel_id=v.channel_id
   LEFT JOIN LATERAL (
@@ -47,7 +55,7 @@ resolved AS (
       JOIN public.gsa_tv_episodes e ON e.series_id=se.id
       JOIN public.gsa_tv_media_items m ON m.id=e.media_item_id
      WHERE b.media_item_id IS NULL
-       AND b.episode_id IS NULL
+       AND b.compat_episode_id IS NULL
        AND b.program_id IS NOT NULL
        AND se.program_id=b.program_id
        AND m.channel_id=v.channel_id
@@ -63,8 +71,8 @@ resolved AS (
       FROM public.gsa_tv_ad_assets aa
       JOIN public.gsa_tv_media_items m ON m.id=aa.media_item_id
       JOIN public.gsa_tv_ad_campaigns c ON c.id=aa.campaign_id
-     WHERE b.campaign_id IS NOT NULL
-       AND aa.campaign_id=b.campaign_id
+     WHERE b.compat_campaign_id IS NOT NULL
+       AND aa.campaign_id=b.compat_campaign_id
        AND c.status='active'
        AND ((v.broadcast_date + make_interval(secs=>b.planned_start_offset_s))
             AT TIME ZONE 'America/Sao_Paulo')
@@ -106,6 +114,6 @@ FROM resolved;
 $$;
 
 COMMENT ON FUNCTION public.gsa_tv_production_signature(uuid) IS
-  'Assina a grade versionada e a mídia efetivamente resolvida (direta, episódio/série ou campanha), incluindo direitos, aprovação, duração e metadata.';
+  'Assina a grade versionada e a mídia efetivamente resolvida (direta, episódio/série ou campanha), incluindo direitos, aprovação, duração e metadata; tolera blocos legados sem colunas opcionais live_source_id/episode_id/campaign_id.';
 
 COMMIT;
