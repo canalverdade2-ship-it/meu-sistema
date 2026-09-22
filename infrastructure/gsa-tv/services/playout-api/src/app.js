@@ -4269,11 +4269,12 @@ async function readAutopilotStateFile(filename) {
 }
 
 async function autopilotSnapshot() {
-  const [readinessFile, factoryFile, durationFile, fallbackFile] = await Promise.all([
+  const [readinessFile, factoryFile, durationFile, fallbackFile, broadcastFile] = await Promise.all([
     readAutopilotStateFile("readiness-horizon.json"),
     readAutopilotStateFile("content-factory.json"),
     readAutopilotStateFile("duration-engine.json"),
     readAutopilotStateFile("fallback-engine.json"),
+    readAutopilotStateFile("broadcast-controller.json"),
   ]);
   const readiness = readinessFile.data || {};
   const today = localClock(new Date()).date;
@@ -4328,6 +4329,20 @@ async function autopilotSnapshot() {
       activate_at: fallbackFile.data?.activate_at || null,
       finished_at: fallbackFile.data?.finished_at || null,
     },
+    broadcast_controller: {
+      present: broadcastFile.present,
+      age_seconds: broadcastFile.age_seconds,
+      enabled: broadcastFile.data?.enabled ?? false,
+      state: broadcastFile.data?.state || null,
+      reason: broadcastFile.data?.reason || null,
+      window: broadcastFile.data?.window || null,
+      action: broadcastFile.data?.action || null,
+      desired_state: broadcastFile.data?.desired_state || null,
+      signal_state: broadcastFile.data?.signal_state || null,
+      playout_state: broadcastFile.data?.playout_state || null,
+      checked_at: broadcastFile.data?.checked_at || null,
+      finished_at: broadcastFile.data?.finished_at || null,
+    },
     healthy:
       readinessFresh &&
       (!nextDay || nextDay.state === "ready") &&
@@ -4337,7 +4352,8 @@ async function autopilotSnapshot() {
       String(durationFile.data?.state || "") !== "failed" &&
       !["failed", "fallback_incomplete"].includes(
         String(fallbackFile.data?.state || ""),
-      ),
+      ) &&
+      String(broadcastFile.data?.state || "") !== "failed",
   };
 }
 
