@@ -82,6 +82,14 @@ def load_readiness():
     return json.loads(READINESS_FILE.read_text())
 
 
+def load_previous_state():
+    try:
+        value = json.loads(STATE_FILE.read_text())
+        return value if isinstance(value, dict) else {}
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
 def parse_clock(value):
     parts = [int(x) for x in str(value or "06:00:00").split(":")]
     while len(parts) < 3:
@@ -333,6 +341,7 @@ def main():
         })
         return 0
 
+    previous_state = load_previous_state()
     window = activation_window(args.fallback_hours)
     state = {
         "state": "checking",
@@ -364,6 +373,21 @@ def main():
         if x.get("block_id") and x.get("issue") in ACTIONABLE
     ]
     if not issues:
+        retry_compile = (
+            previous_state.get("state") == "fallback_compile_failed"
+            and previous_state.get("broadcast_date") == window["tomorrow"].isoformat()
+            and day.get("state") == "ready"
+        )
+        if retry_compile:
+            compile_result = compile_if_ready(window["tomorrow"].isoformat())
+            state["compile"] = compile_result
+            state["state"], exit_code = fallback_outcome(day, compile_result, 0)
+            state["reason"] = "retry_compile_after_previous_failure"
+            state["assigned"] = 0
+            state["finished_at"] = now().isoformat()
+            atomic_write(state)
+            return exit_code
+
         state.update(state="idle", reason="d1_no_actionable_media_issues", assigned=0)
         atomic_write(state)
         return 0
