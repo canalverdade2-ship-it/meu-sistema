@@ -96,6 +96,14 @@ def load_readiness():
     return json.loads(READINESS_FILE.read_text())
 
 
+def load_previous_state():
+    try:
+        value = json.loads(STATE_FILE.read_text())
+        return value if isinstance(value, dict) else {}
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
 def select_shortfall(report, horizon_days):
     today = now().date()
     candidates = []
@@ -297,6 +305,12 @@ def compile_if_ready(date):
     }
 
 
+def duration_outcome(base_state, compile_result):
+    if compile_result and compile_result.get("returncode") == 0:
+        return base_state, 0
+    return "compile_failed", 2
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--horizon-days", type=int, default=3)
@@ -319,10 +333,27 @@ def main():
         })
         return 0
 
+    previous_state = load_previous_state()
     refresh_readiness(max(4, args.horizon_days + 1))
     report = load_readiness()
     target = select_shortfall(report, args.horizon_days)
     if not target:
+        previous_target = previous_state.get("target") or {}
+        previous_date = previous_target.get("date")
+        retry_compile = previous_state.get("state") == "compile_failed" and bool(previous_date)
+        if retry_compile:
+            compile_result = compile_if_ready(previous_date)
+            next_state, exit_code = duration_outcome("compile_retry_completed", compile_result)
+            atomic_write({
+                "state": next_state,
+                "reason": "retry_compile_after_previous_failure",
+                "target": previous_target,
+                "compile": compile_result,
+                "checked_at": now().isoformat(),
+                "finished_at": now().isoformat(),
+            })
+            return exit_code
+
         atomic_write({
             "state": "idle",
             "reason": "no_duration_shortfall",
@@ -378,9 +409,10 @@ def main():
     except Exception as exc:
         state["compile"] = {"returncode": None, "deferred": True, "error": str(exc)[:800]}
 
+    state["state"], exit_code = duration_outcome(state["state"], state["compile"])
     state["finished_at"] = now().isoformat()
     atomic_write(state)
-    return 0
+    return exit_code
 
 
 if __name__ == "__main__":
