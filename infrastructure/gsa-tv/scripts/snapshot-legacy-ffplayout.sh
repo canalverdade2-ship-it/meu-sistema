@@ -119,12 +119,13 @@ state_host="$(docker inspect "$CONTAINER" --format '{{range .Mounts}}{{if eq .De
   echo "BLOCKED: ffplayout /state bind mount is unavailable." >&2
   exit 80
 }
-container_tmp="/state/.gsa-tv-legacy-snapshot-${stamp}.db"
-host_tmp="$state_host/.gsa-tv-legacy-snapshot-${stamp}.db"
+source_db="$state_host/ffplayout.db"
+[ -s "$source_db" ] || {
+  echo "BLOCKED: ffplayout source database is missing on the host bind." >&2
+  exit 81
+}
 
 cleanup() {
-  docker exec "$CONTAINER" rm -f "$container_tmp" >/dev/null 2>&1 || true
-  rm -f "$host_tmp" >/dev/null 2>&1 || true
   if [ -n "${tmp:-}" ] && [ -d "$tmp" ]; then rm -rf "$tmp"; fi
 }
 trap cleanup EXIT
@@ -153,18 +154,30 @@ for name in "${paths[@]}"; do
   fi
 done
 
-# Replace any live-copied SQLite file with a transactionally consistent SQLite backup.
-# Materialize beside the live DB on the already-writable /state bind mount, then
-# remove the temporary file after copying it into the immutable snapshot.
-docker exec -u 0 "$CONTAINER" sqlite3 /state/ffplayout.db ".backup '$container_tmp'"
-[ -s "$host_tmp" ] || {
-  echo "BLOCKED: SQLite backup was not materialized on the /state bind mount." >&2
-  exit 81
-}
-docker exec -u 0 "$CONTAINER" sqlite3 -readonly "$container_tmp" "pragma integrity_check;" | grep -qx ok
+# Replace the live-copied SQLite file with a transactionally consistent backup.
+# The SQLite backup API runs on the host against the bind-mounted live DB, so the
+# running ffplayout container is never asked to create or modify any file.
 rm -f "$tmp/container/state/ffplayout.db"
-cp -a "$host_tmp" "$tmp/container/state/ffplayout.db"
-[ -s "$tmp/container/state/ffplayout.db" ]
+python3 - "$source_db" "$tmp/container/state/ffplayout.db" <<'PY'
+import sqlite3
+import sys
+
+source_path, destination_path = sys.argv[1], sys.argv[2]
+source = sqlite3.connect(f"file:{source_path}?mode=ro", uri=True, timeout=30)
+destination = sqlite3.connect(destination_path, timeout=30)
+try:
+    source.backup(destination)
+    result = destination.execute("pragma integrity_check").fetchone()
+    if not result or result[0] != "ok":
+        raise SystemExit(f"SQLite integrity_check failed: {result!r}")
+finally:
+    destination.close()
+    source.close()
+PY
+[ -s "$tmp/container/state/ffplayout.db" ] || {
+  echo "BLOCKED: host SQLite backup was not materialized." >&2
+  exit 82
+}
 
 {
   echo "destination_inventory_begin"
@@ -186,8 +199,6 @@ chmod -R o-rwx "$tmp"
 mv "$tmp" "$out"
 tmp=""
 trap - EXIT
-docker exec "$CONTAINER" rm -f "$container_tmp" >/dev/null 2>&1 || true
-rm -f "$host_tmp" >/dev/null 2>&1 || true
 
 verify_dir "$out"
 echo "SNAPSHOT_APPLIED=true"
