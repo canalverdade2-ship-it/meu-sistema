@@ -473,7 +473,7 @@ SQL
     echo "MEDIA_BASENAME_RECONCILIATION_BEGIN"
     psql "$database_url" -X -qAt -F '|' -v ON_ERROR_STOP=1 -c "select id,drive_path from public.gsa_tv_media_items where drive_path like '/media/1/%' order by id" 2>/dev/null \
       | python3 -c '
-import os,sys
+import os,re,sys
 roots=[
 "/opt/gsa-tv/backups/production-editions",
 "/home/opc/gsa-ai",
@@ -491,7 +491,13 @@ for root in roots:
         for name in files:
             if os.path.splitext(name)[1].lower() not in exts:
                 continue
-            index.setdefault(name,[]).append(os.path.join(base,name))
+            path=os.path.join(base,name)
+            keys=[name]
+            m=re.match(r"^[0-9a-f]{16}-(.+)$",name,re.I)
+            if m:
+                keys.append(m.group(1))
+            for key in keys:
+                index.setdefault(key,[]).append(path)
 rows=[]
 for line in sys.stdin:
     line=line.rstrip("\n")
