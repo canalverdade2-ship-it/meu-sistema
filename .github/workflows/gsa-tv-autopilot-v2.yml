@@ -38,9 +38,17 @@ jobs:
           python infrastructure/gsa-tv/scripts/test_autopilot_content_factory.py
           python infrastructure/gsa-tv/scripts/test_autopilot_duration_engine.py
 
-      - name: Autonomous Node pipeline syntax
+      - name: Runtime JavaScript syntax
         run: |
           node --check infrastructure/gsa-tv/scripts/autonomous-script.cjs
+          node --check infrastructure/gsa-tv/services/playout-api/src/app.js
+          node --check infrastructure/gsa-tv/services/encoder-engine/src/app.js
+          node --check infrastructure/gsa-tv/services/encoder-engine/encoder-client.js
+
+      - name: Runtime shell syntax
+        run: |
+          bash -n infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh
+          bash -n infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh
 
       - name: Active GSA TV secret guard
         shell: python
