@@ -308,7 +308,7 @@ def main():
                     task_json={'output':f"/media/1/production/autonomous/{date}/{name}-{block['id']}.json",'mode':'generic_program','targetWords':target_words,'targetSeconds':budget,'date':date,'program':block['name']}
                     remaining=(deadline-now()).total_seconds()
                     if remaining<=0: raise TimeoutError('Janela de produção encerrada')
-                    child=subprocess.Popen(['docker','exec','-i','gsa-tv-control-plane','node','/media/1/production/autonomous/tools/autonomous-script.cjs'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,start_new_session=True)
+                    child=subprocess.Popen(['docker','exec','-i','-e',f"GSA_TV_AUTOPILOT_AUTO_APPROVE={os.environ.get('GSA_TV_AUTOPILOT_AUTO_APPROVE','false')}",'gsa-tv-control-plane','node','/media/1/production/autonomous/tools/autonomous-script.cjs'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,start_new_session=True)
                     try:
                         stdout_data,_=child.communicate(input=json.dumps(task_json),timeout=remaining)
                     except BaseException:
