@@ -13,6 +13,7 @@ on:
       - "infrastructure/gsa-tv/scripts/reconcile-stale-offair-state.sh"
       - "infrastructure/gsa-tv/scripts/recover-local-media-cache.sh"
       - "infrastructure/gsa-tv/scripts/autopilot-migration-status.sh"
+      - "infrastructure/gsa-tv/scripts/apply-autopilot-migration.sh"
       - "infrastructure/gsa-tv/scripts/backup-full.sh"
       - "supabase/migrations/20260922131000_gsa_tv_autopilot_compile_gate.sql"
       - "supabase/migrations/20260922132000_gsa_tv_autopilot_duration_swap.sql"
@@ -80,15 +81,8 @@ jobs:
       RUNTIME_CUTOVER_CONFIRM_POLICY: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_cutover_policy || '' }}
       RUNTIME_SNAPSHOT_CONFIRM_POLICY: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_legacy_snapshot_policy || '' }}
       RUNTIME_PREPARE_CONFIRM_POLICY: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_prepare_policy || '' }}
-      EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Supabase CLI for first-migration preparation
-        if: ${{ env.RUNTIME_OPERATION == 'prepare-first-migration' }}
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
 
       - name: Guard operation contract
         id: guard
@@ -96,9 +90,6 @@ jobs:
         env:
           VPS_SSH_KEY_PRESENT: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
           VPS_KNOWN_HOSTS_PRESENT: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
-          SUPABASE_ACCESS_TOKEN_PRESENT: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD_PRESENT: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_PROJECT_ID_PRESENT: ${{ secrets.SUPABASE_PROJECT_ID }}
         run: |
           set -euo pipefail
           test "${RUNTIME_CONFIRM_POLICY}" = "OFFAIR-GUARD" || {
@@ -151,18 +142,7 @@ jobs:
               echo "Preparação permitida somente na branch de rollout ou main." >&2
               exit 65
             fi
-            prep_missing=()
-            [ -n "${SUPABASE_ACCESS_TOKEN_PRESENT:-}" ] || prep_missing+=("SUPABASE_ACCESS_TOKEN")
-            [ -n "${SUPABASE_DB_PASSWORD_PRESENT:-}" ] || prep_missing+=("SUPABASE_DB_PASSWORD")
-            [ -n "${SUPABASE_PROJECT_ID_PRESENT:-}" ] || prep_missing+=("SUPABASE_PROJECT_ID")
-            if [ "${#prep_missing[@]}" -gt 0 ]; then
-              printf 'Secret Supabase obrigatório ausente: %s\n' "${prep_missing[@]}" >&2
-              exit 78
-            fi
-            if [ "${SUPABASE_PROJECT_ID_PRESENT}" != "${EXPECTED_PROJECT_ID}" ]; then
-              echo "Project ref Supabase não corresponde ao projeto autorizado." >&2
-              exit 79
-            fi
+            echo "PREPARE_DB_TARGET=self_hosted_vps"
           fi
 
           if [ "${RUNTIME_OPERATION}" = "cutover" ] && [ "${RUNTIME_CUTOVER_CONFIRM_POLICY}" != "CUTOVER-GUARD" ]; then
@@ -262,33 +242,19 @@ jobs:
             exit 80
           fi
 
-      - name: Link authorized Supabase project
+      - name: Validate self-hosted production database
         if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
         shell: bash
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
         run: |
           set -euo pipefail
-          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
-          supabase link --project-ref "$SUPABASE_PROJECT_ID"
-
-      - name: Validate linked Supabase DB authentication
-        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
-        shell: bash
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
-        run: |
-          set -euo pipefail
-          test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
-          # Use the same direct PostgreSQL connection path as migration repair.
-          # This is read-only; a missing migration-history table is reported as
-          # an empty remote history by the CLI.
-          supabase migration list --linked --password "$SUPABASE_DB_PASSWORD" >/dev/null
-          echo "SUPABASE_DB_AUTH_OK=true"
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'sudo bash -s' \
+            < infrastructure/gsa-tv/scripts/autopilot-migration-status.sh \
+            | tee "$RUNNER_TEMP/gsa-tv-self-hosted-db.txt"
+          grep -Eq '^MIGRATION_STATE=(pending|ready)$' "$RUNNER_TEMP/gsa-tv-self-hosted-db.txt"
+          echo "SELF_HOSTED_DB_ACCESS_OK=true"
 
       - name: Prepare legacy ffplayout snapshot dry-run
         if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
@@ -317,12 +283,41 @@ jobs:
           grep -qx 'SNAPSHOT_APPLIED=true' "$RUNNER_TEMP/gsa-tv-prepare-snapshot-apply.txt"
           grep -qx 'SNAPSHOT_VERIFY_OK=true' "$RUNNER_TEMP/gsa-tv-prepare-snapshot-apply.txt"
 
-      - name: Apply only five canonical Autopilot migrations
+      - name: Stage canonical self-hosted migration bundle
         if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
         shell: bash
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          local_dir="$RUNNER_TEMP/gsa-tv-first-migration"
+          remote_dir="/tmp/gsa-tv-first-migration-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          mkdir -p "$local_dir"
+          cp infrastructure/gsa-tv/scripts/apply-autopilot-migration.sh "$local_dir/"
+          cp supabase/migrations/20260922131000_gsa_tv_autopilot_compile_gate.sql "$local_dir/"
+          cp supabase/migrations/20260922132000_gsa_tv_autopilot_duration_swap.sql "$local_dir/"
+          cp supabase/migrations/20260922134000_gsa_tv_autopilot_continuity_fallback.sql "$local_dir/"
+          cp supabase/migrations/20260922135000_gsa_tv_cinema_duration_contract.sql "$local_dir/"
+          cp supabase/migrations/20260922136000_gsa_tv_resolved_production_signature.sql "$local_dir/"
+          (cd "$local_dir" && sha256sum * > manifest.sha256)
+
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "set -e; rm -rf '$remote_dir'; install -d -m 0700 '$remote_dir'"
+
+          scp -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$local_dir/"* "$VPS_USER@$VPS_HOST:$remote_dir/"
+
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "set -e; cd '$remote_dir'; sha256sum -c manifest.sha256; chmod 0700 apply-autopilot-migration.sh"
+
+          echo "SELF_HOSTED_MIGRATION_REMOTE_DIR=$remote_dir" >> "$GITHUB_ENV"
+
+      - name: Apply only five canonical Autopilot migrations on self-hosted PostgreSQL
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
+        shell: bash
         run: |
           set -euo pipefail
 
@@ -335,16 +330,15 @@ jobs:
           }
 
           migrations=(
-            "20260922131000:supabase/migrations/20260922131000_gsa_tv_autopilot_compile_gate.sql"
-            "20260922132000:supabase/migrations/20260922132000_gsa_tv_autopilot_duration_swap.sql"
-            "20260922134000:supabase/migrations/20260922134000_gsa_tv_autopilot_continuity_fallback.sql"
-            "20260922135000:supabase/migrations/20260922135000_gsa_tv_cinema_duration_contract.sql"
-            "20260922136000:supabase/migrations/20260922136000_gsa_tv_resolved_production_signature.sql"
+            "20260922131000:gsa_tv_autopilot_compile_gate:20260922131000_gsa_tv_autopilot_compile_gate.sql"
+            "20260922132000:gsa_tv_autopilot_duration_swap:20260922132000_gsa_tv_autopilot_duration_swap.sql"
+            "20260922134000:gsa_tv_autopilot_continuity_fallback:20260922134000_gsa_tv_autopilot_continuity_fallback.sql"
+            "20260922135000:gsa_tv_cinema_duration_contract:20260922135000_gsa_tv_cinema_duration_contract.sql"
+            "20260922136000:gsa_tv_resolved_production_signature:20260922136000_gsa_tv_resolved_production_signature.sql"
           )
 
           for item in "${migrations[@]}"; do
-            version="${item%%:*}"
-            file="${item#*:}"
+            IFS=: read -r version name filename <<<"$item"
             status="$(remote_status)"
             line="$(printf '%s\n' "$status" | grep "^MIGRATION_STATUS=$version|" || true)"
             [ -n "$line" ] || { echo "Sem status para $version." >&2; exit 81; }
@@ -360,14 +354,22 @@ jobs:
               exit 82
             fi
 
-            if [ "$contract" != t ]; then
-              echo "MIGRATION_APPLY=$version"
-              supabase db query --linked --file "$file"
-            else
+            if [ "$contract" = t ]; then
+              mode="repair-history"
               echo "MIGRATION_REPAIR_HISTORY_ONLY=$version"
+            else
+              mode="apply"
+              echo "MIGRATION_APPLY=$version"
             fi
 
-            supabase migration repair --linked --password "$SUPABASE_DB_PASSWORD" --status applied "$version"
+            ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+              -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+              "$VPS_USER@$VPS_HOST" \
+              sudo bash "$SELF_HOSTED_MIGRATION_REMOTE_DIR/apply-autopilot-migration.sh" \
+                --version "$version" \
+                --name "$name" \
+                --mode "$mode" \
+                --file "$SELF_HOSTED_MIGRATION_REMOTE_DIR/$filename"
 
             verified="$(remote_status | grep "^MIGRATION_STATUS=$version|" || true)"
             grep -q '|history=t|contract=t$' <<<"$verified" || {
@@ -378,6 +380,17 @@ jobs:
 
           remote_status | tee "$RUNNER_TEMP/gsa-tv-migration-after.txt"
           grep -qx 'MIGRATION_STATE=ready' "$RUNNER_TEMP/gsa-tv-migration-after.txt"
+
+      - name: Remove self-hosted migration staging
+        if: ${{ always() && steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          remote_dir="/tmp/gsa-tv-first-migration-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "rm -rf '$remote_dir'"
 
       - name: Reconcile stale logical off-air state dry-run
         if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
