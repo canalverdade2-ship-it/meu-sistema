@@ -66,13 +66,28 @@ def parse_clock(value, default):
     return dt.time(hour, minute, second)
 
 
-def phase(moment, start=dt.time(6, 0), stop=dt.time(23, 59), prepare_minutes=10):
+def phase(
+    moment,
+    start=dt.time(6, 0),
+    stop=dt.time(23, 59),
+    prepare_minutes=10,
+    prepare_start=None,
+):
     seconds = moment.hour * 3600 + moment.minute * 60 + moment.second
     start_s = start.hour * 3600 + start.minute * 60 + start.second
     stop_s = stop.hour * 3600 + stop.minute * 60 + stop.second
     if start_s >= stop_s:
         raise ValueError("A política atual exige janela on-air no mesmo dia")
-    prepare_s = max(0, start_s - max(1, int(prepare_minutes)) * 60)
+    if prepare_start is not None:
+        prepare_s = (
+            prepare_start.hour * 3600 +
+            prepare_start.minute * 60 +
+            prepare_start.second
+        )
+        if prepare_s > start_s:
+            raise ValueError("preflight_start não pode ser posterior a on_air_start")
+    else:
+        prepare_s = max(0, start_s - max(1, int(prepare_minutes)) * 60)
     if prepare_s <= seconds < start_s:
         return "prepare"
     if start_s <= seconds < stop_s:
@@ -124,6 +139,11 @@ def policy(state):
         "revision": schedule.get("revision"),
         "start": parse_clock(schedule.get("on_air_start"), "06:00:00"),
         "stop": parse_clock(schedule.get("stream_stop"), "23:59:00"),
+        "prepare_start": (
+            parse_clock(schedule.get("preflight_start"), "05:59:00")
+            if schedule.get("preflight_start")
+            else None
+        ),
         "prepare_minutes": int(os.environ.get("GSA_TV_BROADCAST_PREPARE_MINUTES", "10")),
     }
 
@@ -233,7 +253,13 @@ def run():
         return 2
 
     p = policy(current)
-    window = phase(moment, p["start"], p["stop"], p["prepare_minutes"])
+    window = phase(
+        moment,
+        p["start"],
+        p["stop"],
+        p["prepare_minutes"],
+        p["prepare_start"],
+    )
     action = decide(window, current)
     base.update(
         state="checking",
@@ -241,6 +267,7 @@ def run():
         action=action,
         policy_revision=p["revision"],
         on_air_start=p["start"].isoformat(),
+        preflight_start=p["prepare_start"].isoformat() if p["prepare_start"] else None,
         stream_stop=p["stop"].isoformat(),
         desired_state=current.get("desired_state"),
         signal_state=current.get("signal_state"),
@@ -283,8 +310,27 @@ def run():
 
     try:
         if action == "start":
-            # Compile/readiness is the final gate immediately before going on air.
-            production.compile_ready(moment.date().isoformat())
+            previous = read_previous()
+            prepared_at = None
+            try:
+                if previous.get("prepared_date") == moment.date().isoformat():
+                    prepared_at = dt.datetime.fromisoformat(
+                        str(previous.get("checked_at") or "").replace("Z", "+00:00")
+                    )
+            except (TypeError, ValueError):
+                prepared_at = None
+            prepared_fresh = bool(
+                previous.get("state") == "prepared"
+                and prepared_at
+                and 0 <= (
+                    moment.astimezone(dt.timezone.utc) -
+                    prepared_at.astimezone(dt.timezone.utc)
+                ).total_seconds() <= 300
+            )
+            # If 05:59 preflight is fresh, stream_start performs the final
+            # fail-closed compile against the current published schedule.
+            if not prepared_fresh:
+                production.compile_ready(moment.date().isoformat())
             job_type = "stream_start"
         elif action == "stop":
             job_type = "stream_stop"
