@@ -151,10 +151,6 @@ if [ "$SCOPE" = "all" ] || [ "$SCOPE" = "production" ]; then production_selected
 }
 
 if [ "$broadcast_selected" = true ]; then
-  truthy "$(read_policy GSA_TV_BROADCAST_AUTOMATION_ENABLED)" || {
-    echo "Falha de pós-condição: broadcast policy não foi ativada." >&2
-    exit 80
-  }
   assert_timer_active gsa-tv-autopilot-broadcast-controller.timer
   assert_no_active_legacy_services "${BROADCAST_LEGACY_SERVICES[@]}"
 fi
@@ -283,6 +279,10 @@ PY
 systemctl daemon-reload
 
 if [ "$broadcast_selected" = true ]; then
+  truthy "$(read_policy GSA_TV_BROADCAST_AUTOMATION_ENABLED)" || {
+    echo "Falha de pós-condição: broadcast policy não foi ativada." >&2
+    exit 80
+  }
   assert_timer_active gsa-tv-autopilot-broadcast-controller.timer
   for unit in "${BROADCAST_LEGACY_TIMERS[@]}"; do
     if timer_exists "$unit" && timer_enabled "$unit"; then
