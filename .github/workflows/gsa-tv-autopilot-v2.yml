@@ -154,6 +154,8 @@ jobs:
           assert "systemctl disable --now" in cutover
           assert "systemctl enable --now" in cutover
           assert "systemctl stop" not in cutover
+          assert cutover.rfind('assert_no_active_legacy_services "${BROADCAST_LEGACY_SERVICES[@]}"') > cutover.find("systemctl disable --now")
+          assert cutover.rfind('assert_no_active_legacy_services "${PRODUCTION_LEGACY_SERVICES[@]}"') > cutover.find("systemctl disable --now")
           assert "GSA_TV_AUTOPILOT_AUTO_APPROVE=false" in deploy
           assert "EnvironmentFile=-/opt/gsa-tv/autopilot/autopilot.env" in factory_service
           assert "SuccessExitStatus=2" in factory_service
