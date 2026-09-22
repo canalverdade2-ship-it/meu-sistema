@@ -68,6 +68,7 @@ fi
 
 desired_state="unknown"
 signal_state="unknown"
+playout_state="unknown"
 if container_running gsa-tv-control-plane; then
   row="$(docker exec -e GSA_TV_PREFLIGHT_CHANNEL_ID="$CHANNEL_ID" gsa-tv-control-plane node -e '
     const { Pool } = require("pg");
@@ -75,10 +76,14 @@ if container_running gsa-tv-control-plane; then
       const p = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
       try {
         const r = await p.query(
-          "select coalesce(desired_state,$2) desired_state, coalesce(signal_state,$2) signal_state from public.gsa_tv_channels where id=$1 limit 1",
+          "select coalesce(desired_state,$2) desired_state, coalesce(signal_state,$2) signal_state, coalesce(playout_state,$2) playout_state from public.gsa_tv_channels where id=$1 limit 1",
           [process.env.GSA_TV_PREFLIGHT_CHANNEL_ID, "unknown"]
         );
-        if (r.rowCount) process.stdout.write(String(r.rows[0].desired_state) + "|" + String(r.rows[0].signal_state));
+        if (r.rowCount) process.stdout.write(
+          String(r.rows[0].desired_state) + "|" +
+          String(r.rows[0].signal_state) + "|" +
+          String(r.rows[0].playout_state)
+        );
       } catch (_) {
         process.exitCode = 2;
       } finally {
@@ -87,9 +92,18 @@ if container_running gsa-tv-control-plane; then
     })();
   ' 2>/dev/null || true)"
   if [ -n "$row" ]; then
-    desired_state="${row%%|*}"
-    signal_state="${row#*|}"
+    IFS='|' read -r desired_state signal_state playout_state <<<"$row"
+    desired_state="${desired_state:-unknown}"
+    signal_state="${signal_state:-unknown}"
+    playout_state="${playout_state:-unknown}"
   fi
+fi
+
+first_migration_offair_ready=false
+if [ "$desired_state" = "stopped" ] &&
+   [ "$signal_state" = "stopped" ] &&
+   [ "$playout_state" = "off_air" ]; then
+  first_migration_offair_ready=true
 fi
 
 required_paths=(
@@ -136,6 +150,8 @@ echo "CONTROL_PLANE_RTMP_FFMPEG_COUNT=$cp_rtmp_ffmpeg"
 echo "ENCODER_FFMPEG_COUNT=$enc_ffmpeg"
 echo "DESIRED_STATE=$desired_state"
 echo "SIGNAL_STATE=$signal_state"
+echo "PLAYOUT_STATE=$playout_state"
+echo "FIRST_MIGRATION_OFFAIR_READY=$first_migration_offair_ready"
 echo "ENV_FILE_PRESENT=$env_present"
 echo "DATABASE_CONFIGURED=$db_configured"
 echo "ENCODER_TOKEN_CONFIGURED=$encoder_token_configured"
