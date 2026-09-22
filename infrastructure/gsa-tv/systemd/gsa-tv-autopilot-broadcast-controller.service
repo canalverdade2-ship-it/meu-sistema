@@ -1,0 +1,16 @@
+[Unit]
+Description=GSA TV Autopilot V2 - scheduled broadcast controller
+After=docker.service network-online.target
+Wants=docker.service network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/gsa-tv
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=GSA_TV_ROOT=/opt/gsa-tv
+Environment=GSA_TV_BROADCAST_AUTOMATION_ENABLED=false
+EnvironmentFile=-/opt/gsa-tv/autopilot/autopilot.env
+ExecStart=/usr/bin/python3 /opt/gsa-tv/bin/autopilot-broadcast-controller.py
+SuccessExitStatus=2
+TimeoutStartSec=240
+Nice=5
