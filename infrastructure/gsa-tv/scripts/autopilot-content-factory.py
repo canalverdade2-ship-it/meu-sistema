@@ -169,6 +169,36 @@ def terminate_group(child):
             pass
 
 
+def run_duration_engine(horizon_days, cycle_minutes):
+    command = [
+        sys.executable,
+        str(BIN / "autopilot-duration-engine.py"),
+        "--horizon-days",
+        str(horizon_days),
+        "--timeout-minutes",
+        str(cycle_minutes),
+    ]
+    result = subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        timeout=cycle_minutes * 60 + 120,
+    )
+    duration_state = STATE_DIR / "duration-engine.json"
+    payload = None
+    if duration_state.is_file():
+        try:
+            payload = json.loads(duration_state.read_text())
+        except Exception:
+            payload = None
+    return {
+        "returncode": result.returncode,
+        "stdout_tail": (result.stdout or "")[-1200:],
+        "stderr_tail": (result.stderr or "")[-1200:],
+        "duration_engine": payload,
+    }
+
+
 def run_production(target, cycle_minutes):
     log_path = STATE_DIR / f"content-factory-{target['date']}.log"
     command = [
@@ -251,10 +281,33 @@ def main():
 
     if not target:
         shortfalls = sum(x.get("shortfalls", 0) for x in blockers)
+        if shortfalls:
+            state.update(
+                state="repairing_duration",
+                reason="no_missing_media_blocks",
+                shortfall_blocks=shortfalls,
+                started_at=now().isoformat(),
+            )
+            atomic_write(FACTORY_FILE, state)
+            try:
+                duration = run_duration_engine(args.horizon_days, args.cycle_minutes)
+                state["duration_cycle"] = duration
+                state["state"] = (
+                    "duration_cycle_completed"
+                    if duration["returncode"] == 0
+                    else "duration_cycle_failed"
+                )
+            except subprocess.TimeoutExpired:
+                state["state"] = "duration_cycle_timeout"
+                state["duration_cycle"] = {"returncode": 124}
+            state["finished_at"] = now().isoformat()
+            atomic_write(FACTORY_FILE, state)
+            return 0
+
         state.update(
-            state="idle" if not shortfalls else "waiting_duration_engine",
+            state="idle",
             reason="no_missing_media_blocks",
-            shortfall_blocks=shortfalls,
+            shortfall_blocks=0,
             finished_at=now().isoformat(),
         )
         atomic_write(FACTORY_FILE, state)
