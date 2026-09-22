@@ -184,6 +184,8 @@ jobs:
           assert "PHYSICAL_OFF_AIR_EVIDENCE=true" in runtime_workflow
           assert "HOST_SQLITE_BACKUP_PROBE=ok" in runtime_workflow
           assert "supabase db query --linked --file" in runtime_workflow
+          assert 'supabase db query --linked "select 1 as auth_ok"' in runtime_workflow
+          assert "SUPABASE_DB_AUTH_OK=true" in runtime_workflow
           assert "supabase migration repair --status applied" in runtime_workflow
           assert "reconcile-stale-offair-state.sh" in runtime_workflow
           assert "recover-local-media-cache.sh" in runtime_workflow
@@ -193,6 +195,7 @@ jobs:
           assert "db reset --linked" not in runtime_workflow
           assert "deploy-autopilot-v2.sh" not in prep_section
           assert "cutover-autopilot-v2.sh" not in prep_section
+          assert prep_section.index("Validate linked Supabase DB authentication") < prep_section.index("Prepare legacy ffplayout snapshot apply")
           assert prep_section.index("Prepare legacy ffplayout snapshot apply") < prep_section.index("Apply only five canonical Autopilot migrations")
           assert prep_section.index("Apply only five canonical Autopilot migrations") < prep_section.index("Reconcile stale logical off-air state apply")
           assert prep_section.index("Reconcile stale logical off-air state apply") < prep_section.index("Full verified backup for first migration")
