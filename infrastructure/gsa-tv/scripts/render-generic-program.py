@@ -42,6 +42,25 @@ def validate_inputs(script, manifest, target):
     if not math.isfinite(target) or not 60 <= target <= 7200:
         raise ValueError('Invalid slot duration')
 
+def compute_timing(audio_duration, slot_seconds, bumper_duration):
+    values = (audio_duration, slot_seconds, bumper_duration)
+    if not all(math.isfinite(float(x)) for x in values):
+        raise ValueError('Non-finite duration')
+    body_seconds = float(slot_seconds) - (2 * float(bumper_duration))
+    if body_seconds < 60:
+        raise ValueError(
+            f'Slot too short for opening/closing bumpers: slot={slot_seconds:.2f}s '
+            f'bumpers={2 * float(bumper_duration):.2f}s'
+        )
+    speed = float(audio_duration) / body_seconds
+    if not 0.90 <= speed <= 1.10:
+        raise ValueError(
+            f'Narration needs editorial adjustment: {float(audio_duration):.2f}s for '
+            f'{body_seconds:.2f}s body inside {float(slot_seconds):.2f}s slot; '
+            'no excessive stretching allowed'
+        )
+    return body_seconds, speed
+
 used_urls = set()
 
 def fetch_video(query, work_dir, index, timeout=30):
@@ -137,19 +156,7 @@ def main():
         raise FileNotFoundError(f'Broadcast bumper not found: {bumper_file}')
 
     bumper_duration = float(probe(bumper_file)['format']['duration'])
-    body_seconds = args.seconds - (2 * bumper_duration)
-    if body_seconds < 60:
-        raise ValueError(
-            f'Slot too short for opening/closing bumpers: slot={args.seconds:.2f}s '
-            f'bumpers={2 * bumper_duration:.2f}s'
-        )
-
-    speed = duration / body_seconds
-    if not math.isfinite(speed) or not 0.90 <= speed <= 1.10:
-        raise ValueError(
-            f'Narration needs editorial adjustment: {duration:.2f}s for '
-            f'{body_seconds:.2f}s body inside {args.seconds:.2f}s slot; no excessive stretching allowed'
-        )
+    body_seconds, speed = compute_timing(duration, args.seconds, bumper_duration)
 
     title = work / 'program.txt'
     
