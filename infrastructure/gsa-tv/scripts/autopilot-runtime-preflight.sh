@@ -281,7 +281,22 @@ if [ "${#missing_paths[@]}" -gt 0 ]; then
   fi
   if have systemctl; then
     echo "BACKUP_SERVICE_STATE=$(systemctl show gsa-tv-backup.service -p ActiveState -p SubState -p Result -p ExecMainStatus --value 2>/dev/null | paste -sd ',' - || true)"
+    echo "BACKUP_SERVICE_EXECSTART=$(systemctl show gsa-tv-backup.service -p ExecStart --value 2>/dev/null | sed -E 's/[[:space:]]+/ /g' | cut -c1-500 || true)"
+    echo "BACKUP_SERVICE_FRAGMENT=$(systemctl show gsa-tv-backup.service -p FragmentPath --value 2>/dev/null || true)"
+    echo "BACKUP_SERVICE_JOURNAL_BEGIN"
+    journalctl -u gsa-tv-backup.service -n 40 --no-pager -o short-iso 2>/dev/null | sed -E 's#(postgres(ql)?://)[^ @]+@#\\1***@#g' || true
+    echo "BACKUP_SERVICE_JOURNAL_END"
   fi
+  echo "BACKUP_PREREQ_PSQL=$(command -v psql 2>/dev/null || echo missing)"
+  echo "BACKUP_PREREQ_PG_DUMP=$(command -v pg_dump 2>/dev/null || echo missing)"
+  echo "BACKUP_PREREQ_OPENSSL=$(command -v openssl 2>/dev/null || echo missing)"
+  for p in /opt/gsa-tv/backup/gsa-tv-backup-full.sh /opt/gsa-tv/bin/backup-full.sh /home/opc/.gsa_tv_secret_key; do
+    if [ -e "$p" ]; then
+      stat -c 'BACKUP_PREREQ_PATH=%n TYPE=%F OWNER=%u:%g MODE=%a SIZE=%s' "$p" 2>/dev/null || true
+    else
+      echo "BACKUP_PREREQ_PATH=$p MISSING"
+    fi
+  done
   for p in /opt/gsa-tv/backups /opt/gsa-tv/backups/ffplayout /opt/gsa-tv/backups/full; do
     if [ -e "$p" ]; then
       stat -c 'BACKUP_PATH=%n TYPE=%F OWNER=%u:%g MODE=%a' "$p" 2>/dev/null || true
