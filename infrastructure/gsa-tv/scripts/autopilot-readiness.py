@@ -152,7 +152,9 @@ def inspect_day(day):
                         "block_id": row["id"],
                         "program": row.get("program_name"),
                         "issue": "content_shortfall",
+                        "planned_start_offset_s": row.get("planned_start_offset_s"),
                         "planned_duration_s": duration,
+                        "media_item_id": row.get("media_item_id"),
                         "media_duration_s": media_duration,
                         "shortfall_s": round(duration - media_duration, 3),
                     })
