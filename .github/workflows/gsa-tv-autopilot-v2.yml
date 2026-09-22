@@ -87,6 +87,7 @@ jobs:
           autonomous = Path("infrastructure/gsa-tv/scripts/autonomous-script.cjs").read_text()
           night_production = Path("infrastructure/gsa-tv/scripts/night-production.py").read_text()
           renderer = Path("infrastructure/gsa-tv/scripts/render-generic-program.py").read_text()
+          gemini = Path("infrastructure/gsa-tv/services/playout-api/src/gemini.js").read_text()
 
           required_control = [
               "ENCODER_ENGINE_URL",
@@ -103,9 +104,15 @@ jobs:
 
           assert "GSA_TV_AUTOPILOT_AUTO_APPROVE" in autonomous
           assert "approvalState = automatedApproval ? 'approved' : 'pending'" in autonomous
+          assert "visual_review_passed: visualPassed" in autonomous
+          assert "gemini.reviewImages" in autonomous
+          assert "source_bound_program" in autonomous
+          assert "reviewImages" in gemini
           assert "GSA_TV_AUTOPILOT_AUTO_APPROVE" in night_production
           assert "approval_state = 'approved' if automated_approval else 'pending'" in night_production
           assert "def compute_timing(" in renderer
+          assert "source_bound_program" in renderer
+          assert "visual_provenance = []" in renderer
           assert "autopilot-fallback-engine.py" in deploy
           assert "GSA_TV_AUTOPILOT_AUTO_APPROVE=false" in deploy
           assert "EnvironmentFile=-/opt/gsa-tv/autopilot/autopilot.env" in factory_service
