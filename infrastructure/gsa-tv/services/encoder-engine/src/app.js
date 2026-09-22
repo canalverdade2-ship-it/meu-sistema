@@ -18,6 +18,7 @@ if (TOKEN.length < 32) throw new Error("ENCODER_ENGINE_TOKEN forte é obrigatór
 if (!DATABASE_URL) throw new Error("DATABASE_URL é obrigatória.");
 
 const pool = new Pool({ connectionString: DATABASE_URL, max: 1, application_name: "gsa-tv-encoder-engine" });
+const STATE_KEY = crypto.createHash("sha256").update(`gsa-tv-encoder-state:${TOKEN}`).digest();
 let lockClient = null;
 let outer = null;
 let producer = null;
@@ -33,8 +34,16 @@ const intentionalStops = new WeakSet();
 let usingFallback = false;
 let desiredRetryTimer = null;
 
+function redact(value) {
+  return String(value || "")
+    .replace(/(rtmps?:\/\/[^\s]+\/)[^/?\s]+/gi, "$1[PROTECTED]")
+    .replace(/(stream[_-]?key=)[^&\s]+/gi, "$1[PROTECTED]");
+}
 function log(level, message, extra = {}) {
-  process.stdout.write(JSON.stringify({ time: new Date().toISOString(), level, message, ...extra }) + "\n");
+  const safe = JSON.parse(JSON.stringify(extra, (_key, value) =>
+    typeof value === "string" ? redact(value) : value
+  ));
+  process.stdout.write(JSON.stringify({ time: new Date().toISOString(), level, message, ...safe }) + "\n");
 }
 function hash(value) { return crypto.createHash("sha256").update(JSON.stringify(value)).digest("hex"); }
 function safeEqual(a, b) {
@@ -75,11 +84,11 @@ function spawnTracked(kind, args) {
   proc.stderr.on("data", (chunk) => { tail = (tail + String(chunk)).slice(-5000); });
   proc.once("exit", (code, signal) => {
     const intentional = intentionalStops.has(proc);
-    log(code === 0 || shuttingDown || intentional ? "info" : "error", `${kind}_exited`, { pid: proc.pid, code, signal, intentional, tail: tail.slice(-1200) });
+    log(code === 0 || shuttingDown || intentional ? "info" : "error", `${kind}_exited`, { pid: proc.pid, code, signal, intentional, tail: redact(tail.slice(-1200)) });
     if (kind === "outer" && outer === proc) {
       outer = null;
       if (!shuttingDown && desired === "running" && lastOuterArgs) {
-        lastError = `transport exited (${code ?? signal}); restarting`;
+        lastError = redact(`transport exited (${code ?? signal}); restarting`);
         setTimeout(() => {
           if (!shuttingDown && desired === "running" && !alive(outer) && lastOuterArgs) {
             outer = spawnTracked("outer", lastOuterArgs);
@@ -91,7 +100,7 @@ function spawnTracked(kind, args) {
     if (kind === "producer" && producer === proc) {
       producer = null;
       if (!intentional && !shuttingDown && desired === "running" && lastProducerArgs) {
-        lastError = `producer exited (${code ?? signal}); switching to fallback`;
+        lastError = redact(`producer exited (${code ?? signal}); switching to fallback`);
         setTimeout(() => void startFallback().catch((error) => { lastError = error.message; }), 500).unref();
       }
     }
@@ -133,20 +142,61 @@ async function retryDesiredProducer() {
   producer = spawnTracked("producer", lastProducerArgs);
   log("info", "desired_producer_retry", { pid: producer.pid });
 }
+function encryptState(payload) {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", STATE_KEY, iv);
+  const body = Buffer.concat([
+    cipher.update(JSON.stringify(payload), "utf8"),
+    cipher.final(),
+  ]);
+  const tag = cipher.getAuthTag();
+  return `v2.${iv.toString("base64url")}.${Buffer.concat([body, tag]).toString("base64url")}`;
+}
+function decryptState(raw) {
+  const text = String(raw || "").trim();
+  if (text.startsWith("{")) {
+    // One-time compatibility path for a pre-hardening local state file.
+    return JSON.parse(text);
+  }
+  const [version, ivPart, dataPart] = text.split(".");
+  if (version !== "v2" || !ivPart || !dataPart)
+    throw new Error("Estado persistido do encoder possui formato inválido.");
+  const packed = Buffer.from(dataPart, "base64url");
+  if (packed.length <= 16) throw new Error("Estado persistido do encoder está corrompido.");
+  const body = packed.subarray(0, packed.length - 16);
+  const tag = packed.subarray(packed.length - 16);
+  const decipher = crypto.createDecipheriv(
+    "aes-256-gcm",
+    STATE_KEY,
+    Buffer.from(ivPart, "base64url"),
+  );
+  decipher.setAuthTag(tag);
+  return JSON.parse(Buffer.concat([decipher.update(body), decipher.final()]).toString("utf8"));
+}
 async function persistDesired(args, nextMode) {
   const temporary = STATE_FILE + ".tmp";
-  await fs.writeFile(temporary, JSON.stringify({ version: 1, desired: "running", mode: nextMode, args }), { mode: 0o600 });
+  const protectedState = encryptState({
+    version: 2,
+    desired: "running",
+    mode: nextMode,
+    args,
+  });
+  await fs.writeFile(temporary, protectedState, { mode: 0o600 });
   await fs.rename(temporary, STATE_FILE);
 }
 async function restoreDesired() {
   try {
-    const saved = JSON.parse(await fs.readFile(STATE_FILE, "utf8"));
+    const saved = decryptState(await fs.readFile(STATE_FILE, "utf8"));
     if (saved?.desired === "running" && Array.isArray(saved.args)) {
       await ensure({ args: saved.args, mode: saved.mode || "program" });
       log("info", "desired_state_restored", { mode: saved.mode || "program" });
+      if (saved.version !== 2) await persistDesired(saved.args, saved.mode || "program");
     }
   } catch (error) {
-    if (error.code !== "ENOENT") { lastError = error.message; log("error", "desired_state_restore_failed", { error: error.message }); }
+    if (error.code !== "ENOENT") {
+      lastError = redact(error.message);
+      log("error", "desired_state_restore_failed", { error: redact(error.message) });
+    }
   }
 }
 function splitRelayArgs(args) {
@@ -222,7 +272,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "POST" && req.url === "/v1/stop") { const result = await stopAll(); res.writeHead(200, { "content-type": "application/json" }); return res.end(JSON.stringify(result)); }
     res.writeHead(404); res.end();
   } catch (error) {
-    lastError = error.message; log("error", "request_failed", { path: req.url, error: error.message });
+    lastError = redact(error.message); log("error", "request_failed", { path: req.url, error: redact(error.message) });
     res.writeHead(500, { "content-type": "application/json" }); res.end(JSON.stringify({ error: error.message }));
   }
 });
