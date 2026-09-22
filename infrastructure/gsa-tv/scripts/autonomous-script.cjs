@@ -227,7 +227,12 @@ async function main(){
   console.error(`AUDIO_MEASURED_DURATION: ${audioDuration.toFixed(2)}s`);
   const expectedSeconds = task.targetSeconds || Math.round(audioDuration);
 
-  const renderScript = require('node:path').join(__dirname, task.mode === 'generic_program' ? 'render-generic-program.py' : 'render-original-reflection.py');
+  const renderScript = require('node:path').join(
+    __dirname,
+    (task.mode === 'generic_program' || task.mode === 'source_bound_program')
+      ? 'render-generic-program.py'
+      : 'render-original-reflection.py'
+  );
   try {
     await execFileAsync('python3', [renderScript, '--script', task.output, '--manifest', manifestPath, '--seconds', String(expectedSeconds), '--output', mp4Path]);
   } catch (err) {
