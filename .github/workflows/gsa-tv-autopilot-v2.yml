@@ -98,6 +98,7 @@ jobs:
           readiness = Path("infrastructure/gsa-tv/scripts/autopilot-readiness.py").read_text()
           gemini = Path("infrastructure/gsa-tv/services/playout-api/src/gemini.js").read_text()
           cinema_migration = Path("supabase/migrations/20260922135000_gsa_tv_cinema_duration_contract.sql").read_text()
+          fallback_migration = Path("supabase/migrations/20260922134000_gsa_tv_autopilot_continuity_fallback.sql").read_text()
 
           required_control = [
               "ENCODER_ENGINE_URL",
@@ -159,6 +160,9 @@ jobs:
           assert "systemctl stop" not in cutover
           assert cutover.rfind('assert_no_active_legacy_services "${BROADCAST_LEGACY_SERVICES[@]}"') > cutover.find("systemctl disable --now")
           assert cutover.rfind('assert_no_active_legacy_services "${PRODUCTION_LEGACY_SERVICES[@]}"') > cutover.find("systemctl disable --now")
+          assert "'allow_continuity_fill',true" in fallback_migration
+          assert "'allow_trim',true" in fallback_migration
+          assert "content_mode','library'" in fallback_migration
           assert "GSA_TV_AUTOPILOT_AUTO_APPROVE=false" in deploy
           assert "EnvironmentFile=-/opt/gsa-tv/autopilot/autopilot.env" in factory_service
           assert "SuccessExitStatus=2" in factory_service
