@@ -379,6 +379,36 @@ def main():
 
     if not target:
         shortfalls = sum(x.get("shortfalls", 0) for x in blockers)
+
+        duration_state_file = STATE_DIR / "duration-engine.json"
+        previous_duration = {}
+        if duration_state_file.is_file():
+            try:
+                previous_duration = json.loads(duration_state_file.read_text())
+            except Exception:
+                previous_duration = {}
+        if not shortfalls and previous_duration.get("state") == "compile_failed":
+            state.update(
+                state="retrying_duration_compile",
+                reason="previous_duration_compile_failed",
+                started_at=now().isoformat(),
+            )
+            atomic_write(FACTORY_FILE, state)
+            try:
+                duration = run_duration_engine(args.horizon_days, args.cycle_minutes)
+                state["duration_cycle"] = duration
+                state["state"] = (
+                    "duration_compile_retry_completed"
+                    if duration["returncode"] == 0
+                    else "duration_cycle_failed"
+                )
+            except subprocess.TimeoutExpired:
+                state["state"] = "duration_cycle_timeout"
+                state["duration_cycle"] = {"returncode": 124}
+            state["finished_at"] = now().isoformat()
+            atomic_write(FACTORY_FILE, state)
+            return 0
+
         if shortfalls:
             state.update(
                 state="repairing_duration",
