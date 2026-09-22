@@ -12,8 +12,28 @@ async function main(){
  let input='';for await(const chunk of process.stdin)input+=chunk;
  const task=JSON.parse(input);
  if(!/^\/media\/1\/production\/autonomous\//.test(task.output)||task.output.includes('..'))throw Error('Destino inválido');
- if(task.mode!=='original_reflection'&&task.mode!=='generic_program')throw Error('Formato ainda não habilitado neste gerador');
+ const allowedModes=new Set(['original_reflection','generic_program','source_bound_program']);
+ if(!allowedModes.has(task.mode))throw Error('Formato ainda não habilitado neste gerador');
  if(!Number.isInteger(task.targetWords)||task.targetWords<500||task.targetWords>10000)throw Error('Orçamento inválido');
+ const sourceBound=task.mode==='source_bound_program';
+ const allowedRights=new Set(['open_data','public_domain','licensed']);
+ const sourceItems=sourceBound?(Array.isArray(task.sourceItems)?task.sourceItems:[]):[];
+ if(sourceBound){
+   if(!sourceItems.length||sourceItems.length>20)throw Error('SOURCE_PACKAGE_INVALID');
+   for(const item of sourceItems){
+     if(!item||typeof item.id!=='string'||typeof item.title!=='string'||typeof item.summary!=='string')throw Error('SOURCE_PACKAGE_INVALID');
+     if(!allowedRights.has(String(item.rights_classification||'')))throw Error('SOURCE_RIGHTS_NOT_ALLOWED');
+     if(item.summary.trim().length<20)throw Error('SOURCE_SUMMARY_TOO_SHORT');
+   }
+ }
+ const sourceDigest=sourceBound?hash(JSON.stringify(sourceItems.map(x=>({
+   id:x.id,source_id:x.source_id||null,title:x.title,summary:x.summary,
+   canonical_url:x.canonical_url||null,rights_classification:x.rights_classification,
+   source_name:x.source_name||null,provider:x.provider||null
+ })))):null;
+ const sourceWords=sourceBound?sourceItems.reduce((n,x)=>n+words(String(x.title||'')+' '+String(x.summary||'')),0):0;
+ const sourceExpansionLimit=sourceBound?Math.max(700,Math.floor(sourceWords*3.2)+250):null;
+ if(sourceBound&&task.targetWords>sourceExpansionLimit)throw Error('SOURCE_BUDGET_INSUFFICIENT target='+task.targetWords+' supported='+sourceExpansionLimit);
  const pool=new Pool({connectionString:process.env.DATABASE_URL});
  try{
   const row=(await pool.query("select * from gsa_tv_ai_provider_secrets where channel_id='ch-main' order by updated_at desc limit 1")).rows[0];
@@ -30,7 +50,10 @@ async function main(){
    return result.text;
   }
   const themes=['acolher sem julgar','paciência nas pequenas atitudes','cuidar dos vínculos','gratidão sem negar as dificuldades','recomeçar com responsabilidade','escuta e solidariedade'];
-  const count=Math.ceil(task.targetWords/500);const target=Math.ceil(task.targetWords/count);
+  const count=sourceBound
+    ?Math.min(sourceItems.length,Math.max(1,Math.ceil(task.targetWords/550)))
+    :Math.ceil(task.targetWords/500);
+  const target=Math.ceil(task.targetWords/count);
   const parentDir=require('node:path').dirname(task.output);
   const baseName=require('node:path').basename(task.output);
   await fs.mkdir(parentDir,{recursive:true});
@@ -39,7 +62,7 @@ async function main(){
   try {
     const raw = await fs.readFile(task.output, 'utf8');
     const existing = JSON.parse(raw);
-    if (existing && existing.script_sha256 && existing.review?.pass === true && Array.isArray(existing.sections) && existing.sections.length === count && existing.mode === task.mode) {
+    if (existing && existing.script_sha256 && existing.review?.pass === true && Array.isArray(existing.sections) && existing.sections.length === count && existing.mode === task.mode && (!sourceBound || existing.source_digest === sourceDigest)) {
       result = existing;
       console.error('SCRIPT_ALREADY_VALIDATED words: ' + result.word_count + ' hash: ' + result.script_sha256);
     }
@@ -67,14 +90,26 @@ async function main(){
       } catch {}
 
       if (!section) {
-        const instructions = task.mode === 'generic_program'
-          ? `Escreva um texto ORIGINAL em português brasileiro para locução do programa televisivo "${task.program}". O texto deve ser apropriado para o tema e formato deste programa. Não copie textos protegidos. Não cite pessoas reais, estatísticas, estudos, fatos atuais ou testemunhos como reais. Não prometa cura, prosperidade ou intervenção divina. Exemplos devem ser claramente hipotéticos. Não dê conselho médico/financeiro. Sem propaganda, pedidos de dinheiro, participação ao vivo ou contatos inventados. Não inclua instruções de direção no texto falado. Desenvolva ideias distintas, sem enchimento e sem repetir parágrafos. IMPORTANTE: Desenvolva o texto com extensão entre ${Math.floor(target*0.88)} e ${Math.ceil(target*1.12)} palavras (mínimo de ${Math.floor(target*0.88)} palavras). Responda somente JSON com title (curto), text (locução integral), visual_query (termo de busca curto em inglês de 1 a 3 palavras para banco de imagens para ilustrar este parágrafo).`
-          : 'Escreva um texto ORIGINAL em português brasileiro para locução de um programa de reflexão cristã acolhedora. Não copie orações, músicas ou traduções bíblicas. Não cite versículos, pessoas reais, estatísticas, estudos, fatos atuais ou testemunhos como reais. Não prometa cura, prosperidade ou intervenção divina garantida. Exemplos devem ser claramente hipotéticos. Não dê conselho médico/financeiro. Sem propaganda, pedidos de dinheiro, participação ao vivo ou contatos inventados. Não inclua instruções de direção no texto falado. Desenvolva ideias distintas, sem enchimento e sem repetir parágrafos. IMPORTANTE: Desenvolva o texto com extensão entre ' + Math.floor(target*0.88) + ' e ' + Math.ceil(target*1.12) + ' palavras (mínimo de ' + Math.floor(target*0.88) + ' palavras). Responda somente JSON com title (curto), text (locução integral), visual_query (termo de busca curto em inglês de 1 a 3 palavras para banco de imagens para ilustrar este parágrafo).';
+        const instructions = sourceBound
+          ? `Escreva em português brasileiro uma seção factual e neutra para o programa "${task.program}" usando EXCLUSIVAMENTE os fatos contidos nas fontes fornecidas no JSON do usuário. Parafraseie; não copie trechos longos. Preserve números, datas, nomes e incertezas. Não acrescente fatos de memória, conhecimento geral ou inferência não sustentada. Quando houver alegação, posição política, legislação, eleição, autoridade pública ou interpretação contestável, atribua claramente à fonte correspondente e não endosse, ataque, recomende, ranqueie ou preveja candidatos, partidos, governos ou resultados eleitorais. Diferencie fato da fonte de contexto editorial. Se as fontes não sustentarem material suficiente para esta seção, responda JSON com {"insufficient":true,"reason":"..."} e não invente preenchimento. Não dê conselho médico/financeiro. Não inclua instruções de direção no texto falado. Meta de extensão: entre ${Math.floor(target*0.88)} e ${Math.ceil(target*1.12)} palavras. Responda somente JSON com title (curto), text (locução integral), visual_query (termo visual genérico em inglês de 1 a 3 palavras) e source_ids (array apenas com IDs das fontes efetivamente usadas).`
+          : task.mode === 'generic_program'
+            ? `Escreva um texto ORIGINAL em português brasileiro para locução do programa televisivo "${task.program}". O texto deve ser apropriado para o tema e formato deste programa. Não copie textos protegidos. Não cite pessoas reais, estatísticas, estudos, fatos atuais ou testemunhos como reais. Não prometa cura, prosperidade ou intervenção divina. Exemplos devem ser claramente hipotéticos. Não dê conselho médico/financeiro. Sem propaganda, pedidos de dinheiro, participação ao vivo ou contatos inventados. Não inclua instruções de direção no texto falado. Desenvolva ideias distintas, sem enchimento e sem repetir parágrafos. IMPORTANTE: Desenvolva o texto com extensão entre ${Math.floor(target*0.88)} e ${Math.ceil(target*1.12)} palavras (mínimo de ${Math.floor(target*0.88)} palavras). Responda somente JSON com title (curto), text (locução integral), visual_query (termo de busca curto em inglês de 1 a 3 palavras para banco de imagens para ilustrar este parágrafo).`
+            : 'Escreva um texto ORIGINAL em português brasileiro para locução de um programa de reflexão cristã acolhedora. Não copie orações, músicas ou traduções bíblicas. Não cite versículos, pessoas reais, estatísticas, estudos, fatos atuais ou testemunhos como reais. Não prometa cura, prosperidade ou intervenção divina garantida. Exemplos devem ser claramente hipotéticos. Não dê conselho médico/financeiro. Sem propaganda, pedidos de dinheiro, participação ao vivo ou contatos inventados. Não inclua instruções de direção no texto falado. Desenvolva ideias distintas, sem enchimento e sem repetir parágrafos. IMPORTANTE: Desenvolva o texto com extensão entre ' + Math.floor(target*0.88) + ' e ' + Math.ceil(target*1.12) + ' palavras (mínimo de ' + Math.floor(target*0.88) + ' palavras). Responda somente JSON com title (curto), text (locução integral), visual_query (termo de busca curto em inglês de 1 a 3 palavras para banco de imagens para ilustrar este parágrafo).';
         for(let attempt=0;attempt<3;attempt++){
           try {
             const currentTheme = task.mode === 'generic_program' ? 'conteúdo apropriado ao programa' : themes[(index+Number(task.date.slice(-2)))%themes.length];
+            const assignedSources=sourceBound
+              ?sourceItems.filter((_,sourceIndex)=>sourceIndex%count===index)
+              :[];
             await new Promise(r => setTimeout(r, 3500)); // Pace globally to ~17 req/min
-            section=parse(await generate(JSON.stringify({program:task.program,date:task.date,part:index+1,totalParts:count,theme:currentTheme,targetWords:target,minimumWords:Math.floor(target*0.90),maximumWords:Math.ceil(target*1.10),opening:index===0,closing:index===count-1,previousTopics:sections.map(x=>x.title),previousAttemptWords:section?words(section.text):null}),instructions,'broadcast_script'));
+            section=parse(await generate(JSON.stringify({
+              program:task.program,date:task.date,part:index+1,totalParts:count,
+              theme:sourceBound?'fontes verificadas':currentTheme,
+              targetWords:target,minimumWords:Math.floor(target*0.90),maximumWords:Math.ceil(target*1.10),
+              opening:index===0,closing:index===count-1,previousTopics:sections.map(x=>x.title),
+              previousAttemptWords:section?words(section.text):null,
+              sources:assignedSources
+            }),instructions,'broadcast_script'));
             section.mode = task.mode;
             await fs.writeFile(task.output+`.part-${index+1}-attempt-${attempt+1}-${Date.now()}.json`,JSON.stringify(section,null,2),{mode:0o640,flag:'wx'});
             console.error('SCRIPT_WORD_COUNT '+(index+1)+' '+words(section.text||''));
@@ -88,18 +123,34 @@ async function main(){
           }
         }
       }
+      if(section?.insufficient===true)throw Error('SOURCE_BUDGET_INSUFFICIENT section='+(index+1)+' '+String(section.reason||''));
       if(!section||typeof section.text!=='string'||words(section.text)<target*0.83||words(section.text)>target*1.17)throw Error('Roteiro fora do orçamento na parte '+(index+1));
+      if(sourceBound){
+        const allowedIds=new Set(sourceItems.map(x=>x.id));
+        if(!Array.isArray(section.source_ids)||!section.source_ids.length||section.source_ids.some(id=>!allowedIds.has(String(id))))throw Error('SOURCE_TRACE_INVALID section='+(index+1));
+      }
       sections.push(section);
       console.error('SCRIPT_SECTION_READY '+(index+1)+'/'+count);
     }
     const narration=sections.map(x=>x.text.trim()).join('\n\n');
-    const reviewInstructions = task.mode === 'generic_program'
-      ? `Você é o revisor editorial do programa "${task.program}". Avalie se o texto é original, coerente com o programa, sem instruções de produção faladas, repetição excessiva, fatos externos sem fonte, testemunhos apresentados como reais, promessas absurdas ou contatos inventados. Responda apenas JSON {"pass":boolean,"violations":[string]}. Reprove qualquer violação substancial.`
-      : 'Você é o revisor editorial. Avalie se o texto é uma reflexão original coerente, sem instruções de produção faladas, repetição excessiva, fatos externos sem fonte, testemunhos apresentados como reais, citações de músicas/orações/versículos, promessas garantidas de cura/dinheiro/milagres ou contatos inventados. Não exija fontes para crenças religiosas claramente apresentadas como reflexão. Responda apenas JSON {"pass":boolean,"violations":[string]}. Reprove qualquer violação substancial.';
+    const reviewInstructions = sourceBound
+      ? `Você é o revisor factual da GSA TV. Compare cada afirmação factual das seções com o pacote de fontes fornecido. Reprove qualquer fato, número, data, causa, citação indireta ou interpretação apresentada como fato que não esteja sustentada. Exija atribuição clara para alegações/posições políticas ou contestáveis. Reprove persuasão partidária, recomendação/ranqueamento de candidatos/partidos/governos, previsão eleitoral, especulação de motivos e reprodução extensa de texto-fonte. Aceite paráfrase neutra fiel. Responda apenas JSON {"pass":boolean,"violations":[string]}.`
+      : task.mode === 'generic_program'
+        ? `Você é o revisor editorial do programa "${task.program}". Avalie se o texto é original, coerente com o programa, sem instruções de produção faladas, repetição excessiva, fatos externos sem fonte, testemunhos apresentados como reais, promessas absurdas ou contatos inventados. Responda apenas JSON {"pass":boolean,"violations":[string]}. Reprove qualquer violação substancial.`
+        : 'Você é o revisor editorial. Avalie se o texto é uma reflexão original coerente, sem instruções de produção faladas, repetição excessiva, fatos externos sem fonte, testemunhos apresentados como reais, citações de músicas/orações/versículos, promessas garantidas de cura/dinheiro/milagres ou contatos inventados. Não exija fontes para crenças religiosas claramente apresentadas como reflexão. Responda apenas JSON {"pass":boolean,"violations":[string]}. Reprove qualquer violação substancial.';
     await new Promise(r => setTimeout(r, 4000));
-    const review=parse(await generate(JSON.stringify({mode:task.mode,program:task.program,sections}), reviewInstructions,'review',2500));
+    const review=parse(await generate(JSON.stringify({
+      mode:task.mode,program:task.program,sections,
+      sources:sourceBound?sourceItems:undefined
+    }), reviewInstructions,'review',2500));
     const script_sha256=hash(narration);
-    result={program:task.program,date:task.date,mode:task.mode,sections,narration,word_count:words(narration),script_sha256,review:{...review,script_sha256},generated_at:new Date().toISOString(),provider:row.provider,model:row.default_model};
+    result={
+      program:task.program,date:task.date,mode:task.mode,sections,narration,
+      word_count:words(narration),script_sha256,review:{...review,script_sha256},
+      source_ids:sourceBound?[...new Set(sections.flatMap(x=>x.source_ids||[]))]:[],
+      source_digest:sourceDigest,
+      generated_at:new Date().toISOString(),provider:row.provider,model:row.default_model
+    };
     await fs.writeFile(task.output,JSON.stringify(result,null,2),{mode:0o640});
     if(review.pass!==true||!Array.isArray(review.violations)||review.violations.length)throw Error('Revisão editorial reprovou o roteiro: ' + JSON.stringify(review.violations));
   }
@@ -196,6 +247,9 @@ async function main(){
     program_id: task.programId || null,
     target_block_id: task.targetBlockId || null,
     production_reason: task.productionReason || 'missing_media',
+    source_ids: result.source_ids || [],
+    source_digest: result.source_digest || null,
+    source_bound: sourceBound,
     broadcast_date: task.date,
     production_qc: qc,
     target_duration_s: expectedSeconds,
