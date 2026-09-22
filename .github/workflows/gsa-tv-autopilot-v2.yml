@@ -7,7 +7,7 @@ on:
       - "infrastructure/gsa-tv/**"
       - "docs/gsa-tv-secret-rotation.md"
       - "supabase/migrations/*gsa_tv_autopilot*.sql"
-      - ".github/workflows/gsa-tv-autopilot-v2.yml"
+      - ".github/workflows/gsa-tv-autopilot*.yml"
   push:
     branches:
       - "feat/gsa-tv-autopilot-v2"
@@ -16,7 +16,7 @@ on:
       - "infrastructure/gsa-tv/**"
       - "docs/gsa-tv-secret-rotation.md"
       - "supabase/migrations/*gsa_tv_autopilot*.sql"
-      - ".github/workflows/gsa-tv-autopilot-v2.yml"
+      - ".github/workflows/gsa-tv-autopilot*.yml"
 
 permissions:
   contents: read
