@@ -46,7 +46,50 @@ def published(date):
     versions = query("select id from gsa_tv_schedule_versions where channel_id='ch-main' and broadcast_date=$1 and state='published' order by version desc limit 1", [date])
     if not versions:
         raise RuntimeError('Nenhuma grade publicada para ' + date)
-    blocks = query("select b.id,b.program_id,b.planned_start_offset_s,b.planned_duration_s,b.media_item_id,b.is_reprise,b.metadata,b.block_type,p.name from gsa_tv_program_blocks b left join gsa_tv_programs p on p.id=b.program_id where b.schedule_version_id=$1 order by b.planned_start_offset_s,b.position", [versions[0]['id']])
+    blocks = query(
+        """select
+               b.id,b.program_id,b.planned_start_offset_s,b.planned_duration_s,
+               b.is_reprise,b.metadata,b.block_type,b.live_source_id,
+               p.name,
+               coalesce(dm.id,em.id,pm.id,cm.id) as media_item_id
+           from public.gsa_tv_program_blocks b
+           left join public.gsa_tv_programs p on p.id=b.program_id
+           left join public.gsa_tv_media_items dm on dm.id=b.media_item_id
+           left join public.gsa_tv_episodes ep on ep.id=b.episode_id
+           left join public.gsa_tv_media_items em on em.id=ep.media_item_id
+           left join lateral (
+             select m.*
+               from public.gsa_tv_series se
+               join public.gsa_tv_episodes e on e.series_id=se.id
+               join public.gsa_tv_media_items m on m.id=e.media_item_id
+              where b.media_item_id is null
+                and b.episode_id is null
+                and b.program_id is not null
+                and se.program_id=b.program_id
+              order by case when b.is_reprise then e.last_run_at else e.first_run_at end nulls first,
+                       e.season_number,e.episode_number
+              limit 1
+           ) pm on true
+           left join lateral (
+             select m.*
+               from public.gsa_tv_ad_assets aa
+               join public.gsa_tv_media_items m on m.id=aa.media_item_id
+               join public.gsa_tv_ad_campaigns c on c.id=aa.campaign_id
+              where b.campaign_id is not null
+                and aa.campaign_id=b.campaign_id
+                and c.status='active'
+                and (($2::date + make_interval(secs=>b.planned_start_offset_s)) at time zone $3)
+                    between c.starts_at and c.ends_at
+                and m.state='ready'
+                and m.rights_ok
+                and m.approval_state='approved'
+              order by aa.weight desc,m.updated_at asc
+              limit 1
+           ) cm on true
+          where b.schedule_version_id=$1
+          order by b.planned_start_offset_s,b.position""",
+        [versions[0]['id'], date, 'America/Sao_Paulo'],
+    )
     return versions[0]['id'], blocks
 
 def run(command, deadline, logfile):
@@ -141,7 +184,7 @@ def link_eligible(date, version, blocks):
     for b in blocks:
         if b['media_item_id'] or not b['program_id']: continue
         library=bool(b.get('is_reprise') or (b.get('metadata') or {}).get('content_mode')=='library')
-        rows=query("select * from gsa_tv_media_items where channel_id='ch-main' and state='ready' and approval_state='approved' and rights_ok and (metadata->>'program_id'=$1 or metadata->>'program_slug'=$2 or ($3::boolean and (title ilike ('%' || $5 || '%') or id ilike ('%' || $2 || '%')))) and ($3::boolean or metadata->>'broadcast_date'=$4) order by updated_at desc",[str(b['program_id']),slug(b['name']),library,date,b['name']])
+        rows=query("select * from gsa_tv_media_items where channel_id='ch-main' and state='ready' and approval_state='approved' and rights_ok and (metadata->>'program_id'=$1 or metadata->>'program_slug'=$2) and ($3::boolean or metadata->>'broadcast_date'=$4) order by case when metadata->>'target_block_id'=$5 then 0 else 1 end,updated_at desc",[str(b['program_id']),slug(b['name']),library,date,str(b['id'])])
         for m in rows:
             if media_issue(m,b,date): continue
             backup=ROOT/'backups/production-links'/date/(str(b['id'])+'.json')
@@ -167,6 +210,8 @@ def report(date):
         if start < start_of_day: continue
         if start != previous: issues.append({'block':b['id'],'issue':'gap_or_overlap','expected':previous,'actual':start})
         previous=start+duration
+        if b.get('block_type') == 'live' and b.get('live_source_id'):
+            continue
         rows=query('select state,approval_state,rights_ok,rights_expires_at,drive_path,duration_s from gsa_tv_media_items where id=$1 and channel_id=\'ch-main\'',[b['media_item_id']]) if b['media_item_id'] else []
         if not rows: issues.append({'block':b['id'],'program':b['name'],'issue':'missing_media'}); continue
         issue=media_issue(rows[0],b,date)
