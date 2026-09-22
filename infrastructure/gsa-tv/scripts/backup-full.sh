@@ -81,9 +81,26 @@ done < <(psql "$DB_URL" -X -Atq -F '|' -c "select id,drive_path from public.gsa_
   echo "catalog_missing_files=$CATALOG_MISSING"
   echo "archived_paths=${archive_paths[*]:-none}"
 } > "$TMP/media-inventory.txt"
-tar -C "$BASE" --exclude='control-plane/.env' --exclude='watchdog/.env' --exclude='*/secrets/*' -czf "$TMP/runtime-config.tgz" control-plane watchdog 2>/dev/null || true
+runtime_paths=()
+for rel in control-plane watchdog; do
+  [[ -e "$BASE/$rel" ]] && runtime_paths+=("$rel")
+done
+if [[ "${#runtime_paths[@]}" -gt 0 ]]; then
+  tar -C "$BASE" --exclude='control-plane/.env' --exclude='watchdog/.env' --exclude='*/secrets/*' -czf "$TMP/runtime-config.tgz" "${runtime_paths[@]}"
+else
+  tar -C "$BASE" -czf "$TMP/runtime-config.tgz" --files-from /dev/null
+fi
+
 SECRET_TAR="$TMP/secrets.tar"
-tar -C "$BASE" -cf "$SECRET_TAR" control-plane/.env watchdog/.env secrets control-plane/secrets watchdog/secrets 2>/dev/null || true
+secret_paths=()
+for rel in control-plane/.env watchdog/.env secrets control-plane/secrets watchdog/secrets; do
+  [[ -e "$BASE/$rel" ]] && secret_paths+=("$rel")
+done
+if [[ "${#secret_paths[@]}" -gt 0 ]]; then
+  tar -C "$BASE" -cf "$SECRET_TAR" "${secret_paths[@]}"
+else
+  tar -C "$BASE" -cf "$SECRET_TAR" --files-from /dev/null
+fi
 openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000 -pass file:"$KEY_FILE" -in "$SECRET_TAR" -out "$TMP/secrets.tar.enc"
 rm -f "$SECRET_TAR"
 cp "$BASE/playlists/1/$(date +%F).json" "$TMP/current-playlist.json" 2>/dev/null || true
