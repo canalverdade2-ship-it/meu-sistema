@@ -4699,7 +4699,7 @@ const heartbeatTimer = setInterval(
     ),
   30000,
 );
-setInterval(
+const liveAutomationTimer = setInterval(
   () =>
     scheduledLiveAutomation().catch((e) =>
       log("error", "scheduled_live_failed", { error: e.message }),
@@ -4719,6 +4719,7 @@ void restoreRuntime()
 process.on("SIGTERM", async () => {
   clearInterval(jobsTimer);
   clearInterval(heartbeatTimer);
+  clearInterval(liveAutomationTimer);
   clearInterval(aiTimer);
   await stopLiveRecording().catch(() => {});
   if (USE_EXTERNAL_ENCODER) {
