@@ -8,7 +8,7 @@ on:
       - ".github/workflows/tmp-browserslist-lock-refresh.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   refresh:
@@ -32,6 +32,17 @@ jobs:
           npm install --package-lock-only --ignore-scripts --no-fund
       - name: Security audit
         run: npm audit --audit-level=high
+      - name: Commit deterministic lock refresh
+        run: |
+          git config user.name "gsa-tv-autopilot-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add package.json package-lock.json
+          if git diff --cached --quiet; then
+            echo "No lockfile changes to commit."
+          else
+            git commit -m "security: pin patched browserslist 4.29.0"
+            git push origin HEAD:feat/gsa-tv-autopilot-v2
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: browserslist-lock-refresh
