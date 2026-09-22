@@ -42,6 +42,14 @@ def atomic_write(payload):
     tmp.replace(STATE_FILE)
 
 
+def read_previous():
+    try:
+        value = json.loads(STATE_FILE.read_text())
+        return value if isinstance(value, dict) else {}
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
 def local_now():
     return dt.datetime.now(TZ)
 
@@ -240,6 +248,15 @@ def run():
     )
 
     if action == "prepare":
+        previous = read_previous()
+        if previous.get("state") == "prepared" and previous.get("prepared_date") == moment.date().isoformat():
+            base.update(
+                state="prepared",
+                prepared_date=moment.date().isoformat(),
+                reason="already_prepared_in_current_window",
+            )
+            atomic_write(base)
+            return 0
         try:
             production.compile_ready(moment.date().isoformat())
             base.update(state="prepared", prepared_date=moment.date().isoformat())
