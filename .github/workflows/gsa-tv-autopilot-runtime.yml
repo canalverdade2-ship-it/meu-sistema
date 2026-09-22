@@ -284,7 +284,10 @@ jobs:
         run: |
           set -euo pipefail
           test "$SUPABASE_PROJECT_ID" = "$EXPECTED_PROJECT_ID"
-          supabase db query --linked "select 1 as auth_ok" >/dev/null
+          # Use the same direct PostgreSQL connection path as migration repair.
+          # This is read-only; a missing migration-history table is reported as
+          # an empty remote history by the CLI.
+          supabase migration list --linked --password "$SUPABASE_DB_PASSWORD" >/dev/null
           echo "SUPABASE_DB_AUTH_OK=true"
 
       - name: Prepare legacy ffplayout snapshot dry-run
@@ -364,7 +367,7 @@ jobs:
               echo "MIGRATION_REPAIR_HISTORY_ONLY=$version"
             fi
 
-            supabase migration repair --status applied "$version"
+            supabase migration repair --linked --password "$SUPABASE_DB_PASSWORD" --status applied "$version"
 
             verified="$(remote_status | grep "^MIGRATION_STATUS=$version|" || true)"
             grep -q '|history=t|contract=t$' <<<"$verified" || {
