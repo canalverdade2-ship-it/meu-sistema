@@ -87,6 +87,7 @@ jobs:
           deploy = Path("infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh").read_text()
           preflight = Path("infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh").read_text()
           factory_service = Path("infrastructure/gsa-tv/systemd/gsa-tv-autopilot-content-factory.service").read_text()
+          content_factory = Path("infrastructure/gsa-tv/scripts/autopilot-content-factory.py").read_text()
           broadcast_service = Path("infrastructure/gsa-tv/systemd/gsa-tv-autopilot-broadcast-controller.service").read_text()
           broadcast_controller = Path("infrastructure/gsa-tv/scripts/autopilot-broadcast-controller.py").read_text()
           autonomous = Path("infrastructure/gsa-tv/scripts/autonomous-script.cjs").read_text()
