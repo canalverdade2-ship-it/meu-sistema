@@ -115,9 +115,12 @@ def main():
     validate_inputs(script, manifest, args.seconds)
     audio = Path(manifest['audio_wav'])
     duration = float(probe(audio)['format']['duration'])
-    speed = duration / args.seconds
+    speed = duration / body_seconds
     if not math.isfinite(speed) or not 0.90 <= speed <= 1.10:
-        raise ValueError(f'Narration needs editorial adjustment: {duration:.2f}s for {args.seconds:.2f}s; no excessive stretching allowed')
+        raise ValueError(
+            f'Narration needs editorial adjustment: {duration:.2f}s for '
+            f'{body_seconds:.2f}s body inside {args.seconds:.2f}s slot; no excessive stretching allowed'
+        )
     output = args.output.resolve()
     work = output.parent / (output.stem + '-graphics')
     temp = output.with_name(output.stem + '.partial.mp4')
@@ -128,6 +131,25 @@ def main():
     if temp.exists():
         temp.unlink()
     work.mkdir(parents=True)
+
+    slug = unicodedata.normalize('NFKD', script['program']).encode('ascii', 'ignore').decode('ascii').lower()
+    slug = re.sub(r'[^a-z0-9\\s-]', '', slug)
+    slug = re.sub(r'[-\\s]+', '-', slug).strip('-')
+
+    bumper_path = Path(f'/opt/gsa-tv/cache/media/1/identity/vinhetas/vinheta-{slug}.mp4')
+    fallback_bumper = Path('/opt/gsa-tv/cache/media/1/identity/vinhetas/vinheta-gsa-tv-40s-broadcast-safe.mp4')
+    bumper_file = bumper_path if bumper_path.exists() else fallback_bumper
+    if not bumper_file.exists():
+        raise FileNotFoundError(f'Broadcast bumper not found: {bumper_file}')
+
+    bumper_duration = float(probe(bumper_file)['format']['duration'])
+    body_seconds = args.seconds - (2 * bumper_duration)
+    if body_seconds < 60:
+        raise ValueError(
+            f'Slot too short for opening/closing bumpers: slot={args.seconds:.2f}s '
+            f'bumpers={2 * bumper_duration:.2f}s'
+        )
+
     title = work / 'program.txt'
     
     title.write_text('\n'.join(textwrap.wrap(script['program'], width=40)), encoding='utf-8')
@@ -141,7 +163,7 @@ def main():
     input_count = 0    # índice do próximo input a ser adicionado
 
     for index, section in enumerate(sections):
-        end = start + args.seconds * len(section['text'].split()) / total_words
+        end = start + body_seconds * len(section['text'].split()) / total_words
         seg_dur = end - start
         query = section.get('visual_query', '')
 
@@ -172,7 +194,7 @@ def main():
     start = 0.0
     last_out = "out1"
     for index, section in enumerate(sections):
-        end = start + args.seconds * len(section['text'].split()) / total_words
+        end = start + body_seconds * len(section['text'].split()) / total_words
         text = work / f'chapter-{index:02}.txt'
         text.write_text('\n'.join(textwrap.wrap(section['title'], width=34)), encoding='utf-8')
         next_out = f"out{index+2}"
@@ -185,7 +207,7 @@ def main():
     # Run ffmpeg
     cmd = ['ffmpeg', '-nostdin', '-v', 'error', '-y'] + media_args + ['-i', str(audio)]
     cmd.extend(['-filter_complex', ';'.join(filter_complex)])
-    cmd.extend(['-map', '[video_final]', '-map', f'{input_count}:a', '-af', f'atempo={speed:.9f},apad', '-t', str(args.seconds)])
+    cmd.extend(['-map', '[video_final]', '-map', f'{input_count}:a', '-af', f'atempo={speed:.9f},apad', '-t', str(body_seconds)])
     cmd.extend(['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2', '-movflags', '+faststart', str(temp)])
 
     
@@ -212,7 +234,7 @@ def main():
         bumper_file = '/opt/gsa-tv/cache/media/1/identity/vinheta-gsa-tv-40s-broadcast-safe.mp4'
         
     with open(list_file, 'w', encoding='utf-8') as f:
-        f.write(f"file '{bumper_file}'\n")
+        f.write(f"file '{bumper_file.as_posix()}'\n")
         safe_temp = temp.resolve().as_posix().replace("'", r"'\''")
         f.write(f"file '{safe_temp}'\n")
         f.write(f"file '{bumper_file}'\n")
@@ -222,11 +244,16 @@ def main():
     
     final_data = probe(final_temp)
     final_actual = float(final_data['format']['duration'])
-    
+    if abs(final_actual - args.seconds) > 0.75:
+        raise ValueError(
+            f'Final master duration mismatch: {final_actual:.3f}s for {args.seconds:.3f}s slot'
+        )
+
     final_temp.rename(output)
     
     report = {'state': 'technical_validated', 'broadcast_date': script['date'], 'program': script['program'],
-              'duration_s': final_actual, 'target_duration_s': args.seconds, 'audio_speed': speed,
+              'duration_s': final_actual, 'target_duration_s': args.seconds, 'body_target_duration_s': body_seconds,
+              'bumper_duration_s': bumper_duration, 'audio_speed': speed,
               'script_sha256': script['script_sha256'], 'master_sha256': sha(output),
               'audio_sha256': sha(audio), 'visual_provenance': 'pexels_pixabay_fallback',
               'visual_review': 'pending', 'published': False}
