@@ -8,6 +8,7 @@ on:
       - ".github/workflows/gsa-tv-autopilot-runtime.yml"
       - "infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh"
       - "infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh"
+      - "infrastructure/gsa-tv/scripts/cutover-autopilot-v2.sh"
       - "infrastructure/gsa-tv/services/playout-api/**"
       - "infrastructure/gsa-tv/services/encoder-engine/**"
       - "infrastructure/gsa-tv/systemd/gsa-tv-autopilot-**"
@@ -20,6 +21,19 @@ on:
         options:
           - preflight
           - deploy
+          - cutover
+      cutover_scope:
+        description: "Escopo do cutover legado"
+        required: true
+        type: choice
+        options:
+          - broadcast
+          - production
+          - all
+      confirm_cutover_policy:
+        description: "Para cutover, digite CUTOVER-GUARD"
+        required: false
+        type: string
       confirm_first_migration_policy:
         description: "Digite OFFAIR-GUARD para confirmar que o workflow nunca deve desligar o canal automaticamente"
         required: true
@@ -42,6 +56,8 @@ jobs:
       VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
       RUNTIME_OPERATION: ${{ github.event_name == 'workflow_dispatch' && inputs.operation || 'preflight' }}
       RUNTIME_CONFIRM_POLICY: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_first_migration_policy || 'OFFAIR-GUARD' }}
+      RUNTIME_CUTOVER_SCOPE: ${{ github.event_name == 'workflow_dispatch' && inputs.cutover_scope || 'all' }}
+      RUNTIME_CUTOVER_CONFIRM_POLICY: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_cutover_policy || '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -76,9 +92,16 @@ jobs:
           fi
 
           echo "runtime_configured=true" >> "$GITHUB_OUTPUT"
-          if [ "${RUNTIME_OPERATION}" = "deploy" ] && [ "${GITHUB_REF_NAME}" != "main" ]; then
-            echo "Deploy de produção permitido somente a partir da branch main." >&2
-            exit 65
+          if [ "${RUNTIME_OPERATION}" = "deploy" ] || [ "${RUNTIME_OPERATION}" = "cutover" ]; then
+            if [ "${GITHUB_REF_NAME}" != "main" ]; then
+              echo "Operação mutante de produção permitida somente a partir da branch main." >&2
+              exit 65
+            fi
+          fi
+
+          if [ "${RUNTIME_OPERATION}" = "cutover" ] && [ "${RUNTIME_CUTOVER_CONFIRM_POLICY}" != "CUTOVER-GUARD" ]; then
+            echo "Cutover exige confirmação explícita CUTOVER-GUARD." >&2
+            exit 64
           fi
 
       - name: Configure SSH with pinned host key
@@ -132,6 +155,10 @@ jobs:
           set -e
           echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
 
+          if [ "${RUNTIME_OPERATION}" = "cutover" ] && [ "$rc" -ne 0 ]; then
+            echo "Cutover exige preflight EXTERNAL_READY (exit 0); recebido rc=$rc." >&2
+            exit "$rc"
+          fi
           if [ "${RUNTIME_OPERATION}" = "deploy" ] && [ "$rc" -eq 20 ]; then
             echo "Preflight encontrou runtime bloqueado/parcial." >&2
             exit 20
@@ -223,6 +250,44 @@ jobs:
              echo "--- readiness ---";
              sudo test -s /opt/gsa-tv/runtime/autopilot/readiness-horizon.json;
              sudo python3 -c "import json; x=json.load(open('/opt/gsa-tv/runtime/autopilot/readiness-horizon.json')); print(json.dumps({'generated_at':x.get('generated_at'),'ready_days':x.get('ready_days'),'days':x.get('days')},ensure_ascii=False))"'
+
+      - name: Guarded cutover dry-run
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'cutover' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "sudo bash -s -- --scope=${RUNTIME_CUTOVER_SCOPE}" \
+            < infrastructure/gsa-tv/scripts/cutover-autopilot-v2.sh
+
+      - name: Guarded cutover apply
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'cutover' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "sudo bash -s -- --apply --scope=${RUNTIME_CUTOVER_SCOPE}" \
+            < infrastructure/gsa-tv/scripts/cutover-autopilot-v2.sh
+
+      - name: Post-cutover evidence
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'cutover' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'set -e;
+             echo "--- autopilot timers ---";
+             sudo systemctl list-timers --all --no-pager | grep "gsa-tv-autopilot" || true;
+             echo "--- legacy timers ---";
+             sudo systemctl list-timers --all --no-pager | grep -E "gsa-tv-(morning-start|signoff|night-factory)" || true;
+             echo "--- failed units ---";
+             sudo systemctl --failed --no-pager | grep -i "gsa-tv" || true'
 
       - name: Remove local SSH material
         if: always()
