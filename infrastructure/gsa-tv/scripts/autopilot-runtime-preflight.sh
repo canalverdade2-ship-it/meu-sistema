@@ -106,6 +106,42 @@ if [ "$desired_state" = "stopped" ] &&
   first_migration_offair_ready=true
 fi
 
+latest_backup_state="unknown"
+latest_backup_age_s="unknown"
+latest_backup_archive=""
+latest_backup_manifest_ok=false
+if container_running gsa-tv-control-plane; then
+  backup_row="$(docker exec gsa-tv-control-plane node -e '
+    const { Pool } = require("pg");
+    (async () => {
+      const p = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
+      try {
+        const r = await p.query(
+          "select state, greatest(0,extract(epoch from now()-coalesce(finished_at,started_at)))::bigint age_s, coalesce(archive_path,$1) archive_path from public.gsa_tv_backup_runs where channel_id=$2 order by coalesce(finished_at,started_at) desc limit 1",
+          ["", process.env.CHANNEL_ID || "ch-main"]
+        );
+        if (r.rowCount) process.stdout.write(
+          String(r.rows[0].state || "unknown") + "|" +
+          String(r.rows[0].age_s || "unknown") + "|" +
+          String(r.rows[0].archive_path || "")
+        );
+      } finally {
+        await p.end().catch(() => {});
+      }
+    })().catch(() => process.exitCode = 2);
+  ' 2>/dev/null || true)"
+  if [ -n "$backup_row" ]; then
+    IFS='|' read -r latest_backup_state latest_backup_age_s latest_backup_archive <<<"$backup_row"
+    latest_backup_state="${latest_backup_state:-unknown}"
+    latest_backup_age_s="${latest_backup_age_s:-unknown}"
+    if [ -n "${latest_backup_archive:-}" ] &&
+       [ -s "$latest_backup_archive/manifest.sha256" ] &&
+       (cd "$latest_backup_archive" && sha256sum -c manifest.sha256 >/dev/null 2>&1); then
+      latest_backup_manifest_ok=true
+    fi
+  fi
+fi
+
 legacy_broadcast_units=(
   gsa-tv-morning-start.timer
   gsa-tv-morning-start.service
@@ -177,6 +213,10 @@ echo "DESIRED_STATE=$desired_state"
 echo "SIGNAL_STATE=$signal_state"
 echo "PLAYOUT_STATE=$playout_state"
 echo "FIRST_MIGRATION_OFFAIR_READY=$first_migration_offair_ready"
+echo "LATEST_BACKUP_STATE=$latest_backup_state"
+echo "LATEST_BACKUP_AGE_S=$latest_backup_age_s"
+echo "LATEST_BACKUP_ARCHIVE=${latest_backup_archive:-none}"
+echo "LATEST_BACKUP_MANIFEST_OK=$latest_backup_manifest_ok"
 echo "ENV_FILE_PRESENT=$env_present"
 echo "DATABASE_CONFIGURED=$db_configured"
 echo "ENCODER_TOKEN_CONFIGURED=$encoder_token_configured"
