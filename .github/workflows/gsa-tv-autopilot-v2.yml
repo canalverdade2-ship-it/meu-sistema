@@ -115,6 +115,7 @@ jobs:
           gemini = Path("infrastructure/gsa-tv/services/playout-api/src/gemini.js").read_text()
           cinema_migration = Path("supabase/migrations/20260922135000_gsa_tv_cinema_duration_contract.sql").read_text()
           fallback_migration = Path("supabase/migrations/20260922134000_gsa_tv_autopilot_continuity_fallback.sql").read_text()
+          signature_migration = Path("supabase/migrations/20260922136000_gsa_tv_resolved_production_signature.sql").read_text()
 
           required_control = [
               "ENCODER_ENGINE_URL",
@@ -236,6 +237,15 @@ jobs:
           assert ":'version'" not in migration_apply
           assert ":'name'" not in migration_apply
           assert "supabase " not in migration_apply
+          assert "compat_live_source_id" in signature_migration
+          assert "compat_episode_id" in signature_migration
+          assert "compat_campaign_id" in signature_migration
+          assert "to_jsonb(b)->>'live_source_id'" in signature_migration
+          assert "to_jsonb(b)->>'episode_id'" in signature_migration
+          assert "to_jsonb(b)->>'campaign_id'" in signature_migration
+          assert "b.live_source_id" not in signature_migration
+          assert "b.episode_id" not in signature_migration
+          assert "b.campaign_id" not in signature_migration
           assert "source.backup(destination)" in full_backup
           assert "media-catalog-missing.txt" in full_backup
           assert "catalog_missing_files" in full_backup
