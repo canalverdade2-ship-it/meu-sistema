@@ -56,16 +56,23 @@ jobs:
           ref = os.environ['SUPABASE_PROJECT_ID']
           assert ref == 'ocgajvagxagutfvgxwsy', 'Unexpected project'
           query = pathlib.Path('scripts/audit-migration-collisions.sql').read_text()
-          request = urllib.request.Request(
-              f'https://api.supabase.com/v1/projects/{ref}/database/query',
-              data=json.dumps({'query':query,'read_only':True}).encode(),
-              headers={'Authorization':'Bearer '+os.environ['SUPABASE_ACCESS_TOKEN'],'Content-Type':'application/json'},
-              method='POST')
-          try:
-              with urllib.request.urlopen(request, timeout=45) as response:
-                  result = json.load(response)
-          except urllib.error.HTTPError as error:
-              raise SystemExit(f'Cloud read-only audit unavailable: HTTP {error.code}')
+          result = []
+          # The API returns only the last result set for a multi-statement query.
+          # This fixed audit SQL contains SELECTs without semicolons in literals.
+          for statement in query.split(';'):
+              statement = statement.strip()
+              if not statement.startswith('SELECT '):
+                  continue
+              request = urllib.request.Request(
+                  f'https://api.supabase.com/v1/projects/{ref}/database/query',
+                  data=json.dumps({'query':statement,'read_only':True}).encode(),
+                  headers={'Authorization':'Bearer '+os.environ['SUPABASE_ACCESS_TOKEN'],'Content-Type':'application/json'},
+                  method='POST')
+              try:
+                  with urllib.request.urlopen(request, timeout=45) as response:
+                      result.extend(json.load(response))
+              except urllib.error.HTTPError as error:
+                  raise SystemExit(f'Cloud read-only audit unavailable: HTTP {error.code}')
           text = json.dumps(result, ensure_ascii=False, indent=2)
           pathlib.Path('cloud-evidence.json').write_text(text)
           print(text)
