@@ -1,0 +1,16 @@
+[Unit]
+Description=GSA TV Autopilot V2 - rolling readiness horizon
+After=docker.service
+Wants=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/gsa-tv
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=GSA_TV_CHANNEL_ID=ch-main
+Environment=GSA_TV_ROOT=/opt/gsa-tv
+ExecStart=/usr/bin/python3 /opt/gsa-tv/bin/autopilot-readiness.py --days 7
+
+# Readiness monitoring must never control or stop the on-air chain.
+TimeoutStartSec=180
+Nice=10

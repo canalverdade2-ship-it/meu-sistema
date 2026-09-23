@@ -16,11 +16,8 @@ on:
       - 'src/security/collaboratorAccess.ts'
       - 'src/data/publicServiceCatalog.ts'
       - 'src/hooks/usePublicPageMetadata.ts'
-      - 'supabase/functions/gsa-public-advertising/**'
-      - 'supabase/functions/gsa-advertiser-admin/**'
-      - 'supabase/functions/gsa-ad-delivery/**'
-      - 'supabase/functions/gsa-advertising-webhook/**'
-      - 'supabase/functions/gsa-advertising-scheduler/**'
+      - 'supabase/functions/gsa-ads-public/**'
+      - 'supabase/functions/gsa-ads-admin/**'
       - 'supabase/migrations/20260721210100_create_advertising_foundation.sql'
       - 'supabase/migrations/20260721223100_complete_advertising_platform.sql'
       - 'scripts/check-advertising-foundation.ts'
@@ -33,10 +30,8 @@ on:
       - 'src/components/ads/**'
       - 'src/pages/AdvertiserPortal.tsx'
       - 'src/components/admin/AdvertisingAdminModule.tsx'
-      - 'supabase/functions/gsa-advertiser-admin/**'
-      - 'supabase/functions/gsa-ad-delivery/**'
-      - 'supabase/functions/gsa-advertising-webhook/**'
-      - 'supabase/functions/gsa-advertising-scheduler/**'
+      - 'supabase/functions/gsa-ads-public/**'
+      - 'supabase/functions/gsa-ads-admin/**'
       - 'supabase/migrations/20260721223100_complete_advertising_platform.sql'
 
 permissions:
@@ -87,19 +82,13 @@ jobs:
 
       - name: Check advertising Edge Functions
         run: |
-          deno check supabase/functions/gsa-public-advertising/index.ts
-          deno check supabase/functions/gsa-advertiser-admin/index.ts
-          deno check supabase/functions/gsa-ad-delivery/index.ts
-          deno check supabase/functions/gsa-advertising-webhook/index.ts
-          deno check supabase/functions/gsa-advertising-scheduler/index.ts
+          deno check supabase/functions/gsa-ads-public/index.ts
+          deno check supabase/functions/gsa-ads-admin/index.ts
 
       - name: Test advertising Edge Functions
         run: |
-          deno test --allow-env supabase/functions/gsa-public-advertising/index_test.ts
-          deno test --allow-env supabase/functions/gsa-advertiser-admin/index_test.ts
-          deno test --allow-env supabase/functions/gsa-ad-delivery/index_test.ts
-          deno test --allow-env supabase/functions/gsa-advertising-webhook/index_test.ts
-          deno test --allow-env supabase/functions/gsa-advertising-scheduler/index_test.ts
+          deno test --allow-env supabase/functions/gsa-ads-public/index_test.ts
+          deno test --allow-env supabase/functions/gsa-ads-admin/index_test.ts
 
       - name: Apply and exercise advertising migrations in PostgreSQL
         shell: bash

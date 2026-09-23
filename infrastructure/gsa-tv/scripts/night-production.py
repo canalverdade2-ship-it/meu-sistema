@@ -46,7 +46,50 @@ def published(date):
     versions = query("select id from gsa_tv_schedule_versions where channel_id='ch-main' and broadcast_date=$1 and state='published' order by version desc limit 1", [date])
     if not versions:
         raise RuntimeError('Nenhuma grade publicada para ' + date)
-    blocks = query("select b.id,b.program_id,b.planned_start_offset_s,b.planned_duration_s,b.media_item_id,b.is_reprise,b.metadata,b.block_type,p.name from gsa_tv_program_blocks b left join gsa_tv_programs p on p.id=b.program_id where b.schedule_version_id=$1 order by b.planned_start_offset_s,b.position", [versions[0]['id']])
+    blocks = query(
+        """select
+               b.id,b.program_id,b.planned_start_offset_s,b.planned_duration_s,
+               b.is_reprise,b.metadata,b.block_type,b.live_source_id,
+               p.name,
+               coalesce(dm.id,em.id,pm.id,cm.id) as media_item_id
+           from public.gsa_tv_program_blocks b
+           left join public.gsa_tv_programs p on p.id=b.program_id
+           left join public.gsa_tv_media_items dm on dm.id=b.media_item_id
+           left join public.gsa_tv_episodes ep on ep.id=b.episode_id
+           left join public.gsa_tv_media_items em on em.id=ep.media_item_id
+           left join lateral (
+             select m.*
+               from public.gsa_tv_series se
+               join public.gsa_tv_episodes e on e.series_id=se.id
+               join public.gsa_tv_media_items m on m.id=e.media_item_id
+              where b.media_item_id is null
+                and b.episode_id is null
+                and b.program_id is not null
+                and se.program_id=b.program_id
+              order by case when b.is_reprise then e.last_run_at else e.first_run_at end nulls first,
+                       e.season_number,e.episode_number,e.id
+      limit 1
+           ) pm on true
+           left join lateral (
+             select m.*
+               from public.gsa_tv_ad_assets aa
+               join public.gsa_tv_media_items m on m.id=aa.media_item_id
+               join public.gsa_tv_ad_campaigns c on c.id=aa.campaign_id
+              where b.campaign_id is not null
+                and aa.campaign_id=b.campaign_id
+                and c.status='active'
+                and (($2::date + make_interval(secs=>b.planned_start_offset_s)) at time zone $3)
+                    between c.starts_at and c.ends_at
+                and m.state='ready'
+                and m.rights_ok
+                and m.approval_state='approved'
+              order by aa.weight desc,m.updated_at asc
+              limit 1
+           ) cm on true
+          where b.schedule_version_id=$1
+          order by b.planned_start_offset_s,b.position""",
+        [versions[0]['id'], date, 'America/Sao_Paulo'],
+    )
     return versions[0]['id'], blocks
 
 def run(command, deadline, logfile):
@@ -125,9 +168,11 @@ def media_issue(m, block, date):
         path = media_path(m['drive_path'])
         if not path.is_file(): return 'missing_file'
         actual = probe(path)
-        library = bool(block.get('is_reprise') or (block.get('metadata') or {}).get('content_mode')=='library')
-        if actual > block['planned_duration_s']+1 and not library: return 'overlong'
-        # Playout compiler automatically pads underfilled slots with Continuidade filler.
+        metadata = block.get('metadata') or {}
+        allow_fill = metadata.get('allow_continuity_fill') is True
+        allow_trim = metadata.get('allow_trim') is True
+        if actual > block['planned_duration_s']+1 and not allow_trim: return 'overlong'
+        if actual + 1 < block['planned_duration_s'] and not allow_fill: return 'underfilled'
         if abs(actual-float(m['duration_s'])) > 2: return 'metadata_duration_mismatch'
     except Exception:
         return 'probe_failed'
@@ -139,7 +184,7 @@ def link_eligible(date, version, blocks):
     for b in blocks:
         if b['media_item_id'] or not b['program_id']: continue
         library=bool(b.get('is_reprise') or (b.get('metadata') or {}).get('content_mode')=='library')
-        rows=query("select * from gsa_tv_media_items where channel_id='ch-main' and state='ready' and approval_state='approved' and rights_ok and (metadata->>'program_id'=$1 or metadata->>'program_slug'=$2 or ($3::boolean and (title ilike ('%' || $5 || '%') or id ilike ('%' || $2 || '%')))) and ($3::boolean or metadata->>'broadcast_date'=$4) order by updated_at desc",[str(b['program_id']),slug(b['name']),library,date,b['name']])
+        rows=query("select * from gsa_tv_media_items where channel_id='ch-main' and state='ready' and approval_state='approved' and rights_ok and (metadata->>'program_id'=$1 or metadata->>'program_slug'=$2) and ($3::boolean or metadata->>'broadcast_date'=$4) order by case when metadata->>'target_block_id'=$5 then 0 else 1 end,updated_at desc",[str(b['program_id']),slug(b['name']),library,date,str(b['id'])])
         for m in rows:
             if media_issue(m,b,date): continue
             backup=ROOT/'backups/production-links'/date/(str(b['id'])+'.json')
@@ -165,6 +210,8 @@ def report(date):
         if start < start_of_day: continue
         if start != previous: issues.append({'block':b['id'],'issue':'gap_or_overlap','expected':previous,'actual':start})
         previous=start+duration
+        if b.get('block_type') == 'live' and b.get('live_source_id'):
+            continue
         rows=query('select state,approval_state,rights_ok,rights_expires_at,drive_path,duration_s from gsa_tv_media_items where id=$1 and channel_id=\'ch-main\'',[b['media_item_id']]) if b['media_item_id'] else []
         if not rows: issues.append({'block':b['id'],'program':b['name'],'issue':'missing_media'}); continue
         issue=media_issue(rows[0],b,date)
@@ -211,6 +258,7 @@ def main():
     parser.add_argument('--reconcile',action='store_true')
     parser.add_argument('--date',default=now().date().isoformat())
     parser.add_argument('--force',action='store_true',help='Bypass time window check')
+    parser.add_argument('--max-runtime-minutes',type=int,default=None,help='Bound a forced production cycle without changing the nightly default')
     args=parser.parse_args()
     date=dt.date.fromisoformat(args.date).isoformat()
     if args.compile_ready:
@@ -263,6 +311,11 @@ def main():
     deadline=dt.datetime.combine(dt.date.fromisoformat(date),dt.time(5,59),TZ)
     if args.force and deadline < now():
         deadline = now() + dt.timedelta(hours=6)
+    if args.max_runtime_minutes is not None:
+        if not 5 <= args.max_runtime_minutes <= 360:
+            raise ValueError('--max-runtime-minutes deve ficar entre 5 e 360')
+        runtime_deadline = now() + dt.timedelta(minutes=args.max_runtime_minutes)
+        deadline = min(deadline, runtime_deadline) if deadline > now() else runtime_deadline
     logfile=STATE/(date+'-execution.log')
     save(state)
     def interrupted(signum, frame):
@@ -285,11 +338,24 @@ def main():
                 item['state']='autonomous_generation';save(state)
                 print(f'[Night Production] Starting autonomous generation for {block["name"]} (budget: {budget}s)...', flush=True)
                 try:
-                    target_words=min(1200,max(500,int(budget*0.6)))
+                    try:
+                        speech_wpm=float(os.environ.get('GSA_TV_AUTOPILOT_SPEECH_WPM','125'))
+                    except ValueError:
+                        speech_wpm=125.0
+                    speech_wpm=min(170.0,max(90.0,speech_wpm))
+                    program_bumper=MEDIA/'identity/vinhetas'/('vinheta-'+name+'.mp4')
+                    fallback_bumper=MEDIA/'identity/vinhetas'/'vinheta-gsa-tv-40s-broadcast-safe.mp4'
+                    selected_bumper=program_bumper if program_bumper.is_file() else fallback_bumper
+                    try:
+                        bumper_reserve=2*probe(selected_bumper)
+                    except Exception:
+                        bumper_reserve=80.0
+                    speech_seconds=max(60.0,float(budget)-bumper_reserve)
+                    target_words=min(10000,max(500,int(round((speech_seconds/60.0)*speech_wpm))))
                     task_json={'output':f"/media/1/production/autonomous/{date}/{name}-{block['id']}.json",'mode':'generic_program','targetWords':target_words,'targetSeconds':budget,'date':date,'program':block['name']}
                     remaining=(deadline-now()).total_seconds()
                     if remaining<=0: raise TimeoutError('Janela de produção encerrada')
-                    child=subprocess.Popen(['docker','exec','-i','gsa-tv-control-plane','node','/media/1/production/autonomous/tools/autonomous-script.cjs'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,start_new_session=True)
+                    child=subprocess.Popen(['docker','exec','-i','-e',f"GSA_TV_AUTOPILOT_AUTO_APPROVE={os.environ.get('GSA_TV_AUTOPILOT_AUTO_APPROVE','false')}",'gsa-tv-control-plane','node','/media/1/production/autonomous/tools/autonomous-script.cjs'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,start_new_session=True)
                     try:
                         stdout_data,_=child.communicate(input=json.dumps(task_json),timeout=remaining)
                     except BaseException:
@@ -347,9 +413,37 @@ def main():
                 item.update(state='validated',master=str(output),duration=qc['probe']['duration'])
                 # No broad matching, no forged approval: register a reviewable candidate.
                 media_id='media-master-'+name+'-'+date+'-'+str(block['id'])
-                metadata={'program_slug':name,'program_id':block['program_id'],'broadcast_date':date,'production_qc':qc,'target_block_id':block['id'],'target_duration_s':budget}
-                query("insert into gsa_tv_media_items(id,channel_id,title,original_filename,duration_s,video_codec,video_width,video_height,video_fps,audio_codec,audio_sample_rate,audio_channels,state,rights_ok,drive_path,media_kind,source_type,ai_generated,approval_state,metadata) values($1,'ch-main',$2,$3,$4,'h264',1920,1080,30,'aac',48000,2,'ready',true,$5,'program','services',true,'approved',$6::jsonb) on conflict(id) do update set approval_state='approved',rights_ok=true,metadata=excluded.metadata,duration_s=excluded.duration_s,drive_path=excluded.drive_path,updated_at=now()",[media_id,block['name']+' — '+date,output.name,round(qc['probe']['duration']),'/media/1/program-masters/'+output.name,json.dumps(metadata)])
-                item['state']='validated'
+                auto_approval_enabled = str(os.environ.get('GSA_TV_AUTOPILOT_AUTO_APPROVE','')).strip().lower() in ('1','true','yes','on')
+                technical_passed = (
+                    qc.get('state') == 'validated'
+                    and abs(float(qc['probe']['duration']) - float(budget)) <= 1.5
+                )
+                provenance_declared = bool(qc.get('source_ledger') or qc.get('visual_provenance') or source_ledger)
+                automated_approval = auto_approval_enabled and technical_passed and provenance_declared
+                approval_state = 'approved' if automated_approval else 'pending'
+                rights_ok = bool(automated_approval)
+                metadata={
+                    'program_slug':name,
+                    'program_id':block['program_id'],
+                    'broadcast_date':date,
+                    'production_qc':qc,
+                    'target_block_id':block['id'],
+                    'target_duration_s':budget,
+                    'automated_approval':{
+                        'enabled':auto_approval_enabled,
+                        'approved':automated_approval,
+                        'policy':'gsa_tv_autopilot_generated_content_v1',
+                        'technical_qc_passed':technical_passed,
+                        'provenance_declared':provenance_declared,
+                        'decided_at':now().isoformat(),
+                    },
+                    'rights_basis':{
+                        'policy':'autopilot_generated_content_v1',
+                        'source_ledger':source_ledger,
+                    } if automated_approval else None,
+                }
+                query("insert into gsa_tv_media_items(id,channel_id,title,original_filename,duration_s,video_codec,video_width,video_height,video_fps,audio_codec,audio_sample_rate,audio_channels,state,rights_ok,drive_path,media_kind,source_type,ai_generated,approval_state,metadata) values($1,'ch-main',$2,$3,$4,'h264',1920,1080,30,'aac',48000,2,'ready',$5,$6,'program','services',true,$7,$8::jsonb) on conflict(id) do update set approval_state=excluded.approval_state,rights_ok=excluded.rights_ok,metadata=excluded.metadata,duration_s=excluded.duration_s,drive_path=excluded.drive_path,updated_at=now()",[media_id,block['name']+' — '+date,output.name,round(qc['probe']['duration']),rights_ok,'/media/1/program-masters/'+output.name,approval_state,json.dumps(metadata)])
+                item['state']='validated' if automated_approval else 'awaiting_automated_approval_policy'
                 item['media_id']=media_id
             except (InterruptedError,TimeoutError): raise
             except Exception as exc:

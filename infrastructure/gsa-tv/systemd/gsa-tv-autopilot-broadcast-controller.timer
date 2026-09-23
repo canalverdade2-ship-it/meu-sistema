@@ -1,0 +1,11 @@
+[Unit]
+Description=GSA TV Autopilot V2 - evaluate broadcast state every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00 America/Sao_Paulo
+AccuracySec=5s
+Persistent=true
+Unit=gsa-tv-autopilot-broadcast-controller.service
+
+[Install]
+WantedBy=timers.target

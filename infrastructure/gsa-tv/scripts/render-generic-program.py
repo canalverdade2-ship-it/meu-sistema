@@ -10,12 +10,11 @@ import subprocess
 import os
 import urllib.request
 import urllib.parse
+import ipaddress
+import socket
 import textwrap
 import unicodedata
 import re
-import ssl
-
-ssl._create_default_https_context = ssl._create_unverified_context
 
 def sha(path):
     h = hashlib.sha256()
@@ -34,8 +33,8 @@ def probe(path):
 def validate_inputs(script, manifest, target):
     digest = hashlib.sha256(script['narration'].encode()).hexdigest()
     review = script.get('review', {})
-    if script.get('mode') not in ['generic_program', 'original_reflection']:
-        raise ValueError('Only generic program or original reflection is supported')
+    if script.get('mode') not in ['generic_program', 'source_bound_program']:
+        raise ValueError('Only generic or source-bound programs are supported')
     if review.get('pass') is not True or review.get('violations') != []:
         raise ValueError('Editorial review is missing or rejected')
     if any(x != digest for x in [script.get('script_sha256'), review.get('script_sha256'), manifest.get('script_sha256')]):
@@ -45,16 +44,110 @@ def validate_inputs(script, manifest, target):
     if not math.isfinite(target) or not 60 <= target <= 7200:
         raise ValueError('Invalid slot duration')
 
+def compute_timing(audio_duration, slot_seconds, bumper_duration):
+    values = (audio_duration, slot_seconds, bumper_duration)
+    if not all(math.isfinite(float(x)) for x in values):
+        raise ValueError('Non-finite duration')
+    body_seconds = float(slot_seconds) - (2 * float(bumper_duration))
+    if body_seconds < 60:
+        raise ValueError(
+            f'Slot too short for opening/closing bumpers: slot={slot_seconds:.2f}s '
+            f'bumpers={2 * float(bumper_duration):.2f}s'
+        )
+    speed = float(audio_duration) / body_seconds
+    if not 0.90 <= speed <= 1.10:
+        raise ValueError(
+            f'Narration needs editorial adjustment: {float(audio_duration):.2f}s for '
+            f'{body_seconds:.2f}s body inside {float(slot_seconds):.2f}s slot; '
+            'no excessive stretching allowed'
+        )
+    return body_seconds, speed
+
 used_urls = set()
+
+MEDIA_HOST_SUFFIXES = {
+    'pexels': ('pexels.com',),
+    'pixabay': ('pixabay.com',),
+}
+
+def validate_media_url(url, provider):
+    parsed = urllib.parse.urlparse(str(url))
+    if parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.password:
+        raise ValueError('Unsafe media URL')
+    host = parsed.hostname.lower().rstrip('.')
+    suffixes = MEDIA_HOST_SUFFIXES.get(provider, ())
+    if not suffixes or not any(host == suffix or host.endswith('.' + suffix) for suffix in suffixes):
+        raise ValueError(f'Unexpected media host for {provider}: {host}')
+    try:
+        infos = socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)
+    except socket.gaierror as exc:
+        raise ValueError(f'Media host resolution failed: {host}') from exc
+    addresses = {info[4][0] for info in infos}
+    if not addresses:
+        raise ValueError('Media host resolved without addresses')
+    for raw in addresses:
+        ip = ipaddress.ip_address(raw)
+        if not ip.is_global:
+            raise ValueError(f'Non-public media address blocked: {ip}')
+    return str(url)
+
+class SafeMediaRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def __init__(self, provider):
+        super().__init__()
+        self.provider = provider
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        validate_media_url(newurl, self.provider)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+def download_media(url, out_path, provider, timeout=30):
+    validate_media_url(url, provider)
+    max_bytes = int(os.environ.get('GSA_TV_BROLL_MAX_BYTES', str(512 * 1024 * 1024)))
+    if max_bytes < 1024 * 1024 or max_bytes > 2 * 1024 * 1024 * 1024:
+        raise ValueError('GSA_TV_BROLL_MAX_BYTES outside safe bounds')
+    opener = urllib.request.build_opener(SafeMediaRedirectHandler(provider))
+    request = urllib.request.Request(url, headers={'User-Agent': 'GSA-TV-Autopilot/2'})
+    total = 0
+    try:
+        with opener.open(request, timeout=timeout) as response, open(out_path, 'wb') as target:
+            validate_media_url(response.geturl(), provider)
+            content_length = response.headers.get('Content-Length')
+            if content_length and int(content_length) > max_bytes:
+                raise ValueError('B-roll exceeds configured size limit')
+            while True:
+                chunk = response.read(1024 * 1024)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > max_bytes:
+                    raise ValueError('B-roll exceeded configured size limit while downloading')
+                target.write(chunk)
+    except Exception:
+        try:
+            Path(out_path).unlink(missing_ok=True)
+        except Exception:
+            pass
+        raise
+    if total < 1024:
+        Path(out_path).unlink(missing_ok=True)
+        raise ValueError('B-roll download is unexpectedly small')
+    return out_path
 
 def fetch_video(query, work_dir, index, timeout=30):
     """Busca vídeo B-roll FHD 1080p no Pexels Videos e depois Pixabay Videos.
     Retorna o caminho do arquivo .mp4 baixado, ou None se não encontrar."""
-    pexels_key = os.environ.get('PEXELS_API_KEY', 'vzRYUjFgGAouI5uYTbjlvonzRU2kiefK0P7JRPyf0Iq7CcDzU5gOZUbz')
-    pixabay_key = os.environ.get('PIXABAY_API_KEY', '57596721-7e8e67b2aa9e242e8ade98871')
+    pexels_key = os.environ.get('PEXELS_API_KEY', '').strip()
+    pixabay_key = os.environ.get('PIXABAY_API_KEY', '').strip()
 
     if not query:
-        return None
+        return None, {
+            'provider': 'internal_generated',
+            'asset_id': None,
+            'source_page_url': None,
+            'contributor': None,
+            'license_basis': 'GSA internal generated background',
+            'query': query,
+        }
 
     query_encoded = urllib.parse.quote(query)
     out_path = work_dir / f'video_{index}.mp4'
@@ -76,9 +169,16 @@ def fetch_video(query, work_dir, index, timeout=30):
                     url = vf.get('link', '')
                     if url and url not in used_urls:
                         used_urls.add(url)
-                        urllib.request.urlretrieve(url, out_path)
+                        download_media(url, out_path, 'pexels', timeout=timeout)
                         print(f"Pexels video: '{query}' → {vf.get('width')}x{vf.get('height')}")
-                        return out_path
+                        return out_path, {
+                            'provider': 'pexels',
+                            'asset_id': video.get('id'),
+                            'source_page_url': video.get('url'),
+                            'contributor': (video.get('user') or {}).get('name'),
+                            'license_basis': 'Pexels License',
+                            'query': query,
+                        }
         except Exception as e:
             print(f"Pexels video error for '{query}': {e}")
 
@@ -97,13 +197,27 @@ def fetch_video(query, work_dir, index, timeout=30):
                     vid_url = vdata.get('url', '')
                     if vid_url and vid_url not in used_urls:
                         used_urls.add(vid_url)
-                        urllib.request.urlretrieve(vid_url, out_path)
+                        download_media(vid_url, out_path, 'pixabay', timeout=timeout)
                         print(f"Pixabay video ({quality}): '{query}' → {vdata.get('width')}x{vdata.get('height')}")
-                        return out_path
+                        return out_path, {
+                            'provider': 'pixabay',
+                            'asset_id': hit.get('id'),
+                            'source_page_url': hit.get('pageURL'),
+                            'contributor': hit.get('user'),
+                            'license_basis': 'Pixabay Content License',
+                            'query': query,
+                        }
         except Exception as e:
             print(f"Pixabay video error for '{query}': {e}")
 
-    return None
+    return None, {
+        'provider': 'internal_generated',
+        'asset_id': None,
+        'source_page_url': None,
+        'contributor': None,
+        'license_basis': 'GSA internal generated background',
+        'query': query,
+    }
 
 def main():
     parser = argparse.ArgumentParser()
@@ -118,9 +232,6 @@ def main():
     validate_inputs(script, manifest, args.seconds)
     audio = Path(manifest['audio_wav'])
     duration = float(probe(audio)['format']['duration'])
-    speed = duration / args.seconds
-    if not math.isfinite(speed) or not 0.90 <= speed <= 1.10:
-        raise ValueError(f'Narration needs editorial adjustment: {duration:.2f}s for {args.seconds:.2f}s; no excessive stretching allowed')
     output = args.output.resolve()
     work = output.parent / (output.stem + '-graphics')
     temp = output.with_name(output.stem + '.partial.mp4')
@@ -131,11 +242,26 @@ def main():
     if temp.exists():
         temp.unlink()
     work.mkdir(parents=True)
+
+    slug = unicodedata.normalize('NFKD', script['program']).encode('ascii', 'ignore').decode('ascii').lower()
+    slug = re.sub(r'[^a-z0-9\\s-]', '', slug)
+    slug = re.sub(r'[-\\s]+', '-', slug).strip('-')
+
+    bumper_path = Path(f'/opt/gsa-tv/cache/media/1/identity/vinhetas/vinheta-{slug}.mp4')
+    fallback_bumper = Path('/opt/gsa-tv/cache/media/1/identity/vinhetas/vinheta-gsa-tv-40s-broadcast-safe.mp4')
+    bumper_file = bumper_path if bumper_path.exists() else fallback_bumper
+    if not bumper_file.exists():
+        raise FileNotFoundError(f'Broadcast bumper not found: {bumper_file}')
+
+    bumper_duration = float(probe(bumper_file)['format']['duration'])
+    body_seconds, speed = compute_timing(duration, args.seconds, bumper_duration)
+
     title = work / 'program.txt'
     
     title.write_text('\n'.join(textwrap.wrap(script['program'], width=40)), encoding='utf-8')
     
     sections = script['sections']
+    visual_provenance = []
     total_words = sum(len(x['text'].split()) for x in sections)
     start = 0.0
     
@@ -144,11 +270,14 @@ def main():
     input_count = 0    # índice do próximo input a ser adicionado
 
     for index, section in enumerate(sections):
-        end = start + args.seconds * len(section['text'].split()) / total_words
+        end = start + body_seconds * len(section['text'].split()) / total_words
         seg_dur = end - start
         query = section.get('visual_query', '')
 
-        clip = fetch_video(query, work, index)
+        clip, provenance = fetch_video(query, work, index)
+        provenance['section_index'] = index
+        provenance['section_title'] = section.get('title')
+        visual_provenance.append(provenance)
 
         if clip:
             # Vídeo B-roll: loop se necessário, escala para 1920×1080, reset de timestamps
@@ -175,7 +304,7 @@ def main():
     start = 0.0
     last_out = "out1"
     for index, section in enumerate(sections):
-        end = start + args.seconds * len(section['text'].split()) / total_words
+        end = start + body_seconds * len(section['text'].split()) / total_words
         text = work / f'chapter-{index:02}.txt'
         text.write_text('\n'.join(textwrap.wrap(section['title'], width=34)), encoding='utf-8')
         next_out = f"out{index+2}"
@@ -188,7 +317,7 @@ def main():
     # Run ffmpeg
     cmd = ['ffmpeg', '-nostdin', '-v', 'error', '-y'] + media_args + ['-i', str(audio)]
     cmd.extend(['-filter_complex', ';'.join(filter_complex)])
-    cmd.extend(['-map', '[video_final]', '-map', f'{input_count}:a', '-af', f'atempo={speed:.9f},apad', '-t', str(args.seconds)])
+    cmd.extend(['-map', '[video_final]', '-map', f'{input_count}:a', '-af', f'atempo={speed:.9f},apad', '-t', str(body_seconds)])
     cmd.extend(['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2', '-movflags', '+faststart', str(temp)])
 
     
@@ -198,41 +327,54 @@ def main():
     video = next(x for x in data['streams'] if x['codec_type'] == 'video')
     sound = next(x for x in data['streams'] if x['codec_type'] == 'audio')
     actual = float(data['format']['duration'])
-    if abs(actual - args.seconds) > 0.15 or (video['width'], video['height'], video['codec_name']) != (1920, 1080, 'h264') or sound['codec_name'] != 'aac' or sound['sample_rate'] != '48000' or sound['channels'] != 2:
-        raise ValueError('Master failed technical verification')
+    if abs(actual - body_seconds) > 0.15 or (video['width'], video['height'], video['codec_name']) != (1920, 1080, 'h264') or sound['codec_name'] != 'aac' or sound['sample_rate'] != '48000' or sound['channels'] != 2:
+        raise ValueError('Program body failed technical verification')
     subprocess.run(['ffmpeg', '-nostdin', '-v', 'error', '-xerror', '-i', str(temp), '-f', 'null', '-'], check=True)
     
     list_file = work / 'concat_list.txt'
     
-    slug = unicodedata.normalize('NFKD', script['program']).encode('ascii', 'ignore').decode('ascii').lower()
-    slug = re.sub(r'[^a-z0-9\s-]', '', slug)
-    slug = re.sub(r'[-\s]+', '-', slug).strip('-')
-    
-    bumper_path = f'/opt/gsa-tv/cache/media/1/identity/vinhetas/vinheta-{slug}.mp4'
-    if Path(bumper_path).exists():
-        bumper_file = bumper_path
-    else:
-        bumper_file = '/opt/gsa-tv/cache/media/1/identity/vinheta-gsa-tv-40s-broadcast-safe.mp4'
-        
+    # Reuse the exact bumper Path already selected and probed above.
+    safe_bumper = bumper_file.resolve().as_posix().replace("'", r"'\''")
     with open(list_file, 'w', encoding='utf-8') as f:
-        f.write(f"file '{bumper_file}'\n")
+        f.write(f"file '{safe_bumper}'\n")
         safe_temp = temp.resolve().as_posix().replace("'", r"'\''")
         f.write(f"file '{safe_temp}'\n")
-        f.write(f"file '{bumper_file}'\n")
+        f.write(f"file '{safe_bumper}'\n")
         
     final_temp = output.with_name(output.stem + '.final.mp4')
     subprocess.run(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', str(list_file), '-c', 'copy', str(final_temp)], check=True)
     
     final_data = probe(final_temp)
     final_actual = float(final_data['format']['duration'])
-    
+    final_video = next((x for x in final_data['streams'] if x.get('codec_type') == 'video'), None)
+    final_audio = next((x for x in final_data['streams'] if x.get('codec_type') == 'audio'), None)
+    final_ok = (
+        abs(final_actual - args.seconds) <= 0.75
+        and final_video is not None
+        and final_audio is not None
+        and (final_video.get('width'), final_video.get('height'), final_video.get('codec_name')) == (1920, 1080, 'h264')
+        and final_audio.get('codec_name') == 'aac'
+        and str(final_audio.get('sample_rate')) == '48000'
+        and int(final_audio.get('channels') or 0) == 2
+    )
+    if not final_ok:
+        raise ValueError(
+            f'Final master failed broadcast verification: duration={final_actual:.3f}s '
+            f'target={args.seconds:.3f}s'
+        )
+    subprocess.run(
+        ['ffmpeg', '-nostdin', '-v', 'error', '-xerror', '-i', str(final_temp), '-f', 'null', '-'],
+        check=True,
+    )
+
     final_temp.rename(output)
     
     report = {'state': 'technical_validated', 'broadcast_date': script['date'], 'program': script['program'],
-              'duration_s': final_actual, 'target_duration_s': args.seconds, 'audio_speed': speed,
+              'duration_s': final_actual, 'target_duration_s': args.seconds, 'body_target_duration_s': body_seconds,
+              'bumper_duration_s': bumper_duration, 'audio_speed': speed,
               'script_sha256': script['script_sha256'], 'master_sha256': sha(output),
-              'audio_sha256': sha(audio), 'visual_provenance': 'pexels_pixabay_fallback',
-              'visual_review': 'pending', 'published': False}
+              'audio_sha256': sha(audio), 'visual_provenance': visual_provenance,
+              'visual_review': {'state': 'pending', 'pass': False}, 'published': False}
     output.with_suffix('.qc.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
     print(json.dumps(report))
 

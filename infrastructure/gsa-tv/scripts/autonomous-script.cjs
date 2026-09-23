@@ -12,8 +12,28 @@ async function main(){
  let input='';for await(const chunk of process.stdin)input+=chunk;
  const task=JSON.parse(input);
  if(!/^\/media\/1\/production\/autonomous\//.test(task.output)||task.output.includes('..'))throw Error('Destino inválido');
- if(task.mode!=='original_reflection'&&task.mode!=='generic_program')throw Error('Formato ainda não habilitado neste gerador');
+ const allowedModes=new Set(['original_reflection','generic_program','source_bound_program']);
+ if(!allowedModes.has(task.mode))throw Error('Formato ainda não habilitado neste gerador');
  if(!Number.isInteger(task.targetWords)||task.targetWords<500||task.targetWords>10000)throw Error('Orçamento inválido');
+ const sourceBound=task.mode==='source_bound_program';
+ const allowedRights=new Set(['open_data','public_domain','licensed']);
+ const sourceItems=sourceBound?(Array.isArray(task.sourceItems)?task.sourceItems:[]):[];
+ if(sourceBound){
+   if(!sourceItems.length||sourceItems.length>20)throw Error('SOURCE_PACKAGE_INVALID');
+   for(const item of sourceItems){
+     if(!item||typeof item.id!=='string'||typeof item.title!=='string'||typeof item.summary!=='string')throw Error('SOURCE_PACKAGE_INVALID');
+     if(!allowedRights.has(String(item.rights_classification||'')))throw Error('SOURCE_RIGHTS_NOT_ALLOWED');
+     if(item.summary.trim().length<20)throw Error('SOURCE_SUMMARY_TOO_SHORT');
+   }
+ }
+ const sourceDigest=sourceBound?hash(JSON.stringify(sourceItems.map(x=>({
+   id:x.id,source_id:x.source_id||null,title:x.title,summary:x.summary,
+   canonical_url:x.canonical_url||null,rights_classification:x.rights_classification,
+   source_name:x.source_name||null,provider:x.provider||null
+ })))):null;
+ const sourceWords=sourceBound?sourceItems.reduce((n,x)=>n+words(String(x.title||'')+' '+String(x.summary||'')),0):0;
+ const sourceExpansionLimit=sourceBound?Math.max(700,Math.floor(sourceWords*3.2)+250):null;
+ if(sourceBound&&task.targetWords>sourceExpansionLimit)throw Error('SOURCE_BUDGET_INSUFFICIENT target='+task.targetWords+' supported='+sourceExpansionLimit);
  const pool=new Pool({connectionString:process.env.DATABASE_URL});
  try{
   const row=(await pool.query("select * from gsa_tv_ai_provider_secrets where channel_id='ch-main' order by updated_at desc limit 1")).rows[0];
@@ -30,7 +50,10 @@ async function main(){
    return result.text;
   }
   const themes=['acolher sem julgar','paciência nas pequenas atitudes','cuidar dos vínculos','gratidão sem negar as dificuldades','recomeçar com responsabilidade','escuta e solidariedade'];
-  const count=Math.ceil(task.targetWords/500);const target=Math.ceil(task.targetWords/count);
+  const count=sourceBound
+    ?Math.min(sourceItems.length,Math.max(1,Math.ceil(task.targetWords/550)))
+    :Math.ceil(task.targetWords/500);
+  const target=Math.ceil(task.targetWords/count);
   const parentDir=require('node:path').dirname(task.output);
   const baseName=require('node:path').basename(task.output);
   await fs.mkdir(parentDir,{recursive:true});
@@ -39,7 +62,7 @@ async function main(){
   try {
     const raw = await fs.readFile(task.output, 'utf8');
     const existing = JSON.parse(raw);
-    if (existing && existing.script_sha256 && existing.review?.pass === true && Array.isArray(existing.sections) && existing.sections.length === count && existing.mode === task.mode) {
+    if (existing && existing.script_sha256 && existing.review?.pass === true && Array.isArray(existing.sections) && existing.sections.length === count && existing.mode === task.mode && (!sourceBound || existing.source_digest === sourceDigest)) {
       result = existing;
       console.error('SCRIPT_ALREADY_VALIDATED words: ' + result.word_count + ' hash: ' + result.script_sha256);
     }
@@ -67,14 +90,26 @@ async function main(){
       } catch {}
 
       if (!section) {
-        const instructions = task.mode === 'generic_program'
-          ? `Escreva um texto ORIGINAL em português brasileiro para locução do programa televisivo "${task.program}". O texto deve ser apropriado para o tema e formato deste programa. Não copie textos protegidos. Não cite pessoas reais, estatísticas, estudos, fatos atuais ou testemunhos como reais. Não prometa cura, prosperidade ou intervenção divina. Exemplos devem ser claramente hipotéticos. Não dê conselho médico/financeiro. Sem propaganda, pedidos de dinheiro, participação ao vivo ou contatos inventados. Não inclua instruções de direção no texto falado. Desenvolva ideias distintas, sem enchimento e sem repetir parágrafos. IMPORTANTE: Desenvolva o texto com extensão entre ${Math.floor(target*0.88)} e ${Math.ceil(target*1.12)} palavras (mínimo de ${Math.floor(target*0.88)} palavras). Responda somente JSON com title (curto), text (locução integral), visual_query (termo de busca curto em inglês de 1 a 3 palavras para banco de imagens para ilustrar este parágrafo).`
-          : 'Escreva um texto ORIGINAL em português brasileiro para locução de um programa de reflexão cristã acolhedora. Não copie orações, músicas ou traduções bíblicas. Não cite versículos, pessoas reais, estatísticas, estudos, fatos atuais ou testemunhos como reais. Não prometa cura, prosperidade ou intervenção divina garantida. Exemplos devem ser claramente hipotéticos. Não dê conselho médico/financeiro. Sem propaganda, pedidos de dinheiro, participação ao vivo ou contatos inventados. Não inclua instruções de direção no texto falado. Desenvolva ideias distintas, sem enchimento e sem repetir parágrafos. IMPORTANTE: Desenvolva o texto com extensão entre ' + Math.floor(target*0.88) + ' e ' + Math.ceil(target*1.12) + ' palavras (mínimo de ' + Math.floor(target*0.88) + ' palavras). Responda somente JSON com title (curto), text (locução integral), visual_query (termo de busca curto em inglês de 1 a 3 palavras para banco de imagens para ilustrar este parágrafo).';
+        const instructions = sourceBound
+          ? `Escreva em português brasileiro uma seção factual e neutra para o programa "${task.program}" usando EXCLUSIVAMENTE os fatos contidos nas fontes fornecidas no JSON do usuário. Parafraseie; não copie trechos longos. Preserve números, datas, nomes e incertezas. Não acrescente fatos de memória, conhecimento geral ou inferência não sustentada. Quando houver alegação, posição política, legislação, eleição, autoridade pública ou interpretação contestável, atribua claramente à fonte correspondente e não endosse, ataque, recomende, ranqueie ou preveja candidatos, partidos, governos ou resultados eleitorais. Diferencie fato da fonte de contexto editorial. Se as fontes não sustentarem material suficiente para esta seção, responda JSON com {"insufficient":true,"reason":"..."} e não invente preenchimento. Não dê conselho médico/financeiro. Não inclua instruções de direção no texto falado. Meta de extensão: entre ${Math.floor(target*0.88)} e ${Math.ceil(target*1.12)} palavras. Responda somente JSON com title (curto), text (locução integral), visual_query (termo visual genérico em inglês de 1 a 3 palavras) e source_ids (array apenas com IDs das fontes efetivamente usadas).`
+          : task.mode === 'generic_program'
+            ? `Escreva um texto ORIGINAL em português brasileiro para locução do programa televisivo "${task.program}". O texto deve ser apropriado para o tema e formato deste programa. Não copie textos protegidos. Não cite pessoas reais, estatísticas, estudos, fatos atuais ou testemunhos como reais. Não prometa cura, prosperidade ou intervenção divina. Exemplos devem ser claramente hipotéticos. Não dê conselho médico/financeiro. Sem propaganda, pedidos de dinheiro, participação ao vivo ou contatos inventados. Não inclua instruções de direção no texto falado. Desenvolva ideias distintas, sem enchimento e sem repetir parágrafos. IMPORTANTE: Desenvolva o texto com extensão entre ${Math.floor(target*0.88)} e ${Math.ceil(target*1.12)} palavras (mínimo de ${Math.floor(target*0.88)} palavras). Responda somente JSON com title (curto), text (locução integral), visual_query (termo de busca curto em inglês de 1 a 3 palavras para banco de imagens para ilustrar este parágrafo).`
+            : 'Escreva um texto ORIGINAL em português brasileiro para locução de um programa de reflexão cristã acolhedora. Não copie orações, músicas ou traduções bíblicas. Não cite versículos, pessoas reais, estatísticas, estudos, fatos atuais ou testemunhos como reais. Não prometa cura, prosperidade ou intervenção divina garantida. Exemplos devem ser claramente hipotéticos. Não dê conselho médico/financeiro. Sem propaganda, pedidos de dinheiro, participação ao vivo ou contatos inventados. Não inclua instruções de direção no texto falado. Desenvolva ideias distintas, sem enchimento e sem repetir parágrafos. IMPORTANTE: Desenvolva o texto com extensão entre ' + Math.floor(target*0.88) + ' e ' + Math.ceil(target*1.12) + ' palavras (mínimo de ' + Math.floor(target*0.88) + ' palavras). Responda somente JSON com title (curto), text (locução integral), visual_query (termo de busca curto em inglês de 1 a 3 palavras para banco de imagens para ilustrar este parágrafo).';
         for(let attempt=0;attempt<3;attempt++){
           try {
             const currentTheme = task.mode === 'generic_program' ? 'conteúdo apropriado ao programa' : themes[(index+Number(task.date.slice(-2)))%themes.length];
+            const assignedSources=sourceBound
+              ?sourceItems.filter((_,sourceIndex)=>sourceIndex%count===index)
+              :[];
             await new Promise(r => setTimeout(r, 3500)); // Pace globally to ~17 req/min
-            section=parse(await generate(JSON.stringify({program:task.program,date:task.date,part:index+1,totalParts:count,theme:currentTheme,targetWords:target,minimumWords:Math.floor(target*0.90),maximumWords:Math.ceil(target*1.10),opening:index===0,closing:index===count-1,previousTopics:sections.map(x=>x.title),previousAttemptWords:section?words(section.text):null}),instructions,'broadcast_script'));
+            section=parse(await generate(JSON.stringify({
+              program:task.program,date:task.date,part:index+1,totalParts:count,
+              theme:sourceBound?'fontes verificadas':currentTheme,
+              targetWords:target,minimumWords:Math.floor(target*0.90),maximumWords:Math.ceil(target*1.10),
+              opening:index===0,closing:index===count-1,previousTopics:sections.map(x=>x.title),
+              previousAttemptWords:section?words(section.text):null,
+              sources:assignedSources
+            }),instructions,'broadcast_script'));
             section.mode = task.mode;
             await fs.writeFile(task.output+`.part-${index+1}-attempt-${attempt+1}-${Date.now()}.json`,JSON.stringify(section,null,2),{mode:0o640,flag:'wx'});
             console.error('SCRIPT_WORD_COUNT '+(index+1)+' '+words(section.text||''));
@@ -88,18 +123,34 @@ async function main(){
           }
         }
       }
+      if(section?.insufficient===true)throw Error('SOURCE_BUDGET_INSUFFICIENT section='+(index+1)+' '+String(section.reason||''));
       if(!section||typeof section.text!=='string'||words(section.text)<target*0.83||words(section.text)>target*1.17)throw Error('Roteiro fora do orçamento na parte '+(index+1));
+      if(sourceBound){
+        const allowedIds=new Set(sourceItems.map(x=>x.id));
+        if(!Array.isArray(section.source_ids)||!section.source_ids.length||section.source_ids.some(id=>!allowedIds.has(String(id))))throw Error('SOURCE_TRACE_INVALID section='+(index+1));
+      }
       sections.push(section);
       console.error('SCRIPT_SECTION_READY '+(index+1)+'/'+count);
     }
     const narration=sections.map(x=>x.text.trim()).join('\n\n');
-    const reviewInstructions = task.mode === 'generic_program'
-      ? `Você é o revisor editorial do programa "${task.program}". Avalie se o texto é original, coerente com o programa, sem instruções de produção faladas, repetição excessiva, fatos externos sem fonte, testemunhos apresentados como reais, promessas absurdas ou contatos inventados. Responda apenas JSON {"pass":boolean,"violations":[string]}. Reprove qualquer violação substancial.`
-      : 'Você é o revisor editorial. Avalie se o texto é uma reflexão original coerente, sem instruções de produção faladas, repetição excessiva, fatos externos sem fonte, testemunhos apresentados como reais, citações de músicas/orações/versículos, promessas garantidas de cura/dinheiro/milagres ou contatos inventados. Não exija fontes para crenças religiosas claramente apresentadas como reflexão. Responda apenas JSON {"pass":boolean,"violations":[string]}. Reprove qualquer violação substancial.';
+    const reviewInstructions = sourceBound
+      ? `Você é o revisor factual da GSA TV. Compare cada afirmação factual das seções com o pacote de fontes fornecido. Reprove qualquer fato, número, data, causa, citação indireta ou interpretação apresentada como fato que não esteja sustentada. Exija atribuição clara para alegações/posições políticas ou contestáveis. Reprove persuasão partidária, recomendação/ranqueamento de candidatos/partidos/governos, previsão eleitoral, especulação de motivos e reprodução extensa de texto-fonte. Aceite paráfrase neutra fiel. Responda apenas JSON {"pass":boolean,"violations":[string]}.`
+      : task.mode === 'generic_program'
+        ? `Você é o revisor editorial do programa "${task.program}". Avalie se o texto é original, coerente com o programa, sem instruções de produção faladas, repetição excessiva, fatos externos sem fonte, testemunhos apresentados como reais, promessas absurdas ou contatos inventados. Responda apenas JSON {"pass":boolean,"violations":[string]}. Reprove qualquer violação substancial.`
+        : 'Você é o revisor editorial. Avalie se o texto é uma reflexão original coerente, sem instruções de produção faladas, repetição excessiva, fatos externos sem fonte, testemunhos apresentados como reais, citações de músicas/orações/versículos, promessas garantidas de cura/dinheiro/milagres ou contatos inventados. Não exija fontes para crenças religiosas claramente apresentadas como reflexão. Responda apenas JSON {"pass":boolean,"violations":[string]}. Reprove qualquer violação substancial.';
     await new Promise(r => setTimeout(r, 4000));
-    const review=parse(await generate(JSON.stringify({mode:task.mode,program:task.program,sections}), reviewInstructions,'review',2500));
+    const review=parse(await generate(JSON.stringify({
+      mode:task.mode,program:task.program,sections,
+      sources:sourceBound?sourceItems:undefined
+    }), reviewInstructions,'review',2500));
     const script_sha256=hash(narration);
-    result={program:task.program,date:task.date,mode:task.mode,sections,narration,word_count:words(narration),script_sha256,review:{...review,script_sha256},generated_at:new Date().toISOString(),provider:row.provider,model:row.default_model};
+    result={
+      program:task.program,date:task.date,mode:task.mode,sections,narration,
+      word_count:words(narration),script_sha256,review:{...review,script_sha256},
+      source_ids:sourceBound?[...new Set(sections.flatMap(x=>x.source_ids||[]))]:[],
+      source_digest:sourceDigest,
+      generated_at:new Date().toISOString(),provider:row.provider,model:row.default_model
+    };
     await fs.writeFile(task.output,JSON.stringify(result,null,2),{mode:0o640});
     if(review.pass!==true||!Array.isArray(review.violations)||review.violations.length)throw Error('Revisão editorial reprovou o roteiro: ' + JSON.stringify(review.violations));
   }
@@ -176,7 +227,12 @@ async function main(){
   console.error(`AUDIO_MEASURED_DURATION: ${audioDuration.toFixed(2)}s`);
   const expectedSeconds = task.targetSeconds || Math.round(audioDuration);
 
-  const renderScript = require('node:path').join(__dirname, task.mode === 'generic_program' ? 'render-generic-program.py' : 'render-original-reflection.py');
+  const renderScript = require('node:path').join(
+    __dirname,
+    (task.mode === 'generic_program' || task.mode === 'source_bound_program')
+      ? 'render-generic-program.py'
+      : 'render-original-reflection.py'
+  );
   try {
     await execFileAsync('python3', [renderScript, '--script', task.output, '--manifest', manifestPath, '--seconds', String(expectedSeconds), '--output', mp4Path]);
   } catch (err) {
@@ -186,26 +242,195 @@ async function main(){
   const qcPath = mp4Path.replace(/\.mp4$/, '.qc.json');
   const qc = JSON.parse(await fs.readFile(qcPath, 'utf8'));
 
+  if (task.mode === 'generic_program' || task.mode === 'source_bound_program') {
+    let visualReview = {
+      state: 'failed',
+      pass: false,
+      method: 'gemini_sampled_master_v1',
+      identifiable_people: true,
+      visible_logos_or_brands: true,
+      sensitive_or_misleading_context: true,
+      copyrighted_artwork_or_screen: true,
+      notes: ['visual_review_not_completed']
+    };
+    const pathModule = require('node:path');
+    const os = require('node:os');
+    let reviewDir = null;
+    try {
+      const duration = Number(qc.duration_s || expectedSeconds);
+      if (!Number.isFinite(duration) || duration <= 0) throw Error('Duração inválida para revisão visual');
+      reviewDir = await fs.mkdtemp(pathModule.join(os.tmpdir(), 'gsa-tv-visual-review-'));
+      const fractions = [0.08, 0.24, 0.40, 0.56, 0.72, 0.88];
+      const images = [];
+      for (let i = 0; i < fractions.length; i++) {
+        const second = Math.max(0, Math.min(duration - 0.2, duration * fractions[i]));
+        const frame = pathModule.join(reviewDir, `frame-${String(i + 1).padStart(2, '0')}.jpg`);
+        await execFileAsync('ffmpeg', [
+          '-hide_banner','-nostdin','-loglevel','error','-y',
+          '-ss', String(second),
+          '-i', mp4Path,
+          '-frames:v','1',
+          '-vf','scale=640:-2',
+          '-q:v','4',
+          frame
+        ], { timeout: 60000, maxBuffer: 1024 * 1024 });
+        images.push({ buffer: await fs.readFile(frame), mimeType: 'image/jpeg' });
+      }
+
+      const reviewResult = await gemini.reviewImages({
+        apiKey,
+        model: row.default_model,
+        images,
+        instructions: [
+          'Você é um revisor visual conservador de compliance para televisão.',
+          'Analise somente o que está visível nas imagens fornecidas.',
+          'Marque risco se houver pessoa identificável, logotipo/marca reconhecível, obra artística/tela protegida aparente,',
+          'ou contexto visual que possa gerar associação enganosa, sensível ou depreciativa.',
+          'Na dúvida, reprove. Não faça inferências sobre identidade, profissão, saúde ou intenção das pessoas.',
+          'Responda somente JSON válido.'
+        ].join(' '),
+        prompt: JSON.stringify({
+          task: 'gsa_tv_visual_compliance_review',
+          program: task.program,
+          broadcast_date: task.date,
+          required_output: {
+            pass: 'boolean',
+            identifiable_people: 'boolean',
+            visible_logos_or_brands: 'boolean',
+            sensitive_or_misleading_context: 'boolean',
+            copyrighted_artwork_or_screen: 'boolean',
+            notes: ['string']
+          },
+          pass_rule: 'pass somente se todos os quatro campos de risco forem false'
+        })
+      });
+
+      const parsedReview = parse(reviewResult.text);
+      const flags = {
+        identifiable_people: parsedReview.identifiable_people === true,
+        visible_logos_or_brands: parsedReview.visible_logos_or_brands === true,
+        sensitive_or_misleading_context: parsedReview.sensitive_or_misleading_context === true,
+        copyrighted_artwork_or_screen: parsedReview.copyrighted_artwork_or_screen === true,
+      };
+      const pass = parsedReview.pass === true && !Object.values(flags).some(Boolean);
+      visualReview = {
+        state: pass ? 'passed' : 'rejected',
+        pass,
+        method: 'gemini_sampled_master_v1',
+        model: reviewResult.model,
+        sample_count: images.length,
+        ...flags,
+        notes: Array.isArray(parsedReview.notes) ? parsedReview.notes.slice(0, 20).map(String) : []
+      };
+
+      await pool.query(
+        "insert into gsa_tv_ai_usage(channel_id,provider,model,operation,input_units,output_units,metadata) values('ch-main',$1,$2,'visual_compliance_review',$3,$4,$5::jsonb)",
+        [row.provider, reviewResult.model, reviewResult.usage?.input_tokens ?? null, reviewResult.usage?.output_tokens ?? null,
+         JSON.stringify({ pipeline:'autonomous-script', broadcast_date:task.date, program:task.program, visual_review:visualReview })]
+      );
+    } catch (error) {
+      visualReview = {
+        ...visualReview,
+        state: 'failed',
+        pass: false,
+        error: String(error.message || error).slice(0, 500)
+      };
+    } finally {
+      if (reviewDir) await fs.rm(reviewDir, { recursive: true, force: true }).catch(() => {});
+    }
+    qc.visual_review = visualReview;
+    await fs.writeFile(qcPath, JSON.stringify(qc, null, 2), { mode: 0o640 });
+  }
+
   const mediaId = 'media-auto-' + crypto.randomUUID();
   const title = task.program + ' — ' + task.date;
   const originalName = require('node:path').basename(mp4Path);
   const drivePath = mp4Path.startsWith('/media/1/') ? mp4Path : require('node:path').join(require('node:path').dirname(task.output), originalName);
   
+  const autoApprovalEnabled = ['1','true','yes','on'].includes(
+    String(process.env.GSA_TV_AUTOPILOT_AUTO_APPROVE || '').trim().toLowerCase()
+  );
+  const editorialPassed = result?.review?.pass === true &&
+    Array.isArray(result?.review?.violations) &&
+    result.review.violations.length === 0;
+  const technicalPassed = qc?.state === 'technical_validated' &&
+    Number.isFinite(Number(qc?.duration_s)) &&
+    Math.abs(Number(qc.duration_s) - Number(expectedSeconds)) <= 0.75;
+  const provenanceDeclared = Array.isArray(qc?.visual_provenance) &&
+    qc.visual_provenance.length > 0;
+  const visualPassed = qc?.visual_review?.pass === true &&
+    qc?.visual_review?.identifiable_people !== true &&
+    qc?.visual_review?.visible_logos_or_brands !== true &&
+    qc?.visual_review?.sensitive_or_misleading_context !== true &&
+    qc?.visual_review?.copyrighted_artwork_or_screen !== true;
+
+  const automatedApproval = autoApprovalEnabled &&
+    editorialPassed &&
+    technicalPassed &&
+    provenanceDeclared &&
+    visualPassed;
+
+  const approvalState = automatedApproval ? 'approved' : 'pending';
+  const rightsOk = automatedApproval;
+
   const metadata = {
     program_slug: task.program.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+    program_id: task.programId || null,
+    target_block_id: task.targetBlockId || null,
+    production_reason: task.productionReason || 'missing_media',
+    source_ids: result.source_ids || [],
+    source_digest: result.source_digest || null,
+    source_bound: sourceBound,
     broadcast_date: task.date,
     production_qc: qc,
     target_duration_s: expectedSeconds,
-    autonomous_pilot: true
+    autonomous_pilot: true,
+    automated_approval: {
+      enabled: autoApprovalEnabled,
+      approved: automatedApproval,
+      policy: 'gsa_tv_autopilot_generated_content_v1',
+      editorial_review_passed: editorialPassed,
+      technical_qc_passed: technicalPassed,
+      visual_provenance_declared: provenanceDeclared,
+      visual_review_passed: visualPassed,
+      visual_review: qc.visual_review || null,
+      decided_at: new Date().toISOString()
+    },
+    rights_basis: automatedApproval
+      ? {
+          policy: 'autopilot_generated_content_v1',
+          narration: 'original_generated_and_editorially_reviewed',
+          visuals: qc.visual_provenance,
+          internal_brand_assets: true
+        }
+      : null
   };
 
   await pool.query(`
     insert into gsa_tv_media_items
     (id,channel_id,title,original_filename,duration_s,video_codec,video_width,video_height,video_fps,audio_codec,audio_sample_rate,audio_channels,state,rights_ok,drive_path,media_kind,source_type,ai_generated,approval_state,metadata)
-    values($1,'ch-main',$2,$3,$4,'h264',1920,1080,30,'aac',48000,2,'ready',true,$5,'program','services',true,'approved',$6::jsonb)
-  `, [mediaId, title, originalName, Math.round(qc.duration_s), drivePath, JSON.stringify(metadata)]);
+    values($1,'ch-main',$2,$3,$4,'h264',1920,1080,30,'aac',48000,2,'ready',$5,$6,'program','services',true,$7,$8::jsonb)
+  `, [
+    mediaId,
+    title,
+    originalName,
+    Math.round(qc.duration_s),
+    rightsOk,
+    drivePath,
+    approvalState,
+    JSON.stringify(metadata)
+  ]);
 
-  console.log(JSON.stringify({state:'editorially_and_technically_validated',word_count:result.word_count,script_sha256:result.script_sha256,output:task.output,media_id:mediaId,duration_s:qc.duration_s}));
+  console.log(JSON.stringify({
+    state: automatedApproval ? 'editorially_and_technically_validated' : 'awaiting_automated_approval_policy',
+    word_count: result.word_count,
+    script_sha256: result.script_sha256,
+    output: task.output,
+    media_id: mediaId,
+    duration_s: qc.duration_s,
+    approval_state: approvalState,
+    rights_ok: rightsOk
+  }));
  }finally{await pool.end();}
 }
 main().catch(e=>{console.error(e.message);process.exitCode=1});

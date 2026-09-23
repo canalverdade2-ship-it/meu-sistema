@@ -1,0 +1,387 @@
+name: GSA TV Autopilot V2
+
+on:
+  pull_request:
+    paths:
+      - "gsa-tv-night-controller.sh"
+      - "infrastructure/gsa-tv/**"
+      - "docs/gsa-tv-secret-rotation.md"
+      - "supabase/migrations/*gsa_tv_autopilot*.sql"
+      - ".github/workflows/gsa-tv-autopilot*.yml"
+  push:
+    branches:
+      - "feat/gsa-tv-autopilot-v2"
+    paths:
+      - "gsa-tv-night-controller.sh"
+      - "infrastructure/gsa-tv/**"
+      - "docs/gsa-tv-secret-rotation.md"
+      - "supabase/migrations/*gsa_tv_autopilot*.sql"
+      - ".github/workflows/gsa-tv-autopilot*.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  autopilot-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Python syntax
+        run: |
+          python -m py_compile \
+            infrastructure/gsa-tv/scripts/autopilot-readiness.py \
+            infrastructure/gsa-tv/scripts/autopilot-content-factory.py \
+            infrastructure/gsa-tv/scripts/autopilot-broadcast-controller.py \
+            infrastructure/gsa-tv/scripts/autopilot-duration-engine.py \
+            infrastructure/gsa-tv/scripts/autopilot-fallback-engine.py \
+            infrastructure/gsa-tv/scripts/night-production.py \
+            infrastructure/gsa-tv/scripts/render-generic-program.py \
+            infrastructure/gsa-tv/scripts/daily-scripts.py \
+            infrastructure/gsa-tv/scripts/test_autopilot_content_factory.py \
+            infrastructure/gsa-tv/scripts/test_autopilot_broadcast_controller.py \
+            infrastructure/gsa-tv/scripts/test_autopilot_duration_engine.py \
+            infrastructure/gsa-tv/scripts/test_autopilot_fallback_engine.py \
+            infrastructure/gsa-tv/scripts/test_render_generic_program.py
+
+      - name: Autopilot unit tests
+        run: |
+          python infrastructure/gsa-tv/scripts/test_runtime_sqlite_probe.py
+          python infrastructure/gsa-tv/scripts/test_preparation_evidence.py
+          python infrastructure/gsa-tv/scripts/test_autopilot_content_factory.py
+          python infrastructure/gsa-tv/scripts/test_autopilot_broadcast_controller.py
+          python infrastructure/gsa-tv/scripts/test_autopilot_duration_engine.py
+          python infrastructure/gsa-tv/scripts/test_autopilot_fallback_engine.py
+          python infrastructure/gsa-tv/scripts/test_render_generic_program.py
+
+      - name: Runtime JavaScript syntax
+        run: |
+          node --check infrastructure/gsa-tv/scripts/autonomous-script.cjs
+          node --check infrastructure/gsa-tv/services/playout-api/src/app.js
+          node --check infrastructure/gsa-tv/services/encoder-engine/src/app.js
+          node --check infrastructure/gsa-tv/services/encoder-engine/encoder-client.js
+
+      - name: Runtime shell syntax
+        run: |
+          bash -n infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh
+          bash -n infrastructure/gsa-tv/scripts/cutover-autopilot-v2.sh
+          bash -n infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh
+          bash -n infrastructure/gsa-tv/scripts/snapshot-legacy-ffplayout.sh
+          bash -n infrastructure/gsa-tv/scripts/reconcile-stale-offair-state.sh
+          bash -n infrastructure/gsa-tv/scripts/recover-local-media-cache.sh
+          bash -n infrastructure/gsa-tv/scripts/autopilot-migration-status.sh
+          bash -n infrastructure/gsa-tv/scripts/apply-autopilot-migration.sh
+          bash -n infrastructure/gsa-tv/scripts/apply-reconciliation-migration.sh
+          bash -n infrastructure/gsa-tv/scripts/backup-full.sh
+          bash -n infrastructure/gsa-tv/tests/run-live-test-suite.sh
+          bash -n infrastructure/gsa-tv/tests/test-control-plane-restart-continuity.sh
+
+      - name: Runtime Docker build smoke
+        run: |
+          docker build -t gsa-tv/control-plane:ci infrastructure/gsa-tv/services/playout-api
+          docker build -t gsa-tv/encoder-engine:ci infrastructure/gsa-tv/services/encoder-engine
+
+      - name: Runtime contract assertions
+        shell: python
+        run: |
+          from pathlib import Path
+
+          control = Path("infrastructure/gsa-tv/services/playout-api/src/app.js").read_text()
+          encoder = Path("infrastructure/gsa-tv/services/encoder-engine/src/app.js").read_text()
+          compose = Path("infrastructure/gsa-tv/services/playout-api/compose.production.yml").read_text()
+          deploy = Path("infrastructure/gsa-tv/scripts/deploy-autopilot-v2.sh").read_text()
+          preflight = Path("infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh").read_text()
+          cutover = Path("infrastructure/gsa-tv/scripts/cutover-autopilot-v2.sh").read_text()
+          snapshot = Path("infrastructure/gsa-tv/scripts/snapshot-legacy-ffplayout.sh").read_text()
+          offair_reconcile = Path("infrastructure/gsa-tv/scripts/reconcile-stale-offair-state.sh").read_text()
+          media_recovery = Path("infrastructure/gsa-tv/scripts/recover-local-media-cache.sh").read_text()
+          migration_status = Path("infrastructure/gsa-tv/scripts/autopilot-migration-status.sh").read_text()
+          migration_apply = Path("infrastructure/gsa-tv/scripts/apply-autopilot-migration.sh").read_text()
+          full_backup = Path("infrastructure/gsa-tv/scripts/backup-full.sh").read_text()
+          runtime_workflow = Path(".github/workflows/gsa-tv-autopilot-runtime.yml").read_text()
+          reconciliation_workflow = Path(".github/workflows/apply-reconciled-db-migrations-once.yml").read_text()
+          prep_start = runtime_workflow.index("- name: First-migration physical off-air gate")
+          prep_end = runtime_workflow.index("- name: Legacy ffplayout snapshot dry-run", prep_start)
+          prep_section = runtime_workflow[prep_start:prep_end]
+          factory_service = Path("infrastructure/gsa-tv/systemd/gsa-tv-autopilot-content-factory.service").read_text()
+          content_factory = Path("infrastructure/gsa-tv/scripts/autopilot-content-factory.py").read_text()
+          broadcast_service = Path("infrastructure/gsa-tv/systemd/gsa-tv-autopilot-broadcast-controller.service").read_text()
+          broadcast_controller = Path("infrastructure/gsa-tv/scripts/autopilot-broadcast-controller.py").read_text()
+          autonomous = Path("infrastructure/gsa-tv/scripts/autonomous-script.cjs").read_text()
+          night_production = Path("infrastructure/gsa-tv/scripts/night-production.py").read_text()
+          renderer = Path("infrastructure/gsa-tv/scripts/render-generic-program.py").read_text()
+          readiness = Path("infrastructure/gsa-tv/scripts/autopilot-readiness.py").read_text()
+          gemini = Path("infrastructure/gsa-tv/services/playout-api/src/gemini.js").read_text()
+          cinema_migration = Path("supabase/migrations/20260922135000_gsa_tv_cinema_duration_contract.sql").read_text()
+          fallback_migration = Path("supabase/migrations/20260922134000_gsa_tv_autopilot_continuity_fallback.sql").read_text()
+          signature_migration = Path("supabase/migrations/20260922136000_gsa_tv_resolved_production_signature.sql").read_text()
+
+          required_control = [
+              "ENCODER_ENGINE_URL",
+              "encoderEngineRequest",
+              "control_plane_shutdown_encoder_preserved",
+              "control_plane_restore_external_encoder_preserved",
+              "autopilotSnapshot",
+              "fallback_engine",
+              "broadcast_controller",
+          ]
+          for marker in required_control:
+              assert marker in control, f"Control Plane contract missing: {marker}"
+
+          for marker in [
+              "Grade versionada publicada obrigatória",
+              "usa mídia sem aprovação editorial",
+              "allow_continuity_fill",
+              "required_slot_duration_s",
+              "requirePublished: true",
+          ]:
+              assert marker in control, f"Published schedule safety contract missing: {marker}"
+
+          assert 'case "stream_start"' in control
+          assert 'case "stream_resume"' in control
+          assert 'case "live_return"' in control
+          assert 'compilePlaylist(localClock(new Date()).date, { requirePublished: true })' in control
+          assert 'encoder.outer_running && encoder.producer_running' in control
+          assert '"control_plane_restore_external_encoder_preserved"' in control
+          assert 'await encoderEngineStatus()' in control
+
+          for marker in ["encryptState", "decryptState", "aes-256-gcm", "redact("]:
+              assert marker in encoder, f"Encoder security contract missing: {marker}"
+
+          assert "GSA_TV_AUTOPILOT_AUTO_APPROVE" in autonomous
+          assert "approvalState = automatedApproval ? 'approved' : 'pending'" in autonomous
+          assert "visual_review_passed: visualPassed" in autonomous
+          assert "gemini.reviewImages" in autonomous
+          assert "source_bound_program" in autonomous
+          assert "reviewImages" in gemini
+          assert "GSA_TV_AUTOPILOT_AUTO_APPROVE" in night_production
+          assert "approval_state = 'approved' if automated_approval else 'pending'" in night_production
+          assert "def compute_timing(" in renderer
+          assert "source_bound_program" in renderer
+          assert "visual_provenance = []" in renderer
+          assert "autopilot-fallback-engine.py" in deploy
+          assert "cutover-autopilot-v2.sh" in deploy
+          assert "ENCODER_RECREATE_SKIPPED=runtime_not_off_air" in deploy
+          assert 'if [ "$ENCODER_MUTATED" = true ]; then' in deploy
+          assert '[ "$enc_image" = "$ENCODER_IMAGE" ]' in deploy
+          assert "bin-files.state" in deploy
+          assert "tools-files.state" in deploy
+          assert "restore_runtime_files" in deploy
+          assert "DRY_RUN_OK=true" in snapshot
+          assert "SNAPSHOT_APPLIED=true" in snapshot
+          assert "SNAPSHOT_VERIFY_OK=true" in snapshot
+          assert "docker cp" in snapshot
+          assert "source.backup(destination)" in snapshot
+          assert "pragma integrity_check" in snapshot
+          assert "manifest.sha256" in snapshot
+          assert "docker stop" not in snapshot
+          assert "docker restart" not in snapshot
+          assert "docker rm" not in snapshot
+          assert "systemctl stop" not in snapshot
+          assert "systemctl restart" not in snapshot
+          assert "legacy-snapshot" in runtime_workflow
+          assert "SNAPSHOT-GUARD" in runtime_workflow
+          assert "snapshot-legacy-ffplayout.sh" in runtime_workflow
+          assert "PREPARE-FIRST-MIGRATION" in runtime_workflow
+          assert "PHYSICAL_OFF_AIR_EVIDENCE=true" in runtime_workflow
+          assert "HOST_SQLITE_BACKUP_PROBE=ok" in runtime_workflow
+          assert "SELF_HOSTED_DB_ACCESS_OK=true" in runtime_workflow
+          assert "MIGRATION_REPAIRABLE_COMPILE_GATE=true" in runtime_workflow
+          assert "SELF_HOSTED_DB_REPAIRABLE_COMPILE_GATE=true" in runtime_workflow
+          assert "MIGRATION_REPAIR_CONTRACT=" in runtime_workflow
+          assert "apply-autopilot-migration.sh" in runtime_workflow
+          assert "SELF_HOSTED_MIGRATION_REMOTE_DIR" in runtime_workflow
+          assert "sha256sum -c manifest.sha256" in runtime_workflow
+          assert "supabase/setup-cli" not in runtime_workflow
+          assert "--linked" not in runtime_workflow
+          assert "SUPABASE_ACCESS_TOKEN" not in runtime_workflow
+          assert "SUPABASE_PROJECT_ID" not in runtime_workflow
+          assert "SUPABASE_DB_PASSWORD" not in runtime_workflow
+          assert "reconcile-stale-offair-state.sh" in runtime_workflow
+          assert "recover-local-media-cache.sh" in runtime_workflow
+          assert "backup-full.sh" in runtime_workflow
+          assert "MISSING_PATHS=none" in runtime_workflow
+          assert "supabase db push" not in runtime_workflow
+          assert "environment: gsa-tv-production" in reconciliation_workflow
+          assert "apply-reconciliation-migration.sh" in reconciliation_workflow
+          assert "backup-full.sh" in reconciliation_workflow
+          assert "APPLY_20260923013000_20260923013100" in reconciliation_workflow
+          assert "OFF_AIR_GATE=not_required_non_broadcast_schema_change" in reconciliation_workflow
+          assert "RECONCILIATION_POST_VERIFY=true" in reconciliation_workflow
+          assert "db reset --linked" not in runtime_workflow
+          assert "deploy-autopilot-v2.sh" not in prep_section
+          assert "cutover-autopilot-v2.sh" not in prep_section
+          assert prep_section.index("Validate self-hosted production database") < prep_section.index("Prepare legacy ffplayout snapshot apply")
+          assert prep_section.index("Prepare legacy ffplayout snapshot apply") < prep_section.index("Stage canonical self-hosted migration bundle")
+          assert prep_section.index("Stage canonical self-hosted migration bundle") < prep_section.index("Apply only five canonical Autopilot migrations on self-hosted PostgreSQL")
+          assert prep_section.index("Apply only five canonical Autopilot migrations on self-hosted PostgreSQL") < prep_section.index("Reconcile stale logical off-air state apply")
+          assert prep_section.index("Reconcile stale logical off-air state apply") < prep_section.index("Full verified backup for first migration")
+          assert "PHYSICAL_OFF_AIR_EVIDENCE" in preflight
+          assert "AUTOPILOT_DB_CONTRACT_READY" in preflight
+          assert "AUTOPILOT_MIGRATION_COUNT" in preflight
+          assert "DRY_RUN_OK=true" in offair_reconcile
+          assert "OFFAIR_RECONCILE_APPLIED=true" in offair_reconcile
+          assert "physical_off_air" in offair_reconcile
+          assert "docker stop" not in offair_reconcile
+          assert "systemctl stop" not in offair_reconcile
+          assert "RECOVERY_APPLIED=true" in media_recovery
+          assert "RECOVERY_UNRESOLVED_COUNT" in media_recovery
+          assert "cp --reflink=auto" in media_recovery
+          assert "rm -rf" not in media_recovery
+          assert "MIGRATION_STATUS=" in migration_status
+          assert "MIGRATION_STATE=" in migration_status
+          assert "MIGRATION_HISTORY_TABLE=" in migration_status
+          assert "to_regclass('supabase_migrations.schema_migrations')" in migration_status
+          assert 'if [ "$history_table" = "present" ]; then' in migration_status
+          assert "pg_get_functiondef(to_regprocedure('public.gsa_tv_production_signature(uuid)'))" in migration_status
+          assert "'public.gsa_tv_production_signature(uuid)'::regprocedure" not in migration_status
+          assert "v_date > v_today + 7" in migration_status
+          assert "schedule_signature" in migration_status
+          assert "gsa_tv_production_signature" in migration_status
+          assert "MIGRATION_SELF_HOSTED_TARGET=true" in migration_apply
+          assert "CREATE SCHEMA IF NOT EXISTS supabase_migrations" in migration_apply
+          assert "CREATE TABLE IF NOT EXISTS supabase_migrations.schema_migrations" in migration_apply
+          assert "refusing history repair without verified contract" in migration_apply
+          assert 'psql "$DB_URL" -X -v ON_ERROR_STOP=1 -f "$FILE"' in migration_apply
+          assert "VALUES ('$VERSION', '$NAME', NULL)" in migration_apply
+          assert "version='$VERSION'" in migration_apply
+          assert ":'version'" not in migration_apply
+          assert ":'name'" not in migration_apply
+          assert "supabase " not in migration_apply
+          assert "repair-contract is authorized only for canonical compile gate 20260922131000" in migration_apply
+          assert "repair-contract requires history=t and contract=f" in migration_apply
+          assert "v_date > v_today + 7" in migration_apply
+          assert "compat_live_source_id" in signature_migration
+          assert "compat_episode_id" in signature_migration
+          assert "compat_campaign_id" in signature_migration
+          assert "to_jsonb(b)->>'live_source_id'" in signature_migration
+          assert "to_jsonb(b)->>'episode_id'" in signature_migration
+          assert "to_jsonb(b)->>'campaign_id'" in signature_migration
+          assert "b.live_source_id" not in signature_migration
+          assert "b.episode_id" not in signature_migration
+          assert "b.campaign_id" not in signature_migration
+          assert "source.backup(destination)" in full_backup
+          assert "media-catalog-missing.txt" in full_backup
+          assert "catalog_missing_files" in full_backup
+          assert "cache_media_present" in full_backup
+          assert "docker exec gsa-tv-ffplayout sqlite3" not in full_backup
+          assert "CUTOVER_DRY_RUN_OK=true" in cutover
+          assert "GSA_TV_BROADCAST_AUTOMATION_ENABLED" in cutover
+          assert "GSA_TV_AUTOPILOT_AUTO_APPROVE" in cutover
+          assert "assert_recent_readiness" in cutover
+          assert "systemctl disable --now" in cutover
+          assert "systemctl enable --now" in cutover
+          assert "systemctl stop" not in cutover
+          assert cutover.rfind('assert_no_active_legacy_services "${BROADCAST_LEGACY_SERVICES[@]}"') > cutover.find("systemctl disable --now")
+          assert cutover.rfind('assert_no_active_legacy_services "${PRODUCTION_LEGACY_SERVICES[@]}"') > cutover.find("systemctl disable --now")
+          assert "'allow_continuity_fill',true" in fallback_migration
+          assert "'allow_trim',true" in fallback_migration
+          assert "content_mode','library'" in fallback_migration
+          assert "fallback_compile_failed" in control
+          assert "fallback_outcome" in Path("infrastructure/gsa-tv/scripts/autopilot-fallback-engine.py").read_text()
+          assert "compile_failed" in Path("infrastructure/gsa-tv/scripts/autopilot-duration-engine.py").read_text()
+          assert "previous_duration_compile_failed" in content_factory
+          assert "GSA_TV_AUTOPILOT_AUTO_APPROVE=false" in deploy
+          assert "EnvironmentFile=-/opt/gsa-tv/autopilot/autopilot.env" in factory_service
+          assert "SuccessExitStatus=2" in factory_service
+          assert "EnvironmentFile=-/opt/gsa-tv/autopilot/autopilot.env" in broadcast_service
+          assert "SuccessExitStatus=2" in broadcast_service
+          assert "GSA_TV_BROADCAST_AUTOMATION_ENABLED=false" in broadcast_service
+          assert "GSA_TV_BROADCAST_AUTOMATION_ENABLED=false" in deploy
+          assert '"stream_standby"' not in broadcast_controller
+          assert '"stream_start"' in broadcast_controller
+          assert '"stream_stop"' in broadcast_controller
+          assert "hold_manual_pause" in broadcast_controller
+          assert "hold_manual_live_overtime" in broadcast_controller
+          assert "block_unknown_state" in broadcast_controller
+          assert "block_inconsistent_state" in broadcast_controller
+          assert "legacy_broadcast_automation_active" in broadcast_controller
+          assert "legacy_production_automation_active" in content_factory
+          assert "autopilot-broadcast-controller.py" in deploy
+          assert "gsa-tv-autopilot-broadcast-controller.timer" in deploy
+          assert "docker run --rm --network host postgres:15-alpine" not in deploy
+          assert "docker run --rm --network host postgres:15-alpine" not in preflight
+          assert '[ "$desired" != "stopped" ] || [ "$signal" != "stopped" ] || [ "$playout" != "off_air" ]' in deploy
+          assert 'cp -a "$ENV_FILE" "$BACKUP_DIR/control-plane.env"' in deploy
+          assert 'cp -f "$BACKUP_DIR/control-plane.env" "$ENV_FILE"' in deploy
+          assert 'Control Plane existente sem compose local para rollback seguro' in deploy
+          assert 'Encoder Engine existente sem compose local para rollback seguro' in deploy
+          assert 'deploy exige backup full restaurado/testado e íntegro' in deploy
+          assert 'backup_manifest_ok' in deploy
+          assert 'GSA_TV_DEPLOY_BACKUP_MAX_AGE_S' in deploy
+          assert 'FIRST_MIGRATION_OFFAIR_READY=$first_migration_offair_ready' in preflight
+          assert 'LATEST_BACKUP_MANIFEST_OK=$latest_backup_manifest_ok' in preflight
+          assert 'LEGACY_BROADCAST_AUTOMATION_ACTIVE=' in preflight
+          assert 'LEGACY_PRODUCTION_AUTOMATION_ACTIVE=' in preflight
+          assert 'playout_state' in preflight
+          assert "slot_duration_contract_violation" in readiness
+          assert "library_composition_required" in readiness
+          assert "b.planned_duration_s <> 3600" in cinema_migration
+          assert "exatamente 60 minutos" in cinema_migration
+          assert "authorized_continuity_fill_s" in readiness
+          assert "required_slot_duration_s" in readiness
+          assert "allow_continuity_fill" in night_production
+          assert "allow_trim" in night_production
+          assert "coalesce(dm.id,em.id,pm.id,cm.id) as media_item_id" in readiness
+          assert "coalesce(dm.id,em.id,pm.id,cm.id) as media_item_id" in night_production
+          assert "title ilike ('%' || $5 || '%')" not in night_production
+          assert "live_source_id" in night_production
+
+          assert "gsa-tv/control-plane:1.8.0" in compose
+          assert "ENCODER_ENGINE_URL: http://127.0.0.1:9210" in compose
+
+          migrations = [
+              "20260922131000_gsa_tv_autopilot_compile_gate.sql",
+              "20260922132000_gsa_tv_autopilot_duration_swap.sql",
+              "20260922134000_gsa_tv_autopilot_continuity_fallback.sql",
+              "20260922135000_gsa_tv_cinema_duration_contract.sql",
+              "20260922136000_gsa_tv_resolved_production_signature.sql",
+          ]
+          for migration in migrations:
+              assert Path("supabase/migrations", migration).is_file(), f"Missing migration: {migration}"
+              assert migration in deploy, f"Deploy contract does not require: {migration}"
+
+      - name: Active GSA TV secret guard
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          import sys
+
+          files = [
+              Path("gsa-tv-night-controller.sh"),
+              *Path("infrastructure/gsa-tv").rglob("*"),
+          ]
+          text_files = [
+              p for p in files
+              if p.is_file()
+              and p.suffix.lower() in {".py",".js",".cjs",".mjs",".sh",".yml",".yaml",".json",".md",".conf",".service",".timer"}
+              and "__pycache__" not in p.parts
+          ]
+
+          checks = [
+              ("postgres_password_uri", re.compile(r"postgres(?:ql)?://[^\s\"'/:]+:[^@\s\"']+@", re.I)),
+              ("literal_private_key", re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")),
+              ("literal_long_secret", re.compile(r"(?:TOKEN|SECRET|PASSWORD|API[_-]?KEY)\s*=\s*[\"'][A-Za-z0-9._~+/=-]{24,}[\"']", re.I)),
+          ]
+
+          failures = []
+          for path in text_files:
+              try:
+                  content = path.read_text(encoding="utf-8")
+              except UnicodeDecodeError:
+                  continue
+              for name, pattern in checks:
+                  if pattern.search(content):
+                      failures.append(f"{path}: {name}")
+
+          if failures:
+              print("Potential active GSA TV secrets detected:")
+              print("\n".join(failures))
+              sys.exit(1)
+          print(f"Secret guard passed across {len(text_files)} active GSA TV text files.")

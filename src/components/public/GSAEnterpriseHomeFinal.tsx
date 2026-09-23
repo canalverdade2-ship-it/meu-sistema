@@ -5,6 +5,7 @@ import { AccessibleDialog } from '../ui/AccessibleDialog';
 import { PartnerApplicationPage } from './PartnerApplicationPage';
 import { PartnersPage } from './PartnersPage';
 import { PrivacyPolicyPage } from './PrivacyPolicyPage';
+import { PrivacyPolicyDialog } from './PrivacyPolicyDialog';
 import { FreeToolsExperiencePage } from './FreeToolsExperiencePage';
 import { PublicFooter } from './final/PublicFooter';
 import { PublicHomeLanding } from './final/PublicHomeLanding';
@@ -46,6 +47,7 @@ export function GSAEnterpriseHomeFinal(props: GSAEnterpriseHomeFinalProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(null);
   const [requestPackage, setRequestPackage] = useState<ServicePackageRequest | null>(null);
+  const [privacyNoticeOpen, setPrivacyNoticeOpen] = useState(false);
 
   const filteredPackages = useMemo(
     () => props.servicePackages.filter((item) => item.audience === props.publicAudience || item.audience === 'AMBOS'),
@@ -180,7 +182,8 @@ export function GSAEnterpriseHomeFinal(props: GSAEnterpriseHomeFinalProps) {
           : <PartnersPage selectedSlug={props.initialPartnerSlug} onSelectPartner={(slug) => props.onPartnerDetailChange?.(slug)} onBack={() => props.setPublicPage('home')} />
       )}
 
-      {!isPartnerApplication && <PublicFooter setPublicPage={props.setPublicPage} onGuestStore={props.onGuestStore} onAdminLogin={props.onAdminLogin} />}
+      {!isPartnerApplication && <PublicFooter setPublicPage={props.setPublicPage} onGuestStore={props.onGuestStore} onAdminLogin={props.onAdminLogin} onPrivacyNotice={() => setPrivacyNoticeOpen(true)} />}
+      <PrivacyPolicyDialog isOpen={privacyNoticeOpen} onClose={() => setPrivacyNoticeOpen(false)} />
       <ServiceDetailsDialog
         selectedPackage={selectedPackage}
         onClose={() => {

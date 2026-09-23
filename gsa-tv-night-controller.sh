@@ -12,15 +12,31 @@
 set -uo pipefail
 
 MODE="${1:-}"
-CONTROL_TOKEN="e54c08df5a3b42c2967395833b9c7104b3c9e0cb5e0f6c67f8277e5ea2895b0b"
-ENCODER_TOKEN="222d718911511702a4c813c427fdbab3e70c908d39f5c550c9594f8d3938cd9e"
-URL_CONTROL="http://127.0.0.1:9202"
-URL_ENCODER="http://127.0.0.1:9210"
-DB_URL="postgresql://supabase_admin:GSA_SENHA_FORTE_2026@127.0.0.1:5433/gsahub"
+CONTROL_TOKEN="${GSA_TV_CONTROL_TOKEN:-}"
+ENCODER_TOKEN="${GSA_TV_ENCODER_TOKEN:-}"
+URL_CONTROL="${GSA_TV_CONTROL_URL:-http://127.0.0.1:9202}"
+URL_ENCODER="${GSA_TV_ENCODER_URL:-http://127.0.0.1:9210}"
+DB_URL="${GSA_TV_DATABASE_URL:-}"
 CHANNEL_ID="ch-main"
 CONTINUITY_MEDIA_PATH="/media/1/identity/gsa-tv-continuity-1080p30.mp4"
 CONTINUITY_HOST_PATH="/opt/gsa-tv/cache/media/1/identity/gsa-tv-continuity-1080p30.mp4"
 LOG_FILE="/var/log/gsa-tv-night-controller.log"
+
+require_env() {
+  local name="$1"
+  if [ -z "${!name:-}" ]; then
+    echo "[FATAL] Variável obrigatória ausente: $name" >&2
+    exit 78
+  fi
+}
+
+require_env GSA_TV_DATABASE_URL
+if [ "$MODE" = "start" ] || [ "$MODE" = "stop" ]; then
+  require_env GSA_TV_CONTROL_TOKEN
+fi
+if [ "$MODE" = "stop" ]; then
+  require_env GSA_TV_ENCODER_TOKEN
+fi
 
 touch "$LOG_FILE" 2>/dev/null || true
 chmod 644 "$LOG_FILE" 2>/dev/null || true

@@ -68,8 +68,20 @@ function readMigrationConflicts() {
     }
     seenVersions.add(version);
 
-    if (conflict.status !== 'superseded_unapplied') {
+    const supportedStatuses = new Set(['superseded_unapplied', 'reconciled_untracked_effects']);
+    if (!supportedStatuses.has(conflict.status)) {
       throw new Error(`Status de conflito não suportado para ${version}.`);
+    }
+    if (conflict.status === 'reconciled_untracked_effects') {
+      const evidence = conflict.evidence;
+      if (!evidence || !Number.isInteger(evidence.auditWorkflowRunId) || evidence.auditWorkflowRunId <= 0) {
+        throw new Error(`Conflito reconciliado ${version} exige auditWorkflowRunId válido.`);
+      }
+      for (const target of ['selfHosted', 'cloudLegacy']) {
+        if (!evidence[target] || evidence[target].historyRegistered !== false) {
+          throw new Error(`Conflito reconciliado ${version} exige historyRegistered=false para ${target}.`);
+        }
+      }
     }
     if (!Array.isArray(conflict.files) || conflict.files.length < 2) {
       throw new Error(`Conflito ${version} deve listar pelo menos dois arquivos.`);

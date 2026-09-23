@@ -440,10 +440,11 @@ export async function handleRequest(req: Request) {
       console.log("RECONCILIATION_SUMMARY:", summary);
       
       // Heartbeat for operational observability
-      await supabase.from("system_settings").upsert({
+      const { error: heartbeatError } = await supabase.from("system_settings").upsert({
         key: "last_successful_reconciliation_at",
         value: new Date().toISOString()
-      }, { onConflict: "key" }).catch(e => console.error("Falha ao salvar heartbeat:", e));
+      }, { onConflict: "key" });
+      if (heartbeatError) console.error("Falha ao salvar heartbeat:", heartbeatError);
 
       return new Response(JSON.stringify({ success: true, summary, processed: results }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },

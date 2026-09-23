@@ -39,6 +39,57 @@ async function generateText({ apiKey, model, prompt, instructions, webSearch = f
   throw lastError||new Error('Gemini indisponivel.');
 }
 
+async function reviewImages({ apiKey, model, images, prompt, instructions }) {
+  if (!Array.isArray(images) || images.length < 1 || images.length > 8)
+    throw new Error("A revisão visual exige entre 1 e 8 imagens.");
+  const models = [model, ...(model !== "gemini-2.5-flash" ? ["gemini-2.5-flash"] : [])];
+  let lastError = null;
+  for (const selectedModel of models) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const parts = [
+        ...images.map((image) => ({
+          inlineData: {
+            mimeType: image.mimeType || "image/jpeg",
+            data: Buffer.isBuffer(image.buffer)
+              ? image.buffer.toString("base64")
+              : String(image.data || ""),
+          },
+        })),
+        { text: prompt || "" },
+      ];
+      const payload = {
+        systemInstruction: { parts: [{ text: instructions || "" }] },
+        contents: [{ role: "user", parts }],
+        generationConfig: { maxOutputTokens: 2000 },
+      };
+      try {
+        const body = await jsonRequest(
+          `${BASE}/models/${encodeURIComponent(selectedModel)}:generateContent`,
+          apiKey,
+          { method: "POST", body: JSON.stringify(payload) },
+          180000,
+        );
+        const text = textFromGenerateContent(body);
+        if (!text) throw new Error("A API Gemini não retornou revisão visual.");
+        return {
+          body,
+          text,
+          model: selectedModel,
+          usage: {
+            input_tokens: body?.usageMetadata?.promptTokenCount || null,
+            output_tokens: body?.usageMetadata?.candidatesTokenCount || null,
+          },
+        };
+      } catch (error) {
+        lastError = error;
+        if (![429, 503].includes(Number(error.statusCode))) throw error;
+        if (attempt < 2) await wait(1500 * Math.pow(2, attempt));
+      }
+    }
+  }
+  throw lastError || new Error("Gemini indisponível para revisão visual.");
+}
+
 function findInteractionBlock(body, type) {
   if (type === "image" && body?.output_image?.data) return body.output_image;
   if (type === "audio" && body?.output_audio?.data) return body.output_audio;
@@ -132,6 +183,7 @@ async function generateVideo({ apiKey, model, prompt }) {
 
 module.exports = {
   generateText,
+  reviewImages,
   generateImage,
   generateSpeech,
   generateVideo,

@@ -1,0 +1,65 @@
+[
+  {
+    "json_build_object": {
+      "kind": "table",
+      "name": "gsa_tv_programs",
+      "exists": false
+    }
+  },
+  {
+    "json_build_object": {
+      "kind": "table",
+      "name": "gsa_tv_series",
+      "exists": false
+    }
+  },
+  {
+    "json_build_object": {
+      "kind": "table",
+      "name": "gsa_tv_episodes",
+      "exists": false
+    }
+  },
+  {
+    "json_build_object": {
+      "kind": "table",
+      "name": "gsa_tv_schedule_versions",
+      "exists": false
+    }
+  },
+  {
+    "json_build_object": {
+      "kind": "table",
+      "name": "gsa_tv_program_blocks",
+      "exists": false
+    }
+  },
+  {
+    "json_build_object": {
+      "kind": "table",
+      "name": "gsa_tv_rights_records",
+      "exists": false
+    }
+  },
+  {
+    "json_build_object": {
+      "kind": "table",
+      "name": "gsa_tv_execution_log",
+      "exists": false
+    }
+  },
+  {
+    "json_build_object": {
+      "kind": "table",
+      "name": "gsa_tv_watchdog_samples",
+      "exists": false
+    }
+  },
+  {
+    "json_build_object": {
+      "kind": "table",
+      "name": "gsa_tv_graphics",
+      "exists": false
+    }
+  }
+]

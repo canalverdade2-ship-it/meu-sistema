@@ -62,6 +62,9 @@ const SCHEDULE_FILLER_FILE =
   process.env.SCHEDULE_FILLER_FILE ||
   path.join(MEDIA_DIR, "filler/gsa-tv-filler-600.mp4");
 const PREVIEW_DIR = process.env.PREVIEW_DIR || "/preview/1/live";
+const AUTOPILOT_STATE_DIR = String(
+  process.env.AUTOPILOT_STATE_DIR || "/runtime/autopilot",
+);
 const PREVIEW_TOKEN_TTL_SECONDS = Math.max(
   60,
   Math.min(900, Number(process.env.PREVIEW_TOKEN_TTL_SECONDS || 300)),
@@ -79,15 +82,26 @@ const FFPLAYOUT_PASSWORD_FILE = String(
 const CHANNEL_TIMEZONE = String(
   process.env.CHANNEL_TIMEZONE || "America/Sao_Paulo",
 );
+const ENCODER_ENGINE_URL = String(process.env.ENCODER_ENGINE_URL || "").replace(
+  /\/$/,
+  "",
+);
+const ENCODER_ENGINE_TOKEN = String(process.env.ENCODER_ENGINE_TOKEN || "");
+const USE_EXTERNAL_ENCODER = Boolean(ENCODER_ENGINE_URL);
 const QUALITY_PROFILES = {
   "720p30": { width: 1280, height: 720, fps: 30, bitrate: "4000" },
   "1080p30": { width: 1920, height: 1080, fps: 30, bitrate: "6000" },
   "1080p60": { width: 1920, height: 1080, fps: 60, bitrate: "8500" },
 };
-const SERVICE_URLS = { ffplayout: `${FFPLAYOUT_URL}/` };
+const SERVICE_URLS = {
+  ffplayout: `${FFPLAYOUT_URL}/`,
+  ...(USE_EXTERNAL_ENCODER ? { encoder_engine: `${ENCODER_ENGINE_URL}/health` } : {}),
+};
 if (!DATABASE_URL) throw new Error("DATABASE_URL é obrigatória.");
 if (!INTERNAL_API_TOKEN || INTERNAL_API_TOKEN.length < 32)
   throw new Error("INTERNAL_API_TOKEN forte é obrigatório.");
+if (USE_EXTERNAL_ENCODER && ENCODER_ENGINE_TOKEN.length < 32)
+  throw new Error("ENCODER_ENGINE_TOKEN forte é obrigatório quando o Encoder Engine está habilitado.");
 const pool = new Pool({
   connectionString: DATABASE_URL,
   max: 3,
@@ -395,7 +409,53 @@ async function persistStreamState() {
     ],
   );
 }
+async function encoderEngineRequest(route, options = {}) {
+  if (!USE_EXTERNAL_ENCODER)
+    throw new Error("Encoder Engine externo não está configurado.");
+  const method = options.method || "GET";
+  const body = options.body === undefined ? undefined : JSON.stringify(options.body);
+  const response = await fetch(`${ENCODER_ENGINE_URL}${route}`, {
+    method,
+    headers: {
+      authorization: `Bearer ${ENCODER_ENGINE_TOKEN}`,
+      ...(body ? { "content-type": "application/json" } : {}),
+    },
+    body,
+    signal: AbortSignal.timeout(options.timeoutMs || 10000),
+  });
+  const text = await response.text();
+  let payload = {};
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = { raw: text.slice(0, 500) };
+    }
+  }
+  if (!response.ok)
+    throw new Error(
+      `Encoder Engine ${method} ${route} falhou: HTTP ${response.status} ${text.slice(0, 400)}`,
+    );
+  return payload;
+}
+
+async function encoderEngineStatus() {
+  return encoderEngineRequest("/v1/status", { timeoutMs: 5000 });
+}
+
 async function terminateRelay() {
+  if (USE_EXTERNAL_ENCODER) {
+    try {
+      await encoderEngineRequest("/v1/stop", {
+        method: "POST",
+        body: {},
+        timeoutMs: 12000,
+      });
+    } finally {
+      streamProcess = null;
+    }
+    return;
+  }
   if (!streamProcess || streamProcess.killed) {
     streamProcess = null;
     return;
@@ -794,14 +854,30 @@ async function startStreamUnlocked(mode = "program", force = false) {
   const desired = mode === "paused" ? "paused" : "running";
   if (
     !force &&
-    streamProcess &&
-    !streamProcess.killed &&
     streamState.desired === desired &&
     streamState.mode === mode
-  )
-    return streamState;
+  ) {
+    if (USE_EXTERNAL_ENCODER) {
+      try {
+        const status = await encoderEngineStatus();
+        if (status.outer_running && status.producer_running) {
+          streamProcess = {
+            external: true,
+            killed: false,
+            pid: status.producer_pid || null,
+          };
+          streamState.actual = "sending";
+          streamState.last_error = null;
+          return streamState;
+        }
+      } catch {}
+    } else if (streamProcess && !streamProcess.killed) {
+      return streamState;
+    }
+  }
   if (recordingProcess) await stopLiveRecording();
-  if (streamProcess && !streamProcess.killed) await terminateRelay();
+  if (!USE_EXTERNAL_ENCODER && streamProcess && !streamProcess.killed)
+    await terminateRelay();
 
   const target = await outputTarget();
   const profile = await currentQualityProfile();
@@ -926,6 +1002,35 @@ async function startStreamUnlocked(mode = "program", force = false) {
     last_error: null,
   };
   await persistStreamState();
+
+  if (USE_EXTERNAL_ENCODER) {
+    const status = await encoderEngineRequest("/v1/ensure", {
+      method: "POST",
+      body: { args, mode },
+      timeoutMs: 15000,
+    });
+    if (!status.outer_running || !status.producer_running)
+      throw new Error(
+        status.last_error || "Encoder Engine não confirmou transporte e produtor ativos.",
+      );
+    streamProcess = {
+      external: true,
+      killed: false,
+      pid: status.producer_pid || null,
+    };
+    streamState.actual = "sending";
+    streamState.last_error = null;
+    await persistStreamState();
+    log("info", "stream_attached_to_encoder_engine", {
+      mode,
+      producer_pid: status.producer_pid || null,
+      outer_pid: status.outer_pid || null,
+      transport_restarted: Boolean(status.transport_restarted),
+      producer_restarted: Boolean(status.producer_restarted),
+    });
+    return streamState;
+  }
+
   const proc = spawn("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
   streamProcess = proc;
   let stderrTail = "";
@@ -3434,12 +3539,60 @@ async function heartbeat() {
       "critical",
     );
   else await resolveIncident("Transmissão da GSA TV degradada");
+
+  const autopilot = await autopilotSnapshot();
+  if (!autopilot.readiness.present || !autopilot.readiness.fresh)
+    await incident(
+      "Autopilot da GSA TV sem heartbeat",
+      { readiness: autopilot.readiness },
+      "warning",
+    );
+  else await resolveIncident("Autopilot da GSA TV sem heartbeat");
+
+  if (
+    autopilot.readiness.next_day &&
+    autopilot.readiness.next_day.state !== "ready"
+  )
+    await incident(
+      "Grade D+1 da GSA TV incompleta",
+      { next_day: autopilot.readiness.next_day },
+      "warning",
+    );
+  else await resolveIncident("Grade D+1 da GSA TV incompleta");
+
+  const autopilotFailure =
+    ["failed", "cycle_failed", "duration_cycle_failed"].includes(
+      String(autopilot.content_factory.state || ""),
+    ) ||
+    ["failed", "compile_failed"].includes(
+      String(autopilot.duration_engine.state || ""),
+    ) ||
+    ["failed", "fallback_incomplete", "fallback_compile_failed"].includes(
+      String(autopilot.fallback_engine.state || ""),
+    );
+  if (autopilotFailure)
+    await incident(
+      "Fábrica Autopilot da GSA TV falhou",
+      {
+        content_factory: autopilot.content_factory,
+        duration_engine: autopilot.duration_engine,
+        fallback_engine: autopilot.fallback_engine,
+      },
+      "warning",
+    );
+  else await resolveIncident("Fábrica Autopilot da GSA TV falhou");
+
   return {
     status,
     services: states,
     playout: playoutStatus,
-    stream: { ...streamState, process_pid: streamProcess?.pid || null },
+    stream: {
+      ...streamState,
+      process_pid: streamProcess?.pid || null,
+      encoder_external: USE_EXTERNAL_ENCODER,
+    },
     degraded,
+    autopilot,
   };
 }
 async function validateSchedule() {
@@ -3540,9 +3693,11 @@ async function publishedScheduleItems(date) {
       coalesce(dm.drive_path,em.drive_path,pm.drive_path,cm.drive_path) as drive_path,
       coalesce(dm.duration_s,em.duration_s,pm.duration_s,cm.duration_s) as media_duration_s,
       coalesce(dm.media_kind,em.media_kind,pm.media_kind,cm.media_kind) as media_kind,
+      coalesce(dm.state,em.state,pm.state,cm.state) as media_state,
       coalesce(dm.approval_state,em.approval_state,pm.approval_state,cm.approval_state) as approval_state,
       coalesce(dm.rights_ok,em.rights_ok,pm.rights_ok,cm.rights_ok) as rights_ok,
-      coalesce(dm.rights_expires_at,em.rights_expires_at,pm.rights_expires_at,cm.rights_expires_at) as rights_expires_at
+      coalesce(dm.rights_expires_at,em.rights_expires_at,pm.rights_expires_at,cm.rights_expires_at) as rights_expires_at,
+      (($2::date + make_interval(secs=>b.planned_start_offset_s+b.planned_duration_s)) at time zone $3) as block_ends_at
     from public.gsa_tv_program_blocks b
     left join public.gsa_tv_programs p on p.id=b.program_id
     left join public.gsa_tv_media_items dm on dm.id=b.media_item_id
@@ -3553,7 +3708,7 @@ async function publishedScheduleItems(date) {
       join public.gsa_tv_episodes e on e.series_id=se.id
       join public.gsa_tv_media_items m on m.id=e.media_item_id
       where b.media_item_id is null and b.episode_id is null and b.program_id is not null and se.program_id=b.program_id
-      order by case when b.is_reprise then e.last_run_at else e.first_run_at end nulls first,e.season_number,e.episode_number
+      order by case when b.is_reprise then e.last_run_at else e.first_run_at end nulls first,e.season_number,e.episode_number,e.id
       limit 1
     ) pm on true
     left join lateral (
@@ -3562,12 +3717,51 @@ async function publishedScheduleItems(date) {
       join public.gsa_tv_ad_campaigns c on c.id=aa.campaign_id
       where b.campaign_id is not null and aa.campaign_id=b.campaign_id and c.status='active'
         and (($2::date + make_interval(secs=>b.planned_start_offset_s)) at time zone $3) between c.starts_at and c.ends_at and m.state='ready' and m.rights_ok and m.approval_state='approved'
-      order by aa.weight desc,m.updated_at asc limit 1
+      order by aa.weight desc,m.updated_at asc,m.id limit 1
     ) cm on true
     where b.schedule_version_id=$1
     order by b.planned_start_offset_s,b.position`,
     [version.rows[0].id, date, CHANNEL_TIMEZONE],
   );
+
+  const policyResult = await pool.query(
+    "select config->'broadcast_schedule_policy' policy from public.gsa_tv_channels where id=$1 limit 1",
+    [CHANNEL_ID],
+  );
+  const policy = policyResult.rows[0]?.policy || {};
+  const clockSeconds = (value, fallback) => {
+    const raw = String(value || fallback);
+    const parts = raw.split(":").map(Number);
+    if (
+      (parts.length !== 2 && parts.length !== 3) ||
+      parts.some((part) => !Number.isFinite(part))
+    )
+      throw new Error(`Política de horário inválida: ${raw}`);
+    return parts[0] * 3600 + parts[1] * 60 + (parts[2] || 0);
+  };
+  const onAirStart = clockSeconds(policy.on_air_start, "06:00:00");
+  let streamStop = clockSeconds(policy.stream_stop, "23:59:00");
+  if (streamStop <= onAirStart && streamStop === 0) streamStop = 86400;
+
+  let expectedStart = onAirStart;
+  for (const block of blocks.rows) {
+    const blockStart = Number(block.planned_start_offset_s || 0);
+    const blockDuration = Number(block.planned_duration_s || 0);
+    if (!Number.isFinite(blockDuration) || blockDuration <= 0)
+      throw new Error(`Bloco ${block.id} possui duração planejada inválida.`);
+    if (blockStart < onAirStart || blockStart + blockDuration > streamStop)
+      throw new Error(`Bloco ${block.id} está fora da janela oficial de transmissão.`);
+    if (Math.abs(blockStart - expectedStart) > 0.5)
+      throw new Error(
+        `Grade publicada possui lacuna/sobreposição antes do bloco ${block.id}: esperado ${expectedStart}s, recebido ${blockStart}s.`,
+      );
+    expectedStart = blockStart + blockDuration;
+  }
+  if (!blocks.rowCount || Math.abs(expectedStart - streamStop) > 0.5)
+    throw new Error(
+      `Grade publicada não cobre integralmente a janela on-air: final ${expectedStart}s, esperado ${streamStop}s.`,
+    );
+
   const items = [];
   for (const block of blocks.rows) {
     const start = Math.max(0, Number(block.planned_start_offset_s || 0));
@@ -3585,35 +3779,53 @@ async function publishedScheduleItems(date) {
       });
       continue;
     }
-    if (!block.drive_path) {
-      items.push({
-        start,
-        duration: planned,
-        source: SCHEDULE_FILLER_FILE,
-        clipIn: 0,
-        ad: false,
-        title: block.resolved_title || "Continuidade GSA TV",
-        blockId: block.id,
-      });
-      continue;
-    }
+    const metadata =
+      block.metadata && typeof block.metadata === "object" ? block.metadata : {};
+    const requiredSlotDuration = Math.max(
+      0,
+      Number(metadata.required_slot_duration_s || 0),
+    );
+    if (requiredSlotDuration > 0 && planned + 0.001 < requiredSlotDuration)
+      throw new Error(
+        `Bloco ${block.id} viola duração contratual: ${planned}s < ${requiredSlotDuration}s.`,
+      );
+
+    if (!block.drive_path)
+      throw new Error(`Bloco ${block.id} não possui mídia resolvida.`);
+    if (block.media_state !== "ready")
+      throw new Error(`Bloco ${block.id} usa mídia fora do estado ready.`);
+    if (block.approval_state !== "approved")
+      throw new Error(`Bloco ${block.id} usa mídia sem aprovação editorial.`);
+    if (block.rights_ok !== true)
+      throw new Error(`Bloco ${block.id} usa mídia sem direitos confirmados.`);
     if (
-      block.rights_ok !== true ||
-      (block.rights_expires_at &&
-        new Date(block.rights_expires_at).getTime() < Date.now())
+      block.rights_expires_at &&
+      new Date(block.rights_expires_at).getTime() <
+        new Date(block.block_ends_at).getTime()
     )
-      throw new Error(`Bloco ${block.id} usa mídia sem direitos válidos.`);
-    if (
-      block.media_kind === "advertising" &&
-      block.approval_state !== "approved"
-    )
-      throw new Error(`Bloco publicitário ${block.id} não está aprovado.`);
+      throw new Error(
+        `Bloco ${block.id} usa mídia cujos direitos expiram antes do fim da exibição.`,
+      );
+
     const source = resolveMediaPath(block.drive_path);
     await fs.access(source);
-    const playable = Math.min(
-      planned,
-      Math.max(0.04, Number(block.media_duration_s || planned)),
+    const mediaDuration = Math.max(
+      0.04,
+      Number(block.media_duration_s || 0),
     );
+    const allowFill = metadata.allow_continuity_fill === true;
+    const allowTrim = metadata.allow_trim === true;
+
+    if (mediaDuration + 1 < planned && !allowFill)
+      throw new Error(
+        `Bloco ${block.id} está subpreenchido (${mediaDuration}s de ${planned}s) sem composição autorizada.`,
+      );
+    if (mediaDuration > planned + 1 && !allowTrim)
+      throw new Error(
+        `Bloco ${block.id} excede a janela (${mediaDuration}s para ${planned}s) e não pode ser truncado.`,
+      );
+
+    const playable = Math.min(planned, mediaDuration);
     items.push({
       start,
       duration: playable,
@@ -3627,7 +3839,9 @@ async function publishedScheduleItems(date) {
       campaignId: block.campaign_id || null,
       episodeId: block.episode_id || null,
     });
-    if (playable + 0.04 < planned)
+    if (playable + 0.04 < planned) {
+      if (!allowFill)
+        throw new Error(`Bloco ${block.id} exige composição editorial explícita.`);
       items.push({
         start: start + playable,
         duration: planned - playable,
@@ -3637,12 +3851,14 @@ async function publishedScheduleItems(date) {
         title: "Continuidade GSA TV",
         blockId: block.id,
       });
+    }
   }
   return { version: version.rows[0], items };
 }
 
-async function compilePlaylist() {
-  await validateSchedule();
+async function compilePlaylist(targetDate = null, options = {}) {
+  const requirePublished = options?.requirePublished === true;
+  if (!requirePublished) await validateSchedule();
   const rows = await pool.query(
     `select s.id,s.scheduled_start,s.scheduled_end,s.slot_type,m.title,m.drive_path,m.duration_s,m.media_kind,m.approval_state from public.gsa_tv_schedule_slots s join public.gsa_tv_media_items m on m.id=s.media_item_id where s.channel_id=$1 and s.state='confirmed' and s.scheduled_end>now() and s.scheduled_start<now()+interval '48 hours' and m.state='ready' and m.rights_ok and (m.media_kind<>'advertising' or m.approval_state='approved') and (m.rights_expires_at is null or m.rights_expires_at>=s.scheduled_end) order by s.scheduled_start`,
     [CHANNEL_ID],
@@ -3652,7 +3868,7 @@ async function compilePlaylist() {
   await fs.mkdir(PLAYLISTS_DIR, { recursive: true });
 
   const byDate = new Map();
-  for (const item of rows.rows) {
+  if (!requirePublished) for (const item of rows.rows) {
     const source = resolveMediaPath(item.drive_path);
     try {
       await fs.access(source);
@@ -3688,10 +3904,18 @@ async function compilePlaylist() {
 
   const now = new Date();
   const targetDates = [];
-  for (const seed of [now, new Date(now.getTime() + 24 * 60 * 60 * 1000)]) {
-    const date = localClock(seed).date;
-    targetDates.push(date);
-    if (!byDate.has(date)) byDate.set(date, []);
+  if (targetDate != null) {
+    const requested = String(targetDate).trim();
+    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(requested))
+      throw new Error("Data de compilação inválida.");
+    targetDates.push(requested);
+    if (!byDate.has(requested)) byDate.set(requested, []);
+  } else {
+    for (const seed of [now, new Date(now.getTime() + 24 * 60 * 60 * 1000)]) {
+      const date = localClock(seed).date;
+      targetDates.push(date);
+      if (!byDate.has(date)) byDate.set(date, []);
+    }
   }
   const publishedVersions = [];
   for (const date of targetDates) {
@@ -3707,10 +3931,20 @@ async function compilePlaylist() {
     }
   }
 
+  if (requirePublished) {
+    const publishedDateSet = new Set(publishedVersions.map((item) => item.date));
+    const missingPublished = targetDates.filter((date) => !publishedDateSet.has(date));
+    if (missingPublished.length)
+      throw new Error(
+        `Grade versionada publicada obrigatória para: ${missingPublished.join(", ")}.`,
+      );
+  }
+
   const generated = [];
-  for (const [date, items] of [...byDate.entries()].sort(([a], [b]) =>
-    a.localeCompare(b),
-  )) {
+  const targetDateSet = new Set(targetDates);
+  for (const [date, items] of [...byDate.entries()]
+    .filter(([date]) => targetDateSet.has(date))
+    .sort(([a], [b]) => a.localeCompare(b))) {
     items.sort((a, b) => a.start - b.start);
     const program = [];
     let timeline = 0;
@@ -4084,8 +4318,121 @@ async function enqueueAutomationJob(body={}){
   try{const q=await pool.query("insert into public.gsa_tv_jobs(channel_id,job_type,status,progress,payload) values($1,$2,'pending',0,$3) returning id,status",[CHANNEL_ID,jobType,payload]);return{accepted:true,job_id:q.rows[0].id,status:q.rows[0].status,already_queued:false};}
   catch(e){if(e.code==='23505'){const q=await pool.query("select id,status from public.gsa_tv_jobs where channel_id=$1 and job_type=$2 and status in ('pending','running') order by created_at desc limit 1",[CHANNEL_ID,jobType]);if(q.rowCount)return{accepted:true,job_id:q.rows[0].id,status:q.rows[0].status,already_queued:true};}throw e;}
 }
+async function readAutopilotStateFile(filename) {
+  const file = path.join(AUTOPILOT_STATE_DIR, filename);
+  try {
+    const stat = await fs.stat(file);
+    if (!stat.isFile() || stat.size > 2 * 1024 * 1024)
+      throw new Error("Arquivo de estado inválido.");
+    const data = JSON.parse(await fs.readFile(file, "utf8"));
+    return {
+      present: true,
+      age_seconds: Math.max(0, Math.round((Date.now() - stat.mtimeMs) / 1000)),
+      data,
+    };
+  } catch (error) {
+    if (error.code === "ENOENT")
+      return { present: false, age_seconds: null, data: null };
+    return {
+      present: false,
+      age_seconds: null,
+      data: null,
+      error: String(error.message || error).slice(0, 300),
+    };
+  }
+}
+
+async function autopilotSnapshot() {
+  const [readinessFile, factoryFile, durationFile, fallbackFile, broadcastFile] = await Promise.all([
+    readAutopilotStateFile("readiness-horizon.json"),
+    readAutopilotStateFile("content-factory.json"),
+    readAutopilotStateFile("duration-engine.json"),
+    readAutopilotStateFile("fallback-engine.json"),
+    readAutopilotStateFile("broadcast-controller.json"),
+  ]);
+  const readiness = readinessFile.data || {};
+  const today = localClock(new Date()).date;
+  const nextDay = (readiness.days_detail || []).find(
+    (day) => day.date > today,
+  ) || null;
+  const readinessFresh =
+    readinessFile.present && readinessFile.age_seconds !== null &&
+    readinessFile.age_seconds <= 1800;
+  return {
+    readiness: {
+      present: readinessFile.present,
+      fresh: readinessFresh,
+      age_seconds: readinessFile.age_seconds,
+      generated_at: readiness.generated_at || null,
+      start_date: readiness.start_date || null,
+      horizon_days: readiness.days || null,
+      ready_days: readiness.ready_days ?? null,
+      next_day: nextDay
+        ? {
+            date: nextDay.date,
+            state: nextDay.state,
+            coverage_pct: nextDay.coverage_pct,
+            content_coverage_pct: nextDay.content_coverage_pct,
+            issue_count: nextDay.issue_count,
+            hard_issue_count: nextDay.hard_issue_count,
+          }
+        : null,
+    },
+    content_factory: {
+      present: factoryFile.present,
+      age_seconds: factoryFile.age_seconds,
+      state: factoryFile.data?.state || null,
+      reason: factoryFile.data?.reason || null,
+      target: factoryFile.data?.target || null,
+      finished_at: factoryFile.data?.finished_at || null,
+    },
+    duration_engine: {
+      present: durationFile.present,
+      age_seconds: durationFile.age_seconds,
+      state: durationFile.data?.state || null,
+      target: durationFile.data?.target || null,
+      finished_at: durationFile.data?.finished_at || null,
+    },
+    fallback_engine: {
+      present: fallbackFile.present,
+      age_seconds: fallbackFile.age_seconds,
+      state: fallbackFile.data?.state || null,
+      broadcast_date: fallbackFile.data?.broadcast_date || null,
+      assigned: fallbackFile.data?.assigned ?? null,
+      failed: fallbackFile.data?.failed ?? null,
+      activate_at: fallbackFile.data?.activate_at || null,
+      finished_at: fallbackFile.data?.finished_at || null,
+    },
+    broadcast_controller: {
+      present: broadcastFile.present,
+      age_seconds: broadcastFile.age_seconds,
+      enabled: broadcastFile.data?.enabled ?? false,
+      state: broadcastFile.data?.state || null,
+      reason: broadcastFile.data?.reason || null,
+      window: broadcastFile.data?.window || null,
+      action: broadcastFile.data?.action || null,
+      desired_state: broadcastFile.data?.desired_state || null,
+      signal_state: broadcastFile.data?.signal_state || null,
+      playout_state: broadcastFile.data?.playout_state || null,
+      checked_at: broadcastFile.data?.checked_at || null,
+      finished_at: broadcastFile.data?.finished_at || null,
+    },
+    healthy:
+      readinessFresh &&
+      (!nextDay || nextDay.state === "ready") &&
+      !["failed", "cycle_failed", "duration_cycle_failed"].includes(
+        String(factoryFile.data?.state || ""),
+      ) &&
+      String(durationFile.data?.state || "") !== "failed" &&
+      !["failed", "fallback_incomplete"].includes(
+        String(fallbackFile.data?.state || ""),
+      ) &&
+      String(broadcastFile.data?.state || "") !== "failed",
+  };
+}
+
 async function automationSnapshot(){
-  const [channel,incidents,rights,execution,backups,jobs,ai,schedule,mediaPending,aiReady,alerts]=await Promise.all([
+  const [channel,incidents,rights,execution,backups,jobs,ai,schedule,mediaPending,aiReady,alerts,autopilot]=await Promise.all([
     pool.query("select id,name,status,desired_state,playout_state,signal_state,last_heartbeat_at,last_signal_at,last_error,quality_profile,(coalesce(config->>'youtube_video_id','')<>'') youtube_video_id_configured from public.gsa_tv_channels where id=$1",[CHANNEL_ID]),
     pool.query("select id,severity,message,created_at from public.gsa_tv_incidents where channel_id=$1 and not resolved order by created_at desc limit 20",[CHANNEL_ID]),
     pool.query("select id,title,rights_expires_at from public.gsa_tv_media_items where channel_id=$1 and rights_expires_at is not null and rights_expires_at<now()+interval '7 days' order by rights_expires_at limit 50",[CHANNEL_ID]),
@@ -4096,9 +4443,10 @@ async function automationSnapshot(){
     pool.query("select id,broadcast_date,version,state,title,published_at from public.gsa_tv_schedule_versions where channel_id=$1 order by broadcast_date desc,version desc limit 5",[CHANNEL_ID]),
     pool.query("select id,title,state,updated_at from public.gsa_tv_media_items where channel_id=$1 and state in ('received','processing') and updated_at<now()-interval '2 minutes' order by updated_at limit 50",[CHANNEL_ID]),
     pool.query("select id,name,project_type,state,autonomy_mode,updated_at from public.gsa_tv_ai_projects where channel_id=$1 and state='approved' and autonomy_mode in ('supervised_auto','authorized_routine') order by updated_at limit 20",[CHANNEL_ID]),
-    pool.query("select enabled,min_severity,cooldown_minutes,(coalesce(whatsapp_number,'')<>'') recipient_configured from public.gsa_tv_alert_settings where channel_id=$1 limit 1",[CHANNEL_ID])
+    pool.query("select enabled,min_severity,cooldown_minutes,(coalesce(whatsapp_number,'')<>'') recipient_configured from public.gsa_tv_alert_settings where channel_id=$1 limit 1",[CHANNEL_ID]),
+    autopilotSnapshot()
   ]);
-  return{server_time:new Date().toISOString(),channel:channel.rows[0]||null,open_incidents:incidents.rows,rights_expiring:rights.rows,execution_24h:execution.rows[0]||{},backups:backups.rows,recent_jobs:jobs.rows,ai_jobs_24h:ai.rows,schedule_versions:schedule.rows,media_pending:mediaPending.rows,ai_ready:aiReady.rows,alerts:alerts.rows[0]||{enabled:false,recipient_configured:false},stream:streamState};
+  return{server_time:new Date().toISOString(),channel:channel.rows[0]||null,open_incidents:incidents.rows,rights_expiring:rights.rows,execution_24h:execution.rows[0]||{},backups:backups.rows,recent_jobs:jobs.rows,ai_jobs_24h:ai.rows,schedule_versions:schedule.rows,media_pending:mediaPending.rows,ai_ready:aiReady.rows,alerts:alerts.rows[0]||{enabled:false,recipient_configured:false},autopilot,stream:streamState};
 }
 
 async function executeJob(job) {
@@ -4108,7 +4456,7 @@ async function executeJob(job) {
     case "validate_schedule":
       return validateSchedule();
     case "compile_playlist":
-      return compilePlaylist();
+      return compilePlaylist(job.payload?.date || null, { requirePublished: true });
     case "cache_warmup":
       return inspectCache();
     case "materialize_fixed_schedule": {
@@ -4127,20 +4475,20 @@ async function executeJob(job) {
         String(job.payload?.drive_path || ""),
       );
     case "playout_reload": {
-      const compiled = await compilePlaylist();
+      const compiled = await compilePlaylist(localClock(new Date()).date, { requirePublished: true });
       await ffplayoutProcess("restart");
       await waitForHls();
       if (streamState.desired === "running") await startStream(streamState.mode || "program", true);
       return { ...compiled, ffplayout_restarted: true };
     }
     case "stream_start": {
-      await compilePlaylist();
+      await compilePlaylist(localClock(new Date()).date, { requirePublished: true });
       return startStream("program", true);
     }
     case "stream_pause":
       return startStream("paused", true);
     case "stream_resume": {
-      await compilePlaylist();
+      await compilePlaylist(localClock(new Date()).date, { requirePublished: true });
       return startStream("program", true);
     }
     case "stream_stop":
@@ -4171,7 +4519,7 @@ async function executeJob(job) {
       return startStream(`manual-live:${sourceId}`, true);
     }
     case "live_return": {
-      await compilePlaylist();
+      await compilePlaylist(localClock(new Date()).date, { requirePublished: true });
       return startStream("program", true);
     }
     case "credentials_check":
@@ -4526,6 +4874,7 @@ const server = http.createServer(async (req, res) => {
       processing,
       last_cycle: lastCycle,
       stream: streamState,
+      autopilot: await autopilotSnapshot(),
     });
   if (req.method === "POST" && url.pathname === "/process") {
     await processJobs();
@@ -4541,16 +4890,81 @@ async function restoreRuntime() {
       [CHANNEL_ID],
     );
     const desired = result.rows[0]?.desired_state || "stopped";
-    const mode = String(result.rows[0]?.playout_state || "program");
-    if (desired === "running")
-      await startStream(
-        mode.startsWith("live:") || mode.startsWith("manual-live:")
-          ? mode
-          : "program",
-        true,
-      );
-    else if (desired === "paused") await startStream("paused", true);
-    else {
+    const storedMode = String(result.rows[0]?.playout_state || "program");
+    const mode =
+      storedMode.startsWith("live:") || storedMode.startsWith("manual-live:")
+        ? storedMode
+        : storedMode === "paused"
+          ? "paused"
+          : "program";
+
+    if (USE_EXTERNAL_ENCODER) {
+      try {
+        const encoder = await encoderEngineStatus();
+        if (encoder.outer_running && encoder.producer_running) {
+          const actualMode = String(encoder.mode || mode || "program");
+          const mismatch =
+            desired !== "running" ||
+            (mode !== actualMode &&
+              !(mode === "program" && actualMode === "program"));
+
+          // control_plane_restore_external_encoder_preserved:
+          // Reattach to the already-running relay without restarting ffplayout,
+          // recompiling a playlist or calling /v1/ensure.
+          streamProcess = {
+            external: true,
+            killed: false,
+            pid: encoder.producer_pid || null,
+          };
+          streamState = {
+            desired: "running",
+            actual: "sending",
+            mode: actualMode,
+            started_at: new Date().toISOString(),
+            last_error: encoder.last_error || null,
+          };
+          await persistStreamState();
+
+          if (mismatch) {
+            await incident(
+              "Estado do Control Plane divergiu do Encoder preservado",
+              {
+                stored_desired: desired,
+                stored_mode: storedMode,
+                encoder_mode: actualMode,
+                producer_pid: encoder.producer_pid || null,
+                outer_pid: encoder.outer_pid || null,
+              },
+              "warning",
+            ).catch(() => {});
+          }
+          log("info", "control_plane_restore_external_encoder_preserved", {
+            stored_desired: desired,
+            stored_mode: storedMode,
+            encoder_mode: actualMode,
+            producer_pid: encoder.producer_pid || null,
+            outer_pid: encoder.outer_pid || null,
+          });
+          await resolveIncident("Falha ao restaurar a transmissão da GSA TV");
+          return;
+        }
+      } catch (error) {
+        log("warn", "external_encoder_restore_probe_failed", {
+          error: error.message,
+        });
+      }
+    }
+
+    if (desired === "running") {
+      if (mode === "program") {
+        await compilePlaylist(localClock(new Date()).date, {
+          requirePublished: true,
+        });
+      }
+      await startStream(mode, true);
+    } else if (desired === "paused") {
+      await startStream("paused", true);
+    } else {
       streamState.desired = "stopped";
       streamState.actual = "stopped";
       streamState.mode = "off_air";
@@ -4584,7 +4998,7 @@ const heartbeatTimer = setInterval(
     ),
   30000,
 );
-setInterval(
+const liveAutomationTimer = setInterval(
   () =>
     scheduledLiveAutomation().catch((e) =>
       log("error", "scheduled_live_failed", { error: e.message }),
@@ -4604,16 +5018,25 @@ void restoreRuntime()
 process.on("SIGTERM", async () => {
   clearInterval(jobsTimer);
   clearInterval(heartbeatTimer);
+  clearInterval(liveAutomationTimer);
   clearInterval(aiTimer);
   await stopLiveRecording().catch(() => {});
-  await terminateRelay().catch(() => {});
-  try {
-    await ffplayoutProcess("stop");
-  } catch {}
-  if (streamState.desired !== "stopped") {
-    streamState.actual = "recovering";
-    streamState.last_error = "Control plane em reinicialização.";
-    await persistStreamState().catch(() => {});
+  if (USE_EXTERNAL_ENCODER) {
+    streamProcess = null;
+    log("info", "control_plane_shutdown_encoder_preserved", {
+      desired: streamState.desired,
+      mode: streamState.mode,
+    });
+  } else {
+    await terminateRelay().catch(() => {});
+    try {
+      await ffplayoutProcess("stop");
+    } catch {}
+    if (streamState.desired !== "stopped") {
+      streamState.actual = "recovering";
+      streamState.last_error = "Control plane em reinicialização.";
+      await persistStreamState().catch(() => {});
+    }
   }
   server.close();
   await pool.end();

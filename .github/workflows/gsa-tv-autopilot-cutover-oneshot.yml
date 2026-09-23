@@ -1,0 +1,155 @@
+name: GSA TV Autopilot One-Shot Cutover
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_sha:
+        description: "Exact SHA to allow cutover"
+        required: true
+        type: string
+      scope:
+        description: "Cutover scope"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - all
+          - broadcast
+          - production
+
+jobs:
+  cutover:
+    name: Perform Cutover
+    runs-on: ubuntu-24.04
+    environment: gsa-tv-production
+    steps:
+      - name: Assert Target Commit and Inputs
+        env:
+          TARGET_SHA: ${{ inputs.target_sha }}
+          SCOPE: ${{ inputs.scope }}
+        run: |
+          if ! [[ "${TARGET_SHA}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "ERROR: TARGET_SHA must be a 40-character hexadecimal string."
+            exit 1
+          fi
+          
+          case "${SCOPE}" in
+            all|broadcast|production)
+              ;;
+            *)
+              echo "ERROR: Invalid scope '${SCOPE}'."
+              exit 1
+              ;;
+          esac
+          
+          if [ "${GITHUB_SHA}" != "${TARGET_SHA}" ]; then
+            echo "ERROR: This one-shot workflow is locked to SHA ${TARGET_SHA}."
+            echo "Current SHA is ${GITHUB_SHA}."
+            exit 1
+          fi
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_sha }}
+
+      - name: Configure SSH
+        shell: bash
+        env:
+          VPS_SSH_KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          echo "$VPS_SSH_KEY" > "$HOME/.ssh/gsa-tv-deploy"
+          chmod 600 "$HOME/.ssh/gsa-tv-deploy"
+          echo "$VPS_KNOWN_HOSTS" >> "$HOME/.ssh/known_hosts"
+
+      - name: Guarded cutover dry-run
+        shell: bash
+        env:
+          VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+          VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+          RUNTIME_CUTOVER_SCOPE: ${{ inputs.scope }}
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "sudo bash -s -- --scope=${RUNTIME_CUTOVER_SCOPE}" \
+            < infrastructure/gsa-tv/scripts/cutover-autopilot-v2.sh | tee dry-run.log
+            
+          if ! grep -q 'CUTOVER_DRY_RUN_OK=true' dry-run.log; then
+            echo "Dry run failed."
+            exit 1
+          fi
+
+      - name: Guarded cutover preflight check
+        shell: bash
+        env:
+          VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+          VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'sudo /opt/gsa-tv/bin/autopilot-runtime-preflight.sh' | tee preflight.log
+            
+          if ! grep -q '^STATUS=EXTERNAL_READY$' preflight.log; then
+            echo "Preflight check failed. Not in EXTERNAL_READY state."
+            exit 1
+          fi
+
+      - name: Guarded cutover apply
+        shell: bash
+        env:
+          VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+          VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+          RUNTIME_CUTOVER_SCOPE: ${{ inputs.scope }}
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "sudo bash -s -- --apply --scope=${RUNTIME_CUTOVER_SCOPE}" \
+            < infrastructure/gsa-tv/scripts/cutover-autopilot-v2.sh | tee apply.log
+            
+          if ! grep -q 'CUTOVER_OK=true' apply.log; then
+            echo "Cutover apply failed."
+            exit 1
+          fi
+          
+          BACKUP_PATH=$(grep '^CUTOVER_BACKUP=' apply.log | cut -d= -f2 || true)
+          echo "Cutover Backup Path: $BACKUP_PATH"
+
+      - name: Post-cutover evidence
+        shell: bash
+        env:
+          VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+          VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'set -e;
+             echo "--- autopilot timers ---";
+             sudo systemctl list-timers --all --no-pager | grep "gsa-tv-autopilot" || true;
+             echo "--- legacy timers ---";
+             sudo systemctl list-timers --all --no-pager | grep -E "gsa-tv-(morning-start|signoff|night-factory)" || true;
+             echo "--- legacy status ---";
+             sudo systemctl is-enabled gsa-tv-night-factory.timer || echo "legacy correctly disabled";
+             echo "--- failed units ---";
+             sudo systemctl --failed --no-pager | grep -i "gsa-tv" || true;
+             if sudo systemctl --failed --no-pager | grep -qi "gsa-tv"; then
+               echo "ERROR: Found failed gsa-tv units!";
+               exit 1;
+             fi'
+
+      - name: Remove local SSH material
+        if: always()
+        shell: bash
+        run: |
+          rm -f "$HOME/.ssh/gsa-tv-deploy" "$HOME/.ssh/known_hosts"

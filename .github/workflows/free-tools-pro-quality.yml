@@ -12,8 +12,7 @@ on:
       - 'scripts/check-free-tools-contracts.ts'
       - 'scripts/check-free-tools-pro-security-contracts.ts'
       - 'scripts/check-calculator-pro-panel-contracts.ts'
-      - 'supabase/functions/gsa-free-tools-pro/**'
-      - 'supabase/functions/gsa-free-tools-pro-webhook/**'
+      - 'supabase/functions/gsa-free-tools/**'
       - 'supabase/migrations/*free_tools_pro*.sql'
       - 'supabase/migrations/*calculator_pro*.sql'
       - 'supabase/config.toml'
@@ -29,8 +28,7 @@ on:
       - 'scripts/check-free-tools-contracts.ts'
       - 'scripts/check-free-tools-pro-security-contracts.ts'
       - 'scripts/check-calculator-pro-panel-contracts.ts'
-      - 'supabase/functions/gsa-free-tools-pro/**'
-      - 'supabase/functions/gsa-free-tools-pro-webhook/**'
+      - 'supabase/functions/gsa-free-tools/**'
       - 'supabase/migrations/*free_tools_pro*.sql'
       - 'supabase/migrations/*calculator_pro*.sql'
       - 'supabase/config.toml'
@@ -74,11 +72,8 @@ jobs:
       - name: Calculator Pro panel recovery contract
         run: npx tsx scripts/check-calculator-pro-panel-contracts.ts
 
-      - name: Check public Pro API
-        run: deno check supabase/functions/gsa-free-tools-pro/index.ts
-
-      - name: Check InfinitePay webhook
-        run: deno check supabase/functions/gsa-free-tools-pro-webhook/index.ts
+      - name: Check consolidated Free Tools API and webhook
+        run: deno check supabase/functions/gsa-free-tools/index.ts
 
       - name: Build
         run: npm run build

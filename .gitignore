@@ -25,3 +25,11 @@ scratch/**/*.mp4
 production/**/*.mp4
 assets/**/*.mp4
 *.mp4
+
+# Local secrets and runtime credentials
+/CREDENCIAIS_SISTEMA_GSA.md
+**/secrets/
+*.secret
+*.secrets
+*.key
+*.pem
