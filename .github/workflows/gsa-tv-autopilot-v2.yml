@@ -187,6 +187,9 @@ jobs:
           assert "PHYSICAL_OFF_AIR_EVIDENCE=true" in runtime_workflow
           assert "HOST_SQLITE_BACKUP_PROBE=ok" in runtime_workflow
           assert "SELF_HOSTED_DB_ACCESS_OK=true" in runtime_workflow
+          assert "MIGRATION_REPAIRABLE_COMPILE_GATE=true" in runtime_workflow
+          assert "SELF_HOSTED_DB_REPAIRABLE_COMPILE_GATE=true" in runtime_workflow
+          assert "MIGRATION_REPAIR_CONTRACT=" in runtime_workflow
           assert "apply-autopilot-migration.sh" in runtime_workflow
           assert "SELF_HOSTED_MIGRATION_REMOTE_DIR" in runtime_workflow
           assert "sha256sum -c manifest.sha256" in runtime_workflow
@@ -227,6 +230,9 @@ jobs:
           assert 'if [ "$history_table" = "present" ]; then' in migration_status
           assert "pg_get_functiondef(to_regprocedure('public.gsa_tv_production_signature(uuid)'))" in migration_status
           assert "'public.gsa_tv_production_signature(uuid)'::regprocedure" not in migration_status
+          assert "v_date > v_today + 7" in migration_status
+          assert "schedule_signature" in migration_status
+          assert "gsa_tv_production_signature" in migration_status
           assert "MIGRATION_SELF_HOSTED_TARGET=true" in migration_apply
           assert "CREATE SCHEMA IF NOT EXISTS supabase_migrations" in migration_apply
           assert "CREATE TABLE IF NOT EXISTS supabase_migrations.schema_migrations" in migration_apply
@@ -237,6 +243,9 @@ jobs:
           assert ":'version'" not in migration_apply
           assert ":'name'" not in migration_apply
           assert "supabase " not in migration_apply
+          assert "repair-contract is authorized only for canonical compile gate 20260922131000" in migration_apply
+          assert "repair-contract requires history=t and contract=f" in migration_apply
+          assert "v_date > v_today + 7" in migration_apply
           assert "compat_live_source_id" in signature_migration
           assert "compat_episode_id" in signature_migration
           assert "compat_campaign_id" in signature_migration
