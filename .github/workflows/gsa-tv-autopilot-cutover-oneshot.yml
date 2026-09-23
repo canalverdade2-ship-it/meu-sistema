@@ -2,6 +2,11 @@ name: Autopilot V2 One-Shot Cutover
 
 on:
   workflow_dispatch:
+    inputs:
+      target_sha:
+        description: "Exact SHA to allow cutover"
+        required: true
+        type: string
 
 jobs:
   cutover:
@@ -11,9 +16,8 @@ jobs:
     steps:
       - name: Assert Target Commit
         run: |
-          # Assert that we are running exactly on the reconciled SHA
-          if [ "${GITHUB_SHA}" != "644fe131facb6486100215af39f32755af43dbc0" ]; then
-            echo "ERROR: This one-shot workflow can ONLY run on commit 644fe131facb6486100215af39f32755af43dbc0."
+          if [ "${GITHUB_SHA}" != "${{ inputs.target_sha }}" ]; then
+            echo "ERROR: This one-shot workflow is locked to SHA ${{ inputs.target_sha }}."
             echo "Current SHA is ${GITHUB_SHA}."
             exit 1
           fi
