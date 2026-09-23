@@ -105,19 +105,6 @@ jobs:
             --file gsa-targeted-validation.sql \
             2>&1 | tee gsa-targeted-validation.log
 
-      - name: Diagnostic Ledger Check
-        run: |
-          cat > diagnostic-ledger.sql <<'SQL'
-                    SELECT version
-          FROM supabase_migrations.schema_migrations
-          WHERE version IN (
-            '20260722090000',
-            '20260722090100'
-          )
-          ORDER BY version;
-          SQL
-          supabase db query --linked --file diagnostic-ledger.sql || true
-
       - name: Compare migration history
         shell: bash
         run: |

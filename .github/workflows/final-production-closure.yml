@@ -23,6 +23,9 @@ concurrency:
 jobs:
   validate-deploy-verify:
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      deployment: false
     timeout-minutes: 35
 
     services:
