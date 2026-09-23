@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# GSA TV Autopilot V2 — runtime preflight (read-only)
+# GSA TV Autopilot V2 â€” runtime preflight (read-only)
 set -euo pipefail
 
 CHANNEL_ID="${GSA_TV_CHANNEL_ID:-ch-main}"
@@ -287,6 +287,34 @@ echo "LEGACY_BROADCAST_AUTOMATION_ACTIVE=${active_legacy_broadcast[*]:-none}"
 echo "LEGACY_PRODUCTION_AUTOMATION_ACTIVE=${active_legacy_production[*]:-none}"
 echo "MISSING_PATHS=${missing_paths[*]:-none}"
 
+# Required preparation evidence must also be emitted after paths are recovered.
+if container_exists gsa-tv-ffplayout; then
+  state_host="$(docker inspect gsa-tv-ffplayout --format '{{range .Mounts}}{{if eq .Destination "/state"}}{{.Source}}{{end}}{{end}}' 2>/dev/null || true)"
+  if command -v python3 >/dev/null 2>&1 && [ -n "$state_host" ] && [ -s "$state_host/ffplayout.db" ]; then
+    python3 - "$state_host/ffplayout.db" <<'PY' 2>/dev/null || echo "HOST_SQLITE_BACKUP_PROBE=failed"
+import sqlite3
+import sys
+
+path = sys.argv[1]
+source = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=30)
+destination = sqlite3.connect(":memory:", timeout=30)
+try:
+    source.backup(destination)
+    row = destination.execute("pragma integrity_check").fetchone()
+    if not row or row[0] != "ok":
+        raise SystemExit(2)
+    print("HOST_SQLITE_BACKUP_PROBE=ok")
+finally:
+    destination.close()
+    source.close()
+PY
+  else
+    echo "HOST_SQLITE_BACKUP_PROBE=unavailable"
+  fi
+else
+  echo "HOST_SQLITE_BACKUP_PROBE=unavailable"
+fi
+
 if [ "${#missing_paths[@]}" -gt 0 ]; then
   echo "RUNTIME_PATH_DIAGNOSTICS_BEGIN"
   for p in     /opt/gsa-tv     /opt/gsa-tv/cache     /opt/gsa-tv/cache/media     /opt/gsa-tv/playlists     /opt/gsa-tv/preview     /opt/gsa-tv/fallback     /opt/gsa-tv/runtime; do
@@ -314,28 +342,7 @@ if [ "${#missing_paths[@]}" -gt 0 ]; then
       done
     ' 2>/dev/null || true
     echo "FFPLAYOUT_PATHS_END"
-    state_host="$(docker inspect gsa-tv-ffplayout --format '{{range .Mounts}}{{if eq .Destination "/state"}}{{.Source}}{{end}}{{end}}' 2>/dev/null || true)"
-    if command -v python3 >/dev/null 2>&1 && [ -n "$state_host" ] && [ -s "$state_host/ffplayout.db" ]; then
-      python3 - "$state_host/ffplayout.db" <<'PY' 2>/dev/null || echo "HOST_SQLITE_BACKUP_PROBE=failed"
-import sqlite3
-import sys
 
-path = sys.argv[1]
-source = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=30)
-destination = sqlite3.connect(":memory:", timeout=30)
-try:
-    source.backup(destination)
-    row = destination.execute("pragma integrity_check").fetchone()
-    if not row or row[0] != "ok":
-        raise SystemExit(2)
-    print("HOST_SQLITE_BACKUP_PROBE=ok")
-finally:
-    destination.close()
-    source.close()
-PY
-    else
-      echo "HOST_SQLITE_BACKUP_PROBE=unavailable"
-    fi
   fi
   if have systemctl; then
     echo "BACKUP_SERVICE_STATE=$(systemctl show gsa-tv-backup.service -p ActiveState -p SubState -p Result -p ExecMainStatus --value 2>/dev/null | paste -sd ',' - || true)"
