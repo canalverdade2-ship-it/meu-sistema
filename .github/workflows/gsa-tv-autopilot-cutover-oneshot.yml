@@ -8,10 +8,14 @@ on:
         required: true
         type: string
       scope:
-        description: "Cutover scope (all, broadcast, production)"
+        description: "Cutover scope"
         required: false
         default: "all"
-        type: string
+        type: choice
+        options:
+          - all
+          - broadcast
+          - production
 
 jobs:
   cutover:
@@ -19,10 +23,27 @@ jobs:
     runs-on: ubuntu-24.04
     environment: gsa-tv-production
     steps:
-      - name: Assert Target Commit
+      - name: Assert Target Commit and Inputs
+        env:
+          TARGET_SHA: ${{ inputs.target_sha }}
+          SCOPE: ${{ inputs.scope }}
         run: |
-          if [ "${GITHUB_SHA}" != "${{ inputs.target_sha }}" ]; then
-            echo "ERROR: This one-shot workflow is locked to SHA ${{ inputs.target_sha }}."
+          if ! [[ "${TARGET_SHA}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "ERROR: TARGET_SHA must be a 40-character hexadecimal string."
+            exit 1
+          fi
+          
+          case "${SCOPE}" in
+            all|broadcast|production)
+              ;;
+            *)
+              echo "ERROR: Invalid scope '${SCOPE}'."
+              exit 1
+              ;;
+          esac
+          
+          if [ "${GITHUB_SHA}" != "${TARGET_SHA}" ]; then
+            echo "ERROR: This one-shot workflow is locked to SHA ${TARGET_SHA}."
             echo "Current SHA is ${GITHUB_SHA}."
             exit 1
           fi
