@@ -21,6 +21,18 @@ with checks(version, history_ok, contract_ok) as (
       '20260922131000',
       exists(select 1 from supabase_migrations.schema_migrations where version='20260922131000'),
       to_regprocedure('public.gsa_tv_guard_automation_compile()') is not null
+      and position(
+        'v_date > v_today + 7'
+        in coalesce(pg_get_functiondef(to_regprocedure('public.gsa_tv_guard_automation_compile()')),'')
+      ) > 0
+      and position(
+        'schedule_signature'
+        in coalesce(pg_get_functiondef(to_regprocedure('public.gsa_tv_guard_automation_compile()')),'')
+      ) > 0
+      and position(
+        'gsa_tv_production_signature'
+        in coalesce(pg_get_functiondef(to_regprocedure('public.gsa_tv_guard_automation_compile()')),'')
+      ) > 0
     ),
     (
       '20260922132000',
@@ -54,7 +66,23 @@ else
   row="$(psql "$DB_URL" -X -qAt -F '|' -v ON_ERROR_STOP=1 <<'SQL'
 with checks(version, history_ok, contract_ok) as (
   values
-    ('20260922131000', false, to_regprocedure('public.gsa_tv_guard_automation_compile()') is not null),
+    (
+      '20260922131000',
+      false,
+      to_regprocedure('public.gsa_tv_guard_automation_compile()') is not null
+      and position(
+        'v_date > v_today + 7'
+        in coalesce(pg_get_functiondef(to_regprocedure('public.gsa_tv_guard_automation_compile()')),'')
+      ) > 0
+      and position(
+        'schedule_signature'
+        in coalesce(pg_get_functiondef(to_regprocedure('public.gsa_tv_guard_automation_compile()')),'')
+      ) > 0
+      and position(
+        'gsa_tv_production_signature'
+        in coalesce(pg_get_functiondef(to_regprocedure('public.gsa_tv_guard_automation_compile()')),'')
+      ) > 0
+    ),
     ('20260922132000', false, to_regprocedure('public.gsa_tv_autopilot_replace_shortfall_media(uuid,text,text,date)') is not null),
     ('20260922134000', false, to_regprocedure('public.gsa_tv_autopilot_assign_continuity_fallback(uuid,text,text,date)') is not null),
     ('20260922135000', false, to_regprocedure('public.gsa_tv_guard_cinema_duration_compile()') is not null),
