@@ -107,7 +107,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if ! supabase db query --linked "SELECT version FROM supabase_migrations.schema_migrations WHERE version = '20260722235959';" 2>/dev/null | grep -q "20260722235959"; then
+          cat > careers-migrations-ledger-check.sql <<'SQL'
+          SELECT version
+          FROM supabase_migrations.schema_migrations
+          WHERE version = '20260722235959';
+          SQL
+
+          if ! supabase db query --linked \
+            --file careers-migrations-ledger-check.sql \
+            2>&1 | tee careers-migrations-after-apply.log; then
+            echo "FAIL: não foi possível consultar o ledger remoto." >&2
+            exit 1
+          fi
+
+          if ! grep -q '20260722235959' careers-migrations-after-apply.log; then
             supabase migration repair --linked --status applied 20260722235959 2>&1 | tee careers-migration-repair.log
           fi
 

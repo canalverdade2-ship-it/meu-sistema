@@ -12,7 +12,7 @@ on:
       - 'supabase/migrations/20260721210100_create_advertising_foundation.sql'
       - 'supabase/migrations/20260721223100_complete_advertising_platform.sql'
       - 'supabase/migrations/20260721223500_schedule_advertising_campaigns.sql'
-      - 'supabase/migrations/20260722040000_harden_advertising_backend.sql'
+      - 'supabase/migrations/20260722040001_harden_advertising_backend.sql'
       - 'supabase/migrations/20260722235900_fix_gsa_advertising_flow.sql'
       - 'supabase/functions/gsa-ads-public/**'
       - 'supabase/functions/gsa-ads-admin/**'
@@ -112,7 +112,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cp supabase/migrations/20260722040000_harden_advertising_backend.sql /tmp/gsa-ads-hardening.sql
+          cp supabase/migrations/20260722040001_harden_advertising_backend.sql /tmp/gsa-ads-hardening.sql
           printf '\nCOMMIT;\n' >> /tmp/gsa-ads-hardening.sql
 
       - name: Apply advertising SQL and reconcile history
