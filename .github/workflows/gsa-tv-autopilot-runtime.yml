@@ -237,7 +237,17 @@ jobs:
             < infrastructure/gsa-tv/scripts/autopilot-migration-status.sh \
             | tee "$RUNNER_TEMP/gsa-tv-migration-before.txt"
 
-          if grep -q '^MIGRATION_STATE=inconsistent
+          if grep -q '^MIGRATION_STATE=inconsistent$' "$RUNNER_TEMP/gsa-tv-migration-before.txt"; then
+            inconsistent_count="$(grep -Ec '^MIGRATION_STATUS=.*\|history=t\|contract=f$' "$RUNNER_TEMP/gsa-tv-migration-before.txt" || true)"
+            if [ "$inconsistent_count" = "1" ] &&
+               grep -qx 'MIGRATION_STATUS=20260922131000|history=t|contract=f' "$RUNNER_TEMP/gsa-tv-migration-before.txt"; then
+              echo "MIGRATION_REPAIRABLE_COMPILE_GATE=true"
+            else
+              echo "Histórico de migrations inconsistente fora do reparo canônico autorizado; abortando antes da primeira mutação." >&2
+              exit 80
+            fi
+          fi
+
       - name: Validate self-hosted production database
         if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
         shell: bash
@@ -249,7 +259,19 @@ jobs:
             'sudo bash -s' \
             < infrastructure/gsa-tv/scripts/autopilot-migration-status.sh \
             | tee "$RUNNER_TEMP/gsa-tv-self-hosted-db.txt"
-          if grep -Eq '^MIGRATION_STATE=(pending|ready)
+
+          if grep -Eq '^MIGRATION_STATE=(pending|ready)$' "$RUNNER_TEMP/gsa-tv-self-hosted-db.txt"; then
+            :
+          elif grep -qx 'MIGRATION_STATE=inconsistent' "$RUNNER_TEMP/gsa-tv-self-hosted-db.txt" &&
+               [ "$(grep -Ec '^MIGRATION_STATUS=.*\|history=t\|contract=f$' "$RUNNER_TEMP/gsa-tv-self-hosted-db.txt" || true)" = "1" ] &&
+               grep -qx 'MIGRATION_STATUS=20260922131000|history=t|contract=f' "$RUNNER_TEMP/gsa-tv-self-hosted-db.txt"; then
+            echo "SELF_HOSTED_DB_REPAIRABLE_COMPILE_GATE=true"
+          else
+            echo "Estado de migration self-hosted não autorizado para preparação." >&2
+            exit 80
+          fi
+          echo "SELF_HOSTED_DB_ACCESS_OK=true"
+
       - name: Prepare legacy ffplayout snapshot dry-run
         if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'prepare-first-migration' }}
         shell: bash
