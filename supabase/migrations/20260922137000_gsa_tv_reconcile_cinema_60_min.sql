@@ -26,9 +26,8 @@ BEGIN
      SET end_time = '20:30'::time, updated_at = now()
    WHERE channel_id = 'ch-main' AND program_id = v_program_cinema AND start_time = '19:30'::time;
 
-  -- Mover programas que começam às 20:30 para 20:00 para não colidir o unique constraint
-  UPDATE public.gsa_tv_weekly_grid_slots
-     SET start_time = '20:00'::time, updated_at = now()
+  -- Remover slots conflitantes às 20:30
+  DELETE FROM public.gsa_tv_weekly_grid_slots
    WHERE channel_id = 'ch-main' AND start_time = '20:30'::time AND program_id != coalesce(v_program_pipoca, '00000000-0000-0000-0000-000000000000');
 
   UPDATE public.gsa_tv_weekly_grid_slots
