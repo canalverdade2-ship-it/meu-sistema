@@ -5,26 +5,6 @@ import_map = "./functions/import-products-from-file/deno.json"
 entrypoint = "./functions/import-products-from-file/index.ts"
 
 # Funções públicas possuem controles próprios (CORS, rate limit, HMAC ou segredo de cron).
-[functions.gsa-public-advertising]
-enabled = true
-verify_jwt = false
-
-[functions.gsa-advertiser-access]
-enabled = true
-verify_jwt = false
-
-[functions.gsa-ad-delivery]
-enabled = true
-verify_jwt = false
-
-[functions.gsa-advertising-webhook]
-enabled = true
-verify_jwt = false
-
-[functions.gsa-advertising-scheduler]
-enabled = true
-verify_jwt = false
-
 # Acesso público Free/Pro. A função reconfirma pagamento, voucher, sessão e identidade no servidor.
 [functions.gsa-free-tools-pro]
 enabled = true
@@ -35,7 +15,11 @@ verify_jwt = false
 enabled = true
 verify_jwt = false
 
-# Esta função exige sessão Supabase válida e ainda reconfirma o usuário e o módulo no servidor.
-[functions.gsa-advertiser-admin]
+# Publicidade consolidada: HMAC/cron nas rotas públicas e sessão validada no handler administrativo.
+[functions.gsa-ads-public]
 enabled = true
-verify_jwt = true
+verify_jwt = false
+
+[functions.gsa-ads-admin]
+enabled = true
+verify_jwt = false

@@ -92,15 +92,13 @@ async function findExistingUser(admin: any, email: string) {
 
 function isUuid(value: unknown) { return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value); }
 
-async function readJsonWithinLimit(request: Request, maxBytes: number): Promise<JsonRecord> {
+async function readRawWithinLimit(request: Request, maxBytes: number): Promise<string> {
   if (!request.body) throw new SyntaxError('empty_body');
   const reader = request.body.getReader(); const decoder = new TextDecoder(); let size = 0; let txt = '';
   try {
     while (true) { const { done, value } = await reader.read(); if (done) break; size += value.byteLength; if (size > maxBytes) throw new RangeError('payload_too_large'); txt += decoder.decode(value, { stream: true }); }
     txt += decoder.decode();
-    const parsed = JSON.parse(txt);
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new SyntaxError('invalid_body');
-    return parsed as JsonRecord;
+    return txt;
   } finally { reader.releaseLock(); }
 }
 
@@ -143,11 +141,19 @@ export async function handleRequest(request: Request) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL'); const anonKey = Deno.env.get('SUPABASE_ANON_KEY'); const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!supabaseUrl || !anonKey || !serviceRoleKey) return json(503, { error: 'server_not_configured' }, origin);
   // Webhook: detected by x-gsa-signature header
-  if (request.headers.get('x-gsa-signature')) { const raw = await request.text(); return handleWebhook(request, raw, supabaseUrl, serviceRoleKey); }
+  if (request.headers.get('x-gsa-signature')) {
+    let raw: string;
+    try { raw = await readRawWithinLimit(request, MAX_BODY_BYTES); }
+    catch (error) { return json(error instanceof RangeError ? 413 : 400, { error: error instanceof RangeError ? 'payload_too_large' : 'invalid_json' }, origin); }
+    return handleWebhook(request, raw, supabaseUrl, serviceRoleKey);
+  }
   // Admin invite: requires JWT
   if (!(request.headers.get('content-type') || '').toLowerCase().includes('application/json')) return json(415, { error: 'unsupported_media_type' }, origin);
   let body: JsonRecord;
-  try { body = await readJsonWithinLimit(request, MAX_BODY_BYTES); } catch (error) { return json(error instanceof RangeError ? 413 : 400, { error: error instanceof RangeError ? 'payload_too_large' : 'invalid_json' }, origin); }
+  try {
+    body = JSON.parse(await readRawWithinLimit(request, MAX_BODY_BYTES));
+    if (!body || typeof body !== 'object' || Array.isArray(body)) throw new SyntaxError('invalid_body');
+  } catch (error) { return json(error instanceof RangeError ? 413 : 400, { error: error instanceof RangeError ? 'payload_too_large' : 'invalid_json' }, origin); }
   try {
     if (body.order_nsu && body.transaction_nsu && !body.action) return await handleInfinitePayWebhook(body, supabaseUrl, serviceRoleKey);
     return await handleAdminInvite(request, body, origin, supabaseUrl, anonKey, serviceRoleKey);

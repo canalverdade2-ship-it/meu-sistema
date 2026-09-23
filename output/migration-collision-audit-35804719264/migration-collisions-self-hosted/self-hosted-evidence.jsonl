@@ -1,0 +1,13 @@
+{"kind" : "function", "name" : "gsa_admin_cancel_partner_redemption", "arguments" : "p_sessao_id uuid, p_session_token text, p_resgate_id uuid, p_motivo text", "body_md5" : "ed557a0540193f6705d7d04531b18b5e", "security_definer" : true}
+{"kind" : "function", "name" : "gsa_admin_delete_partner_redemption", "arguments" : "p_sessao_id uuid, p_session_token text, p_resgate_id uuid, p_confirmation text", "body_md5" : "ea1a122dc8ed01a68598f4bfc90da031", "security_definer" : true}
+{"kind" : "function", "name" : "gsa_admin_ship_store_order", "arguments" : "p_sessao_id uuid, p_session_token text, p_request_id uuid, p_ordem_compra_id uuid, p_novo_status text, p_rastreavel boolean, p_codigo_rastreio text", "body_md5" : "c066c6adb8ba07cf212cc3668e09cb2e", "security_definer" : true}
+{"kind" : "function", "name" : "gsa_bot_find_partner_redemption", "arguments" : "p_parceiro_id uuid, p_email text, p_telefone text", "body_md5" : "e174bfd9cc8e146861c9d37c4dab12eb", "security_definer" : true}
+{"kind" : "table", "name" : "gsa_tv_programs", "exists" : true}
+{"kind" : "table", "name" : "gsa_tv_series", "exists" : true}
+{"kind" : "table", "name" : "gsa_tv_episodes", "exists" : true}
+{"kind" : "table", "name" : "gsa_tv_schedule_versions", "exists" : true}
+{"kind" : "table", "name" : "gsa_tv_program_blocks", "exists" : true}
+{"kind" : "table", "name" : "gsa_tv_rights_records", "exists" : true}
+{"kind" : "table", "name" : "gsa_tv_execution_log", "exists" : true}
+{"kind" : "table", "name" : "gsa_tv_watchdog_samples", "exists" : true}
+{"kind" : "table", "name" : "gsa_tv_graphics", "exists" : true}
