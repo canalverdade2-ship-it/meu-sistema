@@ -1,0 +1,32 @@
+name: Autopilot V2 One-Shot Cutover
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cutover:
+    name: Perform Cutover
+    runs-on: ubuntu-24.04
+    environment: gsa-tv-production
+    steps:
+      - name: Assert Target Commit
+        run: |
+          # Assert that we are running exactly on the reconciled SHA
+          if [ "${GITHUB_SHA}" != "644fe131facb6486100215af39f32755af43dbc0" ]; then
+            echo "ERROR: This one-shot workflow can ONLY run on commit 644fe131facb6486100215af39f32755af43dbc0."
+            echo "Current SHA is ${GITHUB_SHA}."
+            exit 1
+          fi
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.GSA_TV_SSH_KEY }}
+          known_hosts: ${{ secrets.GSA_TV_KNOWN_HOSTS }}
+
+      - name: Execute Cutover on VPS
+        run: |
+          ssh -p 22 opc@147.15.43.141 "sudo bash -c 'cd /opt/gsa-tv && ./bin/cutover-autopilot-v2.sh'"
