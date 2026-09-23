@@ -6,7 +6,7 @@ on:
     paths:
       - '.github/workflows/advertising-security-hardening.yml'
       - 'supabase/functions/gsa-ads-public/**'
-      - 'supabase/functions/gsa-ads-public/**'
+      - 'supabase/functions/gsa-ads-admin/**'
       - 'supabase/migrations/20260721210100_create_advertising_foundation.sql'
       - 'supabase/migrations/20260721223100_complete_advertising_platform.sql'
       - 'supabase/migrations/20260722090000_harden_ad_delivery_atomicity.sql'
@@ -18,7 +18,7 @@ on:
     paths:
       - '.github/workflows/advertising-security-hardening.yml'
       - 'supabase/functions/gsa-ads-public/**'
-      - 'supabase/functions/gsa-ads-public/**'
+      - 'supabase/functions/gsa-ads-admin/**'
       - 'supabase/migrations/20260721210100_create_advertising_foundation.sql'
       - 'supabase/migrations/20260721223100_complete_advertising_platform.sql'
       - 'supabase/migrations/20260722090000_harden_ad_delivery_atomicity.sql'
