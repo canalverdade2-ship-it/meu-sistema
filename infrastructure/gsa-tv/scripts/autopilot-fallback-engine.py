@@ -112,7 +112,7 @@ def activation_window(default_hours):
         hours = float(configured) if configured else float(default_hours)
     except ValueError:
         hours = float(default_hours)
-    hours = min(18.0, max(1.0, hours))
+    hours = min(48.0, max(1.0, hours))
 
     by_airtime = next_start - dt.timedelta(hours=hours)
     latest_before_midnight = dt.datetime.combine(
