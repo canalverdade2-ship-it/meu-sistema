@@ -1,0 +1,156 @@
+name: Apply Reconciled DB Migrations Once
+
+on:
+  push:
+    branches:
+      - feat/gsa-tv-autopilot-v2
+    paths:
+      - deployment-status/apply-db-reconciliation-once.txt
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gsa-db-reconciliation-once
+  cancel-in-progress: false
+
+jobs:
+  apply-self-hosted:
+    runs-on: ubuntu-latest
+    environment: gsa-tv-production
+    timeout-minutes: 90
+    env:
+      VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+      VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+      VPS_KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+      VPS_KNOWN_HOSTS: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard exact one-time authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git log -1 --pretty=%s)" = "ops(db): apply reconciled migrations once"
+          grep -qx 'APPLY_20260923013000_20260923013100' deployment-status/apply-db-reconciliation-once.txt
+          test -n "${VPS_HOST:-}"
+          test -n "${VPS_USER:-}"
+          test "${#VPS_KEY}" -ge 100
+          test "${#VPS_KNOWN_HOSTS}" -ge 20
+          echo "RECONCILIATION_AUTHORIZED=true"
+
+      - name: Configure pinned SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_KEY" > "$HOME/.ssh/gsa-db-reconcile"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 0600 "$HOME/.ssh/gsa-db-reconcile" "$HOME/.ssh/known_hosts"
+
+      - name: Verify self-hosted prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-db-reconcile"             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST"             'set -e; hostname; command -v sudo; sudo -n true; command -v psql; command -v pg_dump; command -v pg_restore; command -v sha256sum'
+          echo "OFF_AIR_GATE=not_required_non_broadcast_schema_change"
+
+      - name: Stage verified reconciliation bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          local_dir="$RUNNER_TEMP/gsa-db-reconcile"
+          remote_dir="/tmp/gsa-db-reconcile-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          mkdir -p "$local_dir"
+          cp infrastructure/gsa-tv/scripts/apply-reconciliation-migration.sh "$local_dir/"
+          cp infrastructure/gsa-tv/scripts/backup-full.sh "$local_dir/"
+          cp supabase/migrations/20260923013000_reconcile_partner_redemption_collision.sql "$local_dir/"
+          cp supabase/migrations/20260923013100_reconcile_checkout_shipping_collision.sql "$local_dir/"
+          (cd "$local_dir" && sha256sum * > manifest.sha256)
+
+          ssh -i "$HOME/.ssh/gsa-db-reconcile"             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST"             "set -e; rm -rf '$remote_dir'; install -d -m 0700 '$remote_dir'"
+
+          scp -i "$HOME/.ssh/gsa-db-reconcile"             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$local_dir/"* "$VPS_USER@$VPS_HOST:$remote_dir/"
+
+          ssh -i "$HOME/.ssh/gsa-db-reconcile"             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST"             "set -e; cd '$remote_dir'; sha256sum -c manifest.sha256; chmod 0700 apply-reconciliation-migration.sh backup-full.sh"
+
+          echo "REMOTE_DIR=$remote_dir" >> "$GITHUB_ENV"
+
+      - name: Read-only reconciliation status before mutation
+        id: before
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > "$RUNNER_TEMP/reconciliation-before.txt"
+          for spec in             "20260923013000 reconcile_partner_redemption_collision"             "20260923013100 reconcile_checkout_shipping_collision"
+          do
+            read -r version name <<<"$spec"
+            ssh -i "$HOME/.ssh/gsa-db-reconcile"               -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes               "$VPS_USER@$VPS_HOST"               "sudo bash '$REMOTE_DIR/apply-reconciliation-migration.sh' --version '$version' --name '$name' --mode status"               | tee -a "$RUNNER_TEMP/reconciliation-before.txt"
+          done
+
+          if [ "$(grep -c '^RECONCILIATION_BEFORE_HISTORY=t$' "$RUNNER_TEMP/reconciliation-before.txt")" -eq 2 ] &&
+             [ "$(grep -c '^RECONCILIATION_BEFORE_CONTRACT=t$' "$RUNNER_TEMP/reconciliation-before.txt")" -eq 2 ]; then
+            echo "already_ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "already_ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Full restore-tested backup before migration
+        if: ${{ steps.before.outputs.already_ready != 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          backup_path="$(ssh -i "$HOME/.ssh/gsa-db-reconcile"             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST"             "sudo bash '$REMOTE_DIR/backup-full.sh'" | tee "$RUNNER_TEMP/reconciliation-backup.txt" | tail -n 1)"
+          test -n "$backup_path"
+          ssh -i "$HOME/.ssh/gsa-db-reconcile"             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST"             "set -e; sudo test -s '$backup_path/manifest.sha256'; cd '$backup_path'; sudo sha256sum -c manifest.sha256"
+          echo "PRE_MIGRATION_BACKUP=$backup_path" >> "$GITHUB_ENV"
+          echo "PRE_MIGRATION_BACKUP_RESTORE_TESTED=true"
+
+      - name: Apply or safely repair reconciliation migrations
+        if: ${{ steps.before.outputs.already_ready != 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-db-reconcile"             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST"             "sudo bash '$REMOTE_DIR/apply-reconciliation-migration.sh'               --version 20260923013000               --name reconcile_partner_redemption_collision               --mode apply               --file '$REMOTE_DIR/20260923013000_reconcile_partner_redemption_collision.sql'"             | tee "$RUNNER_TEMP/reconciliation-13000.txt"
+
+          ssh -i "$HOME/.ssh/gsa-db-reconcile"             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST"             "sudo bash '$REMOTE_DIR/apply-reconciliation-migration.sh'               --version 20260923013100               --name reconcile_checkout_shipping_collision               --mode apply               --file '$REMOTE_DIR/20260923013100_reconcile_checkout_shipping_collision.sql'"             | tee "$RUNNER_TEMP/reconciliation-13100.txt"
+
+      - name: Verify history and contracts after migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > "$RUNNER_TEMP/reconciliation-after.txt"
+          for spec in             "20260923013000 reconcile_partner_redemption_collision"             "20260923013100 reconcile_checkout_shipping_collision"
+          do
+            read -r version name <<<"$spec"
+            ssh -i "$HOME/.ssh/gsa-db-reconcile"               -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes               "$VPS_USER@$VPS_HOST"               "sudo bash '$REMOTE_DIR/apply-reconciliation-migration.sh' --version '$version' --name '$name' --mode status"               | tee -a "$RUNNER_TEMP/reconciliation-after.txt"
+          done
+
+          test "$(grep -c '^RECONCILIATION_BEFORE_HISTORY=t$' "$RUNNER_TEMP/reconciliation-after.txt")" -eq 2
+          test "$(grep -c '^RECONCILIATION_BEFORE_CONTRACT=t$' "$RUNNER_TEMP/reconciliation-after.txt")" -eq 2
+          echo "RECONCILIATION_POST_VERIFY=true"
+
+      - name: Upload redacted reconciliation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-reconciliation-evidence-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/reconciliation-before.txt
+            ${{ runner.temp }}/reconciliation-backup.txt
+            ${{ runner.temp }}/reconciliation-13000.txt
+            ${{ runner.temp }}/reconciliation-13100.txt
+            ${{ runner.temp }}/reconciliation-after.txt
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Remove remote staging and local SSH material
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          if [ -n "${REMOTE_DIR:-}" ]; then
+            ssh -i "$HOME/.ssh/gsa-db-reconcile"               -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes               "$VPS_USER@$VPS_HOST"               "rm -rf '$REMOTE_DIR'"
+          fi
+          rm -f "$HOME/.ssh/gsa-db-reconcile" "$HOME/.ssh/known_hosts"
