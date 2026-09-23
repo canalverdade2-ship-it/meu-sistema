@@ -123,7 +123,7 @@ jobs:
             exit 65
           fi
           if [ "${RUNTIME_OPERATION}" = "deploy" ] || [ "${RUNTIME_OPERATION}" = "cutover" ]; then
-            if [ "${GITHUB_REF_NAME}" != "main" ] && [ "${GITHUB_REF_NAME}" != "feat/gsa-tv-autopilot-v2" ]; then
+            if [ "${GITHUB_REF_NAME}" != "main" ]; then
               echo "Operação mutante de deploy/cutover permitida somente a partir da branch main." >&2
               exit 65
             fi
