@@ -33,6 +33,7 @@ on:
           - preflight
           - legacy-snapshot
           - prepare-first-migration
+          - deploy-dry-run
           - deploy
           - cutover
       cutover_scope:
@@ -115,6 +116,12 @@ jobs:
           fi
 
           echo "runtime_configured=true" >> "$GITHUB_OUTPUT"
+          if [ "${RUNTIME_OPERATION}" = "deploy-dry-run" ] &&
+             [ "${GITHUB_REF_NAME}" != "feat/gsa-tv-autopilot-v2" ] &&
+             [ "${GITHUB_REF_NAME}" != "main" ]; then
+            echo "Dry-run permitido somente na branch de rollout ou main." >&2
+            exit 65
+          fi
           if [ "${RUNTIME_OPERATION}" = "deploy" ] || [ "${RUNTIME_OPERATION}" = "cutover" ]; then
             if [ "${GITHUB_REF_NAME}" != "main" ]; then
               echo "Operação mutante de deploy/cutover permitida somente a partir da branch main." >&2
@@ -205,9 +212,21 @@ jobs:
             echo "Cutover exige preflight EXTERNAL_READY (exit 0); recebido rc=$rc." >&2
             exit "$rc"
           fi
-          if [ "${RUNTIME_OPERATION}" = "deploy" ] && [ "$rc" -eq 20 ]; then
-            echo "Preflight encontrou runtime bloqueado/parcial." >&2
-            exit 20
+          if { [ "${RUNTIME_OPERATION}" = "deploy" ] || [ "${RUNTIME_OPERATION}" = "deploy-dry-run" ]; } && [ "$rc" -eq 20 ]; then
+            file="$RUNNER_TEMP/gsa-tv-preflight.txt"
+            # An absent Control Plane is installable only after verified preparation.
+            grep -qx 'STATUS=CONTROL_PLANE_MISSING' "$file"
+            if grep -qx 'STATUS=BLOCKED' "$file"; then
+              echo "Preflight encontrou runtime bloqueado." >&2
+              exit 20
+            fi
+            grep -qx 'PHYSICAL_OFF_AIR_EVIDENCE=true' "$file"
+            grep -qx 'FIRST_MIGRATION_OFFAIR_READY=true' "$file"
+            grep -qx 'AUTOPILOT_DB_CONTRACT_READY=true' "$file"
+            grep -qx 'AUTOPILOT_MIGRATION_COUNT=5' "$file"
+            grep -qx 'LATEST_BACKUP_STATE=restored_test' "$file"
+            grep -qx 'LATEST_BACKUP_MANIFEST_OK=true' "$file"
+            grep -qx 'MISSING_PATHS=none' "$file"
           fi
           if [ "$rc" -ne 0 ] && [ "$rc" -ne 10 ] && [ "$rc" -ne 20 ]; then
             exit "$rc"
@@ -593,7 +612,7 @@ jobs:
             < infrastructure/gsa-tv/scripts/snapshot-legacy-ffplayout.sh
 
       - name: Package immutable runtime source
-        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'deploy' }}
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && (env.RUNTIME_OPERATION == 'deploy' || env.RUNTIME_OPERATION == 'deploy-dry-run') }}
         shell: bash
         run: |
           set -euo pipefail
@@ -611,7 +630,7 @@ jobs:
           cat "$dir/source.sha256"
 
       - name: Upload immutable release source
-        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'deploy' }}
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && (env.RUNTIME_OPERATION == 'deploy' || env.RUNTIME_OPERATION == 'deploy-dry-run') }}
         shell: bash
         run: |
           set -euo pipefail
@@ -631,7 +650,7 @@ jobs:
             "set -e; cd '$remote'; sha256sum -c source.sha256; tar -xzf source.tgz; chmod -R go-w ."
 
       - name: Guarded deploy dry-run
-        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'deploy' }}
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && (env.RUNTIME_OPERATION == 'deploy' || env.RUNTIME_OPERATION == 'deploy-dry-run') }}
         shell: bash
         run: |
           set -euo pipefail

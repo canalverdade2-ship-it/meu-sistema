@@ -158,7 +158,6 @@ docker compose version >/dev/null
   echo "BLOCKED: $ENV_FILE não existe. Não é seguro reconstruir credenciais automaticamente." >&2
   exit 78
 }
-chmod 600 "$ENV_FILE"
 
 read_env() {
   local key="$1"
@@ -402,6 +401,8 @@ done
 
 trap rollback_runtime ERR
 MUTATION_STARTED=true
+
+chmod 600 "$ENV_FILE"
 
 install -d -m 0755 "$CONTROL_DIR" "$ENCODER_DIR" "$BIN_DIR" /opt/gsa-tv/releases
 install -d -m 0750 /opt/gsa-tv/autopilot
