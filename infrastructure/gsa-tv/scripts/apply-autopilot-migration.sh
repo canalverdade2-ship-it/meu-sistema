@@ -21,7 +21,7 @@ while [ "$#" -gt 0 ]; do
     --mode) MODE="${2:-}"; shift 2 ;;
     --file) FILE="${2:-}"; shift 2 ;;
     -h|--help)
-      echo "Usage: apply-autopilot-migration.sh --version VERSION --name NAME --mode apply|repair-history [--file SQL]"
+      echo "Usage: apply-autopilot-migration.sh --version VERSION --name NAME --mode apply|repair-history|repair-contract [--file SQL]"
       exit 0
       ;;
     *) echo "Unknown argument: $1" >&2; exit 64 ;;
@@ -50,13 +50,25 @@ case "$MODE" in
     }
     ;;
   repair-history) ;;
-  *) echo "BLOCKED: mode must be apply or repair-history" >&2; exit 64 ;;
+  repair-contract)
+    [ -n "$FILE" ] && [ -f "$FILE" ] || {
+      echo "BLOCKED: canonical SQL file missing for repair-contract" >&2
+      exit 80
+    }
+    ;;
+  *) echo "BLOCKED: mode must be apply, repair-history or repair-contract" >&2; exit 64 ;;
 esac
 
 contract_ok() {
   case "$VERSION" in
     20260922131000)
-      psql "$DB_URL" -X -qAt -v ON_ERROR_STOP=1 -c         "select case when to_regprocedure('public.gsa_tv_guard_automation_compile()') is not null then 't' else 'f' end"
+      psql "$DB_URL" -X -qAt -v ON_ERROR_STOP=1 -c \
+        "select case when
+           to_regprocedure('public.gsa_tv_guard_automation_compile()') is not null
+           and position('v_date > v_today + 7' in coalesce(pg_get_functiondef(to_regprocedure('public.gsa_tv_guard_automation_compile()')),'')) > 0
+           and position('schedule_signature' in coalesce(pg_get_functiondef(to_regprocedure('public.gsa_tv_guard_automation_compile()')),'')) > 0
+           and position('gsa_tv_production_signature' in coalesce(pg_get_functiondef(to_regprocedure('public.gsa_tv_guard_automation_compile()')),'')) > 0
+         then 't' else 'f' end"
       ;;
     20260922132000)
       psql "$DB_URL" -X -qAt -v ON_ERROR_STOP=1 -c         "select case when to_regprocedure('public.gsa_tv_autopilot_replace_shortfall_media(uuid,text,text,date)') is not null then 't' else 'f' end"
@@ -119,17 +131,39 @@ echo "MIGRATION_MODE=$MODE"
 echo "MIGRATION_BEFORE_HISTORY=$before_history"
 echo "MIGRATION_BEFORE_CONTRACT=$before_contract"
 
-if [ "$before_history" = t ] && [ "$before_contract" != t ]; then
+if [ "$before_history" = t ] && [ "$before_contract" != t ] && [ "$MODE" != "repair-contract" ]; then
   echo "BLOCKED: migration history exists without required contract" >&2
   exit 81
 fi
 
 if [ "$MODE" = "repair-history" ]; then
+  [ "$before_history" != t ] || {
+    echo "BLOCKED: history already present; repair-history is unnecessary" >&2
+    exit 82
+  }
   [ "$before_contract" = t ] || {
     echo "BLOCKED: refusing history repair without verified contract" >&2
     exit 82
   }
+elif [ "$MODE" = "repair-contract" ]; then
+  [ "$VERSION" = "20260922131000" ] || {
+    echo "BLOCKED: repair-contract is authorized only for canonical compile gate 20260922131000" >&2
+    exit 86
+  }
+  [ "$before_history" = t ] && [ "$before_contract" != t ] || {
+    echo "BLOCKED: repair-contract requires history=t and contract=f" >&2
+    exit 86
+  }
+  psql "$DB_URL" -X -v ON_ERROR_STOP=1 -f "$FILE"
+  [ "$(contract_ok)" = t ] || {
+    echo "BLOCKED: canonical contract repair did not verify" >&2
+    exit 87
+  }
 else
+  [ "$before_history" != t ] || {
+    echo "BLOCKED: history already present; apply mode would be ambiguous" >&2
+    exit 83
+  }
   if [ "$before_contract" = t ]; then
     echo "BLOCKED: contract already exists; use repair-history mode" >&2
     exit 83
