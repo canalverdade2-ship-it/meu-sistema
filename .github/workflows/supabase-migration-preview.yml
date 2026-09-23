@@ -108,13 +108,11 @@ jobs:
       - name: Diagnostic Ledger Check
         run: |
           cat > diagnostic-ledger.sql <<'SQL'
-          SELECT version
+                    SELECT version
           FROM supabase_migrations.schema_migrations
           WHERE version IN (
-            '20260722040000',
-            '20260722040001',
-            '20260722120000',
-            '20260722120100'
+            '20260722090000',
+            '20260722090100'
           )
           ORDER BY version;
           SQL
