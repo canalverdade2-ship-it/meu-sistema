@@ -524,14 +524,29 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          set +e
           ssh -i "$HOME/.ssh/gsa-tv-deploy" \
             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
             "$VPS_USER@$VPS_HOST" \
             'sudo bash -s' \
             < infrastructure/gsa-tv/scripts/autopilot-runtime-preflight.sh \
             | tee "$RUNNER_TEMP/gsa-tv-preflight-after.txt"
+          preflight_rc=${PIPESTATUS[0]}
+          set -e
 
           file="$RUNNER_TEMP/gsa-tv-preflight-after.txt"
+          # Preparation precedes installation: a missing Control Plane is expected.
+          # Keep transport errors and partially installed runtimes fail-closed.
+          case "$preflight_rc" in
+            0) grep -qx 'STATUS=EXTERNAL_READY' "$file" ;;
+            10) grep -qx 'STATUS=LEGACY_COUPLED' "$file" ;;
+            20) grep -qx 'STATUS=CONTROL_PLANE_MISSING' "$file" ;;
+            *) exit "$preflight_rc" ;;
+          esac
+          if grep -qx 'STATUS=BLOCKED' "$file"; then
+            echo "Preparation preflight remains blocked." >&2
+            exit 20
+          fi
           grep -qx 'PHYSICAL_OFF_AIR_EVIDENCE=true' "$file"
           grep -qx 'DESIRED_STATE=stopped' "$file"
           grep -qx 'SIGNAL_STATE=stopped' "$file"

@@ -52,6 +52,7 @@ jobs:
       - name: Autopilot unit tests
         run: |
           python infrastructure/gsa-tv/scripts/test_runtime_sqlite_probe.py
+          python infrastructure/gsa-tv/scripts/test_preparation_evidence.py
           python infrastructure/gsa-tv/scripts/test_autopilot_content_factory.py
           python infrastructure/gsa-tv/scripts/test_autopilot_broadcast_controller.py
           python infrastructure/gsa-tv/scripts/test_autopilot_duration_engine.py
