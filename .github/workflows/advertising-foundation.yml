@@ -30,8 +30,8 @@ on:
       - 'src/components/ads/**'
       - 'src/pages/AdvertiserPortal.tsx'
       - 'src/components/admin/AdvertisingAdminModule.tsx'
-      - 'supabase/functions/gsa-ads-admin/**'
       - 'supabase/functions/gsa-ads-public/**'
+      - 'supabase/functions/gsa-ads-admin/**'
       - 'supabase/migrations/20260721223100_complete_advertising_platform.sql'
 
 permissions:

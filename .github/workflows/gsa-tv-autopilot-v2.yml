@@ -76,6 +76,7 @@ jobs:
           bash -n infrastructure/gsa-tv/scripts/recover-local-media-cache.sh
           bash -n infrastructure/gsa-tv/scripts/autopilot-migration-status.sh
           bash -n infrastructure/gsa-tv/scripts/apply-autopilot-migration.sh
+          bash -n infrastructure/gsa-tv/scripts/apply-reconciliation-migration.sh
           bash -n infrastructure/gsa-tv/scripts/backup-full.sh
           bash -n infrastructure/gsa-tv/tests/run-live-test-suite.sh
           bash -n infrastructure/gsa-tv/tests/test-control-plane-restart-continuity.sh
@@ -103,6 +104,7 @@ jobs:
           migration_apply = Path("infrastructure/gsa-tv/scripts/apply-autopilot-migration.sh").read_text()
           full_backup = Path("infrastructure/gsa-tv/scripts/backup-full.sh").read_text()
           runtime_workflow = Path(".github/workflows/gsa-tv-autopilot-runtime.yml").read_text()
+          reconciliation_workflow = Path(".github/workflows/apply-reconciled-db-migrations-once.yml").read_text()
           prep_start = runtime_workflow.index("- name: First-migration physical off-air gate")
           prep_end = runtime_workflow.index("- name: Legacy ffplayout snapshot dry-run", prep_start)
           prep_section = runtime_workflow[prep_start:prep_end]
@@ -205,6 +207,12 @@ jobs:
           assert "backup-full.sh" in runtime_workflow
           assert "MISSING_PATHS=none" in runtime_workflow
           assert "supabase db push" not in runtime_workflow
+          assert "environment: gsa-tv-production" in reconciliation_workflow
+          assert "apply-reconciliation-migration.sh" in reconciliation_workflow
+          assert "backup-full.sh" in reconciliation_workflow
+          assert "APPLY_20260923013000_20260923013100" in reconciliation_workflow
+          assert "OFF_AIR_GATE=not_required_non_broadcast_schema_change" in reconciliation_workflow
+          assert "RECONCILIATION_POST_VERIFY=true" in reconciliation_workflow
           assert "db reset --linked" not in runtime_workflow
           assert "deploy-autopilot-v2.sh" not in prep_section
           assert "cutover-autopilot-v2.sh" not in prep_section

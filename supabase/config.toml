@@ -4,7 +4,16 @@ verify_jwt = false
 import_map = "./functions/import-products-from-file/deno.json"
 entrypoint = "./functions/import-products-from-file/index.ts"
 
-# Funções públicas possuem controles próprios (CORS, rate limit, HMAC ou segredo de cron).
+# Publicidade consolidada: rotas públicas possuem CORS/rate limit/segredo de cron
+# e o handler administrativo valida sessão/HMAC internamente quando aplicável.
+[functions.gsa-ads-public]
+enabled = true
+verify_jwt = false
+
+[functions.gsa-ads-admin]
+enabled = true
+verify_jwt = false
+
 # Acesso público Free/Pro. A função reconfirma pagamento, voucher, sessão e identidade no servidor.
 [functions.gsa-free-tools-pro]
 enabled = true
@@ -15,11 +24,3 @@ verify_jwt = false
 enabled = true
 verify_jwt = false
 
-# Publicidade consolidada: HMAC/cron nas rotas públicas e sessão validada no handler administrativo.
-[functions.gsa-ads-public]
-enabled = true
-verify_jwt = false
-
-[functions.gsa-ads-admin]
-enabled = true
-verify_jwt = false
