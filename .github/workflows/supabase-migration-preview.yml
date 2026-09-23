@@ -21,6 +21,9 @@ jobs:
   preview:
     name: Preview migrations
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      deployment: false
     timeout-minutes: 15
     env:
       EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy

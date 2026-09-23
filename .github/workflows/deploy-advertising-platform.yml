@@ -12,10 +12,10 @@ on:
       - 'supabase/migrations/20260721210100_create_advertising_foundation.sql'
       - 'supabase/migrations/20260721223100_complete_advertising_platform.sql'
       - 'supabase/migrations/20260721223500_schedule_advertising_campaigns.sql'
-      - 'supabase/migrations/20260722040000_harden_advertising_backend.sql'
+      - 'supabase/migrations/20260722040001_harden_advertising_backend.sql'
       - 'supabase/migrations/20260722235900_fix_gsa_advertising_flow.sql'
-      - 'supabase/functions/gsa-public-advertising/**'
-      - 'supabase/functions/gsa-advertiser-admin/**'
+      - 'supabase/functions/gsa-ads-public/**'
+      - 'supabase/functions/gsa-ads-admin/**'
       - 'supabase/functions/gsa-advertiser-access/**'
       - 'supabase/functions/gsa-ad-delivery/**'
       - 'supabase/functions/gsa-advertising-webhook/**'
@@ -76,8 +76,8 @@ jobs:
 
       - name: Validate Edge Function sources
         run: |
-          deno check supabase/functions/gsa-public-advertising/index.ts
-          deno check supabase/functions/gsa-advertiser-admin/index.ts
+          deno check supabase/functions/gsa-ads-public/index.ts
+          deno check supabase/functions/gsa-ads-admin/index.ts
           deno check supabase/functions/gsa-advertiser-access/index.ts
           deno check supabase/functions/gsa-ad-delivery/index.ts
           deno check supabase/functions/gsa-advertising-webhook/index.ts
@@ -112,7 +112,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cp supabase/migrations/20260722040000_harden_advertising_backend.sql /tmp/gsa-ads-hardening.sql
+          cp supabase/migrations/20260722040001_harden_advertising_backend.sql /tmp/gsa-ads-hardening.sql
           printf '\nCOMMIT;\n' >> /tmp/gsa-ads-hardening.sql
 
       - name: Apply advertising SQL and reconcile history
@@ -164,8 +164,8 @@ jobs:
         run: |
           set -euo pipefail
           : > advertising-functions-deploy.log
-          supabase functions deploy gsa-advertiser-admin --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee -a advertising-functions-deploy.log
-          for function_name in gsa-public-advertising gsa-advertiser-access gsa-ad-delivery gsa-advertising-webhook gsa-advertising-scheduler; do
+          supabase functions deploy gsa-ads-admin --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee -a advertising-functions-deploy.log
+          for function_name in gsa-ads-public gsa-advertiser-access gsa-ad-delivery gsa-advertising-webhook gsa-advertising-scheduler; do
             supabase functions deploy "$function_name" --project-ref "$SUPABASE_PROJECT_ID" --no-verify-jwt 2>&1 | tee -a advertising-functions-deploy.log
           done
 
@@ -212,7 +212,7 @@ jobs:
           supabase db query --linked --file /tmp/verify-gsa-ads.sql 2>&1 | tee advertising-production-verification.log
           grep -q 'ADVERTISING_PLATFORM_PRODUCTION_VERIFIED' advertising-production-verification.log
           supabase functions list --project-ref "$SUPABASE_PROJECT_ID" 2>&1 | tee advertising-functions-list.log
-          for function_name in gsa-public-advertising gsa-advertiser-admin gsa-advertiser-access gsa-ad-delivery gsa-advertising-webhook gsa-advertising-scheduler; do
+          for function_name in gsa-ads-public gsa-ads-admin gsa-advertiser-access gsa-ad-delivery gsa-advertising-webhook gsa-advertising-scheduler; do
             grep -q "$function_name" advertising-functions-list.log
           done
 
@@ -263,7 +263,7 @@ jobs:
           set -euo pipefail
           mkdir -p deployment-status
           cat > deployment-status/advertising-platform-production.json <<JSON
-          {"status":"${RESULT}","workflow_run_id":"${RUN_ID}","validated_sha":"${VALIDATED_SHA}","validated_at_utc":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","project_ref":"ocgajvagxagutfvgxwsy","migrations":["20260721210100","20260721223100","20260721223500","20260722120100","20260722235900"],"edge_functions":["gsa-public-advertising","gsa-advertiser-admin","gsa-advertiser-access","gsa-ad-delivery","gsa-advertising-webhook","gsa-advertising-scheduler"]}
+          {"status":"${RESULT}","workflow_run_id":"${RUN_ID}","validated_sha":"${VALIDATED_SHA}","validated_at_utc":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","project_ref":"ocgajvagxagutfvgxwsy","migrations":["20260721210100","20260721223100","20260721223500","20260722120100","20260722235900"],"edge_functions":["gsa-ads-public","gsa-ads-admin","gsa-advertiser-access","gsa-ad-delivery","gsa-advertising-webhook","gsa-advertising-scheduler"]}
           JSON
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'

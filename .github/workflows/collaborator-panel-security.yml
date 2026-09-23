@@ -81,6 +81,9 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: validate
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      deployment: false
     timeout-minutes: 25
     env:
       EXPECTED_PROJECT_ID: ocgajvagxagutfvgxwsy
@@ -107,15 +110,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          supabase migration list --linked 2>&1 | tee collaborator-migrations-before.log
-          if awk -F'|' '
-            {
-              remote=$2
-              gsub(/[^0-9]/, "", remote)
-              if (remote == "20260721130000") found=1
-            }
-            END { exit found ? 0 : 1 }
-          ' collaborator-migrations-before.log; then
+          cat > collaborator-migrations-ledger-check.sql <<'SQL'
+          SELECT version
+          FROM supabase_migrations.schema_migrations
+          WHERE version = '20260721130000';
+          SQL
+
+          if ! supabase db query --linked \
+            --file collaborator-migrations-ledger-check.sql \
+            2>&1 | tee collaborator-migrations-before.log; then
+            echo "FAIL: não foi possível consultar o ledger remoto." >&2
+            exit 1
+          fi
+
+          if grep -q '20260721130000' collaborator-migrations-before.log; then
             echo 'Migration do Painel do Colaborador já registrada.' | tee collaborator-migration-apply.log
           else
             supabase db query --linked --file supabase/migrations/20260721130000_harden_collaborator_authorization.sql 2>&1 | tee collaborator-migration-apply.log
