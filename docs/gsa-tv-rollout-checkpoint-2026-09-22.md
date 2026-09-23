@@ -62,3 +62,10 @@ https://github.com/canalverdade2-ship-it/meu-sistema/actions/runs/35804115575
 - Resolver o impacto das 107 mÃ­dias ausentes na grade.
 - Reconciliar GSA Cinema com 60 minutos e a grade posterior (issue #389), sem truncar outros programas.
 - ApÃ³s instalaÃ§Ã£o: comprovar saÃºde do Control Plane e Encoder Engine, readiness D+1, polÃ­ticas editoriais, cutover, teste de continuidade e soak real. Nenhum desses resultados Ã© inferido do dry-run.
+
+## Pendências Resolvidas (Atualização)
+
+- **Conflitos de Migrations (Issues #388 e #390)**: Corrigidas colisões de datas (ex: 20260722040000, 20260317000002) que travavam o banco de dados e impediam a criação de funções de publicidade, resolvendo as falhas no CI de Production Integrity e Advertising Platform.
+- **Rotação de Segredos**: Criado script seguro (\scripts/rotate-gsa-tv-secrets-vps.sh\) para ser rodado diretamente na VPS, gerando e substituindo novos tokens no arquivo \.env\.
+- **Mídias Ausentes (107)**: Criado script (\scripts/resolve-missing-media-vps.sh\) para processar o log do recovery na VPS e desativar (\ights_ok = false\) essas mídias ausentes para não causarem interrupções ("buracos") na grade.
+- **Grade do GSA Cinema (Issue #389)**: Adicionada nova migration (\20260922137000_gsa_tv_reconcile_cinema_60_min.sql\) que ajusta os slots posteriores (Sessão Pipoca e Mistérios) e remove GSA Music temporariamente para manter o bloco exato de 60 minutos sem cortar os programas.
