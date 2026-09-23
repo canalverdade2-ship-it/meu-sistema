@@ -213,6 +213,27 @@ jobs:
             exit "$rc"
           fi
 
+      - name: Read-only migration status smoke
+        if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'preflight' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'sudo bash -s' \
+            < infrastructure/gsa-tv/scripts/autopilot-migration-status.sh \
+            | tee "$RUNNER_TEMP/gsa-tv-migration-smoke.txt"
+          migration_rc=${PIPESTATUS[0]}
+          set -e
+          if [ "$migration_rc" -ne 0 ] && [ "$migration_rc" -ne 2 ]; then
+            echo "Migration status smoke falhou: rc=$migration_rc" >&2
+            exit "$migration_rc"
+          fi
+          grep -Eq '^MIGRATION_STATE=(pending|ready|inconsistent)$' "$RUNNER_TEMP/gsa-tv-migration-smoke.txt"
+          echo "MIGRATION_STATUS_SMOKE_OK=true"
+
       - name: Stop after read-only preflight
         if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'preflight' }}
         run: |
