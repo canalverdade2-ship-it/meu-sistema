@@ -33,7 +33,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git log -1 --pretty=%s)" = "ops(db): apply reconciled migrations once"
-          grep -qx 'APPLY_20260923013000_20260923013100' deployment-status/apply-db-reconciliation-once.txt
+          grep -qx 'APPLY_20260923013000_20260923013100_ATTEMPT_2' deployment-status/apply-db-reconciliation-once.txt
           test -n "${VPS_HOST:-}"
           test -n "${VPS_USER:-}"
           test "${#VPS_KEY}" -ge 100
@@ -101,9 +101,26 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          backup_path="$(ssh -i "$HOME/.ssh/gsa-db-reconcile"             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST"             "sudo bash '$REMOTE_DIR/backup-full.sh'" | tee "$RUNNER_TEMP/reconciliation-backup.txt" | tail -n 1)"
-          test -n "$backup_path"
-          ssh -i "$HOME/.ssh/gsa-db-reconcile"             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST"             "set -e; sudo test -s '$backup_path/manifest.sha256'; cd '$backup_path'; sudo sha256sum -c manifest.sha256"
+          latest_backup="$(ssh -i "$HOME/.ssh/gsa-db-reconcile" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" 'sudo bash -s' <<'REMOTE'
+          set -euo pipefail
+          ENV_FILE=/opt/gsa-tv/control-plane/.env
+          DB_URL="$(awk -F= '$1=="DATABASE_URL"{sub(/^DATABASE_URL=/,"");print;exit}' "$ENV_FILE")"
+          psql "$DB_URL" -X -qAt -v ON_ERROR_STOP=1 -c "select coalesce(archive_path,'') from public.gsa_tv_backup_runs where state='restored_test' and finished_at > now() - interval '30 minutes' order by finished_at desc limit 1"
+          REMOTE
+          )"
+
+          backup_path=""
+          if [ -n "$latest_backup" ] && ssh -i "$HOME/.ssh/gsa-db-reconcile" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" "sudo test -s '$latest_backup/manifest.sha256' && sudo bash -c \"cd '$latest_backup' && sha256sum -c manifest.sha256\""; then
+            backup_path="$latest_backup"
+            printf '%s\n' "$backup_path" | tee "$RUNNER_TEMP/reconciliation-backup.txt"
+            echo "PRE_MIGRATION_BACKUP_REUSED=true"
+          else
+            backup_path="$(ssh -i "$HOME/.ssh/gsa-db-reconcile" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" "sudo bash '$REMOTE_DIR/backup-full.sh'" | tee "$RUNNER_TEMP/reconciliation-backup.txt" | tail -n 1)"
+            test -n "$backup_path"
+            ssh -i "$HOME/.ssh/gsa-db-reconcile" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" "sudo test -s '$backup_path/manifest.sha256' && sudo bash -c \"cd '$backup_path' && sha256sum -c manifest.sha256\""
+            echo "PRE_MIGRATION_BACKUP_REUSED=false"
+          fi
+
           echo "PRE_MIGRATION_BACKUP=$backup_path" >> "$GITHUB_ENV"
           echo "PRE_MIGRATION_BACKUP_RESTORE_TESTED=true"
 
