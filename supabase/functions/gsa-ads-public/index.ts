@@ -25,7 +25,7 @@ function isAllowedOrigin(origin: string | null): boolean {
 }
 
 function corsHeaders(origin: string | null) {
-  const allowed = origin && isAllowedOrigin(origin) ? origin : '*';
+  const allowed = !origin ? '*' : (isAllowedOrigin(origin) ? origin : '');
   return { 'access-control-allow-origin': allowed, 'access-control-allow-headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret, x-custom-header', 'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS', 'access-control-max-age': '86400', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', vary: 'Origin' };
 }
 
@@ -322,8 +322,8 @@ async function handlePublicAdvertisingForm(request: Request, body: JsonRecord, o
 // ------------------------------
 export async function handleRequest(request: Request) {
   const origin = request.headers.get('origin');
-  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(origin) });
   if (origin && !isAllowedOrigin(origin)) return json(403, { error: 'origin_not_allowed' }, origin);
+  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(origin) });
   if (request.method !== 'POST') return json(405, { error: 'method_not_allowed' }, origin, { allow: 'POST, OPTIONS' });
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
@@ -357,7 +357,15 @@ export async function handleRequest(request: Request) {
   }
 
   let body: JsonRecord;
-  try { body = JSON.parse(raw); } catch { return json(400, { error: 'invalid_json' }, origin); }
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return json(400, { error: 'invalid_json' }, origin);
+    }
+    body = parsed as JsonRecord;
+  } catch {
+    return json(400, { error: 'invalid_json' }, origin);
+  }
 
   if (body.action === 'serve' || body.action === 'event') {
     return handleAdDelivery(request, body, origin, admin);
