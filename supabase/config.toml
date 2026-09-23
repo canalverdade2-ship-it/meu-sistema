@@ -4,24 +4,13 @@ verify_jwt = false
 import_map = "./functions/import-products-from-file/deno.json"
 entrypoint = "./functions/import-products-from-file/index.ts"
 
-# Funções públicas possuem controles próprios (CORS, rate limit, HMAC ou segredo de cron).
-[functions.gsa-public-advertising]
+# Publicidade consolidada: rotas públicas possuem CORS/rate limit/segredo de cron
+# e o handler administrativo valida sessão/HMAC internamente quando aplicável.
+[functions.gsa-ads-public]
 enabled = true
 verify_jwt = false
 
-[functions.gsa-advertiser-access]
-enabled = true
-verify_jwt = false
-
-[functions.gsa-ad-delivery]
-enabled = true
-verify_jwt = false
-
-[functions.gsa-advertising-webhook]
-enabled = true
-verify_jwt = false
-
-[functions.gsa-advertising-scheduler]
+[functions.gsa-ads-admin]
 enabled = true
 verify_jwt = false
 
@@ -35,7 +24,3 @@ verify_jwt = false
 enabled = true
 verify_jwt = false
 
-# Esta função exige sessão Supabase válida e ainda reconfirma o usuário e o módulo no servidor.
-[functions.gsa-advertiser-admin]
-enabled = true
-verify_jwt = true
