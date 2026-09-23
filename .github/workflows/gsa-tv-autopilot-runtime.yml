@@ -230,12 +230,19 @@ jobs:
           grep -qx 'HOST_SQLITE_BACKUP_PROBE=ok' "$file"
           grep -qx 'FFPLAYOUT_HEALTH=healthy' "$file"
 
+          set +e
           ssh -i "$HOME/.ssh/gsa-tv-deploy" \
             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
             "$VPS_USER@$VPS_HOST" \
             'sudo bash -s' \
             < infrastructure/gsa-tv/scripts/autopilot-migration-status.sh \
             | tee "$RUNNER_TEMP/gsa-tv-migration-before.txt"
+          migration_rc=${PIPESTATUS[0]}
+          set -e
+          if [ "$migration_rc" -ne 0 ] && [ "$migration_rc" -ne 2 ]; then
+            echo "Falha inesperada ao ler status de migrations: rc=$migration_rc" >&2
+            exit "$migration_rc"
+          fi
 
           if grep -q '^MIGRATION_STATE=inconsistent$' "$RUNNER_TEMP/gsa-tv-migration-before.txt"; then
             inconsistent_count="$(grep -Ec '^MIGRATION_STATUS=.*\|history=t\|contract=f$' "$RUNNER_TEMP/gsa-tv-migration-before.txt" || true)"
@@ -253,12 +260,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          set +e
           ssh -i "$HOME/.ssh/gsa-tv-deploy" \
             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
             "$VPS_USER@$VPS_HOST" \
             'sudo bash -s' \
             < infrastructure/gsa-tv/scripts/autopilot-migration-status.sh \
             | tee "$RUNNER_TEMP/gsa-tv-self-hosted-db.txt"
+          migration_rc=${PIPESTATUS[0]}
+          set -e
+          if [ "$migration_rc" -ne 0 ] && [ "$migration_rc" -ne 2 ]; then
+            echo "Falha inesperada ao validar banco self-hosted: rc=$migration_rc" >&2
+            exit "$migration_rc"
+          fi
 
           if grep -Eq '^MIGRATION_STATE=(pending|ready)$' "$RUNNER_TEMP/gsa-tv-self-hosted-db.txt"; then
             :
@@ -338,11 +352,20 @@ jobs:
           set -euo pipefail
 
           remote_status() {
-            ssh -i "$HOME/.ssh/gsa-tv-deploy" \
+            local out rc
+            set +e
+            out="$(ssh -i "$HOME/.ssh/gsa-tv-deploy" \
               -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
               "$VPS_USER@$VPS_HOST" \
               'sudo bash -s' \
-              < infrastructure/gsa-tv/scripts/autopilot-migration-status.sh
+              < infrastructure/gsa-tv/scripts/autopilot-migration-status.sh)"
+            rc=$?
+            set -e
+            if [ "$rc" -ne 0 ] && [ "$rc" -ne 2 ]; then
+              echo "Falha inesperada ao ler status remoto de migrations: rc=$rc" >&2
+              return "$rc"
+            fi
+            printf '%s\n' "$out"
           }
 
           migrations=(
