@@ -688,7 +688,7 @@ jobs:
              sudo systemctl list-timers --all --no-pager | grep "gsa-tv-autopilot";
              echo "--- readiness ---";
              sudo test -s /opt/gsa-tv/runtime/autopilot/readiness-horizon.json;
-             sudo python3 -c "import json; x=json.load(open('/opt/gsa-tv/runtime/autopilot/readiness-horizon.json')); print(json.dumps({'generated_at':x.get('generated_at'),'ready_days':x.get('ready_days'),'days':x.get('days')},ensure_ascii=False))"'
+             sudo python3 -c "import json; x=json.load(open(\"/opt/gsa-tv/runtime/autopilot/readiness-horizon.json\")); print(json.dumps({\"generated_at\":x.get(\"generated_at\"),\"ready_days\":x.get(\"ready_days\"),\"days\":x.get(\"days\")},ensure_ascii=False))"'
 
       - name: Guarded cutover dry-run
         if: ${{ steps.guard.outputs.runtime_configured == 'true' && env.RUNTIME_OPERATION == 'cutover' }}
