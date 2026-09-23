@@ -1,0 +1,75 @@
+name: Migration Collision Read-only Audit
+on:
+  push:
+    branches: [feat/gsa-tv-autopilot-v2]
+    paths:
+      - '.github/workflows/migration-collision-audit.yml'
+      - 'scripts/audit-migration-collisions.sql'
+permissions:
+  contents: read
+jobs:
+  self-hosted:
+    runs-on: ubuntu-latest
+    environment: gsa-tv-production
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read collision evidence through pinned SSH
+        env:
+          VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+          VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+          VPS_KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -d -m 0700 "$HOME/.ssh"
+          trap 'rm -f "$HOME/.ssh/collision-key" "$HOME/.ssh/collision-hosts"' EXIT
+          printf '%s\n' "$VPS_KEY" > "$HOME/.ssh/collision-key"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/collision-hosts"
+          chmod 600 "$HOME/.ssh/collision-key" "$HOME/.ssh/collision-hosts"
+          {
+            cat <<'SH'
+          set -euo pipefail
+          DB_URL="$(awk -F= '$1=="DATABASE_URL"{sub(/^[^=]*=/,"");print;exit}' /opt/gsa-tv/control-plane/.env)"
+          psql "$DB_URL" -X -qAt -v ON_ERROR_STOP=1 <<'AUDIT_SQL'
+          SH
+            cat scripts/audit-migration-collisions.sql
+            printf '\nAUDIT_SQL\n'
+          } | ssh -i "$HOME/.ssh/collision-key" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$HOME/.ssh/collision-hosts" "$VPS_USER@$VPS_HOST" 'sudo bash -s' | tee self-hosted-evidence.jsonl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: migration-collisions-self-hosted
+          path: self-hosted-evidence.jsonl
+  cloud:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read cloud collision evidence
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        shell: python
+        run: |
+          import json, os, pathlib, urllib.request, urllib.error
+          ref = os.environ['SUPABASE_PROJECT_ID']
+          assert ref == 'ocgajvagxagutfvgxwsy', 'Unexpected project'
+          query = pathlib.Path('scripts/audit-migration-collisions.sql').read_text()
+          request = urllib.request.Request(
+              f'https://api.supabase.com/v1/projects/{ref}/database/query',
+              data=json.dumps({'query':query,'read_only':True}).encode(),
+              headers={'Authorization':'Bearer '+os.environ['SUPABASE_ACCESS_TOKEN'],'Content-Type':'application/json'},
+              method='POST')
+          try:
+              with urllib.request.urlopen(request, timeout=45) as response:
+                  result = json.load(response)
+          except urllib.error.HTTPError as error:
+              raise SystemExit(f'Cloud read-only audit unavailable: HTTP {error.code}')
+          text = json.dumps(result, ensure_ascii=False, indent=2)
+          pathlib.Path('cloud-evidence.json').write_text(text)
+          print(text)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: migration-collisions-cloud
+          path: cloud-evidence.json
