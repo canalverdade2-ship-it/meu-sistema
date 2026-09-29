@@ -733,3 +733,5 @@ jobs:
         shell: bash
         run: |
           rm -f "$HOME/.ssh/gsa-tv-deploy" "$HOME/.ssh/known_hosts"
+
+# chatgpt-readonly-preflight-trigger: 2026-09-28
