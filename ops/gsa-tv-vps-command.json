@@ -1,6 +1,6 @@
 {
-  "operation": "producer-hooks",
+  "operation": "producer-contract",
   "requested_by": "chatgpt",
   "scope": "gsa-tv",
-  "note": "Read-only producer hook probe"
+  "note": "Read-only producer contract probe"
 }
