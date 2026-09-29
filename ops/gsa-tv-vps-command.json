@@ -1,6 +1,6 @@
 {
-  "operation": "producer-contract",
+  "operation": "audiovisual-hooks",
   "requested_by": "chatgpt",
   "scope": "gsa-tv",
-  "note": "Read-only producer contract probe"
+  "note": "Read-only audiovisual gate consumer probe"
 }
