@@ -1,6 +1,6 @@
 {
-  "operation": "automation-snapshot",
+  "operation": "producer-symbols",
   "requested_by": "chatgpt",
   "scope": "gsa-tv",
-  "note": "Read-only Control Plane automation snapshot"
+  "note": "Read-only production package interface probe"
 }
