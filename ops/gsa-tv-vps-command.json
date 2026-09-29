@@ -1,6 +1,6 @@
 {
-  "operation": "media-provider-locations",
+  "operation": "gsa-tech-progress",
   "requested_by": "chatgpt",
   "scope": "gsa-tv",
-  "note": "Read-only visual provider and SFX location discovery"
+  "note": "Read-only GSA Tech production progress"
 }
