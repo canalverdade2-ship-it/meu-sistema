@@ -1,6 +1,6 @@
 {
-  "operation": "audiovisual-hooks",
+  "operation": "gsa-tech-preflight",
   "requested_by": "chatgpt",
   "scope": "gsa-tv",
-  "note": "Read-only audiovisual gate consumer probe"
+  "note": "Read-only GSA Tech production prerequisite diagnostic"
 }
