@@ -1,0 +1,6 @@
+{
+  "operation": "status",
+  "requested_by": "chatgpt",
+  "scope": "gsa-tv",
+  "note": "Read-only VPS status probe"
+}
