@@ -51,7 +51,7 @@ jobs:
           )"
 
           case "$operation" in
-            status|inventory|backup-status|schedule-now|automation-snapshot) ;;
+            status|inventory|backup-status|schedule-now|automation-snapshot|producer-symbols) ;;
             *)
               echo "Unsupported read-only operation: $operation" >&2
               exit 64
@@ -106,6 +106,20 @@ jobs:
           sudo systemctl --failed --no-pager 2>/dev/null | grep -Ei '(^UNIT|gsa-tv|ffplayout)' || true
           echo "--- /opt/gsa-tv top-level ---"
           sudo find /opt/gsa-tv -mindepth 1 -maxdepth 2 -printf '%y %p\n' 2>/dev/null | sort | head -250 || true
+          REMOTE
+              ;;
+            producer-symbols)
+              cat > "$RUNNER_TEMP/remote-probe.sh" <<'REMOTE'
+          set -euo pipefail
+          echo "=== GSA_TV_PRODUCER_SYMBOLS ==="
+          for f in /opt/gsa-tv/control-plane/src/production-package.js /opt/gsa-tv/control-plane/src/editorial-production.js /opt/gsa-tv/releases/fish-editorial-20260928/fish.js; do
+            echo "--- $f ---"
+            if [ -f "$f" ]; then
+              sudo grep -nE 'module\.exports|export |async function|function |router|pathname|production|package|render|fish|tts|voice|media|program|asset' "$f" 2>/dev/null | head -220 || true
+            else
+              echo "MISSING"
+            fi
+          done
           REMOTE
               ;;
             automation-snapshot)
