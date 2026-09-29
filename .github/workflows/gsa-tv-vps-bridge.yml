@@ -51,7 +51,7 @@ jobs:
           )"
 
           case "$operation" in
-            status|inventory|backup-status|schedule-now|automation-snapshot|producer-symbols|producer-hooks) ;;
+            status|inventory|backup-status|schedule-now|automation-snapshot|producer-symbols|producer-hooks|producer-contract) ;;
             *)
               echo "Unsupported read-only operation: $operation" >&2
               exit 64
@@ -106,6 +106,18 @@ jobs:
           sudo systemctl --failed --no-pager 2>/dev/null | grep -Ei '(^UNIT|gsa-tv|ffplayout)' || true
           echo "--- /opt/gsa-tv top-level ---"
           sudo find /opt/gsa-tv -mindepth 1 -maxdepth 2 -printf '%y %p\n' 2>/dev/null | sort | head -250 || true
+          REMOTE
+              ;;
+            producer-contract)
+              cat > "$RUNNER_TEMP/remote-probe.sh" <<'REMOTE'
+          set -euo pipefail
+          echo "=== GSA_TV_PRODUCER_CONTRACT ==="
+          echo "--- editorial-production lines 98-165 ---"
+          sudo sed -n '98,165p' /opt/gsa-tv/control-plane/src/editorial-production.js 2>/dev/null || true
+          echo "--- production-package lines 45-140 ---"
+          sudo sed -n '45,140p' /opt/gsa-tv/control-plane/src/production-package.js 2>/dev/null || true
+          echo "--- app automation jobs lines 3770-3820 ---"
+          sudo sed -n '3770,3820p' /opt/gsa-tv/control-plane/src/app.js 2>/dev/null || true
           REMOTE
               ;;
             producer-hooks)
