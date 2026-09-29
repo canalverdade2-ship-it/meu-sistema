@@ -51,7 +51,7 @@ jobs:
           )"
 
           case "$operation" in
-            status|inventory|backup-status|schedule-now|automation-snapshot|producer-symbols|producer-hooks|producer-contract|audiovisual-hooks|gsa-tech-preflight) ;;
+            status|inventory|backup-status|schedule-now|automation-snapshot|producer-symbols|producer-hooks|producer-contract|audiovisual-hooks|gsa-tech-preflight|media-provider-locations) ;;
             *)
               echo "Unsupported read-only operation: $operation" >&2
               exit 64
@@ -106,6 +106,20 @@ jobs:
           sudo systemctl --failed --no-pager 2>/dev/null | grep -Ei '(^UNIT|gsa-tv|ffplayout)' || true
           echo "--- /opt/gsa-tv top-level ---"
           sudo find /opt/gsa-tv -mindepth 1 -maxdepth 2 -printf '%y %p\n' 2>/dev/null | sort | head -250 || true
+          REMOTE
+              ;;
+            media-provider-locations)
+              cat > "$RUNNER_TEMP/remote-probe.sh" <<'REMOTE'
+          set -u
+          echo "=== GSA_TV_MEDIA_PROVIDER_LOCATIONS ==="
+          echo "--- files referencing visual provider variable names ---"
+          sudo grep -RIlE 'PEXELS_API_KEY|PIXABAY_API_KEY|PEXELS|PIXABAY'             /opt/gsa-tv /home/opc/gsa-ai /home/opc/gsa-program-builder 2>/dev/null             | grep -vE '/cache/|/node_modules/|/\.git/' | head -100 || true
+          echo "--- audio and sfx directories ---"
+          sudo find /opt/gsa-tv/cache/media /home/opc/gsa-ai -type d \( -iname '*sfx*' -o -iname '*sound*' -o -iname '*audio*' \)             2>/dev/null | sort | head -160 || true
+          echo "--- gsa broll provider references, assignments redacted ---"
+          if [ -f /opt/gsa-tv/bin/gsa-broll-pexels.sh ]; then
+            sudo grep -nEi 'pexels|pixabay|secret|vault|env' /opt/gsa-tv/bin/gsa-broll-pexels.sh 2>/dev/null               | sed -E 's/(KEY|TOKEN|SECRET)([A-Za-z0-9_]*)=.*/\1\2=<redacted>/I' | head -120 || true
+          fi
           REMOTE
               ;;
             gsa-tech-preflight)
