@@ -1,0 +1,148 @@
+name: GSA TV VPS Read-Only Bridge
+
+on:
+  push:
+    branches:
+      - "ops/gsa-tv-vps-bridge"
+    paths:
+      - ".github/workflows/gsa-tv-vps-bridge.yml"
+      - "ops/gsa-tv-vps-command.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gsa-tv-vps-readonly-bridge
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    environment: gsa-tv-production
+    timeout-minutes: 15
+    env:
+      VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+      VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate request and secrets
+        id: request
+        shell: bash
+        env:
+          VPS_SSH_KEY_PRESENT: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS_PRESENT: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          test -n "${VPS_HOST:-}" || { echo "Missing GSA_TV_VPS_HOST" >&2; exit 78; }
+          test -n "${VPS_USER:-}" || { echo "Missing GSA_TV_VPS_USER" >&2; exit 78; }
+          test "${#VPS_SSH_KEY_PRESENT}" -ge 100 || { echo "Missing/invalid GSA_TV_VPS_SSH_KEY" >&2; exit 78; }
+          test "${#VPS_KNOWN_HOSTS_PRESENT}" -ge 20 || { echo "Missing/invalid GSA_TV_VPS_KNOWN_HOSTS" >&2; exit 78; }
+
+          operation="$(python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("ops/gsa-tv-vps-command.json")
+          data = json.loads(p.read_text(encoding="utf-8"))
+          print(data.get("operation", ""))
+          PY
+          )"
+
+          case "$operation" in
+            status|inventory|backup-status) ;;
+            *)
+              echo "Unsupported read-only operation: $operation" >&2
+              exit 64
+              ;;
+          esac
+          echo "operation=$operation" >> "$GITHUB_OUTPUT"
+          echo "READ_ONLY_OPERATION=$operation"
+
+      - name: Configure pinned SSH
+        shell: bash
+        env:
+          VPS_SSH_KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/gsa-tv-deploy"
+          chmod 0600 "$HOME/.ssh/gsa-tv-deploy"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 0600 "$HOME/.ssh/known_hosts"
+
+      - name: Verify SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy"             -o BatchMode=yes             -o IdentitiesOnly=yes             -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST"             'set -e; printf "SSH_OK=true\n"; hostname; id -un; command -v sudo >/dev/null; sudo -n true'
+
+      - name: Run read-only GSA TV probe
+        shell: bash
+        env:
+          OPERATION: ${{ steps.request.outputs.operation }}
+        run: |
+          set -euo pipefail
+
+          case "$OPERATION" in
+            status)
+              cat > "$RUNNER_TEMP/remote-probe.sh" <<'REMOTE'
+          set -euo pipefail
+          echo "=== GSA_TV_VPS_STATUS ==="
+          printf 'HOSTNAME='; hostname
+          printf 'UTC_NOW='; date -u +%Y-%m-%dT%H:%M:%SZ
+          printf 'UPTIME='; uptime -p || true
+          echo "--- root filesystem ---"
+          df -h / || true
+          echo "--- GSA TV / ffplayout containers ---"
+          sudo docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}' 2>/dev/null | grep -Ei '(^NAMES|gsa-tv|ffplayout)' || true
+          echo "--- GSA TV services ---"
+          sudo systemctl list-units --type=service --all --no-pager 2>/dev/null | grep -Ei 'gsa-tv|ffplayout' || true
+          echo "--- GSA TV timers ---"
+          sudo systemctl list-timers --all --no-pager 2>/dev/null | grep -Ei 'gsa-tv|ffplayout' || true
+          echo "--- failed GSA TV units ---"
+          sudo systemctl --failed --no-pager 2>/dev/null | grep -Ei '(^UNIT|gsa-tv|ffplayout)' || true
+          echo "--- /opt/gsa-tv top-level ---"
+          sudo find /opt/gsa-tv -mindepth 1 -maxdepth 2 -printf '%y %p\n' 2>/dev/null | sort | head -250 || true
+          REMOTE
+              ;;
+            inventory)
+              cat > "$RUNNER_TEMP/remote-probe.sh" <<'REMOTE'
+          set -euo pipefail
+          echo "=== GSA_TV_VPS_INVENTORY ==="
+          echo "--- containers ---"
+          sudo docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}' 2>/dev/null | grep -Ei '(^NAMES|gsa-tv|ffplayout)' || true
+          echo "--- service unit files ---"
+          sudo systemctl list-unit-files --no-pager 2>/dev/null | grep -Ei 'gsa-tv|ffplayout' || true
+          echo "--- /opt/gsa-tv tree ---"
+          sudo find /opt/gsa-tv -mindepth 1 -maxdepth 3 -printf '%y %p\n' 2>/dev/null | sort | head -500 || true
+          echo "--- likely GSA TV directories under /home/opc ---"
+          find /home/opc -mindepth 1 -maxdepth 3 -type d 2>/dev/null | grep -Ei 'gsa.?tv|ffplayout' | sort | head -200 || true
+          REMOTE
+              ;;
+            backup-status)
+              cat > "$RUNNER_TEMP/remote-probe.sh" <<'REMOTE'
+          set -euo pipefail
+          echo "=== GSA_TV_BACKUP_STATUS ==="
+          echo "--- backup directories ---"
+          for d in /home/opc/backups /opt/gsa-tv/backups /opt/gsa-tv/backup; do
+            if [ -d "$d" ]; then
+              echo "DIR=$d"
+              sudo find "$d" -maxdepth 2 -type f -printf '%TY-%Tm-%TdT%TH:%TM:%TS %s %p\n' 2>/dev/null | sort -r | head -100 || true
+            fi
+          done
+          echo "--- backup-related systemd units ---"
+          sudo systemctl list-unit-files --no-pager 2>/dev/null | grep -Ei 'gsa-tv.*backup|backup.*gsa-tv' || true
+          REMOTE
+              ;;
+          esac
+
+          ssh -i "$HOME/.ssh/gsa-tv-deploy"             -o BatchMode=yes             -o IdentitiesOnly=yes             -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST"             'sudo bash -s' < "$RUNNER_TEMP/remote-probe.sh"
+
+      - name: Remove local SSH material
+        if: always()
+        shell: bash
+        run: |
+          rm -f "$HOME/.ssh/gsa-tv-deploy" "$HOME/.ssh/known_hosts"
