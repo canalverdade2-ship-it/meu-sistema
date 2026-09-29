@@ -4,5 +4,7 @@
   "requested_by": "chatgpt",
   "approved_by_user": true,
   "no_playout_change": true,
-  "no_schedule_change": true
+  "no_schedule_change": true,
+  "attempt": 2,
+  "media_strategy": "openverse+wikimedia+incompetech+fish"
 }
