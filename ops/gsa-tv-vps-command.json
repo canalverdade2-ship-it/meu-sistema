@@ -1,6 +1,6 @@
 {
-  "operation": "producer-symbols",
+  "operation": "producer-hooks",
   "requested_by": "chatgpt",
   "scope": "gsa-tv",
-  "note": "Read-only production package interface probe"
+  "note": "Read-only producer hook probe"
 }
