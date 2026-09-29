@@ -61,10 +61,94 @@ def fish_tts(text,voice,model,target):
     run(["ffmpeg","-nostdin","-v","error","-y","-i",str(target),"-af","loudnorm=I=-16:TP=-2:LRA=7","-ar","48000","-ac","2",str(fixed)])
     return fixed
 
-def get_media(section,idx,pexels,pixabay,ledger):
-    videos=[]; images=[]; used=set()
+def meta_value(meta,key):
+    v=(meta or {}).get(key) or {}
+    return re.sub(r"<[^>]+>","",str(v.get("value") or "")).strip()
+
+def public_domain_license(meta):
+    name=meta_value(meta,"LicenseShortName").lower()
+    url=meta_value(meta,"LicenseUrl").lower()
+    return ("cc0" in name or "public domain" in name or "public-domain" in name
+            or "publicdomain" in url or "/zero/" in url)
+
+def openverse_images(query,needed,idx,used,ledger):
+    out=[]
+    try:
+        r=requests.get("https://api.openverse.org/v1/images/",
+          params={"q":query,"page_size":30,"license":"cc0"},timeout=40)
+        r.raise_for_status()
+        for item in r.json().get("results",[]):
+            if len(out)>=needed: break
+            u=item.get("url")
+            if not u or u in used: continue
+            ext=Path(u.split("?")[0]).suffix.lower()
+            if ext not in (".jpg",".jpeg",".png",".webp"): ext=".jpg"
+            p=ROOT/"assets/image"/("s%02d-ov-%s%s"%(idx,str(item.get("id") or len(used))[:14],ext))
+            try:
+                download(u,p)
+                info=probe(p)
+                vs=[x for x in info.get("streams",[]) if x.get("codec_type")=="video"]
+                if not vs or int(vs[0].get("width") or 0)<800:
+                    p.unlink(missing_ok=True); continue
+                used.add(u); out.append(p)
+                ledger.append({"type":"image","provider":"openverse","id":item.get("id"),"title":item.get("title"),"creator":item.get("creator"),"source":item.get("foreign_landing_url"),"media_url":u,"query":query,"license":"CC0","sha256":sha(p)})
+            except Exception as e:
+                p.unlink(missing_ok=True)
+                print("WARN Openverse image",query,e,file=sys.stderr)
+    except Exception as e: print("WARN Openverse image API",query,e,file=sys.stderr)
+    return out
+
+def commons_videos(query,needed,idx,used,ledger):
+    out=[]; api="https://commons.wikimedia.org/w/api.php"
+    try:
+        s=requests.get(api,params={"action":"query","format":"json","list":"search","srnamespace":6,
+          "srsearch":query+" filetype:video","srlimit":30},headers={"User-Agent":"GSA-TV-Tech/1.0"},timeout=40)
+        s.raise_for_status()
+        titles=[x.get("title") for x in s.json().get("query",{}).get("search",[]) if x.get("title")]
+        if not titles: return out
+        for off in range(0,len(titles),10):
+            if len(out)>=needed: break
+            q=requests.get(api,params={"action":"query","format":"json","prop":"videoinfo",
+              "titles":"|".join(titles[off:off+10]),
+              "viprop":"url|size|mime|mediatype|extmetadata|derivatives",
+              "viextmetadatafilter":"LicenseShortName|LicenseUrl|Artist|Credit"},
+              headers={"User-Agent":"GSA-TV-Tech/1.0"},timeout=45)
+            q.raise_for_status()
+            for page in q.json().get("query",{}).get("pages",{}).values():
+                if len(out)>=needed: break
+                vi=(page.get("videoinfo") or [{}])[0]
+                meta=vi.get("extmetadata") or {}
+                if not public_domain_license(meta): continue
+                candidates=[]
+                for d in vi.get("derivatives") or []:
+                    u=d.get("src") or d.get("url")
+                    w=int(d.get("width") or 0)
+                    if u and w>=960: candidates.append((abs(w-1280),u))
+                candidates.sort(key=lambda x:x[0])
+                u=(candidates[0][1] if candidates else vi.get("url"))
+                if not u or u in used: continue
+                if u.startswith("//"): u="https:"+u
+                ext=Path(u.split("?")[0]).suffix.lower()
+                if ext not in (".webm",".ogv",".ogg",".mp4",".mov"): ext=".webm"
+                p=ROOT/"assets/video"/("s%02d-wc-%s%s"%(idx,str(page.get("pageid") or len(used)),ext))
+                try:
+                    download(u,p)
+                    info=probe(p)
+                    vs=[x for x in info.get("streams",[]) if x.get("codec_type")=="video"]
+                    if not vs or dur(p)<4:
+                        p.unlink(missing_ok=True); continue
+                    used.add(u); out.append(p)
+                    ledger.append({"type":"video","provider":"wikimedia_commons","id":page.get("pageid"),"title":page.get("title"),"creator":meta_value(meta,"Artist"),"source":vi.get("descriptionurl"),"media_url":u,"query":query,"license":meta_value(meta,"LicenseShortName") or "Public domain/CC0","license_url":meta_value(meta,"LicenseUrl"),"sha256":sha(p)})
+                except Exception as e:
+                    p.unlink(missing_ok=True)
+                    print("WARN Commons video",query,e,file=sys.stderr)
+    except Exception as e: print("WARN Wikimedia Commons API",query,e,file=sys.stderr)
+    return out
+
+def get_media(section,idx,pexels,pixabay,used,ledger):
+    videos=[]; images=[]
     queries=section["visual_queries"]
-    for qi,q0 in enumerate(queries):
+    for q0 in queries:
         q=quote(q0)
         if pexels and len(videos)<2:
             try:
@@ -78,7 +162,7 @@ def get_media(section,idx,pexels,pixabay,ledger):
                     if not u or u in used: continue
                     p=ROOT/"assets/video"/("s%02d-px-%s.mp4"%(idx,item.get("id")))
                     download(u,p); used.add(u); videos.append(p)
-                    ledger.append({"type":"video","provider":"pexels","id":item.get("id"),"page":item.get("url"),"query":q0,"license":"Pexels License","sha256":sha(p)})
+                    ledger.append({"type":"video","provider":"pexels","id":item.get("id"),"source":item.get("url"),"query":q0,"license":"Pexels License","sha256":sha(p)})
                     break
             except Exception as e: print("WARN pexels video",q0,e,file=sys.stderr)
         if pexels and len(images)<3:
@@ -90,7 +174,7 @@ def get_media(section,idx,pexels,pixabay,ledger):
                     if not u or u in used: continue
                     p=ROOT/"assets/image"/("s%02d-px-%s.jpg"%(idx,item.get("id")))
                     download(u,p); used.add(u); images.append(p)
-                    ledger.append({"type":"image","provider":"pexels","id":item.get("id"),"page":item.get("url"),"query":q0,"license":"Pexels License","sha256":sha(p)})
+                    ledger.append({"type":"image","provider":"pexels","id":item.get("id"),"source":item.get("url"),"query":q0,"license":"Pexels License","sha256":sha(p)})
                     if len(images)>=3: break
             except Exception as e: print("WARN pexels image",q0,e,file=sys.stderr)
         if pixabay and len(videos)<2:
@@ -102,7 +186,7 @@ def get_media(section,idx,pexels,pixabay,ledger):
                     if not u or u in used: continue
                     p=ROOT/"assets/video"/("s%02d-pb-%s.mp4"%(idx,item.get("id")))
                     download(u,p); used.add(u); videos.append(p)
-                    ledger.append({"type":"video","provider":"pixabay","id":item.get("id"),"page":item.get("pageURL"),"query":q0,"license":"Pixabay Content License","sha256":sha(p)})
+                    ledger.append({"type":"video","provider":"pixabay","id":item.get("id"),"source":item.get("pageURL"),"query":q0,"license":"Pixabay Content License","sha256":sha(p)})
                     break
             except Exception as e: print("WARN pixabay video",q0,e,file=sys.stderr)
         if pixabay and len(images)<3:
@@ -113,9 +197,14 @@ def get_media(section,idx,pexels,pixabay,ledger):
                     if not u or u in used: continue
                     p=ROOT/"assets/image"/("s%02d-pb-%s.jpg"%(idx,item.get("id")))
                     download(u,p); used.add(u); images.append(p)
-                    ledger.append({"type":"image","provider":"pixabay","id":item.get("id"),"page":item.get("pageURL"),"query":q0,"license":"Pixabay Content License","sha256":sha(p)})
+                    ledger.append({"type":"image","provider":"pixabay","id":item.get("id"),"source":item.get("pageURL"),"query":q0,"license":"Pixabay Content License","sha256":sha(p)})
                     if len(images)>=3: break
             except Exception as e: print("WARN pixabay image",q0,e,file=sys.stderr)
+        if len(videos)<2:
+            videos.extend(commons_videos(q0,2-len(videos),idx,used,ledger))
+        if len(images)<3:
+            images.extend(openverse_images(q0,3-len(images),idx,used,ledger))
+        if len(videos)>=2 and len(images)>=3: break
     return videos,images
 
 def refresh_music(ledger):
@@ -144,39 +233,31 @@ def refresh_music(ledger):
 def select_sfx(ledger):
     out=ROOT/"assets/sfx"; out.mkdir(parents=True,exist_ok=True)
     chosen=[]; used=set()
-    # Material use of Openverse API: download CC0 effects from search results.
-    for query in ("technology transition whoosh","digital interface click","electronic impact"):
-        if len(chosen)>=4: break
+    for query in ("technology transition whoosh","digital interface click","electronic impact","computer notification","futuristic transition"):
+        if len(chosen)>=8: break
         try:
-            r=requests.get("https://api.openverse.org/v1/audio/",params={"q":query,"page_size":20,"license":"cc0"},timeout=30)
+            r=requests.get("https://api.openverse.org/v1/audio/",params={"q":query,"page_size":30,"license":"cc0"},timeout=35)
             r.raise_for_status()
             for x in r.json().get("results",[]):
+                if len(chosen)>=8: break
                 u=x.get("url")
                 if not u or u in used: continue
-                p=out/("openverse-%02d%s"%(len(chosen)+1,Path(u.split("?")[0]).suffix.lower() or ".mp3"))
-                if p.suffix.lower() not in (".wav",".mp3",".m4a",".ogg",".flac"):
-                    p=p.with_suffix(".mp3")
+                ext=Path(u.split("?")[0]).suffix.lower()
+                if ext not in (".wav",".mp3",".m4a",".ogg",".flac"): ext=".mp3"
+                p=out/("openverse-%02d%s"%(len(chosen)+1,ext))
                 try:
                     download(u,p)
                     info=probe(p)
-                    if not any(s.get("codec_type")=="audio" for s in info.get("streams",[])):
+                    if not any(s.get("codec_type")=="audio" for s in info.get("streams",[])) or dur(p)<0.15:
                         p.unlink(missing_ok=True); continue
                     chosen.append(p); used.add(u)
-                    ledger.append({"type":"sfx","provider":"openverse","id":x.get("id"),"title":x.get("title"),"creator":x.get("creator"),"license":x.get("license"),"license_version":x.get("license_version"),"source":x.get("foreign_landing_url"),"media_url":u,"sha256":sha(p)})
-                    break
+                    ledger.append({"type":"sfx","provider":"openverse","id":x.get("id"),"title":x.get("title"),"creator":x.get("creator"),"license":"CC0","source":x.get("foreign_landing_url"),"media_url":u,"sha256":sha(p)})
                 except Exception as e:
                     p.unlink(missing_ok=True)
                     print("WARN Openverse SFX asset",query,e,file=sys.stderr)
         except Exception as e: print("WARN Openverse API",query,e,file=sys.stderr)
-    if len(chosen)<2:
-        raise RuntimeError("SFX API gate failed: fewer than 2 Openverse CC0 effects acquired")
-    pool=[p for p in (AUDIO_LIB/"sfx").glob("*") if p.suffix.lower() in (".wav",".mp3",".m4a")]
-    random.Random(29).shuffle(pool)
-    for p in pool:
-        if len(chosen)>=8: break
-        chosen.append(p)
-        ledger.append({"type":"sfx","provider":"gsa_audio_library","file":str(p),"license":"see GSA sonic identity manifest"})
-    if len(chosen)<8: raise RuntimeError("SFX gate failed: fewer than 8 total effects")
+    if len(chosen)<8:
+        raise RuntimeError("SFX API gate failed: fewer than 8 Openverse CC0 effects acquired")
     return chosen[:8]
 
 def concat_wavs(parts,out,pause=.55):
@@ -227,13 +308,12 @@ def main():
     if OUT.exists(): raise RuntimeError("Master already exists; refusing overwrite")
     for d in ("audio","assets/video","assets/image","assets/music","clips","qc"): (ROOT/d).mkdir(parents=True,exist_ok=True)
     pexels=key("PEXELS_API_KEY"); pixabay=key("PIXABAY_API_KEY")
-    if not (pexels or pixabay): raise RuntimeError("No Pexels/Pixabay API key available")
-    ledger=[]; voice_parts=[]; sec_media=[]; sec_durs=[]
+    ledger=[]; voice_parts=[]; sec_media=[]; sec_durs=[]; used_media=set()
     for i,s in enumerate(ep["sections"]):
         raw=ROOT/"audio"/("voice-%02d.wav"%i)
         fixed=fish_tts(s["narration"],ep["fish_voice_id"],ep["fish_model"],raw)
         voice_parts.append(fixed); sec_durs.append(dur(fixed)+(.55 if i+1<len(ep["sections"]) else 0))
-        v,im=get_media(s,i,pexels,pixabay,ledger); sec_media.append((v,im))
+        v,im=get_media(s,i,pexels,pixabay,used_media,ledger); sec_media.append((v,im))
     voice=ROOT/"audio/voice-master.wav"; concat_wavs(voice_parts,voice)
     video_count=sum(len(x[0]) for x in sec_media); image_count=sum(len(x[1]) for x in sec_media)
     if video_count<15 or image_count<20: raise RuntimeError("Visual gate failed: videos=%d images=%d"%(video_count,image_count))
@@ -274,7 +354,7 @@ def main():
     ok=600<=actual<=800 and vs["width"]==1920 and vs["height"]==1080 and vs["codec_name"]=="h264" and au["codec_name"]=="aac" and video_count>=15 and image_count>=20
     if not ok: raise RuntimeError("QC failed")
     tmp.replace(OUT)
-    report={"state":"PASS","program":ep["program"],"presenter":ep["presenter"],"fish_voice_id":ep["fish_voice_id"],"duration_s":actual,"video_count":video_count,"image_count":image_count,"music_count":len(tracks),"openverse_sfx_count":sum(1 for x in ledger if x.get("type")=="sfx" and x.get("provider")=="openverse"),"sfx_count":len(sfx),"credits_file":str(credits),"master":str(OUT),"sha256":sha(OUT),"playout_mutated":False,"schedule_mutated":False,"asset_ledger":ledger}
+    report={"state":"PASS","program":ep["program"],"presenter":ep["presenter"],"fish_voice_id":ep["fish_voice_id"],"duration_s":actual,"video_count":video_count,"image_count":image_count,"music_count":len(tracks),"openverse_image_count":sum(1 for x in ledger if x.get("type")=="image" and x.get("provider")=="openverse"),"commons_video_count":sum(1 for x in ledger if x.get("type")=="video" and x.get("provider")=="wikimedia_commons"),"openverse_sfx_count":sum(1 for x in ledger if x.get("type")=="sfx" and x.get("provider")=="openverse"),"sfx_count":len(sfx),"credits_file":str(credits),"master":str(OUT),"sha256":sha(OUT),"playout_mutated":False,"schedule_mutated":False,"asset_ledger":ledger}
     (ROOT/"qc/report.json").write_text(json.dumps(report,ensure_ascii=False,indent=2))
     print(json.dumps({k:v for k,v in report.items() if k!="asset_ledger"},ensure_ascii=False))
 if __name__=="__main__": main()
