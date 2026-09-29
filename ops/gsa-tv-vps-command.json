@@ -1,6 +1,6 @@
 {
-  "operation": "inventory",
+  "operation": "automation-snapshot",
   "requested_by": "chatgpt",
   "scope": "gsa-tv",
-  "note": "Read-only inventory probe"
+  "note": "Read-only Control Plane automation snapshot"
 }
