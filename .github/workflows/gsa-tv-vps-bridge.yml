@@ -51,7 +51,7 @@ jobs:
           )"
 
           case "$operation" in
-            status|inventory|backup-status|schedule-now|automation-snapshot|producer-symbols|producer-hooks|producer-contract|audiovisual-hooks|gsa-tech-preflight|media-provider-locations) ;;
+            status|inventory|backup-status|schedule-now|automation-snapshot|producer-symbols|producer-hooks|producer-contract|audiovisual-hooks|gsa-tech-preflight|media-provider-locations|gsa-tech-progress) ;;
             *)
               echo "Unsupported read-only operation: $operation" >&2
               exit 64
@@ -106,6 +106,27 @@ jobs:
           sudo systemctl --failed --no-pager 2>/dev/null | grep -Ei '(^UNIT|gsa-tv|ffplayout)' || true
           echo "--- /opt/gsa-tv top-level ---"
           sudo find /opt/gsa-tv -mindepth 1 -maxdepth 2 -printf '%y %p\n' 2>/dev/null | sort | head -250 || true
+          REMOTE
+              ;;
+            gsa-tech-progress)
+              cat > "$RUNNER_TEMP/remote-probe.sh" <<'REMOTE'
+          set -u
+          ROOT=/opt/gsa-tv/production/gsa-tech/ep001
+          echo "=== GSA_TECH_PROGRESS ==="
+          for rel in audio assets/video assets/image assets/music assets/sfx clips qc; do
+            d="$ROOT/$rel"
+            if [ -d "$d" ]; then
+              n="$(find "$d" -maxdepth 1 -type f 2>/dev/null | wc -l)"
+              echo "FILES_${rel//\//_}=$n"
+            else
+              echo "FILES_${rel//\//_}=0"
+            fi
+          done
+          OUT=/opt/gsa-tv/cache/media/1/program-masters/GSA_Tech_2026-09-29_EP001_IA_Apps_Inovacao_MASTER.mp4
+          PART=/opt/gsa-tv/cache/media/1/program-masters/GSA_Tech_2026-09-29_EP001_IA_Apps_Inovacao_MASTER.partial.mp4
+          if [ -f "$OUT" ]; then stat -c 'MASTER_BYTES=%s' "$OUT"; else echo MASTER_BYTES=0; fi
+          if [ -f "$PART" ]; then stat -c 'PARTIAL_BYTES=%s' "$PART"; else echo PARTIAL_BYTES=0; fi
+          if [ -f "$ROOT/qc/report.json" ]; then echo QC_REPORT=present; else echo QC_REPORT=absent; fi
           REMOTE
               ;;
             media-provider-locations)
