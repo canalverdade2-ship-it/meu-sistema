@@ -51,7 +51,7 @@ jobs:
           )"
 
           case "$operation" in
-            status|inventory|backup-status) ;;
+            status|inventory|backup-status|schedule-now) ;;
             *)
               echo "Unsupported read-only operation: $operation" >&2
               exit 64
@@ -120,6 +120,68 @@ jobs:
           sudo find /opt/gsa-tv -mindepth 1 -maxdepth 3 -printf '%y %p\n' 2>/dev/null | sort | head -500 || true
           echo "--- likely GSA TV directories under /home/opc ---"
           find /home/opc -mindepth 1 -maxdepth 3 -type d 2>/dev/null | grep -Ei 'gsa.?tv|ffplayout' | sort | head -200 || true
+          REMOTE
+              ;;
+            schedule-now)
+              cat > "$RUNNER_TEMP/remote-probe.sh" <<'REMOTE'
+          set -euo pipefail
+          BASE="${GSA_TV_BASE:-/opt/gsa-tv}"
+          ENV_FILE="${GSA_TV_ENV_FILE:-$BASE/control-plane/.env}"
+          [ -f "$ENV_FILE" ] || { echo "SCHEDULE_ERROR=env_file_missing"; exit 78; }
+          DB_URL="$(awk -F= '$1=="DATABASE_URL"{sub(/^[^=]*=/,"");print;exit}' "$ENV_FILE")"
+          [ -n "$DB_URL" ] || { echo "SCHEDULE_ERROR=database_url_missing"; exit 78; }
+          echo "=== GSA_TV_SCHEDULE_NOW ==="
+          psql "$DB_URL" -X -qAt -F '|' -v ON_ERROR_STOP=1 <<'SQL'
+          with ctx as (
+            select
+              (now() at time zone 'America/Sao_Paulo')::date as local_date,
+              extract(epoch from ((now() at time zone 'America/Sao_Paulo')::time))::int as sec_now,
+              to_char(now() at time zone 'America/Sao_Paulo','YYYY-MM-DD HH24:MI:SS') as local_now
+          ),
+          version as (
+            select v.id,v.title,v.version,v.broadcast_date
+            from public.gsa_tv_schedule_versions v, ctx
+            where v.state='published'
+              and v.broadcast_date=ctx.local_date
+            order by v.version desc
+            limit 1
+          ),
+          blocks as (
+            select
+              b.id,
+              b.block_type,
+              b.position,
+              b.planned_start_offset_s,
+              b.planned_duration_s,
+              coalesce(m.title,e.title,p.name,'Continuidade GSA TV') as title,
+              case
+                when b.planned_start_offset_s <= ctx.sec_now
+                 and b.planned_start_offset_s + b.planned_duration_s > ctx.sec_now then 'NOW'
+                when b.planned_start_offset_s > ctx.sec_now then 'NEXT'
+                else 'PAST'
+              end as relation
+            from version v
+            join public.gsa_tv_program_blocks b on b.schedule_version_id=v.id
+            left join public.gsa_tv_media_items m on m.id=b.media_item_id
+            left join public.gsa_tv_episodes e on e.id=b.episode_id
+            left join public.gsa_tv_programs p on p.id=b.program_id
+            cross join ctx
+          )
+          select 'LOCAL_NOW',ctx.local_now,'','','' from ctx
+          union all
+          select 'SCHEDULE',coalesce(v.title,''),v.broadcast_date::text,v.version::text,'' from version v
+          union all
+          select
+            relation,
+            title,
+            to_char(time '00:00:00' + make_interval(secs => planned_start_offset_s),'HH24:MI:SS'),
+            to_char(time '00:00:00' + make_interval(secs => planned_start_offset_s + planned_duration_s),'HH24:MI:SS'),
+            block_type
+          from blocks
+          where relation in ('NOW','NEXT')
+          order by 1 desc,3
+          limit 8;
+          SQL
           REMOTE
               ;;
             backup-status)
