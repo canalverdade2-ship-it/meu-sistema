@@ -51,7 +51,7 @@ jobs:
           )"
 
           case "$operation" in
-            status|inventory|backup-status|schedule-now|automation-snapshot|producer-symbols|producer-hooks|producer-contract|audiovisual-hooks) ;;
+            status|inventory|backup-status|schedule-now|automation-snapshot|producer-symbols|producer-hooks|producer-contract|audiovisual-hooks|gsa-tech-preflight) ;;
             *)
               echo "Unsupported read-only operation: $operation" >&2
               exit 64
@@ -106,6 +106,27 @@ jobs:
           sudo systemctl --failed --no-pager 2>/dev/null | grep -Ei '(^UNIT|gsa-tv|ffplayout)' || true
           echo "--- /opt/gsa-tv top-level ---"
           sudo find /opt/gsa-tv -mindepth 1 -maxdepth 2 -printf '%y %p\n' 2>/dev/null | sort | head -250 || true
+          REMOTE
+              ;;
+            gsa-tech-preflight)
+              cat > "$RUNNER_TEMP/remote-probe.sh" <<'REMOTE'
+          set -u
+          echo "=== GSA_TECH_PREFLIGHT_DIAGNOSTIC ==="
+          for cmd in python3 ffmpeg ffprobe docker; do
+            if command -v "$cmd" >/dev/null 2>&1; then echo "CMD_$cmd=present"; else echo "CMD_$cmd=missing"; fi
+          done
+          if python3 -c 'import requests' >/dev/null 2>&1; then echo "PY_REQUESTS=present"; else echo "PY_REQUESTS=missing"; fi
+          if [ -f /home/opc/gsa-program-builder/builder.py ]; then echo "FISH_BUILDER=present"; else echo "FISH_BUILDER=missing"; fi
+          if [ -d /opt/gsa-tv/cache/media/1/identity/audio/sfx ]; then
+            echo "SFX_DIR=present"
+            find /opt/gsa-tv/cache/media/1/identity/audio/sfx -maxdepth 1 -type f \( -name '*.wav' -o -name '*.mp3' -o -name '*.m4a' \) 2>/dev/null | wc -l | awk '{print "SFX_COUNT="$1}'
+          else
+            echo "SFX_DIR=missing"
+          fi
+          sudo docker exec gsa-tv-control-plane sh -lc 'if [ -n "${PEXELS_API_KEY:-}" ]; then echo PEXELS_KEY=present; else echo PEXELS_KEY=missing; fi; if [ -n "${PIXABAY_API_KEY:-}" ]; then echo PIXABAY_KEY=present; else echo PIXABAY_KEY=missing; fi' 2>/dev/null || echo "CONTROL_PLANE_ENV_CHECK=failed"
+          df -Pk /opt/gsa-tv | awk 'NR==2{print "FREE_KB="$4}'
+          OUT=/opt/gsa-tv/cache/media/1/program-masters/GSA_Tech_2026-09-29_EP001_IA_Apps_Inovacao_MASTER.mp4
+          if [ -e "$OUT" ]; then echo "MASTER_EXISTS=yes"; else echo "MASTER_EXISTS=no"; fi
           REMOTE
               ;;
             audiovisual-hooks)
