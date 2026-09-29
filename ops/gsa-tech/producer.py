@@ -138,28 +138,46 @@ def refresh_music(ledger):
             except Exception: p.unlink(missing_ok=True)
     except Exception as e: print("WARN music API",e,file=sys.stderr)
     if len(tracks)<3:
-        pool=list((AUDIO_LIB/"viral").glob("*"))+list((AUDIO_LIB/"lifestyle").glob("*"))
-        for p in pool:
-            if p.suffix.lower() in (".mp3",".wav",".m4a") and p not in tracks:
-                tracks.append(p)
-                ledger.append({"type":"music","provider":"gsa_audio_library","file":str(p),"license":"see GSA sonic identity manifest"})
-                if len(tracks)>=3: break
+        raise RuntimeError("Music API gate failed: fewer than 3 Incompetech tracks acquired")
     return tracks[:3]
 
 def select_sfx(ledger):
-    # Query Openverse API for licensed audio metadata; actual render prefers locally audited GSA SFX.
-    try:
-        r=requests.get("https://api.openverse.org/v1/audio/",params={"q":"technology transition whoosh","page_size":10,"license_type":"commercial"},timeout=30)
-        if r.ok:
-            for x in r.json().get("results",[])[:5]:
-                ledger.append({"type":"sfx_api_candidate","provider":"openverse","id":x.get("id"),"title":x.get("title"),"license":x.get("license"),"source":x.get("foreign_landing_url") or x.get("url")})
-    except Exception as e: print("WARN Openverse API",e,file=sys.stderr)
+    out=ROOT/"assets/sfx"; out.mkdir(parents=True,exist_ok=True)
+    chosen=[]; used=set()
+    # Material use of Openverse API: download CC0 effects from search results.
+    for query in ("technology transition whoosh","digital interface click","electronic impact"):
+        if len(chosen)>=4: break
+        try:
+            r=requests.get("https://api.openverse.org/v1/audio/",params={"q":query,"page_size":20,"license":"cc0"},timeout=30)
+            r.raise_for_status()
+            for x in r.json().get("results",[]):
+                u=x.get("url")
+                if not u or u in used: continue
+                p=out/("openverse-%02d%s"%(len(chosen)+1,Path(u.split("?")[0]).suffix.lower() or ".mp3"))
+                if p.suffix.lower() not in (".wav",".mp3",".m4a",".ogg",".flac"):
+                    p=p.with_suffix(".mp3")
+                try:
+                    download(u,p)
+                    info=probe(p)
+                    if not any(s.get("codec_type")=="audio" for s in info.get("streams",[])):
+                        p.unlink(missing_ok=True); continue
+                    chosen.append(p); used.add(u)
+                    ledger.append({"type":"sfx","provider":"openverse","id":x.get("id"),"title":x.get("title"),"creator":x.get("creator"),"license":x.get("license"),"license_version":x.get("license_version"),"source":x.get("foreign_landing_url"),"media_url":u,"sha256":sha(p)})
+                    break
+                except Exception as e:
+                    p.unlink(missing_ok=True)
+                    print("WARN Openverse SFX asset",query,e,file=sys.stderr)
+        except Exception as e: print("WARN Openverse API",query,e,file=sys.stderr)
+    if len(chosen)<2:
+        raise RuntimeError("SFX API gate failed: fewer than 2 Openverse CC0 effects acquired")
     pool=[p for p in (AUDIO_LIB/"sfx").glob("*") if p.suffix.lower() in (".wav",".mp3",".m4a")]
-    if len(pool)<8: raise RuntimeError("SFX library has fewer than 8 audited files")
     random.Random(29).shuffle(pool)
-    chosen=pool[:8]
-    for p in chosen: ledger.append({"type":"sfx","provider":"gsa_audio_library","file":str(p),"license":"see GSA sonic identity manifest"})
-    return chosen
+    for p in pool:
+        if len(chosen)>=8: break
+        chosen.append(p)
+        ledger.append({"type":"sfx","provider":"gsa_audio_library","file":str(p),"license":"see GSA sonic identity manifest"})
+    if len(chosen)<8: raise RuntimeError("SFX gate failed: fewer than 8 total effects")
+    return chosen[:8]
 
 def concat_wavs(parts,out,pause=.55):
     tmp=ROOT/"audio/silence.wav"
@@ -240,17 +258,23 @@ def main():
     for sd in sec_durs:
         starts.append(c); c+=sd
     sfx=select_sfx(ledger); sfxmix=sfx_bed(sfx,starts[:len(sfx)],total)
+    credits=ROOT/"qc/credits.txt"
+    music_titles=[x.get("title") for x in ledger if x.get("type")=="music" and x.get("provider")=="incompetech"]
+    credits.write_text("Trilha: "+", ".join(t for t in music_titles if t)+" — Kevin MacLeod / incompetech.com — CC BY 4.0",encoding="utf-8")
+    credit_start=max(0,total-8.0)
     tmp=OUT.with_suffix(".partial.mp4"); OUT.parent.mkdir(parents=True,exist_ok=True)
+    vf="[0:v]drawbox=x=0:y=930:w=1920:h=150:color=black@0.72:t=fill:enable='gte(t,%.3f)',drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:textfile=%s:expansion=none:fontcolor=white:fontsize=22:x=60:y=985:enable='gte(t,%.3f)'[vo]"%(credit_start,credits,credit_start)
+    af="[1:a]volume=1.0[v];[2:a]volume=1.0[m];[3:a]volume=1.0[s];[v][m][s]amix=inputs=3:duration=first:normalize=0,loudnorm=I=-16:TP=-1.5:LRA=11[a]"
     run(["ffmpeg","-nostdin","-v","error","-y","-i",str(visual),"-i",str(voice),"-i",str(music),"-i",str(sfxmix),
-      "-filter_complex","[1:a]volume=1.0[v];[2:a]volume=1.0[m];[3:a]volume=1.0[s];[v][m][s]amix=inputs=3:duration=first:normalize=0,loudnorm=I=-16:TP=-1.5:LRA=11[a]",
-      "-map","0:v:0","-map","[a]","-t","%.3f"%total,"-c:v","copy","-c:a","aac","-b:a","192k","-ar","48000","-ac","2","-movflags","+faststart",str(tmp)])
+      "-filter_complex",vf+";"+af,
+      "-map","[vo]","-map","[a]","-t","%.3f"%total,"-c:v","libx264","-preset","veryfast","-crf","20","-pix_fmt","yuv420p","-c:a","aac","-b:a","192k","-ar","48000","-ac","2","-movflags","+faststart",str(tmp)])
     run(["ffmpeg","-nostdin","-v","error","-xerror","-i",str(tmp),"-f","null","-"])
     info=probe(tmp); vs=next(x for x in info["streams"] if x["codec_type"]=="video"); au=next(x for x in info["streams"] if x["codec_type"]=="audio")
     actual=float(info["format"]["duration"])
     ok=600<=actual<=800 and vs["width"]==1920 and vs["height"]==1080 and vs["codec_name"]=="h264" and au["codec_name"]=="aac" and video_count>=15 and image_count>=20
     if not ok: raise RuntimeError("QC failed")
     tmp.replace(OUT)
-    report={"state":"PASS","program":ep["program"],"presenter":ep["presenter"],"fish_voice_id":ep["fish_voice_id"],"duration_s":actual,"video_count":video_count,"image_count":image_count,"music_count":len(tracks),"sfx_count":len(sfx),"master":str(OUT),"sha256":sha(OUT),"playout_mutated":False,"schedule_mutated":False,"asset_ledger":ledger}
+    report={"state":"PASS","program":ep["program"],"presenter":ep["presenter"],"fish_voice_id":ep["fish_voice_id"],"duration_s":actual,"video_count":video_count,"image_count":image_count,"music_count":len(tracks),"openverse_sfx_count":sum(1 for x in ledger if x.get("type")=="sfx" and x.get("provider")=="openverse"),"sfx_count":len(sfx),"credits_file":str(credits),"master":str(OUT),"sha256":sha(OUT),"playout_mutated":False,"schedule_mutated":False,"asset_ledger":ledger}
     (ROOT/"qc/report.json").write_text(json.dumps(report,ensure_ascii=False,indent=2))
     print(json.dumps({k:v for k,v in report.items() if k!="asset_ledger"},ensure_ascii=False))
 if __name__=="__main__": main()
