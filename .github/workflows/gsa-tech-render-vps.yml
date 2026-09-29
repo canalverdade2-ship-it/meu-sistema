@@ -21,8 +21,8 @@ jobs:
     environment: gsa-tv-production
     timeout-minutes: 90
     env:
-      VPS_HOST: \${{ secrets.GSA_TV_VPS_HOST }}
-      VPS_USER: \${{ secrets.GSA_TV_VPS_USER }}
+      VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+      VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
     steps:
       - uses: actions/checkout@v4
 
@@ -57,14 +57,14 @@ jobs:
       - name: Configure pinned SSH
         shell: bash
         env:
-          VPS_SSH_KEY: \${{ secrets.GSA_TV_VPS_SSH_KEY }}
-          VPS_KNOWN_HOSTS: \${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+          VPS_SSH_KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
-          test -n "\${VPS_HOST:-}"
-          test -n "\${VPS_USER:-}"
-          test "\${#VPS_SSH_KEY}" -ge 100
-          test "\${#VPS_KNOWN_HOSTS}" -ge 20
+          test -n "${VPS_HOST:-}"
+          test -n "${VPS_USER:-}"
+          test "${#VPS_SSH_KEY}" -ge 100
+          test "${#VPS_KNOWN_HOSTS}" -ge 20
           install -d -m 0700 "$HOME/.ssh"
           printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/gsa-tv-deploy"
           chmod 0600 "$HOME/.ssh/gsa-tv-deploy"
@@ -97,7 +97,7 @@ jobs:
           test -d /opt/gsa-tv/cache/media/1/identity/audio/sfx
           SFX_COUNT="$(find /opt/gsa-tv/cache/media/1/identity/audio/sfx -maxdepth 1 -type f \( -name "*.wav" -o -name "*.mp3" -o -name "*.m4a" \) | wc -l)"
           test "$SFX_COUNT" -ge 8
-          VISUAL_KEYS="$(docker exec gsa-tv-control-plane sh -lc 'n=0; [ -n "\${PEXELS_API_KEY:-}" ] && n=$((n+1)); [ -n "\${PIXABAY_API_KEY:-}" ] && n=$((n+1)); echo "$n"')"
+          VISUAL_KEYS="$(docker exec gsa-tv-control-plane sh -lc 'n=0; [ -n "${PEXELS_API_KEY:-}" ] && n=$((n+1)); [ -n "${PIXABAY_API_KEY:-}" ] && n=$((n+1)); echo "$n"')"
           test "$VISUAL_KEYS" -ge 1
           FREE_KB="$(df -Pk /opt/gsa-tv | awk 'NR==2{print $4}')"
           test "$FREE_KB" -ge 10485760
