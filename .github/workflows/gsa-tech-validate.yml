@@ -1,0 +1,50 @@
+name: GSA Tech Package Validation
+
+on:
+  push:
+    branches:
+      - "ops/gsa-tv-vps-bridge"
+    paths:
+      - "ops/gsa-tech/**"
+      - ".github/workflows/gsa-tech-validate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python syntax
+        run: python3 -m py_compile ops/gsa-tech/producer.py
+      - name: Episode contract
+        run: |
+          python3 - <<'PY'
+          import json,re
+          from pathlib import Path
+          ep=json.loads(Path("ops/gsa-tech/episode.json").read_text())
+          src=Path("ops/gsa-tech/producer.py").read_text()
+          assert ep["program"]=="GSA Tech"
+          assert ep["presenter"]=="Caio Nex"
+          assert ep["fish_voice_id"]=="194ceec3b5804e8595442ca8184b653b"
+          assert ep["fish_model"]=="s2.1-pro-free"
+          assert len(ep["sections"])>=8
+          words=sum(len(s["narration"].split()) for s in ep["sections"])
+          assert 1400 <= words <= 1900, words
+          assert all(len(s["visual_queries"])>=3 for s in ep["sections"])
+          assert "api.pexels.com" in src and "pixabay.com/api" in src
+          assert "api.fish.audio/v1/tts" in src
+          assert "incompetech.com/music/royalty-free/pieces.json" in src
+          assert "api.openverse.org/v1/audio/" in src
+          forbidden=[
+            r"systemctl\s+(restart|stop|start|disable|enable)",
+            r"docker\s+(restart|stop|kill|rm)",
+            r"stream_(start|stop|pause|resume)",
+            r"compile_playlist",
+          ]
+          assert not any(re.search(p,src,re.I) for p in forbidden)
+          print({"state":"PASS","words":words,"sections":len(ep["sections"])})
+          PY
