@@ -1,6 +1,6 @@
 {
-  "operation": "schedule-now",
+  "operation": "inventory",
   "requested_by": "chatgpt",
   "scope": "gsa-tv",
-  "note": "Read-only current published schedule probe"
+  "note": "Read-only inventory probe"
 }
