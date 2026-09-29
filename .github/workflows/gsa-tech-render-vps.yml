@@ -1,0 +1,152 @@
+name: GSA Tech EP001 Render on VPS
+
+on:
+  push:
+    branches:
+      - "ops/gsa-tv-vps-bridge"
+    paths:
+      - "ops/gsa-tech/render-request.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gsa-tech-ep001-production
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    environment: gsa-tv-production
+    timeout-minutes: 90
+    env:
+      VPS_HOST: \${{ secrets.GSA_TV_VPS_HOST }}
+      VPS_USER: \${{ secrets.GSA_TV_VPS_USER }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate package locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile ops/gsa-tech/producer.py
+          python3 - <<'PY'
+          import json,re
+          from pathlib import Path
+          ep=json.loads(Path("ops/gsa-tech/episode.json").read_text())
+          src=Path("ops/gsa-tech/producer.py").read_text()
+          assert ep["program"]=="GSA Tech"
+          assert ep["presenter"]=="Caio Nex"
+          assert ep["fish_voice_id"]=="194ceec3b5804e8595442ca8184b653b"
+          assert ep["fish_model"]=="s2.1-pro-free"
+          assert len(ep["sections"])>=8
+          assert "api.fish.audio/v1/tts" in src
+          assert "api.pexels.com" in src and "pixabay.com/api" in src
+          assert "incompetech.com/music/royalty-free/pieces.json" in src
+          assert "api.openverse.org/v1/audio/" in src
+          forbidden=[
+            r"systemctl\s+(restart|stop|start|disable|enable)",
+            r"docker\s+(restart|stop|kill|rm)",
+            r"stream_(start|stop|pause|resume)",
+            r"compile_playlist",
+          ]
+          assert not any(re.search(p,src,re.I) for p in forbidden)
+          PY
+
+      - name: Configure pinned SSH
+        shell: bash
+        env:
+          VPS_SSH_KEY: \${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: \${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          test -n "\${VPS_HOST:-}"
+          test -n "\${VPS_USER:-}"
+          test "\${#VPS_SSH_KEY}" -ge 100
+          test "\${#VPS_KNOWN_HOSTS}" -ge 20
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/gsa-tv-deploy"
+          chmod 0600 "$HOME/.ssh/gsa-tv-deploy"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 0600 "$HOME/.ssh/known_hosts"
+
+      - name: Verify production host
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'set -e; test "$(hostname)" = "gsa-server-pro"; sudo -n true; printf "HOST_OK=true\n"'
+
+      - name: Preflight isolated producer
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" 'sudo bash -s' <<'REMOTE'
+          set -euo pipefail
+          OUT=/opt/gsa-tv/cache/media/1/program-masters/GSA_Tech_2026-09-29_EP001_IA_Apps_Inovacao_MASTER.mp4
+          test ! -e "$OUT" || { echo "BLOCKED_MASTER_ALREADY_EXISTS=true"; exit 73; }
+          command -v python3 >/dev/null
+          command -v ffmpeg >/dev/null
+          command -v ffprobe >/dev/null
+          command -v docker >/dev/null
+          python3 -c 'import requests'
+          test -f /home/opc/gsa-program-builder/builder.py
+          test -d /opt/gsa-tv/cache/media/1/identity/audio/sfx
+          SFX_COUNT="$(find /opt/gsa-tv/cache/media/1/identity/audio/sfx -maxdepth 1 -type f \( -name "*.wav" -o -name "*.mp3" -o -name "*.m4a" \) | wc -l)"
+          test "$SFX_COUNT" -ge 8
+          VISUAL_KEYS="$(docker exec gsa-tv-control-plane sh -lc 'n=0; [ -n "\${PEXELS_API_KEY:-}" ] && n=$((n+1)); [ -n "\${PIXABAY_API_KEY:-}" ] && n=$((n+1)); echo "$n"')"
+          test "$VISUAL_KEYS" -ge 1
+          FREE_KB="$(df -Pk /opt/gsa-tv | awk 'NR==2{print $4}')"
+          test "$FREE_KB" -ge 10485760
+          printf 'PREFLIGHT=PASS\nSFX_COUNT=%s\nVISUAL_API_KEYS_PRESENT=%s\nFREE_KB=%s\n' "$SFX_COUNT" "$VISUAL_KEYS" "$FREE_KB"
+          REMOTE
+
+      - name: Stage producer files
+        shell: bash
+        run: |
+          set -euo pipefail
+          scp -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            ops/gsa-tech/producer.py ops/gsa-tech/episode.json "$VPS_USER@$VPS_HOST:/tmp/"
+
+      - name: Render isolated GSA Tech master
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" 'sudo bash -s' <<'REMOTE'
+          set -euo pipefail
+          TOOL_DIR=/opt/gsa-tv/production/gsa-tech/ep001/tools
+          install -d -m 0750 "$TOOL_DIR"
+          install -m 0750 /tmp/producer.py "$TOOL_DIR/producer.py"
+          install -m 0640 /tmp/episode.json "$TOOL_DIR/episode.json"
+          rm -f /tmp/producer.py /tmp/episode.json
+          python3 "$TOOL_DIR/producer.py" "$TOOL_DIR/episode.json"
+          REMOTE
+
+      - name: Verify master and print safe QC
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" 'sudo python3 -' <<'PY'
+          import json
+          from pathlib import Path
+          q=Path("/opt/gsa-tv/production/gsa-tech/ep001/qc/report.json")
+          d=json.loads(q.read_text())
+          safe={k:d.get(k) for k in (
+            "state","program","presenter","fish_voice_id","duration_s","video_count",
+            "image_count","music_count","openverse_sfx_count","sfx_count",
+            "master","sha256","playout_mutated","schedule_mutated"
+          )}
+          assert safe["state"]=="PASS"
+          assert safe["playout_mutated"] is False
+          assert safe["schedule_mutated"] is False
+          print(json.dumps(safe,ensure_ascii=False))
+          PY
+
+      - name: Remove local SSH material
+        if: always()
+        run: rm -f "$HOME/.ssh/gsa-tv-deploy" "$HOME/.ssh/known_hosts"
