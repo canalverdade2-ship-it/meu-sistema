@@ -1,6 +1,6 @@
 {
-  "operation": "gsa-tech-preflight",
+  "operation": "media-provider-locations",
   "requested_by": "chatgpt",
   "scope": "gsa-tv",
-  "note": "Read-only GSA Tech production prerequisite diagnostic"
+  "note": "Read-only visual provider and SFX location discovery"
 }
