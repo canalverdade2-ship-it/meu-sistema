@@ -98,6 +98,48 @@ def openverse_images(query,needed,idx,used,ledger):
     except Exception as e: print("WARN Openverse image API",query,e,file=sys.stderr)
     return out
 
+def commons_images(query,needed,idx,used,ledger):
+    out=[]; api="https://commons.wikimedia.org/w/api.php"
+    try:
+        s=requests.get(api,params={"action":"query","format":"json","list":"search","srnamespace":6,
+          "srsearch":query,"srlimit":40},headers={"User-Agent":"GSA-TV-Tech/1.0"},timeout=40)
+        s.raise_for_status()
+        titles=[x.get("title") for x in s.json().get("query",{}).get("search",[]) if x.get("title")]
+        for off in range(0,len(titles),10):
+            if len(out)>=needed: break
+            q=requests.get(api,params={"action":"query","format":"json","prop":"imageinfo",
+              "titles":"|".join(titles[off:off+10]),
+              "iiprop":"url|size|mime|mediatype|extmetadata","iiurlwidth":1920,
+              "iiextmetadatafilter":"LicenseShortName|LicenseUrl|Artist|Credit"},
+              headers={"User-Agent":"GSA-TV-Tech/1.0"},timeout=45)
+            q.raise_for_status()
+            for page in q.json().get("query",{}).get("pages",{}).values():
+                if len(out)>=needed: break
+                ii=(page.get("imageinfo") or [{}])[0]
+                mime=str(ii.get("mime") or "")
+                if not mime.startswith("image/"): continue
+                meta=ii.get("extmetadata") or {}
+                if not public_domain_license(meta): continue
+                u=ii.get("thumburl") or ii.get("url")
+                if not u or u in used: continue
+                if u.startswith("//"): u="https:"+u
+                ext=Path(u.split("?")[0]).suffix.lower()
+                if ext not in (".jpg",".jpeg",".png",".webp"): ext=".jpg"
+                p=ROOT/"assets/image"/("s%02d-wc-%s%s"%(idx,str(page.get("pageid") or len(used)),ext))
+                try:
+                    download(u,p)
+                    info=probe(p)
+                    vs=[x for x in info.get("streams",[]) if x.get("codec_type")=="video"]
+                    if not vs or int(vs[0].get("width") or 0)<800:
+                        p.unlink(missing_ok=True); continue
+                    used.add(u); out.append(p)
+                    ledger.append({"type":"image","provider":"wikimedia_commons","id":page.get("pageid"),"title":page.get("title"),"creator":meta_value(meta,"Artist"),"source":ii.get("descriptionurl"),"media_url":u,"query":query,"license":meta_value(meta,"LicenseShortName") or "Public domain/CC0","license_url":meta_value(meta,"LicenseUrl"),"sha256":sha(p)})
+                except Exception as e:
+                    p.unlink(missing_ok=True)
+                    print("WARN Commons image",query,e,file=sys.stderr)
+    except Exception as e: print("WARN Wikimedia Commons image API",query,e,file=sys.stderr)
+    return out
+
 def commons_videos(query,needed,idx,used,ledger):
     out=[]; api="https://commons.wikimedia.org/w/api.php"
     try:
@@ -204,6 +246,8 @@ def get_media(section,idx,pexels,pixabay,used,ledger):
             videos.extend(commons_videos(q0,2-len(videos),idx,used,ledger))
         if len(images)<3:
             images.extend(openverse_images(q0,3-len(images),idx,used,ledger))
+        if len(images)<3:
+            images.extend(commons_images(q0,3-len(images),idx,used,ledger))
         if len(videos)>=2 and len(images)>=3: break
     return videos,images
 
@@ -354,7 +398,7 @@ def main():
     ok=600<=actual<=800 and vs["width"]==1920 and vs["height"]==1080 and vs["codec_name"]=="h264" and au["codec_name"]=="aac" and video_count>=15 and image_count>=20
     if not ok: raise RuntimeError("QC failed")
     tmp.replace(OUT)
-    report={"state":"PASS","program":ep["program"],"presenter":ep["presenter"],"fish_voice_id":ep["fish_voice_id"],"duration_s":actual,"video_count":video_count,"image_count":image_count,"music_count":len(tracks),"openverse_image_count":sum(1 for x in ledger if x.get("type")=="image" and x.get("provider")=="openverse"),"commons_video_count":sum(1 for x in ledger if x.get("type")=="video" and x.get("provider")=="wikimedia_commons"),"openverse_sfx_count":sum(1 for x in ledger if x.get("type")=="sfx" and x.get("provider")=="openverse"),"sfx_count":len(sfx),"credits_file":str(credits),"master":str(OUT),"sha256":sha(OUT),"playout_mutated":False,"schedule_mutated":False,"asset_ledger":ledger}
+    report={"state":"PASS","program":ep["program"],"presenter":ep["presenter"],"fish_voice_id":ep["fish_voice_id"],"duration_s":actual,"video_count":video_count,"image_count":image_count,"music_count":len(tracks),"openverse_image_count":sum(1 for x in ledger if x.get("type")=="image" and x.get("provider")=="openverse"),"commons_image_count":sum(1 for x in ledger if x.get("type")=="image" and x.get("provider")=="wikimedia_commons"),"commons_video_count":sum(1 for x in ledger if x.get("type")=="video" and x.get("provider")=="wikimedia_commons"),"openverse_sfx_count":sum(1 for x in ledger if x.get("type")=="sfx" and x.get("provider")=="openverse"),"sfx_count":len(sfx),"credits_file":str(credits),"master":str(OUT),"sha256":sha(OUT),"playout_mutated":False,"schedule_mutated":False,"asset_ledger":ledger}
     (ROOT/"qc/report.json").write_text(json.dumps(report,ensure_ascii=False,indent=2))
     print(json.dumps({k:v for k,v in report.items() if k!="asset_ledger"},ensure_ascii=False))
 if __name__=="__main__": main()
