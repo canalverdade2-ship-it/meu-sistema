@@ -1,0 +1,64 @@
+name: One-shot Finalize Remote Desktop Commander
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/finalize-remote-desktop-commander-once.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    environment: gsa-tv-production
+    timeout-minutes: 10
+    env:
+      VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+      VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+    steps:
+      - name: Configure pinned SSH
+        shell: bash
+        env:
+          VPS_SSH_KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/gsa-tv-deploy"
+          chmod 0600 "$HOME/.ssh/gsa-tv-deploy"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 0600 "$HOME/.ssh/known_hosts"
+
+      - name: Clean orphan and show pending verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy"             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          SERVICE="desktop-commander-remote.service"
+          main_pid="$(sudo systemctl show "$SERVICE" -p MainPID --value)"
+          child_pid="$(pgrep -P "$main_pid" -f '/usr/lib/node_modules/@wonderwhy-er/desktop-commander/dist/index.js' | head -1 || true)"
+
+          while read -r pid ppid args; do
+            [ -n "${pid:-}" ] || continue
+            if [ "$ppid" = "1" ] && [ "$pid" != "$main_pid" ] && [ "$pid" != "${child_pid:-}" ]; then
+              echo "KILLING_ORPHAN_PID=$pid"
+              sudo kill -TERM "$pid" 2>/dev/null || true
+            fi
+          done < <(ps -eo pid=,ppid=,args= | grep -E '/usr/lib/node_modules/@wonderwhy-er/desktop-commander/dist/index.js$' || true)
+
+          sleep 2
+          echo "VERSION=$(node -p "require('/usr/lib/node_modules/@wonderwhy-er/desktop-commander/package.json').version")"
+          echo "SERVICE_STATE=$(sudo systemctl is-active "$SERVICE")"
+          echo "MAIN_PID=$main_pid"
+          echo "CHILD_PID=$child_pid"
+          echo "=== PENDING DEVICE VERIFICATION ==="
+          sudo journalctl -u "$SERVICE" --since "15 minutes ago" --no-pager 2>/dev/null             | grep -A4 -F 'Please complete authentication:'             | tail -n 6 || true
+          echo "FINALIZE_OK=true"
+          REMOTE
+
+      - name: Remove local SSH material
+        if: always()
+        run: rm -f "$HOME/.ssh/gsa-tv-deploy" "$HOME/.ssh/known_hosts"
