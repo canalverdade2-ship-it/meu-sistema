@@ -1,0 +1,93 @@
+name: Upgrade n8n to 2.41.6
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/upgrade-n8n-once.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    environment: gsa-tv-production
+    timeout-minutes: 20
+    env:
+      VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+      VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+    steps:
+      - name: Configure SSH
+        shell: bash
+        env:
+          VPS_SSH_KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/gsa-tv-deploy"
+          chmod 600 "$HOME/.ssh/gsa-tv-deploy"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Upgrade n8n with rollback
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          sudo -n true
+          ROOT=/home/opc/gsa-hub
+          BKP="$(sudo find /opt/gsa-tv/backups/platform-upgrade -mindepth 1 -maxdepth 1 -type d -printf '%p\n' | sort | tail -n 1)"
+          TS="$(date +%Y%m%d-%H%M%S)"
+
+          OLD_ID="$(sudo docker inspect n8n --format '{{.Image}}')"
+          sudo docker tag "$OLD_ID" docker.n8n.io/n8nio/n8n:2.33.5
+          sudo cp "$ROOT/docker-compose.yml" "$ROOT/docker-compose.yml.pre-n8n-2.41.6-$TS"
+
+          sudo docker exec evo-postgres sh -lc 'pg_dump -U "$POSTGRES_USER" -Fc -d n8n' > /tmp/n8n-db.dump
+          sudo install -m 0600 /tmp/n8n-db.dump "$BKP/n8n-db-pre-2.41.6.dump"
+          rm -f /tmp/n8n-db.dump
+
+          sudo sed -i 's#docker.n8n.io/n8nio/n8n:2\.33\.5#docker.n8n.io/n8nio/n8n:2.41.6#' "$ROOT/docker-compose.yml"
+
+          sudo docker stop n8n >/dev/null
+          sudo docker rm n8n >/dev/null
+          cd "$ROOT"
+          sudo docker compose up -d n8n
+
+          ok=0
+          for i in $(seq 1 45); do
+            if curl -fsS --max-time 3 http://127.0.0.1:5678/healthz >/tmp/n8n-health 2>/dev/null; then
+              ok=1
+              break
+            fi
+            sleep 2
+          done
+
+          if [ "$ok" -ne 1 ]; then
+            echo "N8N_UPGRADE_FAILED_ROLLBACK"
+            sudo docker rm -f n8n >/dev/null 2>&1 || true
+
+            sudo docker exec evo-postgres sh -lc 'psql -U "$POSTGRES_USER" -d postgres -v ON_ERROR_STOP=1 -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '''n8n''' AND pid <> pg_backend_pid();" -c "DROP DATABASE IF EXISTS n8n;" -c "CREATE DATABASE n8n;"'
+            cat "$BKP/n8n-db-pre-2.41.6.dump" | sudo docker exec -i evo-postgres sh -lc 'pg_restore -U "$POSTGRES_USER" -d n8n --clean --if-exists'
+
+            sudo rm -rf /var/lib/docker/volumes/n8n_data/_data/*
+            sudo tar -C /var/lib/docker/volumes/n8n_data/_data -xzf "$BKP/n8n-data.tgz"
+
+            PRE="$(ls -1t "$ROOT"/docker-compose.yml.pre-n8n-2.41.6-* | head -n1)"
+            sudo cp "$PRE" "$ROOT/docker-compose.yml"
+            sudo docker compose up -d n8n
+            exit 1
+          fi
+
+          echo "HEALTH=$(cat /tmp/n8n-health)"
+          echo "VERSION=$(sudo docker exec n8n n8n --version)"
+          sudo docker inspect n8n --format 'Image={{.Config.Image}} Restart={{.HostConfig.RestartPolicy.Name}}'
+          echo N8N_UPGRADE_OK=true
+          REMOTE
+
+      - name: Cleanup
+        if: always()
+        run: rm -f "$HOME/.ssh/gsa-tv-deploy" "$HOME/.ssh/known_hosts"
