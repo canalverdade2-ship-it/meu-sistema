@@ -1,0 +1,73 @@
+name: Render GSA News V2 Dynamic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/render-gsa-news-v2-dynamic-once.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    environment: gsa-tv-production
+    timeout-minutes: 45
+    env:
+      VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+      VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+    steps:
+      - name: Configure SSH
+        shell: bash
+        env:
+          VPS_SSH_KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/gsa-tv-deploy"
+          chmod 600 "$HOME/.ssh/gsa-tv-deploy"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Render dynamic V2 on VPS
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy"             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST" "python3 /home/opc/render-v2.py"
+
+      - name: Validate master on VPS
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy"             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST" '
+              set -e
+              F=/home/opc/gsa-news-eleicoes-v2/GSA-News-Especial-Eleicoes-2026-V2-9x16.mp4
+              test -s "$F"
+              ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration,size -of json "$F"
+              test -s /home/opc/gsa-news-eleicoes-v2/QC-GSA-News-Especial-Eleicoes-2026-V2-9x16.txt
+              test -s /home/opc/gsa-news-eleicoes-v2/voices-manifest.json
+            '
+
+      - name: Fetch master
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifact
+          for f in             GSA-News-Especial-Eleicoes-2026-V2-9x16.mp4             QC-GSA-News-Especial-Eleicoes-2026-V2-9x16.txt             voices-manifest.json
+          do
+            scp -i "$HOME/.ssh/gsa-tv-deploy"               -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes               "$VPS_USER@$VPS_HOST:/home/opc/gsa-news-eleicoes-v2/$f" "artifact/$f"
+          done
+
+      - name: Upload master
+        uses: actions/upload-artifact@v4
+        with:
+          name: gsa-news-eleicoes-v2-dynamic-9x16
+          path: artifact/*
+          retention-days: 7
+          compression-level: 0
+
+      - name: Cleanup
+        if: always()
+        run: rm -f "$HOME/.ssh/gsa-tv-deploy" "$HOME/.ssh/known_hosts"
