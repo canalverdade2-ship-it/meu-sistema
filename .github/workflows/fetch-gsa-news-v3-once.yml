@@ -1,0 +1,54 @@
+name: Fetch GSA News V3 Video First
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/fetch-gsa-news-v3-once.yml"
+permissions:
+  contents: read
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    environment: gsa-tv-production
+    timeout-minutes: 45
+    env:
+      VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+      VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+    steps:
+      - name: Configure SSH
+        shell: bash
+        env:
+          VPS_SSH_KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+        run: |
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/gsa-tv-deploy"
+          chmod 600 "$HOME/.ssh/gsa-tv-deploy"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+      - name: Wait for V3 render
+        shell: bash
+        run: |
+          for i in $(seq 1 180); do
+            if ssh -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" "test -s /home/opc/gsa-news-eleicoes-v3/GSA-News-Especial-Eleicoes-2026-V3-VIDEOS-9x16.mp4"; then
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1
+      - name: Fetch V3
+        shell: bash
+        run: |
+          mkdir -p artifact
+          scp -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST:/home/opc/gsa-news-eleicoes-v3/GSA-News-Especial-Eleicoes-2026-V3-VIDEOS-9x16.mp4" artifact/
+          scp -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST:/home/opc/gsa-news-eleicoes-v3/QC-GSA-News-Especial-Eleicoes-2026-V3.txt" artifact/
+          scp -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST:/home/opc/gsa-news-eleicoes-v3/manifest-v3.json" artifact/
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: gsa-news-eleicoes-2026-v3-video-first
+          path: artifact/*
+          retention-days: 7
+          compression-level: 0
+      - name: Cleanup
+        if: always()
+        run: rm -f "$HOME/.ssh/gsa-tv-deploy" "$HOME/.ssh/known_hosts"
