@@ -1,0 +1,94 @@
+name: One-shot Stop Election Live Source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/stop-election-live-once.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  stop:
+    runs-on: ubuntu-latest
+    environment: gsa-tv-production
+    timeout-minutes: 10
+    env:
+      VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+      VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+    steps:
+      - name: Configure SSH
+        shell: bash
+        env:
+          VPS_SSH_KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/gsa-tv-deploy"
+          chmod 600 "$HOME/.ssh/gsa-tv-deploy"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Stop election source without stopping YouTube output
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy"             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+
+          echo "=== BEFORE ==="
+          docker top gsa-tv-ffplayout -eo pid,ppid,user,args 2>/dev/null             | grep -E 'ffplayout|ffmpeg'             | sed -E 's#(rtmps?://[^/ ]+/)[^ ]+#\1[PROTECTED]#g' || true
+
+          # Stop only the election publisher/source. ffplayout and its YouTube output stay running.
+          pm2 stop gsa-tv-election-publisher >/dev/null 2>&1 || true
+          pm2 stop gsa-tv-election-source >/dev/null 2>&1 || true
+          sleep 3
+          pm2 delete gsa-tv-election-publisher >/dev/null 2>&1 || true
+          pm2 delete gsa-tv-election-source >/dev/null 2>&1 || true
+          pm2 save >/dev/null 2>&1 || true
+
+          # Remove the dedicated election browser.
+          docker rm -f gsa-tv-election-chromedriver >/dev/null 2>&1 || true
+
+          # Stop any leftover election-only helper processes.
+          pkill -f '^python3 /home/opc/gsa-tv-election-' 2>/dev/null || true
+          pkill -f '^python3 /tmp/election-' 2>/dev/null || true
+
+          # Prevent election PM2 jobs from being resurrected at boot.
+          TMP="$(mktemp)"
+          crontab -l 2>/dev/null | grep -v 'GSA_TV_ELECTION_PM2_RESURRECT' > "$TMP" || true
+          crontab "$TMP"
+          rm -f "$TMP"
+
+          # Persist ingest disabled for the next ffplayout restart, but do NOT restart ffplayout now.
+          docker exec gsa-tv-ffplayout sqlite3 /state/ffplayout.db             "UPDATE configurations SET ingest_enable=0 WHERE channel_id=1; SELECT ingest_enable FROM configurations WHERE channel_id=1;" || true
+
+          # Update control-plane state back to normal running/programming.
+          cat >/tmp/gsa-tv-stop-election.js <<'NODE'
+          const {Pool}=require('pg');
+          const p=new Pool({connectionString:process.env.DATABASE_URL});
+          (async()=>{
+            const ch=process.env.CHANNEL_ID||'ch-main';
+            await p.query("update public.gsa_tv_channels set desired_state='running',signal_state='sending',playout_state='running',last_error=null,updated_at=now() where id=$1",[ch]);
+            console.log(JSON.stringify((await p.query("select desired_state,signal_state,playout_state,last_error from public.gsa_tv_channels where id=$1",[ch])).rows[0]));
+            await p.end();
+          })().catch(e=>{console.error(e.message);process.exit(1)});
+NODE
+          docker exec -i gsa-tv-control-plane node </tmp/gsa-tv-stop-election.js
+          rm -f /tmp/gsa-tv-stop-election.js
+
+          sleep 5
+          echo "=== AFTER ==="
+          docker top gsa-tv-ffplayout -eo pid,ppid,user,args 2>/dev/null             | grep -E 'ffplayout|ffmpeg'             | sed -E 's#(rtmps?://[^/ ]+/)[^ ]+#\1[PROTECTED]#g' || true
+
+          echo "=== RECENT SWITCH LOG ==="
+          docker logs --since 30s gsa-tv-ffplayout 2>&1             | grep -Ei 'live input ended|switching back to file playback|reinitialize playlist|idle|first live'             | tail -n 40 || true
+
+          echo "STOP_ELECTION_COMPLETE=true"
+          REMOTE
+
+      - name: Cleanup
+        if: always()
+        run: rm -f "$HOME/.ssh/gsa-tv-deploy" "$HOME/.ssh/known_hosts"
