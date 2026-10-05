@@ -1,0 +1,36 @@
+name: Render GSA News V2 Dynamic
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/render-gsa-news-v2-once.yml"]
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    environment: gsa-tv-production
+    timeout-minutes: 45
+    env:
+      VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+      VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+    steps:
+      - name: SSH
+        env:
+          KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          KH: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh; chmod 700 ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/k; chmod 600 ~/.ssh/k
+          printf '%s\n' "$KH" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/k -o BatchMode=yes -o IdentitiesOnly=yes "$VPS_USER@$VPS_HOST" "python3 /home/opc/render-v2.py"
+      - name: Fetch
+        run: |
+          mkdir -p artifact
+          scp -i ~/.ssh/k -o BatchMode=yes -o IdentitiesOnly=yes "$VPS_USER@$VPS_HOST:/home/opc/gsa-news-eleicoes-v2/GSA-News-Especial-Eleicoes-2026-V2-9x16.mp4" artifact/
+          scp -i ~/.ssh/k -o BatchMode=yes -o IdentitiesOnly=yes "$VPS_USER@$VPS_HOST:/home/opc/gsa-news-eleicoes-v2/QC-GSA-News-Especial-Eleicoes-2026-V2-9x16.txt" artifact/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gsa-news-eleicoes-2026-v2-9x16
+          path: artifact/*
+          retention-days: 7
+          compression-level: 0
