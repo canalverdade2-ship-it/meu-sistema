@@ -1,0 +1,55 @@
+name: Export GSA News V2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/export-gsa-news-v2-once.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    environment: gsa-tv-production
+    timeout-minutes: 15
+    env:
+      VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+      VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+    steps:
+      - name: Configure SSH
+        shell: bash
+        env:
+          VPS_SSH_KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/gsa-tv-deploy"
+          chmod 600 "$HOME/.ssh/gsa-tv-deploy"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+      - name: Prepare preview
+        shell: bash
+        run: |
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST"             "ffmpeg -y -hide_banner -loglevel error -ss 120 -i /home/opc/gsa-news-eleicoes-v2/GSA-News-Especial-Eleicoes-2026-V2-9x16.mp4 -frames:v 1 /home/opc/gsa-news-eleicoes-v2/preview-v2.jpg"
+      - name: Fetch files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifact
+          for f in             GSA-News-Especial-Eleicoes-2026-V2-9x16.mp4             QC-GSA-News-Especial-Eleicoes-2026-V2-9x16.txt             V2-manifest.json             asset-manifest.json             preview-v2.jpg
+          do
+            scp -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes               "$VPS_USER@$VPS_HOST:/home/opc/gsa-news-eleicoes-v2/$f" "artifact/$f"
+          done
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: gsa-news-eleicoes-2026-v2-9x16
+          path: artifact/*
+          retention-days: 7
+          compression-level: 0
+      - name: Cleanup
+        if: always()
+        run: rm -f "$HOME/.ssh/gsa-tv-deploy" "$HOME/.ssh/known_hosts"
