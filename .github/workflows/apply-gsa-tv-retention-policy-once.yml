@@ -1,0 +1,77 @@
+name: Apply GSA TV Retention Policy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/apply-gsa-tv-retention-policy-once.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    environment: gsa-tv-production
+    timeout-minutes: 10
+    env:
+      VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+      VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+    steps:
+      - name: Configure SSH
+        shell: bash
+        env:
+          VPS_SSH_KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/gsa-tv-deploy"
+          chmod 600 "$HOME/.ssh/gsa-tv-deploy"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Apply retention policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          sudo -n true
+
+          echo "=== BEFORE ==="
+          df -B1 /
+          sudo du -sb /opt/gsa-tv/backups /opt/gsa-tv/cache 2>/dev/null || true
+
+          echo "=== RUN POLICY ==="
+          sudo -n /usr/bin/python3 /home/opc/gsa-tv-retention.py
+          sudo chown opc:opc /home/opc/gsa-tv-retention.log 2>/dev/null || true
+
+          echo "=== INSTALL DAILY POLICY ==="
+          cat >/tmp/gsa-tv-retention.cron <<'CRON'
+          17 3 * * * root /usr/bin/flock -n /run/lock/gsa-tv-retention.lock /usr/bin/python3 /home/opc/gsa-tv-retention.py >/dev/null 2>&1
+          CRON
+          sudo install -m 0644 /tmp/gsa-tv-retention.cron /etc/cron.d/gsa-tv-retention
+          rm -f /tmp/gsa-tv-retention.cron
+
+          echo "=== AFTER ==="
+          df -B1 /
+          sudo du -sb /opt/gsa-tv/backups /opt/gsa-tv/cache 2>/dev/null || true
+
+          echo "=== RETAINED PRODUCTION EDITIONS ==="
+          find /opt/gsa-tv/backups/production-editions -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | sort || true
+
+          echo "=== OLD PARTIALS REMAINING ==="
+          find /opt/gsa-tv/cache -type f \( -name '*.partial.mp4' -o -name '*.part-*.wav' -o -name '*.part' -o -name '*.tmp' \) -mmin +1440 -printf '%p\n' 2>/dev/null | head -n 50 || true
+
+          echo "=== AUTONOMOUS DIRS ==="
+          find /opt/gsa-tv/cache/media/1/production/autonomous -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | sort || true
+
+          echo "=== CRON ==="
+          sudo cat /etc/cron.d/gsa-tv-retention
+          echo "RETENTION_POLICY_APPLIED=true"
+          REMOTE
+
+      - name: Cleanup
+        if: always()
+        run: rm -f "$HOME/.ssh/gsa-tv-deploy" "$HOME/.ssh/known_hosts"
