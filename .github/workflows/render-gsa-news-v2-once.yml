@@ -9,7 +9,7 @@ jobs:
   render:
     runs-on: ubuntu-latest
     environment: gsa-tv-production
-    timeout-minutes: 45
+    timeout-minutes: 46
     env:
       VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
       VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
