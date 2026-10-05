@@ -42,8 +42,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifact
-          scp -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST:/opt/gsa-tv/runtime/gsa-news-eleicoes-final/GSA-News-Especial-Eleicoes-2026-9x16.mp4"             "artifact/GSA-News-Especial-Eleicoes-2026-9x16.mp4"
-          scp -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST:/opt/gsa-tv/runtime/gsa-news-eleicoes-final/vertical-manifest.json"             "artifact/vertical-manifest.json"
+          scp -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST:/home/opc/gsa-news-eleicoes-vertical-work/GSA-News-Especial-Eleicoes-2026-9x16.mp4"             "artifact/GSA-News-Especial-Eleicoes-2026-9x16.mp4"
+          scp -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes             "$VPS_USER@$VPS_HOST:/home/opc/gsa-news-eleicoes-vertical-work/vertical-manifest.json"             "artifact/vertical-manifest.json"
 
       - name: Upload master
         uses: actions/upload-artifact@v4
