@@ -1,0 +1,34 @@
+name: Run Election Production
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/run-election-production-once.yml"
+permissions:
+  contents: read
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    environment: gsa-tv-production
+    timeout-minutes: 40
+    env:
+      VPS_HOST: ${{ secrets.GSA_TV_VPS_HOST }}
+      VPS_USER: ${{ secrets.GSA_TV_VPS_USER }}
+    steps:
+      - name: Configure SSH
+        shell: bash
+        env:
+          VPS_SSH_KEY: ${{ secrets.GSA_TV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.GSA_TV_VPS_KNOWN_HOSTS }}
+        run: |
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/gsa-tv-deploy"
+          chmod 600 "$HOME/.ssh/gsa-tv-deploy"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+      - name: Produce
+        shell: bash
+        run: |
+          ssh -i "$HOME/.ssh/gsa-tv-deploy" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$VPS_USER@$VPS_HOST" "docker exec -i gsa-tv-control-plane node < /home/opc/build-election-script.js && grep -q '^FACT_CHECK: PASS' /opt/gsa-tv/runtime/gsa-news-eleicoes-final/fact-check.txt && python3 /home/opc/fish-election.py"
+      - name: Cleanup
+        if: always()
+        run: rm -f "$HOME/.ssh/gsa-tv-deploy" "$HOME/.ssh/known_hosts"
