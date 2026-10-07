@@ -107,15 +107,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          supabase migration list --linked 2>&1 | tee careers-migrations-after-apply.log
-          if ! awk -F'|' '
-            {
-              remote=$2
-              gsub(/[^0-9]/, "", remote)
-              if (remote == "20260722235959") found=1
-            }
-            END { exit found ? 0 : 1 }
-          ' careers-migrations-after-apply.log; then
+          cat > careers-migrations-ledger-check.sql <<'SQL'
+          SELECT version
+          FROM supabase_migrations.schema_migrations
+          WHERE version = '20260722235959';
+          SQL
+
+          if ! supabase db query --linked \
+            --file careers-migrations-ledger-check.sql \
+            2>&1 | tee careers-migrations-after-apply.log; then
+            echo "FAIL: não foi possível consultar o ledger remoto." >&2
+            exit 1
+          fi
+
+          if ! grep -q '20260722235959' careers-migrations-after-apply.log; then
             supabase migration repair --linked --status applied 20260722235959 2>&1 | tee careers-migration-repair.log
           fi
 

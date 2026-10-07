@@ -64,7 +64,7 @@ jobs:
           set -euo pipefail
           cp supabase/migrations/20260722040000_affiliate_program.sql /tmp/affiliate-program-reconciled.sql
           printf '\nCOMMIT;\n' >> /tmp/affiliate-program-reconciled.sql
-          cp supabase/migrations/20260722040000_harden_advertising_backend.sql /tmp/advertising-backend-reconciled.sql
+          cp supabase/migrations/20260722040001_harden_advertising_backend.sql /tmp/advertising-backend-reconciled.sql
           printf '\nCOMMIT;\n' >> /tmp/advertising-backend-reconciled.sql
           tail -n 3 /tmp/affiliate-program-reconciled.sql
           tail -n 3 /tmp/advertising-backend-reconciled.sql

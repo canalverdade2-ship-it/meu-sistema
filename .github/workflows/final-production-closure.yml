@@ -23,6 +23,9 @@ concurrency:
 jobs:
   validate-deploy-verify:
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      deployment: false
     timeout-minutes: 35
 
     services:
@@ -114,16 +117,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          supabase migration list --linked 2>&1 | tee production-migrations-before.log
+          cat > production-migrations-ledger-check.sql <<'SQL'
+          SELECT version
+          FROM supabase_migrations.schema_migrations
+          WHERE version = '20260721020000';
+          SQL
 
-          if awk -F'|' '
-            {
-              remote=$2
-              gsub(/[^0-9]/, "", remote)
-              if (remote == "20260721020000") found=1
-            }
-            END { exit found ? 0 : 1 }
-          ' production-migrations-before.log; then
+          if ! supabase db query --linked \
+            --file production-migrations-ledger-check.sql \
+            2>&1 | tee production-migrations-before.log; then
+            echo "FAIL: não foi possível consultar o ledger remoto." >&2
+            exit 1
+          fi
+
+          if grep -q '20260721020000' production-migrations-before.log; then
             echo 'A migration final de auditoria já está registrada em produção.' | tee final-migration-apply.log
           else
             supabase db query --linked --file supabase/migrations/20260721020000_fix_sensitive_admin_audit_revocation.sql 2>&1 | tee final-migration-apply.log
